@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>{{ $title ?? 'Public View' }}</title>
+    <title>{{ $title ?? 'Alumni View' }}</title>
     <!-- Styles / Scripts -->
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -18,11 +18,11 @@
 </head>
 
 <body>
-    @include('components.headers.public.header')
+    @include('components.headers.alumni.header')
         <main class="py-4 bg-white dark:bg-black text-green-600 dark:text-green-400 flex justify-center px-4 sm:px-6 lg:px-8">
             {{ $slot }}
         </main>
-    @include('components.footers.public.footer')
+    @include('components.footers.alumni.footer')
     @livewireScripts
     <script src="https://unpkg.com/preline/dist/preline.js"></script>
 </body>

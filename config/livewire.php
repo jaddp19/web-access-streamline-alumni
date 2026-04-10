@@ -31,8 +31,10 @@ return [
 
     'component_namespaces' => [
         'layouts' => resource_path('views/layouts'),
-        'pages' => resource_path('views/pages'),
-        'headers' => resource_path('views/headers'),
+        'public' => resource_path('views/public'),
+        'alumni' => resource_path('views/alumni'),
+        'admin' => resource_path('views/admin'),
+        'super-admin' => resource_path('view/super-admin'),
     ],
 
     /*
