@@ -19,12 +19,16 @@
 
 <body>
     @include('components.headers.alumni.header')
-        <main class="py-4 bg-white dark:bg-black text-green-600 dark:text-green-400 flex justify-center px-4 sm:px-6 lg:px-8">
-            {{ $slot }}
-        </main>
+
+    <main class="py-20 bg-white dark:bg-black px-4 sm:px-6 lg:px-8 justify-center">
+        {{ $slot }}
+    </main>
+
     @include('components.footers.alumni.footer')
+
     @livewireScripts
     <script src="https://unpkg.com/preline/dist/preline.js"></script>
 </body>
+
 
 </html>

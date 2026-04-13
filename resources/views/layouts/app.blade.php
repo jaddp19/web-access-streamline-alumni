@@ -19,7 +19,7 @@
 
 <body>
     @include('components.headers.public.header')
-        <main class="py-4 bg-white dark:bg-black text-green-600 dark:text-green-400 flex justify-center px-4 sm:px-6 lg:px-8">
+        <main class="bg-white dark:bg-black px-4 py-10 sm:px-6 lg:px-8 justify-center">
             {{ $slot }}
         </main>
     @include('components.footers.public.footer')
