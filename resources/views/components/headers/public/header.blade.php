@@ -38,7 +38,7 @@
     <a href="/" class="text-white hover:text-yellow-400 transition-colors">Home</a>
     <a href="/about" class="text-white hover:text-yellow-400 transition-colors">About</a>
     <a href="/contact" class="text-white hover:text-yellow-400 transition-colors">Contact</a>
-    <a href="/event" class="text-white hover:text-yellow-400 transition-colors">Event</a>
+    <a href="/events" class="text-white hover:text-yellow-400 transition-colors">Event</a>
   </div>
 </header>
 <!-- ========== END HEADER ========== -->
