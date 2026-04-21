@@ -22,12 +22,12 @@
                             <div class="hs-dropdown-menu hs-dropdown-open:opacity-100 w-60 transition-[opacity,margin] duration opacity-0 hidden z-20 bg-white border border-gray-200 rounded-xl shadow-xl dark:bg-neutral-900 dark:border-neutral-700"
                                 role="menu" aria-orientation="vertical" aria-labelledby="hs-dnad">
                                 <div class="py-2 px-3.5">
-                                    {{-- <span class="font-medium text-gray-800 dark:text-neutral-300">
+                                    <span class="font-medium text-gray-800 dark:text-neutral-300">
                                         {{ Auth::user()->name }}
                                     </span>
                                     <p class="text-sm text-gray-500 dark:text-neutral-500">
                                         {{ Auth::user()->email }}
-                                    </p> --}}
+                                    </p>
                                 </div>
                                 <div class="px-4 py-2 border-t border-gray-200 dark:border-neutral-800">
                                     <!-- Switch/Toggle -->

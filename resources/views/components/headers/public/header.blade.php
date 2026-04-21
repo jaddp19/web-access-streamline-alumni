@@ -23,9 +23,9 @@
 
     <!-- Actions -->
     <div class="flex items-center gap-x-6">
-      <button class="px-5 py-2 rounded-lg bg-yellow-400 text-green-900 font-semibold hover:bg-yellow-500 hover:shadow-md transition-all">
-        Sign In
-      </button>
+      <a href="{{ route('login') }}" class="px-5 py-2 rounded-lg bg-yellow-400 text-green-900 font-semibold hover:bg-yellow-500 hover:shadow-md transition-all">
+        Log In
+      </a>
       <!-- Mobile Menu Toggle -->
       <button class="lg:hidden px-3 py-2 rounded-lg bg-green-700 text-white hover:bg-green-600 transition" id="menu-toggle">
         ☰

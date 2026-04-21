@@ -35,6 +35,7 @@ return [
         'alumni' => resource_path('views/alumni'),
         'admin' => resource_path('views/admin'),
         'super-admin' => resource_path('views/super-admin'),
+        'auth' => resource_path('views/auth'),
     ],
 
     /*
