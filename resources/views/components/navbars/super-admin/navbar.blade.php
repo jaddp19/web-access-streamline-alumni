@@ -82,14 +82,14 @@
                         <li>
                             <a class="w-full flex items-center gap-x-2 py-2 px-2.5 text-sm text-black rounded-lg hover:bg-yellow-500 focus:outline-hidden focus:bg-bg-yellow-400"
                                 wire:current="bg-yellow-500"
-                                href="#">
+                                href="{{ route('admin.admin.view') }}">
                                 View Faculty Members
                             </a>
                         </li>
                         <li>
                             <a class="w-full flex items-center gap-x-2 py-2 px-2.5 text-sm text-black rounded-lg hover:bg-yellow-500 focus:outline-hidden focus:bg-bg-yellow-400"
                                 wire:current="bg-yellow-500"
-                                href="#">
+                                href="{{ route('admin.alumni.view') }}">
                                 View All Alumnis
                             </a>
                         </li>
