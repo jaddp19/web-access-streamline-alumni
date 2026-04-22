@@ -37,11 +37,6 @@
                             View Alumni Directory
                             <span class="text-xl leading-none">→</span>
                         </a>
-
-                        <a href="/alumni-events"
-                           class="px-9 py-4 border-2 border-yellow-400 text-yellow-300 hover:bg-yellow-400 hover:text-green-900 font-medium rounded-2xl transition-all duration-300">
-                            Upcoming Events
-                        </a>
                     </div>
                 </div>
 
@@ -57,22 +52,22 @@
             </div>
 
             <!-- Simple Statistics -->
-            <div class="mt-28 grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12">
-                <div class="text-center">
+            <div class="mt-28 grid grid-cols-1 md:grid-cols-4 gap-8 lg:gap-12">
+                <div class="text-center p-10 bg-white/10 backdrop-blur-md rounded-3xl border border-white/30 shadow-lg hover:shadow-xl transition">
                     <div class="text-5xl lg:text-6xl font-semibold text-white">5,200+</div>
                     <div class="mt-3 text-green-200 text-sm font-medium tracking-widest">REGISTERED ALUMNI</div>
                 </div>
-                <div class="text-center">
+                <div class="text-center p-10 bg-white/10 backdrop-blur-md rounded-3xl border border-white/30 shadow-lg hover:shadow-xl transition">
                     <div class="text-5xl lg:text-6xl font-semibold text-white">128</div>
                     <div class="mt-3 text-green-200 text-sm font-medium tracking-widest">GLOBAL CHAPTERS</div>
                 </div>
-                <div class="text-center">
-                    <div class="text-5xl lg:text-6xl font-semibold text-white">340+</div>
-                    <div class="mt-3 text-green-200 text-sm font-medium tracking-widest">EVENTS HOSTED</div>
-                </div>
-                <div class="text-center">
+                <div class="text-center p-10 bg-white/10 backdrop-blur-md rounded-3xl border border-white/30 shadow-lg hover:shadow-xl transition">
                     <div class="text-5xl lg:text-6xl font-semibold text-white">1,350+</div>
                     <div class="mt-3 text-green-200 text-sm font-medium tracking-widest">SCHOLARSHIPS AWARDED</div>
+                </div>
+                <div class="text-center p-10 bg-white/10 backdrop-blur-md rounded-3xl border border-white/30 shadow-lg hover:shadow-xl transition">
+                    <div class="text-5xl lg:text-6xl font-semibold text-white">7</div>
+                    <div class="mt-3 text-green-200 text-sm font-medium tracking-widest">Departments</div>
                 </div>
             </div>
         </div>

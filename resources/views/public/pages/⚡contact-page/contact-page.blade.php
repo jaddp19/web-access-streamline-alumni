@@ -28,7 +28,7 @@
           </div>
           <div>
             <h2 class="text-2xl font-semibold text-yellow-300 mb-3">Email</h2>
-            <p class="text-green-100">alumni@csav.edu.ph</p>
+            <p class="text-green-100">20233855.arroyo@csav.edu.ph</p>
           </div>
         </div>
 

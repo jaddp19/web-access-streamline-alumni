@@ -17,15 +17,15 @@
       <a href="/" class="text-white hover:text-yellow-400 transition-colors">Home</a>
       <a href="/about" class="text-white hover:text-yellow-400 transition-colors">About</a>
       <a href="/contact" class="text-white hover:text-yellow-400 transition-colors">Contact</a>
-      <a href="/events" class="text-white hover:text-yellow-400 transition-colors">Event</a>
+      <a href="#" class="text-white hover:text-yellow-400 transition-colors">Departments</a>
+      <a href="{{ route('login') }}" class="px-5 py-2 rounded-lg bg-yellow-400 text-green-900 font-semibold hover:bg-yellow-500 hover:shadow-md transition-all">
+        Log In
+      </a>
     </div>
     <!-- End Navigation -->
 
     <!-- Actions -->
     <div class="flex items-center gap-x-6">
-      <a href="{{ route('login') }}" class="px-5 py-2 rounded-lg bg-yellow-400 text-green-900 font-semibold hover:bg-yellow-500 hover:shadow-md transition-all">
-        Log In
-      </a>
       <!-- Mobile Menu Toggle -->
       <button class="lg:hidden px-3 py-2 rounded-lg bg-green-700 text-white hover:bg-green-600 transition" id="menu-toggle">
         ☰
@@ -38,7 +38,10 @@
     <a href="/" class="text-white hover:text-yellow-400 transition-colors">Home</a>
     <a href="/about" class="text-white hover:text-yellow-400 transition-colors">About</a>
     <a href="/contact" class="text-white hover:text-yellow-400 transition-colors">Contact</a>
-    <a href="/events" class="text-white hover:text-yellow-400 transition-colors">Event</a>
+    <a href="#" class="text-white hover:text-yellow-400 transition-colors">Departments</a>
+    <a href="{{ route('login') }}" class="px-5 py-2 rounded-lg bg-yellow-400 text-green-900 font-semibold hover:bg-yellow-500 hover:shadow-md transition-all">
+        Log In
+      </a>
   </div>
 </header>
 <!-- ========== END HEADER ========== -->

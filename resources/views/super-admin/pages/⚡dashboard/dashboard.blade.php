@@ -1,10 +1,10 @@
 <div>
     <!-- Content -->
-    <div class="w-full">
+    <div class="w-full shrink-0 p-4 sm:p-6 lg:p-8 flex-wrap px-7">
         <div class="p-4 sm:p-6 space-y-4 sm:space-y-6">
             <!-- Grid -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-                
+
                 <!-- Total Users Card -->
                 <div class="flex flex-col justify-center bg-white dark:bg-black border border-green-700 shadow-2xs rounded-xl">
                     <div class="p-4 md:p-5">
@@ -74,7 +74,7 @@
                 <!-- End Card -->
             </div>
             <!-- End Grid -->
-            
+
             <!-- Charts Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 <!-- Card -->
