@@ -17,13 +17,13 @@
     @livewireStyles
 </head>
 
-<body class="bg-[#FDFDFC] dark:bg-[#0a0a0a] text-[#1b1b18] flex p-6 lg:p-8 items-center lg:justify-center flex-col">
+<body>
     @include('components.headers.super-admin.header')
     @include('components.navbars.super-admin.navbar')
-    <main class="lg:hs-overlay-layout-open:ps-60 bg-white transition-all duration-300 lg:fixed lg:inset-0 pt-13 px-3 pb-3 dark:bg-black">
-        <div class="h-[calc(100dvh-62px)] lg:h-full overflow-hidden flex flex-col bg-white shadow-xs rounded-lg dark:bg-black">
+    <main class="lg:hs-overlay-layout-open:ps-60 transition-all duration-300 lg:fixed lg:inset-0 pt-13 px-3 pb-3 bg-gradient-to-br from-green-900 to-emerald-900">
+        <div class="h-[calc(100dvh-62px)] lg:h-full overflow-hidden flex flex-col shadow-xs rounded-lg">
             <!-- Body -->
-            <div class="bg-white dark:bg-black text-green-600 dark:text-green-400 flex-1 flex flex-col overflow-y-auto [&::-webkit-scrollbar]:w-0">
+            <div class="flex-1 flex flex-col overflow-y-auto [&::-webkit-scrollbar]:w-0 ">
                 {{ $slot }}
             </div>
             <!-- End Body -->
@@ -32,5 +32,4 @@
     @livewireScripts
     <script src="https://unpkg.com/preline/dist/preline.js"></script>
 </body>
-
 </html>

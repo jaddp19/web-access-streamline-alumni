@@ -72,7 +72,7 @@ new #[Layout('layouts::app-super-admin')] class extends Component
         $user->syncRoles($validated['selectedRole']);
 
         session()->flash('success', 'User created successfully.');
-        return redirect()->route('admin.user.view');
+        return redirect()->route('super-admin.user.view');
     }
 
     protected function sanitizeData($data)

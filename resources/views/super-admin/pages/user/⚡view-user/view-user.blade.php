@@ -1,9 +1,9 @@
 <div>
     <!-- Table Section -->
-    <div class="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
+    <div class="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto rounded-xl">
         <!-- Card -->
-        <div class="flex flex-col rounded-xl border border-green-700 p-4 sm:p-6 lg:p-8 bg-gray-700 dark:bg-black shadow-2xs">
-            <div class="overflow-x-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-md bg-gray-700 dark:bg-black">
+        <div class="flex flex-col rounded-xl border border-white/30 p-4 sm:p-6 lg:p-8 bg-white/10 shadow-2xs">
+            <div class="overflow-x-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-md">
                 <div class="min-w-full inline-block align-middle">
                     <div
                         class="rounded-xl shadow-2xs overflow-hidden">
@@ -37,12 +37,12 @@
 
                             <div>
                                 <div class="inline-flex gap-x-2">
-                                    <a id="no-border" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-gray-600 text-neutral-200 shadow-2xs hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none focus:outline-hidden focus:bg-gray-50 dark:border-neutral-700 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+                                    <a class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-yellow-500 text-white shadow-2xs hover:bg-yellow-600 disabled:opacity-50 disabled:pointer-events-none focus:outline-hidden focus:bg-yellow-500"
                                         href="#">
                                         View all
                                     </a>
-                                    <a id="no-border" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-gray-600 text-white hover:bg-blue-700 focus:outline-hidden focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none"
-                                        href="{{ route('admin.user.create') }}">
+                                    <a class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-yellow-500 text-white hover:bg-yellow-600 focus:outline-hidden focus:bg-yellow-500 disabled:opacity-50 disabled:pointer-events-none"
+                                        href="{{ route('super-admin.user.create') }}">
                                         <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24"
                                             height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -58,7 +58,7 @@
 
                         <!-- Table -->
                         <table class="min-w-full text-xs sm:text-sm">
-                            <thead class="bg-gray-800 dark:bg-neutral-900">
+                            <thead class="bg-yellow-500">
                                 <tr>
                                     <th class="ps-2 sm:ps-6 py-3">
                                         <input type="checkbox"
@@ -89,7 +89,7 @@
                                 </tr>
                             </thead>
 
-                            <tbody class="divide-y divide-gray-600">
+                            <tbody class="divide-y divide-white/30">
                                 @forelse ($this->users as $user)
                                     <tr>
                                         <td class="w-4 ps-2 sm:ps-6 py-3 text-center align-middle">
@@ -120,7 +120,7 @@
                                             </span>
                                         </td>
                                         <td class="px-2 sm:px-6 py-1.5 text-start">
-                                            <a href="{{ route('admin.user.edit', $user->id) }}"
+                                            <a href="{{ route('super-admin.user.update', $user->id) }}"
                                             class="text-neutral-200 hover:underline">
                                                 Edit
                                             </a>
@@ -138,7 +138,7 @@
                         <!-- End Table -->
 
                         <!-- Footer -->
-                        <div class="px-6 py-4 grid gap-3 md:flex md:justify-between md:items-center border-t border-gray-600">
+                        <div class="px-6 py-4 grid gap-3 md:flex md:justify-between md:items-center border-t border-white/30">
                             <div>
                                 <p class="text-sm text-neutral-200">
                                     <span class="font-semibold text-neutral-200">
@@ -153,7 +153,7 @@
                                     {{-- Prev Button --}}
                                     @if($this->users->onFirstPage()) 
                                         <button disabled
-                                            class="px-4 py-2 inline-flex items-center justify-center gap-x-1 text-sm font-medium rounded-md border bg-gray-700 dark:bg-black text-gray-400 cursor-not-allowed">
+                                            class="px-4 py-2 inline-flex items-center justify-center gap-x-1 text-sm font-medium rounded-md border text-gray-400 cursor-not-allowed">
                                             <svg class="w-4 h-4 flex-shrink-0 align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor"
                                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                 <path d="M12 15l-6-6 6-6" />
@@ -162,7 +162,7 @@
                                         </button>
                                     @else
                                         <button wire:click="previousPage"
-                                            class="px-4 py-2 inline-flex items-center justify-center gap-x-1 text-sm font-medium rounded-md border bg-gray-700 hover:shadow-md transition-all duration-200 dark:bg-black dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-700">
+                                            class="px-4 py-2 inline-flex items-center justify-center gap-x-1 text-sm font-medium rounded-md hover:shadow-md transition-all duration-200 bg-yellow-500 text-white hover:bg-yellow-600">
                                             <svg class="w-4 h-4 flex-shrink-0 align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor"
                                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                 <path d="M12 15l-6-6 6-6" />
@@ -174,7 +174,7 @@
                                     {{-- Next Button --}}
                                     @if($this->users->hasMorePages())
                                         <button wire:click="nextPage"
-                                            class="px-4 py-2 inline-flex items-center justify-center gap-x-0 text-sm font-medium rounded-md border bg-gray-700 hover:shadow-md transition-all duration-200 dark:bg-black dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-700">
+                                            class="px-4 py-2 inline-flex items-center justify-center gap-x-0 text-sm font-medium rounded-md hover:shadow-md transition-all duration-200 bg-yellow-500 text-white hover:bg-yellow-600">
                                             Next
                                             <svg class="w-4 h-4 flex-shrink-0 align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor"
                                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -183,7 +183,7 @@
                                         </button>
                                     @else
                                         <button disabled
-                                            class="px-4 py-2 inline-flex items-center justify-center gap-x-0 text-sm font-medium rounded-md border bg-gray-700 dark:bg-black text-gray-400 cursor-not-allowed">
+                                            class="px-4 py-2 inline-flex items-center justify-center gap-x-0 text-sm font-medium rounded-md border text-gray-400 cursor-not-allowed">
                                             Next
                                             <svg class="w-4 h-4 flex-shrink-0 align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor"
                                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

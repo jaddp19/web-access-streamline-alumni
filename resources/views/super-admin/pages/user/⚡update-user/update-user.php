@@ -81,7 +81,7 @@ new #[Layout('layouts::app-super-admin')] class extends Component
         $this->user->syncRoles($this->selectedRole);
 
         session()->flash('success', 'User updated successfully.');
-        return redirect()->route('admin.user.view');
+        return redirect()->route('super-admin.user.view');
     }
 
     protected function sanitizeData($data)

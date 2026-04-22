@@ -16,12 +16,12 @@ Route::middleware(['auth', 'role:super-admin'])->prefix('super-admin')->group(fu
     Route::livewire('/roles/create', 'super-admin::pages.role.create-role')->name('create-role');
     Route::livewire('/roles/updte/{role}', 'super-admin::pages.role.update-role')->name('update-role');
 
-    Route::livewire('/user/view', 'super-admin::pages.user.view-user')->name('admin.user.view');
-    Route::livewire('/alumni/view', 'super-admin::pages.user.view-alumni')->name('admin.alumni.view');
-    Route::livewire('/admin/view', 'super-admin::pages.user.view-admin')->name('admin.admin.view');
+    Route::livewire('/user/view', 'super-admin::pages.user.view-user')->name('super-admin.user.view');
+    Route::livewire('/alumni/view', 'super-admin::pages.user.view-alumni')->name('super-admin.alumni.view');
+    Route::livewire('/admin/view', 'super-admin::pages.user.view-admin')->name('super-admin.admin.view');
 
-    Route::livewire('/user/create', 'super-admin::pages.user.create-user')->name('admin.user.create');
-    Route::livewire('/users/edit/{user}', 'super-admin::pages.user.update-user')->name('admin.user.edit');
+    Route::livewire('/user/create', 'super-admin::pages.user.create-user')->name('super-admin.user.create');
+    Route::livewire('/users/edit/{user}', 'super-admin::pages.user.update-user')->name('super-admin.user.update');
 
 
 });

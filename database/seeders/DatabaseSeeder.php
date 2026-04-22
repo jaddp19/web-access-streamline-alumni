@@ -32,21 +32,21 @@ class DatabaseSeeder extends Seeder
             );
             $superAdmin->assignRole($superAdminRole);
 
-            // Shop Owner account
+            // Admin account
             $admin = User::firstOrCreate(
-                ['email' => 'owner@example.com'],
+                ['email' => 'admin@example.com'],
                 [
-                    'name' => 'Shop Owner User',
+                    'name' => 'Admin User',
                     'password' => Hash::make('password123'),
                 ]
             );
             $admin->assignRole($adminRole);
 
-            // Employee account
+            // Alumni account
             $alumni = User::firstOrCreate(
-                ['email' => 'employee@example.com'],
+                ['email' => 'alumni@example.com'],
                 [
-                    'name' => 'Employee User',
+                    'name' => 'Alumni User',
                     'password' => Hash::make('password123'),
                 ]
             );

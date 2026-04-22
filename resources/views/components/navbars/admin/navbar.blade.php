@@ -8,7 +8,7 @@
         w-60
         hidden
         fixed inset-y-0 z-60 start-0
-        bg-green-600
+        bg-green-600    
         lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
         role="dialog" tabindex="-1" aria-label="Sidebar">
         <div class="lg:pt-13 relative flex flex-col h-full max-h-full">
