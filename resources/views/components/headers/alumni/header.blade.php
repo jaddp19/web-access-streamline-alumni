@@ -84,7 +84,7 @@
                                     <!-- End Switch/Toggle -->
                                 </div>
                                 <div class="p-1 border-t border-gray-200 dark:border-neutral-800">
-                                    {{-- <livewire:auth::logout /> --}}
+                                    <livewire:auth::logout />
                                 </div>
                             </div>
                             <!-- End Account Dropdown -->
@@ -96,4 +96,4 @@
         </div>
     </nav>
 </header>
-<!-- ========== END HEADER ========== -->   
+<!-- ========== END HEADER ========== -->
