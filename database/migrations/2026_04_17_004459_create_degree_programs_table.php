@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->string('program_name');
             $table->foreignId('department_id')->constrained('departments')->cascadeOnDelete();
-            $table->enum('level', ['undergraduate', 'graduate', 'postgraduate', 'vocational']);
             $table->timestamps();
         });
     }

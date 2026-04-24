@@ -138,11 +138,6 @@
                                 Assign Department
                             </a>
                         </li>
-                    </ul>
-                    <!-- End List -->
-
-                    <!-- List -->
-                    <ul class="flex flex-col gap-y-1">
                         <li>
                             <a class="w-full flex items-center gap-x-2 py-2 px-2.5 text-medium text-white rounded-lg hover:bg-yellow-500 focus:outline-hidden focus:bg-yellow-400"
                                 wire:current="bg-yellow-500"

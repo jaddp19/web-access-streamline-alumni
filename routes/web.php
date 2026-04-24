@@ -53,8 +53,9 @@ Route::middleware(['auth', 'role:admin|super-admin'])->prefix('admin')->group(fu
 Route::middleware(['auth', 'role:alumni|super-admin'])->prefix('alumni')->group(function(){
     Route::livewire('/dashboard', 'alumni::pages.dashboard')->name('alumni.dashboard');
 
+    Route::livewire('/update/update/{user}', 'alumni::pages.profile.update-name-password')->name('alumni.name-password.update');
     Route::livewire('/profile/view', 'alumni::pages.profile.view-profile')->name('alumni.profile');
-    Route::livewire('/profile/update/{user}', 'alumni::pages.profile.update-profile')->name('alumni.profile.edit');
+    Route::livewire('/profile/update/{user}', 'alumni::pages.profile.update-profile')->name('alumni.profile.update');
 
 });
 

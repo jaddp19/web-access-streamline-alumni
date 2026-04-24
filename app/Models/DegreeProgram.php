@@ -13,7 +13,6 @@ class DegreeProgram extends Model
     protected $fillable = [
         'program_name',
         'department_id',
-        'level'
     ];
 
     public function educationalBackgrounds(): HasMany
