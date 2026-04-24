@@ -20,7 +20,7 @@
 <body>
     @include('components.headers.alumni.header')
 
-    <main class="py-20 bg-gradient-to-br from-green-900 to-emerald-900 px-4 sm:px-6 lg:px-8 justify-center">
+    <main class="py-20 bg-gradient-to-br from-white to-green-100 px-4 sm:px-6 lg:px-8 justify-center">
         {{ $slot }}
     </main>
 

@@ -20,7 +20,7 @@
 <body>
     @include('components.headers.admin.header')
     @include('components.navbars.admin.navbar')
-    <main class="lg:hs-overlay-layout-open:ps-60 transition-all duration-300 lg:fixed lg:inset-0 pt-13 px-3 pb-3 bg-gradient-to-br from-green-900 to-emerald-900">
+    <main class="lg:hs-overlay-layout-open:ps-60 transition-all duration-300 lg:fixed lg:inset-0 pt-13 px-3 pb-3 bg-gradient-to-br from-white to-green-100">
         <div class="h-[calc(100dvh-62px)] lg:h-full overflow-hidden flex flex-col shadow-xs rounded-lg">
             <!-- Body -->
             <div class="flex-1 flex flex-col overflow-y-auto [&::-webkit-scrollbar]:w-0 ">
