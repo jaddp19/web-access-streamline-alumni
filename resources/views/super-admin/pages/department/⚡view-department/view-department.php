@@ -99,6 +99,6 @@ new #[Layout('layouts::app-super-admin')] class extends Component
     public function departments()
     {
         
-        return Department::select('id', 'department_name', 'created_at')->latest()->paginate(10);
+        return Department::select('id', 'department_name', 'created_at')->latest()->paginate(5);
     }
 };

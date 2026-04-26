@@ -33,6 +33,8 @@ Route::middleware(['auth', 'role:super-admin'])->prefix('super-admin')->group(fu
 
     Route::livewire('/department/view', 'super-admin::pages.department.view-department')->name('super-admin.department.view');
     Route::livewire('/courses/view', 'super-admin::pages.course.view-course')->name('super-admin.courses.view');
+    Route::livewire('/course/create', 'super-admin::pages.course.create-course')->name('super-admin.course.create');
+    Route::livewire('/course/update/{program}', 'super-admin::pages.course.update-course')->name('super-admin.course.update');
 
     Route::livewire('/department/create', 'super-admin::pages.department.create-department')->name('super-admin.department.create');
     Route::livewire('/department/update/{department}', 'super-admin::pages.department.update-department')->name('super-admin.department.update');
@@ -56,9 +58,9 @@ Route::middleware(['auth', 'role:admin|super-admin'])->prefix('admin')->group(fu
 Route::middleware(['auth', 'role:alumni|super-admin'])->prefix('alumni')->group(function(){
     Route::livewire('/dashboard', 'alumni::pages.dashboard')->name('alumni.dashboard');
 
-    Route::livewire('/update/update/{user}', 'alumni::pages.profile.update-name-password')->name('alumni.name-password.update');
     Route::livewire('/profile/view', 'alumni::pages.profile.view-profile')->name('alumni.profile');
     Route::livewire('/profile/update/{user}', 'alumni::pages.profile.update-profile')->name('alumni.profile.update');
+    Route::livewire('/profile/update-educational/{alumni}', 'alumni::pages.profile.update-educational-background')->name('alumni.profile.update-educational');
 
 });
 

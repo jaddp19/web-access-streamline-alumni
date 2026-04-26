@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Models\AlumniProfile;
+use App\Models\EducationalBackground;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -12,8 +12,8 @@ class Batch extends Model
         'batch_year'
     ];
 
-    public function alumniProfiles(): HasMany
+    public function educationBackgrounds(): HasMany
     {
-        return $this->hasMany(AlumniProfile::class, "batch_id", "id");
+        return $this->hasMany(EducationalBackground::class, "batch_id", "id");
     }
 }

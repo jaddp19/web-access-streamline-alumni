@@ -1,19 +1,21 @@
 <div class="max-w-2xl mx-auto p-6 bg-green-50 rounded-2xl border border-transparent shadow-2xl text-black space-y-6">
 
-    <h2 class="text-2xl font-bold">Personal Background</h2>
+    <h2 class="text-2xl font-bold">Personal Information</h2>
 
     <form wire:submit.prevent="saveProfile" class="space-y-4">
+
         <div>
-            <label class="block text-sm mb-1">Batch</label>
-            <select wire:model.defer="batch_id"
-                class="w-full px-4 py-2 rounded-lg border border-black text-black placeholder:text-black focus:outline-none">
-                <option value=""> Select Batch </option>
-                @foreach(\App\Models\Batch::all() as $batch)
-                    <option value="{{ $batch->id }}">{{ $batch->batch_year }}</option>
-                @endforeach
-            </select>
-            @error('batch_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+            <label class="block text-sm mb-1">Name</label>
+            <input type="text" wire:model.defer="name"
+                class="w-full px-4 py-2 rounded-lg border border-black text-black">
         </div>
+
+        <div>
+            <label class="block text-sm mb-1">Email</label>
+            <input type="email" wire:model.defer="email"
+                class="w-full px-4 py-2 rounded-lg border border-black text-black">
+        </div>
+
 
         <div>
             <label class="block text-sm mb-1">Gender</label>
@@ -27,15 +29,20 @@
 
         <div>
             <label class="block text-sm mb-1">Phone Number 1</label>
-            <input type="text" wire:model.defer="phone_number_1"
-                class="w-full px-4 py-2 rounded-lg border border-black text-black placeholder:text-black focus:outline-none">
+            <input type="number" wire:model.defer="phone_number_1"
+                class="w-full px-4 py-2 rounded-lg border border-black text-black placeholder:text-black focus:outline-none"
+                placeholder="Enter 10-digit number"
+                inputmode="numeric" pattern="[0-9]*" min="0" step="1">
             @error('phone_number_1') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
         </div>
 
         <div>
             <label class="block text-sm mb-1">Phone Number 2</label>
-            <input type="text" wire:model.defer="phone_number_2"
-                class="w-full px-4 py-2 rounded-lg border border-black text-black placeholder:text-black focus:outline-none">
+            <input type="number" wire:model.defer="phone_number_2"
+                class="w-full px-4 py-2 rounded-lg border border-black text-black placeholder:text-black focus:outline-none"
+                placeholder="Optional 10-digit number"
+                inputmode="numeric" pattern="[0-9]*" min="0" step="1">
+            @error('phone_number_2') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
         </div>
 
         <div>

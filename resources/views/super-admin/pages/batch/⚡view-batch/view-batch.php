@@ -19,6 +19,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     #[Computed]
     public function batches()
     {
-        return Batch::select('id', 'batch_year', 'created_at')->paginate(5);
+        return Batch::select('id', 'batch_year', 'created_at')->orderBy('batch_year','asc')->paginate(5);
     }
 };
