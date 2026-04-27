@@ -41,23 +41,23 @@ new class extends Component
                     return;
                 }
 
-                $response = Http::get('https://emailreputation.abstractapi.com/v1', [
-                    'api_key' => env('ABSTRACT_API_KEY'),
-                    'email'   => $value,
-                ]);
+                // $response = Http::get('https://emailreputation.abstractapi.com/v1', [
+                //     'api_key' => env('ABSTRACT_API_KEY'),
+                //     'email'   => $value,
+                // ]);
 
-                if (!$response->ok()) {
-                    $fail('Unable to validate the email address right now.');
-                    return;
-                }
+                // if (!$response->ok()) {
+                //     $fail('Unable to validate the email address right now.');
+                //     return;
+                // }
 
-                $data = $response->json();
+                // $data = $response->json();
 
-                // check deliverability using the correct field
-                if (!isset($data['email_deliverability']['status']) 
-                    || $data['email_deliverability']['status'] !== 'deliverable') {
-                    $fail('The email address is not deliverable.');
-                }
+                // // check deliverability using the correct field
+                // if (!isset($data['email_deliverability']['status']) 
+                //     || $data['email_deliverability']['status'] !== 'deliverable') {
+                //     $fail('The email address is not deliverable.');
+                // }
             },
         ],
             'password' => 'required|string|min:6|confirmed',
