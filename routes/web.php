@@ -45,6 +45,10 @@ Route::middleware(['auth', 'role:super-admin'])->prefix('super-admin')->group(fu
 
     Route::livewire('/request/view', 'super-admin::pages.request.view-request')->name('super-admin.request.view');
 
+    Route::livewire('/email/view', 'super-admin::pages.email.view-email')->name('super-admin.email.view');
+    Route::livewire('/email/create', 'super-admin::pages.email.create-email')->name('super-admin.email.create');
+    Route::livewire('/email/update/{email}', 'super-admin::pages.email.update-email')->name('super-admin.email.update');
+
 });
 
 Route::middleware(['auth', 'role:admin|super-admin'])->prefix('admin')->group(function(){

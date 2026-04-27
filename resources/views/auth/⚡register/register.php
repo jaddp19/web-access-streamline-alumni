@@ -1,7 +1,9 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Livewire\Component;
 
@@ -19,19 +21,45 @@ new class extends Component
         return [
             'name' => 'required|string|min:3|max:255|unique:users,name',
             'email' => [
-                'required',
-                'email',
-                'unique:users,email',
-                function ($attribute, $value, $fail) {
-                    if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
-                        $fail('The email address is invalid.');
-                    }
-                    $domain = substr(strrchr($value, "@"), 1);
-                    if (!checkdnsrr($domain, "MX")) {
-                        $fail('The email is not valid.');
-                    }
-                },
-            ],
+            'required',
+            'email',
+            'unique:users,email,' . Auth::id(),
+            function ($attribute, $value, $fail) 
+            {
+                // basic format check
+                if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
+                    $fail('The email address is invalid.');
+                    return;
+                }
+
+                // extract domain
+                $domain = substr(strrchr($value, "@"), 1);
+
+                // local MX record check
+                if (!checkdnsrr($domain, "MX")) {
+                    $fail('The email domain is not valid.');
+                    return;
+                }
+
+                $response = Http::get('https://emailreputation.abstractapi.com/v1', [
+                    'api_key' => env('ABSTRACT_API_KEY'),
+                    'email'   => $value,
+                ]);
+
+                if (!$response->ok()) {
+                    $fail('Unable to validate the email address right now.');
+                    return;
+                }
+
+                $data = $response->json();
+
+                // check deliverability using the correct field
+                if (!isset($data['email_deliverability']['status']) 
+                    || $data['email_deliverability']['status'] !== 'deliverable') {
+                    $fail('The email address is not deliverable.');
+                }
+            },
+        ],
             'password' => 'required|string|min:6|confirmed',
             'selectedRole' => 'exists:roles,name',
         ];

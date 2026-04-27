@@ -22,7 +22,7 @@
 
       <!-- Email -->
       <div>
-        <label for="email" class="block text-sm font-medium text-black mb-2">Email Address</label>
+        <label for="email" class="block text-sm font-medium text-black mb-2">Email Address (Real Email Address)</label>
         <input wire:model.defer="email" type="email" id="email" name="email"
           class="w-full px-4 py-3 rounded-lg border border-black text-black placeholder-black focus:outline-none"
           required>

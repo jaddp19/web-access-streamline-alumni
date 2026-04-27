@@ -172,6 +172,13 @@
                                 Application Requests
                             </a>
                         </li>
+                        <li>
+                            <a class="w-full flex items-center gap-x-2 py-2 px-2.5 text-medium text-black rounded-lg hover:bg-gray-100 focus:outline-hidden"
+                                wire:current="bg-gray-100"
+                                href="{{ route('super-admin.email.view') }}">
+                                Email Templates
+                            </a>
+                        </li>
                     </ul>
                     <!-- End List -->
 

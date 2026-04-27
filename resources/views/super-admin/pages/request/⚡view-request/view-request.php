@@ -1,6 +1,9 @@
 <?php
 
+use App\Mail\DynamicEmail;
+use App\Models\Email;
 use App\Models\User;
+use Illuminate\Support\Facades\Mail;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -30,8 +33,16 @@ new #[Layout('layouts::app-super-admin')] class extends Component
     {
         $user = User::findOrFail($userId);
         $user->assignRole('alumni'); // Spatie method
-        session()->flash('success', "{$user->name} has been assigned as Alumni.");
-    }
+
+        // fetch the template (example: slug = 'alumni-accepted')
+        $template = Email::where('slug', 'alumni-accepted')->first();
+
+        if ($template) {
+            // send email using Laravel's Mailable
+            Mail::to($user->email)->send(new DynamicEmail($template, $user));
+        }
+            session()->flash('success', "{$user->name} has been assigned as Alumni.");
+        }
 
     public function decline(int $userId)
     {

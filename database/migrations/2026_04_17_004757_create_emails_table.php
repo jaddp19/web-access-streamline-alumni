@@ -13,7 +13,9 @@ return new class extends Migration
     {
         Schema::create('emails', function (Blueprint $table) {
             $table->id();
-            $table->longText('message');
+            $table->string('slug')->unique();
+            $table->string('subject');
+            $table->text('message'); 
             $table->timestamps();
         });
     }
