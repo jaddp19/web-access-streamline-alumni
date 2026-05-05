@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('alumni_profiles', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->string('image')->nullable;
             $table->enum('gender', ['male', 'female']);
             $table->bigInteger('phone_number_1');
             $table->bigInteger('phone_number_2')->nullable();

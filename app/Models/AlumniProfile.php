@@ -14,6 +14,7 @@ class AlumniProfile extends Model
 {
     protected $fillable = [
         'user_id',
+        'image',
         'gender',
         'phone_number_1',
         'phone_number_2',

@@ -44,7 +44,7 @@
                     <div class="p-4 md:p-5">
                         <div class="flex items-center justify-between">
                             <p class="text-xs uppercase text-green-700">
-                                Total Alumnis
+                                Total Alumni
                             </p>
                         </div>
                         <div class="mt-1 flex items-center justify-between">
@@ -84,10 +84,10 @@
                     <div class="flex flex-wrap justify-between items-center gap-2">
                         <div>
                             <h2 class="text-sm text-green-700   ">
-                                Income
+                                Alumni Graduates
                             </h2>
                             <p class="text-xl sm:text-2xl font-medium text-black">
-                                ₱0.00
+                                11,000
                             </p>
                         </div>
                     </div>
