@@ -18,7 +18,7 @@
         <div class="space-y-8">
           <div>
             <h2 class="text-2xl font-semibold text-green-700 mb-3">Address</h2>
-            <p class="text-black">Colegio de Sta. Ana de Victorias<br>Victorias City, Negros Occidental, Philippines</p>
+            <p class="text-black">Osmeña Avenue, Victorias City,<br>Negros Occidental, Philippines</p>
           </div>
           <div>
             <h2 class="text-2xl font-semibold text-green-700 mb-3">Phone</h2>
@@ -26,7 +26,7 @@
           </div>
           <div>
             <h2 class="text-2xl font-semibold text-green-700 mb-3">Email</h2>
-            <p class="text-black">20233855.arroyo@csav.edu.ph</p>
+            <p class="text-black">c20233855.arroyo@csav.edu.ph</p>
           </div>
         </div>
 

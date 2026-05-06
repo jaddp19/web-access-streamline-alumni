@@ -9,7 +9,7 @@
         <div class="px-6 py-2 bg-green-90 shadow-2xl backdrop-blur-md border border-transparent rounded-2xl inline-block">
           <span class="text-green-700 text-sm font-extrabold tracking-widest">ABOUT OUR ALUMNI COMMUNITY</span>
         </div>
-        <h1 class="text-5xl lg:text-6xl font-bold text-black leading-tight tracking-tight">
+        <h1 class="text-5xl lg:text-6xl font-bold text-green-700 leading-tight tracking-tight">
           One Legacy. Endless Connections.
         </h1>
         <p class="text-lg text-black leading-relaxed">
@@ -39,19 +39,19 @@
       <!-- Values Section -->
       <div class="grid md:grid-cols-3 gap-12 text-center">
         <div class="p-8 bg-green-90 shadow-2xl rounded-2xl border border-transparent hover:bg-gray-200 transition">
-          <h3 class="text-2xl font-semibold text-black">Faith</h3>
+          <h3 class="text-2xl font-semibold text-green-700">Faith</h3>
           <p class="mt-3 text-black text-sm leading-relaxed">
             Guided by strong values and traditions that inspire purpose and resilience.
           </p>
         </div>
         <div class="p-8 bg-green-90 shadow-2xl rounded-2xl border border-transparent hover:bg-gray-200 transition">
-          <h3 class="text-2xl font-semibold text-black">Excellence</h3>
+          <h3 class="text-2xl font-semibold text-green-700">Excellence</h3>
           <p class="mt-3 text-black text-sm leading-relaxed">
             Striving for distinction in academics, careers, and community leadership.
           </p>
         </div>
         <div class="p-8 bg-green-90 shadow-2xl rounded-2xl border border-transparent hover:bg-gray-200 transition">
-          <h3 class="text-2xl font-semibold text-black">Service</h3>
+          <h3 class="text-2xl font-semibold text-green-700">Service</h3>
           <p class="mt-3 text-black text-sm leading-relaxed">
             Giving back to society through initiatives that uplift and empower others.
           </p>
