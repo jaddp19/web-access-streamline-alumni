@@ -35,38 +35,35 @@
 
             <ul class="flex flex-row items-center gap-x-3 ms-auto">
                 <li class="inline-flex items-center gap-1.5 relative text-yellow-500 pe-3 last:pe-0 last:after:hidden after:absolute after:top-1/2 after:end-0 after:inline-block after:w-px after:h-3.5 after:rounded-full after:-translate-y-1/2 after:rotate-12">
-                    <div class="h-8">
-                        <!-- Account Dropdown -->
-                        <div
-                            class="hs-dropdown inline-flex [--strategy:absolute] [--auto-close:inside] [--placement:bottom-right] relative text-start">
-                            <button id="hs-dnad" type="button"
-                                class="p-0.5 inline-flex shrink-0 items-center gap-x-3 text-start rounded-full hover:bg-yellow-500 focus:outline-hidden focus:bg-yellow-500"
-                                aria-haspopup="menu" aria-expanded="false" aria-label="Dropdown">
-                                <img class="shrink-0 size-7 rounded-full"
-                                    src="https://images.unsplash.com/photo-1659482633369-9fe69af50bfb?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=3&w=320&h=320&q=80"
-                                    alt="Avatar">
-                            </button>
+                    <!-- Account Dropdown -->
+                    <div
+                        class="hs-dropdown inline-flex [--strategy:absolute] [--auto-close:inside] [--placement:bottom-right] relative text-start">
+                        <button id="hs-dnad" type="button"
+                            class="w-12 h-12 flex items-center justify-center text-2xl font-bold text-white bg-green-700 rounded-full hover:bg-yellow-500 focus:outline-hidden focus:bg-yellow-500"
+                            aria-haspopup="menu" aria-expanded="false" aria-label="Dropdown">
+                            {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                        </button>
 
-                            <!-- Account Dropdown -->
-                            <div class="hs-dropdown-menu hs-dropdown-open:opacity-100 w-60 transition-[opacity,margin] duration opacity-0 hidden z-20 bg-green-700 border border-yellow-500 rounded-xl shadow-xl"
-                                role="menu" aria-orientation="vertical" aria-labelledby="hs-dnad">
-                                <div class="py-2 px-3.5">
-                                    <span class="font-extrabold text-white">
-                                        {{ Auth::user()->name }}
-                                    </span>
-                                    <p class="text-sm text-white">
-                                        {{ Auth::user()->email }}
-                                    </p>
-                                </div>
-                                
-                                <div class="p-1 border-t">
-                                    <livewire:auth::logout />
-                                </div>
+
+                        <!-- Account Dropdown -->
+                        <div class="hs-dropdown-menu hs-dropdown-open:opacity-100 w-60 transition-[opacity,margin] duration opacity-0 hidden z-20 bg-green-700 border border-yellow-500 rounded-xl shadow-xl"
+                            role="menu" aria-orientation="vertical" aria-labelledby="hs-dnad">
+                            <div class="py-2 px-3.5">
+                                <span class="font-extrabold text-white">
+                                    {{ Auth::user()->name }}
+                                </span>
+                                <p class="text-sm text-white">
+                                    {{ Auth::user()->email }}
+                                </p>
                             </div>
-                            <!-- End Account Dropdown -->
+                                
+                            <div class="p-1 border-t">
+                                <livewire:auth::logout />
+                            </div>
                         </div>
                         <!-- End Account Dropdown -->
                     </div>
+                    <!-- End Account Dropdown -->
                 </li>
             </ul>
         </div>

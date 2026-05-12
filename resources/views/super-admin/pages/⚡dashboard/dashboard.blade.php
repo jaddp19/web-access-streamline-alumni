@@ -15,7 +15,7 @@
                         </div>
                         <div class="mt-1 flex items-center justify-between">
                             <h3 class="text-xl sm:text-2xl font-medium text-black">
-                                0
+                                {{ $this->users }}
                             </h3>
                         </div>
                     </div>
@@ -49,7 +49,7 @@
                         </div>
                         <div class="mt-1 flex items-center justify-between">
                             <h3 class="text-xl sm:text-2xl font-medium text-black">
-                                0
+                                {{ $this->alumni }}
                             </h3>
                         </div>
                     </div>
@@ -66,7 +66,7 @@
                         </div>
                         <div class="mt-1 flex items-center justify-between">
                             <h3 class="text-xl sm:text-2xl font-medium text-black">
-                                0
+                                {{ $this->programHeads }}
                             </h3>
                         </div>
                     </div>
@@ -87,7 +87,7 @@
                                 Alumni Graduates
                             </h2>
                             <p class="text-base sm:text-xl md:text-2xl font-medium text-black">
-                                300
+                            
                             </p>
                         </div>
                     </div>
