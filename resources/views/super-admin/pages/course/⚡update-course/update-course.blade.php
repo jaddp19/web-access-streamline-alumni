@@ -24,7 +24,7 @@
         </h2>
 
         <!-- Form -->
-        <form wire:submit.prevent='create'>
+        <form wire:submit.prevent='update'>
           <div class="grid gap-4 lg:gap-6">
             
             <!-- User -->
