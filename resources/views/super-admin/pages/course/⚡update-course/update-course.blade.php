@@ -20,7 +20,7 @@
 
         <!-- Title -->
         <h2 class="mb-8 text-xl font-semibold text-black">
-          Assign Program Head
+          Update Course
         </h2>
 
         <!-- Form -->
@@ -49,11 +49,11 @@
               @error('department_id') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
             </div>
 
-            <!-- Create Button -->
+            <!-- Update Button -->
             <div class="mt-6 grid">
               <button type="submit"
                 class="w-50 py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-green-700 text-white hover:bg-green-600 focus:outline-hidden">
-                Assign
+                Update
               </button>
             </div>
           </div>

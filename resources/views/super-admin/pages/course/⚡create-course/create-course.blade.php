@@ -20,7 +20,7 @@
 
         <!-- Title -->
         <h2 class="mb-8 text-xl font-semibold text-black">
-          Assign Program Head
+          Create Course
         </h2>
 
         <!-- Form -->

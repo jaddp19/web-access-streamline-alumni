@@ -14,12 +14,11 @@ return new class extends Migration
         Schema::create('alumni_profiles', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->string('image')->nullable;
             $table->enum('gender', ['male', 'female']);
-            $table->bigInteger('phone_number_1');
-            $table->bigInteger('phone_number_2')->nullable();
-            $table->string('permanent_address');
+            $table->decimal('phone_number_1', 11, 0);
+            $table->decimal('phone_number_2', 11, 0)->nullable();
             $table->string('current_address');
+            $table->string('permanent_address')->nullable();
             $table->timestamps();
         });
     }

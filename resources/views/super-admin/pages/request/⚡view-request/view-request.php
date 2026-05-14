@@ -29,21 +29,14 @@ new #[Layout('layouts::app-super-admin')] class extends Component
             ->latest()
             ->paginate(5);
     }
-        public function accept(int $userId)
+
+    public function accept(int $userId)
     {
         $user = User::findOrFail($userId);
         $user->assignRole('alumni'); // Spatie method
 
-        // fetch the template (example: slug = 'alumni-accepted')
-        $template = Email::where('slug', 'alumni-accepted')->first();
-
-        if ($template) {
-            // send email using Laravel's Mailable
-            Mail::to($user->email)->send(new DynamicEmail($template, $user));
-        }
-            session()->flash('success', "{$user->name} has been assigned as Alumni.");
-        }
-
+    }
+    
     public function decline(int $userId)
     {
         $user = User::findOrFail($userId);

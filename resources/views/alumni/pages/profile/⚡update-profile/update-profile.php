@@ -17,6 +17,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
     public string $name = '';
     public string $email = '';
 
+
     protected function rules()
     {
         return [
@@ -57,12 +58,13 @@ new #[Layout('layouts.app-alumni')] class extends Component
         $this->email = $user->email;
 
         if ($profile) {
-            $this->gender            = $profile->gender;
-            $this->phone_number_1    = $profile->phone_number_1;
-            $this->phone_number_2    = $profile->phone_number_2;
-            $this->permanent_address = $profile->permanent_address;
-            $this->current_address   = $profile->current_address;
+            $this->gender                = $profile->gender;
+            $this->phone_number_1        = $profile->phone_number_1;
+            $this->phone_number_2        = $profile->phone_number_2;
+            $this->permanent_address     = $profile->permanent_address;
+            $this->current_address       = $profile->current_address;
         }
+
     }
 
     public function saveProfile()

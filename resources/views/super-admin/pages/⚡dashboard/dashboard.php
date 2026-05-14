@@ -42,4 +42,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         return ProgramHead::count();
     }
 
+    #[Computed]
+    public function active()
+    {
+        return User::role('alumni')->where('status', 'active')->count();
+    }
+
 };

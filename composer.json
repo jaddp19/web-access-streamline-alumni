@@ -10,7 +10,8 @@
         "laravel/framework": "^13.0",
         "laravel/tinker": "^3.0",
         "livewire/livewire": "^4.2",
-        "spatie/laravel-permission": "^7.3"
+        "spatie/laravel-permission": "^7.3",
+        "woenel/prpcmblmts": "2.x-dev"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
