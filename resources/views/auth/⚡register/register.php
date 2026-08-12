@@ -5,9 +5,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-new class extends Component
+new #[Layout('layouts.auth')] class extends Component
 {
     public string $name = '';
     public string $email = '';
@@ -24,7 +25,7 @@ new class extends Component
             'required',
             'email',
             'unique:users,email,' . Auth::id(),
-            function ($attribute, $value, $fail) 
+            function ($attribute, $value, $fail)
             {
                 // basic format check
                 if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
@@ -54,7 +55,7 @@ new class extends Component
                 // $data = $response->json();
 
                 // // check deliverability using the correct field
-                // if (!isset($data['email_deliverability']['status']) 
+                // if (!isset($data['email_deliverability']['status'])
                 //     || $data['email_deliverability']['status'] !== 'deliverable') {
                 //     $fail('The email address is not deliverable.');
                 // }
@@ -95,7 +96,7 @@ new class extends Component
         ]);
 
         return redirect()->route('pop-up');
-        
+
     }
 
     protected function sanitizeData($data)
