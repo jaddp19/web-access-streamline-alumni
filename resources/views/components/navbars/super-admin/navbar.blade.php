@@ -201,8 +201,9 @@
                             <a class="w-full flex items-center gap-x-2 py-2 px-2.5 text-sm text-black rounded-lg hover:bg-gray-100 focus:outline-hidden"
                                 wire:current="bg-gray-100"
                                 href="{{ route('super-admin.request.view') }}">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#000000" viewBox="0 0 256 256">
-                                    <path d="M216,48H40A16,16,0,0,0,24,64V192a16,16,0,0,0,16,16H96v24a8,8,0,0,0,13.66,5.66l56-56A8,8,0,0,0,160,168V160h56a16,16,0,0,0,16-16V64A16,16,0,0,0,216,48ZM40,64H216V80H128a8,8,0,0,0-8,8v72H40ZM180.69,130.34a8.1,8.1,0,1,1-11.38-11.68l14-13.67a8.1,8.1,0,1,1,11.38,11.68Z"></path>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-inbox-icon lucide-inbox">
+                                    <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/>
+                                    <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
                                 </svg>
                                 Application Requests
                             </a>

@@ -100,6 +100,6 @@ new #[Layout('layouts::app-super-admin')] class extends Component
     public function programs()
     {
         
-        return DegreeProgram::with('department:id,department_name')->select('id', 'program_name', 'department_id', 'created_at')->latest()->paginate(10);
+        return DegreeProgram::with('department:id,department_name')->select('id', 'program_name', 'department_id', 'created_at')->latest()->paginate(5);
     }
 };

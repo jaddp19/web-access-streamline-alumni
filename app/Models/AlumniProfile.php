@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Woenel\Prpcmblmts\Models\PhilippineBarangay;
 
 class AlumniProfile extends Model
 {
@@ -18,8 +19,8 @@ class AlumniProfile extends Model
         'gender',
         'phone_number_1',
         'phone_number_2',
-        'permanent_address',
-        'current_address'
+        'current_address',
+        'permanent_address'
     ];
 
     public function educationalBackground(): HasOne
@@ -36,4 +37,5 @@ class AlumniProfile extends Model
     {
         return $this->belongsTo(User::class, "user_id", "id");
     }
+
 }

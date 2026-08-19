@@ -27,7 +27,7 @@
             <img src="https://tse2.mm.bing.net/th/id/OIP.D0DJ0ePPxNcvYOeq6q9esQAAAA?pid=Api&P=0&h=180"
                 alt="School Logo"
                 class="w-12 h-12 rounded-md border-2 border-transparent shadow-sm">
-            <span class="text-xl font-bold text-white tracking-wide hover:text-yellow-400 transition-colors">
+            <span class="text-xs sm:text-lg font-bold text-white tracking-wide hover:text-yellow-400 transition-colors">
                 Colegio de Sta. Ana de Victorias
             </span>
             </a>
