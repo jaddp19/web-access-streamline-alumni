@@ -8,6 +8,7 @@ Route::livewire('/', 'public::pages.index')->name('home');
 Route::livewire('/about', 'public::pages.about-page')->name('about');
 Route::livewire('/contact', 'public::pages.contact-page')->name('contact');
 Route::livewire('/departments', 'public::pages.department-page')->name('departments');
+Route::livewire('/verification', 'public::pages.verification-page')->name('verification.pending');
 
 Route::livewire('/login', 'auth::login')->name('login');
 Route::livewire('/register', 'auth::register')->name('register');
@@ -48,6 +49,8 @@ Route::middleware(['auth', 'role:super-admin'])->prefix('super-admin')->group(fu
     Route::livewire('/email/view', 'super-admin::pages.email.view-email')->name('super-admin.email.view');
     Route::livewire('/email/create', 'super-admin::pages.email.create-email')->name('super-admin.email.create');
     Route::livewire('/email/update/{email}', 'super-admin::pages.email.update-email')->name('super-admin.email.update');
+
+    Route::livewire('/verification-queue', 'super-admin::verification.verification-queue')->name('super-admin.verification-queue');
 
 });
 

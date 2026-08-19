@@ -17,6 +17,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+
+        $this->call([
+            RoleSeeder::class,
+        ]);
          // Create roles if not already seeded
             $superAdminRole = Role::firstOrCreate(['name' => 'super-admin']);
             $adminRole = Role::firstOrCreate(['name' => 'admin']);
@@ -52,6 +56,6 @@ class DatabaseSeeder extends Seeder
             );
             $alumni->assignRole($alumniRole);
 
-            
+
         }
 }

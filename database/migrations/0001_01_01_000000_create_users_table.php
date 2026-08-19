@@ -16,6 +16,14 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->enum('status', ['active', 'inactive'])->default('active');
+
+            // Alumni verification fields
+            $table->enum('verification_status', ['pending', 'verified', 'rejected'])->default('pending');
+            $table->string('verification_document')->nullable();
+            $table->json('ai_extracted_data')->nullable();
+            $table->unsignedTinyInteger('ai_confidence')->nullable();
+            $table->text('rejection_reason')->nullable();
+
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();

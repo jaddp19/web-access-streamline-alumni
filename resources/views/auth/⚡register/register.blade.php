@@ -180,6 +180,123 @@
           @enderror
         </div>
 
+        <!-- Gender -->
+        <div>
+          <label class="block text-sm font-semibold text-[#123524] mb-2">Gender</label>
+          <div class="flex gap-6">
+            <label class="flex items-center gap-2 text-sm text-[#123524]/80 cursor-pointer">
+              <input type="radio" wire:model="gender" value="male" class="text-[#123524] focus:ring-[#D4A537]">
+              Male
+            </label>
+            <label class="flex items-center gap-2 text-sm text-[#123524]/80 cursor-pointer">
+              <input type="radio" wire:model="gender" value="female" class="text-[#123524] focus:ring-[#D4A537]">
+              Female
+            </label>
+          </div>
+          @error('gender')
+            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+          @enderror
+        </div>
+
+        <!-- Phone Numbers -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label for="phone_number_1" class="block text-sm font-semibold text-[#123524] mb-2">Phone Number</label>
+            <input wire:model.defer="phone_number_1" type="text" id="phone_number_1" placeholder="09171234567"
+              class="w-full px-4 py-3 rounded-xl border border-[#123524]/15 text-[#123524] placeholder-[#123524]/30 focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
+            @error('phone_number_1')
+              <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+            @enderror
+          </div>
+          <div>
+            <label for="phone_number_2" class="block text-sm font-semibold text-[#123524] mb-2">Alt. Number</label>
+            <input wire:model.defer="phone_number_2" type="text" id="phone_number_2" placeholder="Optional"
+              class="w-full px-4 py-3 rounded-xl border border-[#123524]/15 text-[#123524] placeholder-[#123524]/30 focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
+            @error('phone_number_2')
+              <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+            @enderror
+          </div>
+        </div>
+
+        <!-- Permanent Address -->
+        <div>
+          <label for="permanent_address" class="block text-sm font-semibold text-[#123524] mb-2">Permanent Address</label>
+          <input wire:model.defer="permanent_address" type="text" id="permanent_address" placeholder="Street, Barangay, City, Province"
+            class="w-full px-4 py-3 rounded-xl border border-[#123524]/15 text-[#123524] placeholder-[#123524]/30 focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
+          @error('permanent_address')
+            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+          @enderror
+        </div>
+
+        <!-- Current Address -->
+        <div>
+          <label for="current_address" class="block text-sm font-semibold text-[#123524] mb-2">Current Address</label>
+          <input wire:model.defer="current_address" type="text" id="current_address" placeholder="Street, Barangay, City, Province"
+            class="w-full px-4 py-3 rounded-xl border border-[#123524]/15 text-[#123524] placeholder-[#123524]/30 focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
+          @error('current_address')
+            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+          @enderror
+        </div>
+
+        <!-- Degree Program -->
+        <div>
+          <label for="degree_program_id" class="block text-sm font-semibold text-[#123524] mb-2">Degree Program</label>
+          <select wire:model.defer="degree_program_id" id="degree_program_id"
+            class="w-full px-4 py-3 rounded-xl border border-[#123524]/15 text-[#123524] focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
+            <option value="">Select your program</option>
+            @foreach ($degreePrograms as $program)
+              <option value="{{ $program->id }}">{{ $program->program_name }}</option>
+            @endforeach
+          </select>
+          @error('degree_program_id')
+            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+          @enderror
+        </div>
+
+        <!-- Graduation Batch -->
+        <div>
+          <label for="batch_id" class="block text-sm font-semibold text-[#123524] mb-2">Graduation Batch</label>
+          <select wire:model.defer="batch_id" id="batch_id"
+            class="w-full px-4 py-3 rounded-xl border border-[#123524]/15 text-[#123524] focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
+            <option value="">Select your batch year</option>
+            @foreach ($batches as $batch)
+              <option value="{{ $batch->id }}">{{ $batch->batch_year }}</option>
+            @endforeach
+          </select>
+          @error('batch_id')
+            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+          @enderror
+        </div>
+
+        <!-- Proof of Alumni Status -->
+        <div>
+          <label for="proof_document" class="block text-sm font-semibold text-[#123524] mb-2">
+            Proof of Alumni Status
+          </label>
+          <p class="text-xs text-[#123524]/50 mb-2">Upload a photo of your school ID, diploma, or yearbook page.</p>
+
+          <label for="proof_document"
+            class="flex flex-col items-center justify-center w-full px-4 py-6 rounded-xl border-2 border-dashed border-[#123524]/20 hover:border-[#D4A537]/60 cursor-pointer transition text-center">
+            <svg class="w-6 h-6 text-[#123524]/40 mb-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l-3.75 3.75M12 9.75l3.75 3.75M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+            </svg>
+            <span class="text-sm text-[#123524]/60">
+              @if ($proof_document)
+                {{ $proof_document->getClientOriginalName() }}
+              @else
+                Click to upload an image
+              @endif
+            </span>
+            <input wire:model="proof_document" type="file" id="proof_document" accept="image/*" class="hidden">
+          </label>
+
+          <div wire:loading wire:target="proof_document" class="text-xs text-[#123524]/50 mt-1">Uploading...</div>
+
+          @error('proof_document')
+            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+          @enderror
+        </div>
+
         <!-- Terms -->
         <label class="flex items-start gap-2.5 text-sm text-[#123524]/70 cursor-pointer">
           <input type="checkbox" required class="mt-0.5 rounded border-[#123524]/30 text-[#123524] focus:ring-[#D4A537]">

@@ -8,7 +8,7 @@
         w-60
         hidden
         fixed inset-y-0 z-60 start-0
-        bg-green-100 
+        bg-green-100
         lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
         role="dialog" tabindex="-1" aria-label="Sidebar">
         <div class="lg:pt-15 relative flex flex-col h-full max-h-full">
@@ -45,7 +45,7 @@
                 </button>
 
 
-                <div 
+                <div
                     class="pt-3 mt-3 flex flex-col border-t border-green-700 first:border-t-0 first:pt-0 first:mt-0">
                     <span class="block ps-2.5 mb-2 font-extrabold text-xs uppercase text-green-700">
                         Home
@@ -186,7 +186,7 @@
                         </li>
                     </ul>
                     <!-- End List -->
-                    
+
                 </div>
 
                 <div
@@ -217,11 +217,22 @@
                                 Email Templates
                             </a>
                         </li>
+
+                        <li>
+                            <a class="w-full flex items-center gap-x-2 py-2 px-2.5 text-sm text-black rounded-lg hover:bg-gray-100 focus:outline-hidden"
+                                wire:current="bg-gray-100"
+                                href="{{ route('super-admin.verification-queue') }}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#000000" viewBox="0 0 256 256">
+                                    <path d="M224,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H96v24a8,8,0,0,0,13.66,5.66l56-56A8,8,0,0,0,160,168V160h56a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48ZM40,64H216V80H128a8,8,0,0,0-8,8v72H40ZM180.69,130.34a8.1,8.1,0,1,1-11.38-11.68l14-13.67a8.1,8.1,0,1,1,11.38,11.68Z"></path>
+                                </svg>
+                                Verification Queue
+                            </a>
+                        </li>
                     </ul>
                     <!-- End List -->
 
                 </div>
-                
+
             </nav>
             <!-- End Body -->
         </div>
