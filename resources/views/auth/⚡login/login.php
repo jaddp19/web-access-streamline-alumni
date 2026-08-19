@@ -3,9 +3,10 @@
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-new class extends Component
+new #[Layout('layouts.auth')] class extends Component
 {
     public string $email = '';
     public string $password = '';
@@ -64,7 +65,7 @@ new class extends Component
             if ($user->hasRole('super-admin')) {
                 return redirect()->route('super-admin.dashboard');
             }
-            
+
             if ($user->roles->isEmpty()) {
             abort(403, 'Unauthorized: Not Found.');
             }
@@ -73,7 +74,7 @@ new class extends Component
         }
 
         $this->addError('auth', 'Login failed.');
-        
+
         return $this->reset('email', 'password');
     }
 

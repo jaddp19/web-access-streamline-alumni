@@ -14,7 +14,6 @@ class EducationalBackground extends Model
         'alumni_profile_id',
         'degree_program_id',
         'batch_id',
-        'graduation_year'
     ];
 
     public function alumniProfile(): BelongsTo
