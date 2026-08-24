@@ -3,8 +3,9 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use App\Models\AlumniProfile;
 use App\Models\Post;
+use App\Models\UserProfile;
+use App\Models\WorkHistory;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -15,15 +16,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable([
-    'name',
-    'email',
-    'password',
-    'status',
-    'school_id',
-    'verification_status',
-    'rejection_reason',
-])]
+#[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -41,11 +34,16 @@ class User extends Authenticatable
 
     public function posts(): HasMany
     {
-        return $this->hasMany(Post::class, "user_id", "id");
+        return $this->hasMany(Post::class, 'user_id', 'id');
     }
 
-    public function alumniProfile(): HasOne
+    public function profile(): HasOne
     {
-        return $this->hasOne(AlumniProfile::class, "user_id", "id");
+        return $this->hasOne(UserProfile::class, 'user_id', 'id');
+    }
+
+    public function workHistories(): HasMany
+    {
+        return $this->hasMany(WorkHistory::class, 'user_id', 'id');
     }
 }

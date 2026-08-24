@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\AlumniProfile;
+// TODO: AlumniProfile model was removed. Reimplement against UserProfile + WorkHistory.
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -52,18 +52,15 @@ new #[Layout('layouts.app-alumni')] class extends Component
     public function mount()
     {
         $user = Auth::user();
-        $profile = AlumniProfile::where('user_id', $user->id)->first();
+        // TODO: AlumniProfile model was removed. Reimplement against UserProfile.
+        $profile = null;
 
         $this->name      = $user->name;
         $this->email     = $user->email;
         $this->school_id = $user->school_id;
 
         if ($profile) {
-            $this->gender                = $profile->gender;
-            $this->phone_number_1        = $profile->phone_number_1;
-            $this->phone_number_2        = $profile->phone_number_2;
-            $this->permanent_address     = $profile->permanent_address;
-            $this->current_address       = $profile->current_address;
+            // TODO: $profile fields (gender, phone_number_*, addresses) belong to UserProfile now.
         }
     }
 
@@ -93,16 +90,17 @@ new #[Layout('layouts.app-alumni')] class extends Component
             'email' => $validated['email'],
         ]);
 
-        AlumniProfile::updateOrCreate(
-            ['user_id' => $user->id],
-            [
-                'gender'            => $validated['gender'],
-                'phone_number_1'    => $validated['phone_number_1'],
-                'phone_number_2'    => $validated['phone_number_2'],
-                'permanent_address' => $validated['permanent_address'],
-                'current_address'   => $validated['current_address'],
-            ]
-        );
+        // TODO: AlumniProfile model was removed. Save these fields against UserProfile instead.
+        // AlumniProfile::updateOrCreate(
+        //     ['user_id' => $user->id],
+        //     [
+        //         'gender'            => $validated['gender'],
+        //         'phone_number_1'    => $validated['phone_number_1'],
+        //         'phone_number_2'    => $validated['phone_number_2'],
+        //         'permanent_address' => $validated['permanent_address'],
+        //         'current_address'   => $validated['current_address'],
+        //     ]
+        // );
 
         session()->flash('success', 'Profile updated successfully.');
         return redirect()->route('alumni.profile');

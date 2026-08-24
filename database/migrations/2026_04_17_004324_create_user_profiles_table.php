@@ -11,14 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('alumni_profiles', function (Blueprint $table) {
+        Schema::create('user_profiles', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->enum('gender', ['male', 'female']);
-            $table->decimal('phone_number_1', 11, 0);
-            $table->decimal('phone_number_2', 11, 0)->nullable();
-            $table->string('current_address');
-            $table->string('permanent_address')->nullable();
+            $table->string('avatar');
+            $table->json('location');
+            $table->foreignId('batch_id')->constrained('batches')->cascadeOnDelete();
+            $table->boolean('is_private');
+            $table->string('board_taken')->nullable();
+            $table->string('board_rate')->nullable();
+            $table->boolean('is_verified');
             $table->timestamps();
         });
     }
@@ -28,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('alumni_profiles');
+        Schema::dropIfExists('user_profiles');
     }
 };

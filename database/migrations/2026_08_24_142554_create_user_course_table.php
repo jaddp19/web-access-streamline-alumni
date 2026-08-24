@@ -11,9 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('batches', function (Blueprint $table) {
+        Schema::create('user_course', function (Blueprint $table) {
             $table->id();
-            $table->integer('batch_year');
+            $table->foreignId('course_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_profile_id')->constrained('user_profiles')->cascadeOnDelete();
             $table->timestamps();
         });
     }
@@ -23,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('batches');
+        Schema::dropIfExists('user_course');
     }
 };

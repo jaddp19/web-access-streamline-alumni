@@ -3,19 +3,13 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\Email;
-use Illuminate\Support\Str;
+// TODO: Email model was removed. Re-implement email template storage
+// (e.g. as a JSON file, a config file, or a new table) and seed it here.
 
 class EmailSeeder extends Seeder
 {
     public function run(): void
     {
-        Email::updateOrCreate(
-            ['slug' => 'alumni-accepted'],
-            [
-                'subject' => 'Alumni Application Accepted',
-                'message' => "Dear {{name}},\n\nCongratulations! Your alumni application in Colegio de Sta. Ana de Victorias has been accepted. You are now officially part of our alumni community.\n\nBest regards,\nAlumni Management Team - Colegio de Sta. Ana de Victorias",
-            ]
-        );
+        // No-op until email template storage is reintroduced.
     }
 }

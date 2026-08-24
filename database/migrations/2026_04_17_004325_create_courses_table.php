@@ -11,10 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('degree_programs', function (Blueprint $table) {
+        Schema::create('courses', function (Blueprint $table) {
             $table->id();
-            $table->string('program_name');
+            $table->string('course_title');
+            $table->string('course_slug');
+            $table->string('course_desc');
+            $table->boolean('is_active');
             $table->foreignId('department_id')->constrained('departments')->cascadeOnDelete();
+            $table->enum('course_type', ['board','non-board']);
             $table->timestamps();
         });
     }
@@ -24,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('degree_programs');
+        Schema::dropIfExists('courses');
     }
 };

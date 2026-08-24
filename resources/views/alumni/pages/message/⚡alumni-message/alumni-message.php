@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\Post;
-use App\Models\PostComment;
+// TODO: PostComment model was removed. Reimplement as a relationship on Post (or a new model).
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
@@ -83,22 +83,23 @@ new #[Layout('layouts.app-alumni')] class extends Component
             return;
         }
 
-        PostComment::create([
-            'post_id' => $post->id,
-            'user_id' => Auth::id(),
-            'body'    => Str::of($body)->stripTags()->trim()->toString(),
-        ]);
+        // TODO: PostComment model was removed. Rebuild against the new comments schema.
+        // PostComment::create([
+        //     'post_id' => $post->id,
+        //     'user_id' => Auth::id(),
+        //     'body'    => Str::of($body)->stripTags()->trim()->toString(),
+        // ]);
 
         $this->commentDrafts[$postId] = '';
     }
 
     public function deleteComment($commentId)
     {
-        $comment = PostComment::find($commentId);
-
-        if ($comment && $comment->user_id === Auth::id()) {
-            $comment->delete();
-        }
+        // TODO: PostComment model was removed. Rebuild against the new comments schema.
+        // $comment = PostComment::find($commentId);
+        // if ($comment && $comment->user_id === Auth::id()) {
+        //     $comment->delete();
+        // }
     }
 
     protected function sanitizeData($data)

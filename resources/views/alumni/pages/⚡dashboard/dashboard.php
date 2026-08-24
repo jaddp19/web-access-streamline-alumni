@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\AlumniProfile;
-use App\Models\EducationalBackground;
+// TODO: AlumniProfile model was removed. Reimplement against UserProfile + WorkHistory.
+// TODO: EducationalBackground model was removed. Reimplement against UserProfile + WorkHistory.
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -18,35 +18,26 @@ new #[Layout('layouts.app-alumni')] class extends Component
     #[Computed]
     public function alumniProfile()
     {
-        return AlumniProfile::where('user_id', $this->alumni->id)->first();
+        // TODO: AlumniProfile model was removed. Reimplement against UserProfile.
+        return null;
     }
 
     #[Computed]
     public function educationalBackground()
     {
-        if (! $this->alumniProfile) {
-            return null;
-        }
-
-        return EducationalBackground::where('alumni_profile_id', $this->alumniProfile->id)->first();
+        // TODO: EducationalBackground model was removed. Reimplement against UserProfile + WorkHistory.
+        return null;
     }
 
     #[Computed]
     public function profileCompletion()
     {
-        $steps = [
-            'personal_info' => (bool) $this->alumniProfile,
-            'education'     => (bool) $this->educationalBackground,
-        ];
-
-        $completed = count(array_filter($steps));
-        $total     = count($steps);
-
+        // TODO: rebuild against new schema (UserProfile + WorkHistory)
         return [
-            'steps'     => $steps,
-            'completed' => $completed,
-            'total'     => $total,
-            'percent'   => $total > 0 ? round(($completed / $total) * 100) : 0,
+            'steps'     => [],
+            'completed' => 0,
+            'total'     => 0,
+            'percent'   => 0,
         ];
     }
 };
