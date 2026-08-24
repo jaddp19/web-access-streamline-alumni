@@ -2,18 +2,26 @@
 
 namespace App\Models;
 
-use App\Models\DegreeProgram;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Department extends Model
 {
     protected $fillable = [
-        'department_name'
+        'dept_name',
+        'dept_slug',
+        'dept_code',
+        'dept_logo',
+        'dept_desc',
+        'is_active',
     ];
 
-    public function degreePrograms(): HasMany
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
+
+    public function courses(): HasMany
     {
-        return $this->hasMany(DegreeProgram::class, "department_id", "id");
+        return $this->hasMany(Course::class, 'department_id', 'id');
     }
 }

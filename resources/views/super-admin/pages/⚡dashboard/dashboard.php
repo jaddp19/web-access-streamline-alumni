@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\AlumniProfile;
-use App\Models\ProgramHead;
+// TODO: AlumniProfile model was removed. Reimplement against UserProfile + WorkHistory.
+// TODO: ProgramHead model was removed. Reimplement as a pivot/relation on User.
 use App\Models\User;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -13,14 +13,8 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function mount()
     {
-        $this->alumniByDept = AlumniProfile::query()
-            ->join('educational_backgrounds', 'alumni_profiles.id', '=', 'educational_backgrounds.alumni_profile_id')
-            ->join('degree_programs', 'educational_backgrounds.degree_program_id', '=', 'degree_programs.id')
-            ->join('departments', 'degree_programs.department_id', '=', 'departments.id')
-            ->selectRaw('departments.department_name as dept, COUNT(alumni_profiles.id) as total')
-            ->groupBy('departments.department_name')
-            ->pluck('total', 'dept')
-            ->toArray();
+        // TODO: AlumniProfile + educational_backgrounds + degree_programs are gone. Rebuild against the new schema.
+        $this->alumniByDept = [];
     }
 
 
@@ -33,13 +27,15 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     #[Computed]
     public function alumni()
     {
-        return AlumniProfile::count();
+        // TODO: AlumniProfile model was removed. Replace with User::role('alumni')->count() or similar.
+        return 0;
     }
 
     #[Computed]
     public function programHeads()
     {
-        return ProgramHead::count();
+        // TODO: ProgramHead model was removed. Rebuild against the new schema.
+        return 0;
     }
 
     #[Computed]
