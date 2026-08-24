@@ -45,6 +45,14 @@ new #[Layout('layouts.auth')] class extends Component
             return;
         }
 
+        // Block pending accounts before they're allowed to authenticate.
+        // Verification is decided solely by the registrar (super-admin);
+        // login itself should not route them anywhere else.
+        if ($user->hasRole('pending-verification')) {
+            $this->addError('email', 'Your account is still pending registrar approval. Please wait for verification before logging in.');
+            return;
+        }
+
         // Attempt login
         if (Auth::attempt(
             ['email' => $this->email, 'password' => $this->password],
@@ -67,7 +75,7 @@ new #[Layout('layouts.auth')] class extends Component
             }
 
             if ($user->roles->isEmpty()) {
-            abort(403, 'Unauthorized: Not Found.');
+                abort(403, 'Unauthorized: Not Found.');
             }
 
             return redirect()->route('login');
@@ -77,6 +85,4 @@ new #[Layout('layouts.auth')] class extends Component
 
         return $this->reset('email', 'password');
     }
-
 };
-

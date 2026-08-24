@@ -1,4 +1,4 @@
-<div>
+<div class="select-none">
     <!-- ========== FOOTER ========== -->
     <footer class="w-full bg-[#123524] mt-auto relative">
 

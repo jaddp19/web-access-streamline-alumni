@@ -1,16 +1,5 @@
 <!-- ========== HEADER ========== -->
-<header class="w-full bg-green-800 dark:bg-green-900 shadow-md">
-  <nav class="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
-    <!-- Logo -->
-    <a href="/" class="flex items-center gap-x-3">
-      <img src="https://tse2.mm.bing.net/th/id/OIP.D0DJ0ePPxNcvYOeq6q9esQAAAA?pid=Api&P=0&h=180"
-           alt="School Logo"
-           class="w-12 h-12 rounded-md border-2 border-transparent shadow-sm">
-      <span class="text-xs sm:text-lg text-xl font-bold text-white tracking-wide hover:text-yellow-400 transition-colors">
-        Colegio de Sta. Ana de Victorias
-      </span>
-    </a>
-    <!-- End Logo -->
+<header class="w-full bg-green-800 dark:bg-green-900 shadow-md select-none">
 
     <nav class="max-w-7xl mx-auto flex items-center justify-between px-6 py-3.5">
         <!-- Logo -->

@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\User;
-use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -11,7 +10,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     use WithPagination;
 
     public string $search = '';
-    public ?int $viewingUserId = null;
     public string $rejectReasonInput = '';
     public ?int $rejectingUserId = null;
 
@@ -54,25 +52,13 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         $user->update([
             'verification_status' => 'rejected',
-            'rejection_reason' => $this->rejectReasonInput ?: 'Documents could not be verified.',
+            'rejection_reason' => $this->rejectReasonInput ?: 'Could not be verified against school records.',
         ]);
         $user->syncRoles([]);
 
         session()->flash('status', "{$user->name}'s application was rejected.");
 
         $this->closeRejectModal();
-    }
-
-    public function documentUrl(User $user): ?string
-    {
-        if (! $user->verification_document) {
-            return null;
-        }
-
-        return Storage::disk('private')->temporaryUrl(
-            $user->verification_document,
-            now()->addMinutes(10)
-        );
     }
 
     public function with(): array
@@ -82,9 +68,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                 ->whereDoesntHave('roles', function ($q) {
                     $q->whereIn('name', ['admin', 'super-admin']);
                 })
-                ->when($this->search, fn ($q) => $q->where(function ($q) {
+                ->when($this->search, fn($q) => $q->where(function ($q) {
                     $q->where('name', 'like', "%{$this->search}%")
-                      ->orWhere('email', 'like', "%{$this->search}%");
+                        ->orWhere('email', 'like', "%{$this->search}%")
+                        ->orWhere('school_id', 'like', "%{$this->search}%");
                 }))
                 ->latest()
                 ->paginate(8),

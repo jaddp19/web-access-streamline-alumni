@@ -35,7 +35,6 @@
                         Alumni Community
                         <span class="block mt-2 relative inline-block">
                             <span class="relative z-10 text-[#123524]">& Lifelong Connections</span>
-                            <span class="absolute left-0 bottom-1 w-full h-2 bg-[#D4A537]/30 -z-0"></span>
                         </span>
                     </h1>
 

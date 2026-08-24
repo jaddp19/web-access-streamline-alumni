@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('alumni_profile_id')->constrained('alumni_profiles')->cascadeOnDelete();
             $table->foreignId('degree_program_id')->constrained('degree_programs')->cascadeOnDelete();
             $table->foreignId('batch_id')->constrained('batches')->cascadeOnDelete();
+            $table->boolean('is_public')->default(true);
             $table->timestamps();
         });
     }
