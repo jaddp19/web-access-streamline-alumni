@@ -2,18 +2,21 @@
 
 namespace App\Models;
 
-use App\Models\EducationalBackground;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Batch extends Model
 {
     protected $fillable = [
-        'batch_year'
+        'batch_name',
     ];
 
-    public function educationBackgrounds(): HasMany
+    protected $casts = [
+        'batch_name' => 'integer',
+    ];
+
+    public function userProfiles(): HasMany
     {
-        return $this->hasMany(EducationalBackground::class, "batch_id", "id");
+        return $this->hasMany(UserProfile::class, 'batch_id', 'id');
     }
 }

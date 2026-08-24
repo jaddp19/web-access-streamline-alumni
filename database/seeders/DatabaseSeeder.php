@@ -31,7 +31,6 @@ class DatabaseSeeder extends Seeder
             ['email' => 'super-admin@example.com'],
             [
                 'name' => 'Super Admin User',
-                'school_id' => 'c1992-0001',
                 'password' => Hash::make('password123'),
             ]
         );
@@ -42,7 +41,6 @@ class DatabaseSeeder extends Seeder
             ['email' => 'admin@example.com'],
             [
                 'name' => 'Admin User',
-                'school_id' => 'c1992-0002',
                 'password' => Hash::make('password123'),
             ]
         );
@@ -53,7 +51,6 @@ class DatabaseSeeder extends Seeder
             ['email' => 'alumni@example.com'],
             [
                 'name' => 'Alumni User',
-                'school_id' => 'c1992-0003',
                 'password' => Hash::make('password123'),
             ]
         );
