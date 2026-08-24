@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
 
 <head>
     <meta charset="utf-8">
@@ -21,8 +21,10 @@
 
 <body>
     @include('components.headers.public.header')
-        <main class="bg-gradient-to-br from-white to-green-100 min-h-screen">
+        <main class="bg-gradient-to-br from-white to-green-100 min-h-screen bg-white dark:bg-black">
+            <div class="select-none">
             {{ $slot }}
+            </div>
         </main>
     @include('components.footers.public.footer')
     @livewireScripts

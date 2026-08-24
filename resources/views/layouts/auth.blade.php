@@ -24,7 +24,7 @@
     <main>
         <div>
             <!-- Body -->
-            <div>
+            <div class="select-none">
                 {{ $slot }}
             </div>
             <!-- End Body -->

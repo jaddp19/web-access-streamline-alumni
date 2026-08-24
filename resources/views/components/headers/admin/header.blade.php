@@ -4,7 +4,7 @@
     <nav class="px-4 sm:px-5.5 flex basis-full items-center w-full mx-auto">
         <div class="w-full flex items-center gap-x-1.5">
             <ul class="flex items-center gap-1.5">
-                <li class="inline-flex items-center relative text-yellow-400 pe-1.5 last:pe-0 last:after:hidden after:absolute after:top-1/2 after:end-0 after:inline-block after:w-px after:h-3.5 after:bg-gray-300 after:rounded-full after:-translate-y-1/2 after:rotate-12 dark:after:bg-neutral-700">          
+                <li class="inline-flex items-center relative text-yellow-400 pe-1.5 last:pe-0 last:after:hidden after:absolute after:top-1/2 after:end-0 after:inline-block after:w-px after:h-3.5 after:bg-gray-300 after:rounded-full after:-translate-y-1/2 after:rotate-12">          
                     <!-- Sidebar Toggle -->
                     <button type="button"
                         class="p-1.5 size-7.5 inline-flex items-center gap-x-1 text-xs rounded-md border border-transparent text-white hover:text-gray-200 disabled:opacity-50 disabled:pointer-events-none focus:outline-hidden"

@@ -15,19 +15,22 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'email', 'password', 'status'])]
+#[Fillable([
+    'name',
+    'email',
+    'password',
+    'status',
+    'school_id',
+    'verification_status',
+    'rejection_reason',
+])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
-    use HasRoles; 
+    use HasRoles;
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -35,6 +38,7 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
     public function posts(): HasMany
     {
         return $this->hasMany(Post::class, "user_id", "id");

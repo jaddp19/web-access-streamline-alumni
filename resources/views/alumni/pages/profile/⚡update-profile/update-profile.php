@@ -16,7 +16,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
     public string $current_address = '';
     public string $name = '';
     public string $email = '';
-
+    public string $school_id = '';
 
     protected function rules()
     {
@@ -54,8 +54,9 @@ new #[Layout('layouts.app-alumni')] class extends Component
         $user = Auth::user();
         $profile = AlumniProfile::where('user_id', $user->id)->first();
 
-        $this->name  = $user->name;
-        $this->email = $user->email;
+        $this->name      = $user->name;
+        $this->email     = $user->email;
+        $this->school_id = $user->school_id;
 
         if ($profile) {
             $this->gender                = $profile->gender;
@@ -64,7 +65,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
             $this->permanent_address     = $profile->permanent_address;
             $this->current_address       = $profile->current_address;
         }
-
     }
 
     public function saveProfile()
@@ -114,5 +114,4 @@ new #[Layout('layouts.app-alumni')] class extends Component
             ? Str::of($data)->stripTags()->trim()->toString()
             : $data;
     }
-
 };

@@ -21,41 +21,42 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RoleSeeder::class,
         ]);
-         // Create roles if not already seeded
-            $superAdminRole = Role::firstOrCreate(['name' => 'super-admin']);
-            $adminRole = Role::firstOrCreate(['name' => 'admin']);
-            $alumniRole = Role::firstOrCreate(['name' => 'alumni']);
+        // Create roles if not already seeded
+        $superAdminRole = Role::firstOrCreate(['name' => 'super-admin']);
+        $adminRole = Role::firstOrCreate(['name' => 'admin']);
+        $alumniRole = Role::firstOrCreate(['name' => 'alumni']);
 
-            // Admin account
-            $superAdmin = User::firstOrCreate(
-                ['email' => 'super-admin@example.com'],
-                [
-                    'name' => 'Super Admin User',
-                    'password' => Hash::make('password123'),
-                ]
-            );
-            $superAdmin->assignRole($superAdminRole);
+        // Admin account
+        $superAdmin = User::firstOrCreate(
+            ['email' => 'super-admin@example.com'],
+            [
+                'name' => 'Super Admin User',
+                'school_id' => 'c1992-0001',
+                'password' => Hash::make('password123'),
+            ]
+        );
+        $superAdmin->assignRole($superAdminRole);
 
-            // Admin account
-            $admin = User::firstOrCreate(
-                ['email' => 'admin@example.com'],
-                [
-                    'name' => 'Admin User',
-                    'password' => Hash::make('password123'),
-                ]
-            );
-            $admin->assignRole($adminRole);
+        // Admin account
+        $admin = User::firstOrCreate(
+            ['email' => 'admin@example.com'],
+            [
+                'name' => 'Admin User',
+                'school_id' => 'c1992-0002',
+                'password' => Hash::make('password123'),
+            ]
+        );
+        $admin->assignRole($adminRole);
 
-            // Alumni account
-            $alumni = User::firstOrCreate(
-                ['email' => 'alumni@example.com'],
-                [
-                    'name' => 'Alumni User',
-                    'password' => Hash::make('password123'),
-                ]
-            );
-            $alumni->assignRole($alumniRole);
-
-
-        }
+        // Alumni account
+        $alumni = User::firstOrCreate(
+            ['email' => 'alumni@example.com'],
+            [
+                'name' => 'Alumni User',
+                'school_id' => 'c1992-0003',
+                'password' => Hash::make('password123'),
+            ]
+        );
+        $alumni->assignRole($alumniRole);
+    }
 }

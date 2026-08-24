@@ -8,13 +8,13 @@ Route::livewire('/', 'public::pages.index')->name('home');
 Route::livewire('/about', 'public::pages.about-page')->name('about');
 Route::livewire('/contact', 'public::pages.contact-page')->name('contact');
 Route::livewire('/departments', 'public::pages.department-page')->name('departments');
-Route::livewire('/verification', 'public::pages.verification-page')->name('verification.pending');
+Route::livewire('/verification', 'public::verification.verification-pending')->name('verification.pending');
 
 Route::livewire('/login', 'auth::login')->name('login');
 Route::livewire('/register', 'auth::register')->name('register');
 Route::livewire('/pop-up', 'auth::pop-up')->name('pop-up');
 
-Route::middleware(['auth', 'role:super-admin'])->prefix('super-admin')->group(function(){
+Route::middleware(['auth', 'role:super-admin'])->prefix('super-admin')->group(function () {
     Route::livewire('/dashboard', 'super-admin::pages.dashboard')->name('super-admin.dashboard');
 
     Route::livewire('/roles/view', 'super-admin::pages.role.view-role')->name('view-role');
@@ -51,10 +51,9 @@ Route::middleware(['auth', 'role:super-admin'])->prefix('super-admin')->group(fu
     Route::livewire('/email/update/{email}', 'super-admin::pages.email.update-email')->name('super-admin.email.update');
 
     Route::livewire('/verification-queue', 'super-admin::verification.verification-queue')->name('super-admin.verification-queue');
-
 });
 
-Route::middleware(['auth', 'role:admin|super-admin'])->prefix('admin')->group(function(){
+Route::middleware(['auth', 'role:admin|super-admin'])->prefix('admin')->group(function () {
     Route::livewire('/dashboard', 'admin::pages.dashboard')->name('admin.dashboard');
 
     Route::livewire('/alumni/view', 'admin::pages.alumni.view-alumni')->name('admin.alumni.view');
@@ -62,13 +61,16 @@ Route::middleware(['auth', 'role:admin|super-admin'])->prefix('admin')->group(fu
     Route::livewire('/alumni/update/{user}', 'admin::pages.alumni.update-alumni')->name('admin.alumni.update');
 });
 
-Route::middleware(['auth', 'role:alumni|super-admin'])->prefix('alumni')->group(function(){
+Route::middleware(['auth', 'role:alumni|super-admin'])->prefix('alumni')->group(function () {
     Route::livewire('/dashboard', 'alumni::pages.dashboard')->name('alumni.dashboard');
 
     Route::livewire('/profile/view', 'alumni::pages.profile.view-profile')->name('alumni.profile');
     Route::livewire('/profile/update/{user}', 'alumni::pages.profile.update-profile')->name('alumni.profile.update');
     Route::livewire('/profile/update-educational/{alumni}', 'alumni::pages.profile.update-educational-background')->name('alumni.profile.update-educational');
 
+    Route::livewire('/settings', 'alumni::pages.settings')->name('alumni.settings');
+
+    Route::livewire('/message', 'alumni::pages.message.alumni-message')->name('alumni.message');
 });
 
 Broadcast::routes();

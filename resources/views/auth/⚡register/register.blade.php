@@ -3,7 +3,6 @@
   <!-- ========== LEFT PANEL — BRANDING ========== -->
   <div class="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-[#123524]">
 
-    <!-- decorative layers -->
     <div class="absolute inset-0">
       <div class="absolute -top-24 -left-24 w-96 h-96 bg-[#D4A537]/10 rounded-full blur-3xl"></div>
       <div class="absolute -bottom-32 -right-16 w-[28rem] h-[28rem] bg-[#D4A537]/15 rounded-full blur-3xl"></div>
@@ -11,14 +10,12 @@
            style="background-image: radial-gradient(#D4A537 1px, transparent 1px); background-size: 28px 28px;"></div>
     </div>
 
-    <!-- background image with overlay -->
     <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRC0rZblAbfgOgTt6ujr71K-2jf9gY65zHSUOVdPIFeKy1BENm-131U9vw&s=10"
          alt="Campus"
          class="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-overlay">
 
     <div class="relative z-10 flex flex-col justify-between w-full px-14 py-16">
 
-      <!-- Logo + Name -->
       <a href="/" class="flex items-center gap-x-3">
         <div class="w-12 h-12 rounded-full bg-white ring-2 ring-[#D4A537]/60 p-1.5 shadow-md shrink-0">
           <img src="https://upload.wikimedia.org/wikipedia/commons/5/55/LogoCSAV.png"
@@ -30,7 +27,6 @@
         </span>
       </a>
 
-      <!-- Middle content -->
       <div class="space-y-8 max-w-md">
         <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-white/10 rounded-full backdrop-blur-sm">
           <span class="w-1.5 h-1.5 rounded-full bg-[#D4A537]"></span>
@@ -48,7 +44,6 @@
         </p>
       </div>
 
-      <!-- Why join list -->
       <div class="space-y-4">
         <div class="flex items-center gap-3">
           <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0">
@@ -82,14 +77,12 @@
   <!-- ========== RIGHT PANEL — FORM ========== -->
   <div class="w-full lg:w-1/2 flex items-center justify-center px-6 sm:px-12 py-16 relative">
 
-    <!-- subtle bg for mobile (no left panel visible) -->
     <div class="absolute inset-0 -z-10 lg:hidden">
       <div class="absolute inset-0 bg-gradient-to-br from-[#123524]/5 via-transparent to-[#D4A537]/10"></div>
     </div>
 
     <div class="w-full max-w-sm">
 
-      <!-- Mobile logo (shown only when left panel is hidden) -->
       <div class="flex lg:hidden justify-center mb-8">
         <div class="w-14 h-14 rounded-full bg-white ring-2 ring-[#D4A537]/60 p-1.5 shadow-md">
           <img src="https://upload.wikimedia.org/wikipedia/commons/5/55/LogoCSAV.png"
@@ -98,13 +91,11 @@
         </div>
       </div>
 
-      <!-- Header -->
       <div class="mb-8">
         <h3 class="text-3xl font-bold text-[#123524]" style="font-family: 'Fraunces', serif;">Create Account</h3>
         <p class="text-[#123524]/60 mt-2">Fill in your details to get started</p>
       </div>
 
-      <!-- Form -->
       <form wire:submit.prevent="register" class="space-y-5">
 
         <!-- Full Name -->
@@ -144,158 +135,76 @@
           @enderror
         </div>
 
-        <!-- Password -->
+        <!-- School ID Number -->
         <div>
-          <label for="password" class="block text-sm font-semibold text-[#123524] mb-2">Password</label>
+          <label for="school_id" class="block text-sm font-semibold text-[#123524] mb-2">School ID Number</label>
           <div class="relative">
             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
               <svg class="w-5 h-5 text-[#123524]/40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5h-15A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5z" />
               </svg>
             </div>
-            <input wire:model.defer="password" type="password" id="password" name="password" placeholder="••••••••"
+            <input wire:model.defer="school_id" type="text" id="school_id" name="school_id" placeholder="e.g. 2021-00123"
               class="w-full pl-12 pr-4 py-3 rounded-xl border border-[#123524]/15 text-[#123524] placeholder-[#123524]/30 focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition"
               required>
           </div>
-          @error('password')
+          <p class="text-xs text-[#123524]/40 mt-1.5">Found on your school ID card or diploma.</p>
+          @error('school_id')
             <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
           @enderror
         </div>
 
-        <!-- Confirm Password -->
-        <div>
-          <label for="password_confirmation" class="block text-sm font-semibold text-[#123524] mb-2">Confirm Password</label>
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <svg class="w-5 h-5 text-[#123524]/40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-              </svg>
-            </div>
-            <input wire:model.defer="password_confirmation" type="password" id="password_confirmation" name="password_confirmation" placeholder="••••••••"
-              class="w-full pl-12 pr-4 py-3 rounded-xl border border-[#123524]/15 text-[#123524] placeholder-[#123524]/30 focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition"
-              required>
-          </div>
-          @error('password_confirmation')
-            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
-          @enderror
-        </div>
-
-        <!-- Gender -->
-        <div>
-          <label class="block text-sm font-semibold text-[#123524] mb-2">Gender</label>
-          <div class="flex gap-6">
-            <label class="flex items-center gap-2 text-sm text-[#123524]/80 cursor-pointer">
-              <input type="radio" wire:model="gender" value="male" class="text-[#123524] focus:ring-[#D4A537]">
-              Male
-            </label>
-            <label class="flex items-center gap-2 text-sm text-[#123524]/80 cursor-pointer">
-              <input type="radio" wire:model="gender" value="female" class="text-[#123524] focus:ring-[#D4A537]">
-              Female
-            </label>
-          </div>
-          @error('gender')
-            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
-          @enderror
-        </div>
-
-        <!-- Phone Numbers -->
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label for="phone_number_1" class="block text-sm font-semibold text-[#123524] mb-2">Phone Number</label>
-            <input wire:model.defer="phone_number_1" type="text" id="phone_number_1" placeholder="09171234567"
-              class="w-full px-4 py-3 rounded-xl border border-[#123524]/15 text-[#123524] placeholder-[#123524]/30 focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
-            @error('phone_number_1')
-              <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
-            @enderror
-          </div>
-          <div>
-            <label for="phone_number_2" class="block text-sm font-semibold text-[#123524] mb-2">Alt. Number</label>
-            <input wire:model.defer="phone_number_2" type="text" id="phone_number_2" placeholder="Optional"
-              class="w-full px-4 py-3 rounded-xl border border-[#123524]/15 text-[#123524] placeholder-[#123524]/30 focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
-            @error('phone_number_2')
-              <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
-            @enderror
-          </div>
-        </div>
-
-        <!-- Permanent Address -->
-        <div>
-          <label for="permanent_address" class="block text-sm font-semibold text-[#123524] mb-2">Permanent Address</label>
-          <input wire:model.defer="permanent_address" type="text" id="permanent_address" placeholder="Street, Barangay, City, Province"
-            class="w-full px-4 py-3 rounded-xl border border-[#123524]/15 text-[#123524] placeholder-[#123524]/30 focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
-          @error('permanent_address')
-            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
-          @enderror
-        </div>
-
-        <!-- Current Address -->
-        <div>
-          <label for="current_address" class="block text-sm font-semibold text-[#123524] mb-2">Current Address</label>
-          <input wire:model.defer="current_address" type="text" id="current_address" placeholder="Street, Barangay, City, Province"
-            class="w-full px-4 py-3 rounded-xl border border-[#123524]/15 text-[#123524] placeholder-[#123524]/30 focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
-          @error('current_address')
-            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
-          @enderror
-        </div>
-
-        <!-- Degree Program -->
-        <div>
-          <label for="degree_program_id" class="block text-sm font-semibold text-[#123524] mb-2">Degree Program</label>
-          <select wire:model.defer="degree_program_id" id="degree_program_id"
-            class="w-full px-4 py-3 rounded-xl border border-[#123524]/15 text-[#123524] focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
-            <option value="">Select your program</option>
-            @foreach ($degreePrograms as $program)
-              <option value="{{ $program->id }}">{{ $program->program_name }}</option>
-            @endforeach
-          </select>
-          @error('degree_program_id')
-            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
-          @enderror
-        </div>
-
-        <!-- Graduation Batch -->
-        <div>
-          <label for="batch_id" class="block text-sm font-semibold text-[#123524] mb-2">Graduation Batch</label>
-          <select wire:model.defer="batch_id" id="batch_id"
-            class="w-full px-4 py-3 rounded-xl border border-[#123524]/15 text-[#123524] focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
-            <option value="">Select your batch year</option>
-            @foreach ($batches as $batch)
-              <option value="{{ $batch->id }}">{{ $batch->batch_year }}</option>
-            @endforeach
-          </select>
-          @error('batch_id')
-            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
-          @enderror
-        </div>
-
-        <!-- Proof of Alumni Status -->
-        <div>
-          <label for="proof_document" class="block text-sm font-semibold text-[#123524] mb-2">
-            Proof of Alumni Status
-          </label>
-          <p class="text-xs text-[#123524]/50 mb-2">Upload a photo of your school ID, diploma, or yearbook page.</p>
-
-          <label for="proof_document"
-            class="flex flex-col items-center justify-center w-full px-4 py-6 rounded-xl border-2 border-dashed border-[#123524]/20 hover:border-[#D4A537]/60 cursor-pointer transition text-center">
-            <svg class="w-6 h-6 text-[#123524]/40 mb-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l-3.75 3.75M12 9.75l3.75 3.75M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+       {{-- Password --}}
+<div>
+    <label for="password" class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
+        Password <span class="text-red-500">*</span>
+    </label>
+    <div class="relative">
+        <input type="password" id="password" wire:model="password"
+            placeholder="••••••••"
+            class="py-2 px-4 pe-11 block w-full border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600">
+        <button type="button"
+            data-hs-toggle-password='{"target": "#password"}'
+            class="absolute inset-y-0 end-0 flex items-center z-20 px-3 cursor-pointer text-gray-400 rounded-e-md focus:outline-none focus:text-blue-600 dark:text-neutral-600 dark:focus:text-blue-500">
+            {{-- Eye Open --}}
+            <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path class="hs-password-active:hidden" d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/>
+                <path class="hs-password-active:hidden" d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/>
+                <path class="hs-password-active:hidden" d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/>
+                <line class="hs-password-active:hidden" x1="2" x2="22" y1="2" y2="22"/>
+                <path class="hidden hs-password-active:block" d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                <circle class="hidden hs-password-active:block" cx="12" cy="12" r="3"/>
             </svg>
-            <span class="text-sm text-[#123524]/60">
-              @if ($proof_document)
-                {{ $proof_document->getClientOriginalName() }}
-              @else
-                Click to upload an image
-              @endif
-            </span>
-            <input wire:model="proof_document" type="file" id="proof_document" accept="image/*" class="hidden">
-          </label>
+        </button>
+    </div>
+    @error('password')
+        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+    @enderror
+</div>
 
-          <div wire:loading wire:target="proof_document" class="text-xs text-[#123524]/50 mt-1">Uploading...</div>
-
-          @error('proof_document')
-            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
-          @enderror
-        </div>
+{{-- Confirm Password --}}
+<div>
+    <label for="password_confirmation" class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
+        Confirm Password <span class="text-red-500">*</span>
+    </label>
+    <div class="relative">
+        <input type="password" id="password_confirmation" wire:model="password_confirmation"
+            placeholder="••••••••"
+            class="py-2 px-4 pe-11 block w-full border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600">
+        <button type="button"
+            data-hs-toggle-password='{"target": "#password_confirmation"}'
+            class="absolute inset-y-0 end-0 flex items-center z-20 px-3 cursor-pointer text-gray-400 rounded-e-md focus:outline-none focus:text-blue-600 dark:text-neutral-600 dark:focus:text-blue-500">
+            <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path class="hs-password-active:hidden" d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/>
+                <path class="hs-password-active:hidden" d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/>
+                <path class="hs-password-active:hidden" d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/>
+                <line class="hs-password-active:hidden" x1="2" x2="22" y1="2" y2="22"/>
+                <path class="hidden hs-password-active:block" d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                <circle class="hidden hs-password-active:block" cx="12" cy="12" r="3"/>
+            </svg>
+        </button>
+    </div>
+</div>
 
         <!-- Terms -->
         <label class="flex items-start gap-2.5 text-sm text-[#123524]/70 cursor-pointer">
@@ -312,14 +221,12 @@
           </svg>
         </button>
 
-        <!-- Divider -->
         <div class="flex items-center gap-3 pt-1">
           <span class="flex-1 h-px bg-[#123524]/10"></span>
           <span class="text-xs text-[#123524]/40 font-medium tracking-wide">OR</span>
           <span class="flex-1 h-px bg-[#123524]/10"></span>
         </div>
 
-        <!-- Login Link -->
         <p class="text-center text-sm text-[#123524]/70">
           Already have an account?
           <a href="{{ route('login') }}" class="font-semibold text-[#123524] hover:text-[#D4A537] transition-colors">
