@@ -36,7 +36,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
      */
     public function deleteSelected()
     {
-        User::role(['alumni', 'super-admin', 'admin'])->whereIn('id', $this->selectedUsers)->delete();
+        User::role(['alumni', 'registrar', 'program head'])->whereIn('id', $this->selectedUsers)->delete();
 
         $this->selectedUsers = [];
         $this->selectAll = false;
@@ -99,7 +99,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
      */
     protected function filteredQuery()
     {
-        return User::role(['alumni', 'super-admin', 'admin'])
+        return User::role(['alumni', 'registrar', 'program head'])
             ->when($this->roleFilter !== 'all', function ($query) {
                 $query->role($this->roleFilter);
             });

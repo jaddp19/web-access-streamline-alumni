@@ -43,15 +43,15 @@
                             {{ $roleFilter === 'alumni' ? 'text-[#123524] border-[#123524]' : 'text-black/50 border-transparent hover:text-[#123524]' }}">
                         Alumni
                     </button>
-                    <button type="button" wire:click="setRoleFilter('admin')"
+                    <button type="button" wire:click="setRoleFilter('program head')"
                         class="px-4 py-2 text-sm font-semibold rounded-t-lg border-b-2 transition
-                            {{ $roleFilter === 'admin' ? 'text-[#123524] border-[#123524]' : 'text-black/50 border-transparent hover:text-[#123524]' }}">
-                        Admin
+                            {{ $roleFilter === 'program head' ? 'text-[#123524] border-[#123524]' : 'text-black/50 border-transparent hover:text-[#123524]' }}">
+                        Program Head
                     </button>
-                    <button type="button" wire:click="setRoleFilter('super-admin')"
+                    <button type="button" wire:click="setRoleFilter('registrar')"
                         class="px-4 py-2 text-sm font-semibold rounded-t-lg border-b-2 transition
-                            {{ $roleFilter === 'super-admin' ? 'text-[#123524] border-[#123524]' : 'text-black/50 border-transparent hover:text-[#123524]' }}">
-                        Super Admin
+                            {{ $roleFilter === 'registrar' ? 'text-[#123524] border-[#123524]' : 'text-black/50 border-transparent hover:text-[#123524]' }}">
+                        Registrar
                     </button>
                 </div>
             </div>
