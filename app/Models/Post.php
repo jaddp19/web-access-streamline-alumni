@@ -15,6 +15,11 @@ class Post extends Model
         'image',
         'category_id',
         'status',
+        'attachments'
+    ];
+
+    protected $casts = [
+        'attachments' => 'array'
     ];
 
     public function user(): BelongsTo

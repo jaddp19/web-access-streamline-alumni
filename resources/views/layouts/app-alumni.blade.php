@@ -38,7 +38,7 @@
     </main>
 
     @include('components.footers.alumni.footer')
-
+    @stack('scripts')
     @livewireScripts
     <script src="https://unpkg.com/preline/dist/preline.js"></script>
 </body>

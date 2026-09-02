@@ -1,21 +1,21 @@
 <?php
 
-use Livewire\Component;
-use Livewire\Attributes\Layout;
-use Livewire\Attributes\Computed;
-use App\Models\ProgramHead;
-use App\Models\User;
 use App\Models\Department;
+use App\Models\User;
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\Layout;
+use Livewire\Component;
+use Spatie\Permission\Models\Role;
 
-new #[Layout('layouts::app-super-admin')] class extends Component
+new #[Layout('layouts.app-super-admin')] class extends Component
 {
-    public int $user_id;
-    public int $department_id;
+    public ?int $user_id = null;
+    public ?int $department_id = null;
 
     protected function rules()
     {
         return [
-            'user_id' => 'required|exists:users,id',
+            'user_id'       => 'required|exists:users,id',
             'department_id' => 'required|exists:departments,id',
         ];
     }
@@ -23,8 +23,8 @@ new #[Layout('layouts::app-super-admin')] class extends Component
     public function messages()
     {
         return [
-            'user_id.required' => 'You must select a user.',
-            'user_id.exists'   => 'Selected user does not exist.',
+            'user_id.required'       => 'You must select a user.',
+            'user_id.exists'         => 'Selected user does not exist.',
             'department_id.required' => 'You must select a department.',
             'department_id.exists'   => 'Selected department does not exist.',
         ];
@@ -34,10 +34,17 @@ new #[Layout('layouts::app-super-admin')] class extends Component
     {
         $validated = $this->validate();
 
-        ProgramHead::create([
-            'user_id' => $validated['user_id'],
-            'department_id' => $validated['department_id'],
-        ]);
+        $user = User::findOrFail($validated['user_id']);
+        $roleName = 'program-head-' . $validated['department_id'];
+
+        if ($user->hasRole($roleName)) {
+            $this->addError('user_id', 'This user is already the program head for that department.');
+            return;
+        }
+
+        $role = Role::firstOrCreate(['name' => $roleName]);
+
+        $user->assignRole($role);
 
         session()->flash('success', 'Program Head assigned successfully.');
         return redirect()->route('super-admin.assign.view');
@@ -47,13 +54,17 @@ new #[Layout('layouts::app-super-admin')] class extends Component
     public function users()
     {
         return User::role('admin')
-            ->with('roles:id,name')
-            ->select('id', 'name')->get();
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
     }
 
     #[Computed]
     public function departments()
     {
-        return Department::select('id', 'department_name')->get();
+        return Department::select('id', 'dept_name')
+            ->where('is_active', true)
+            ->orderBy('dept_name')
+            ->get();
     }
 };

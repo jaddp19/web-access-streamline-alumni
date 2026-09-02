@@ -1,8 +1,12 @@
 <?php
 
+namespace App\Livewire;
+
+use App\Models\UserProfile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -29,6 +33,15 @@ new #[Layout('layouts.app-alumni')] class extends Component
         $user = Auth::user();
         $this->name  = $user->name;
         $this->email = $user->email;
+
+        // is_private stored inverted, so "visible" = !is_private
+        $this->profileVisible = ! ($this->userProfile?->is_private ?? false);
+    }
+
+    #[Computed]
+    public function userProfile()
+    {
+        return UserProfile::where('user_id', Auth::id())->first();
     }
 
     public function setTab(string $tab)
@@ -54,8 +67,8 @@ new #[Layout('layouts.app-alumni')] class extends Component
     public function updatePassword()
     {
         $validated = $this->validate([
-            'current_password'         => 'required|string',
-            'new_password'              => 'required|string|min:6|confirmed',
+            'current_password' => 'required|string',
+            'new_password'     => 'required|string|min:6|confirmed',
         ]);
 
         $user = Auth::user();
@@ -76,7 +89,20 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
     public function savePreferences()
     {
-        // Placeholder — wire up to a real preferences table/column when one exists.
+        $profile = $this->userProfile;
+
+        if ($profile) {
+            $profile->update([
+                'is_private' => ! $this->profileVisible,
+            ]);
+
+            unset($this->userProfile);
+        }
+
+        // NOTE: emailNotifications and eventNotifications currently have no backing
+        // columns in the user_profiles table. To persist these, a migration is required
+        // to add 'email_notifications' and 'event_notifications' boolean columns.
+
         session()->flash('preferences_success', 'Preferences saved.');
     }
 

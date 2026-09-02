@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use Database\Seeders\CategorySeeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -20,6 +21,8 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             RoleSeeder::class,
+            CategorySeeder::class,
+            PermissionSeeder::class,
         ]);
         // Create roles if not already seeded
         $superAdminRole = Role::firstOrCreate(['name' => 'super-admin']);
@@ -31,6 +34,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'super-admin@example.com'],
             [
                 'name' => 'Super Admin User',
+                'school_id' => '2021-2022', // Add a school_id for the super-admin
                 'password' => Hash::make('password123'),
             ]
         );
@@ -41,6 +45,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'admin@example.com'],
             [
                 'name' => 'Admin User',
+                'school_id' => '2022-2023', // Add a school_id for the admin
                 'password' => Hash::make('password123'),
             ]
         );
@@ -51,6 +56,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'alumni@example.com'],
             [
                 'name' => 'Alumni User',
+                'school_id' => '2023-2024', // Add a school_id for the alumni
                 'password' => Hash::make('password123'),
             ]
         );

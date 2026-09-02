@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Email;
+use App\Models\EmailTemplate;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Illuminate\Support\Str;
@@ -13,7 +13,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     protected function rules()
     {
         return [
-            'subject' => 'required|string|max:255|unique:emails,subject',
+            'subject' => 'required|string|max:255',
             'message' => 'required|string|max:5000',
         ];
     }
@@ -24,7 +24,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             'subject.required' => 'The subject field is required.',
             'subject.string'   => 'The subject must be a valid string.',
             'subject.max'      => 'The subject must not exceed 255 characters.',
-            'subject.unique'   => 'This subject already exists.',
             'message.required' => 'The message field is required.',
             'message.string'   => 'The message must be a valid string.',
             'message.max'      => 'The message must not exceed 5000 characters.',
@@ -36,20 +35,29 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $validated = $this->validate();
 
         // sanitize subject and message
-        $validated['subject'] = $this->sanitizeData($validated['subject']);
-        $validated['message'] = $this->sanitizeData($validated['message']);
+        $subject = $this->sanitizeData($validated['subject']);
+        $message = $this->sanitizeData($validated['message']);
 
         // auto-generate slug from subject
-        $slug = Str::slug($validated['subject']);
+        $slug = Str::slug($subject);
 
-        Email::create([
-            'slug'    => $slug,
-            'subject' => $validated['subject'],
-            'message' => $validated['message'],
+        // enforce uniqueness on the generated slug manually, since it lives
+        // inside the `template` JSON column and can't use a normal `unique` rule
+        if (EmailTemplate::whereJsonContains('template->slug', $slug)->exists()) {
+            $this->addError('subject', 'A template with this subject already exists.');
+            return;
+        }
+
+        EmailTemplate::create([
+            'template' => [
+                'slug'    => $slug,
+                'subject' => $subject,
+                'message' => $message,
+            ],
         ]);
 
         session()->flash('success', 'Email template created successfully.');
-        return redirect()->route('super-admin.email.view'); // adjust route to your view-emails page
+        return redirect()->route('super-admin.email.view');
     }
 
     protected function sanitizeData($data)

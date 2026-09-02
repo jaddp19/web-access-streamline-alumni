@@ -1,7 +1,6 @@
 <?php
 
-use App\Models\DegreeProgram;
-use App\Models\Department;
+use App\Models\Course;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -10,64 +9,61 @@ use Livewire\WithPagination;
 new #[Layout('layouts::app-super-admin')] class extends Component
 {
     use WithPagination; // 🔑 enable pagination methods
-    public $selectedPrograms = []; // @var array $selectedPrograms IDs of selected programs across all pages
-    public $selectAll = false; // @var bool $selectAll Whether all programs are selected
-    
+
+    public $selectedPrograms = []; // @var array $selectedPrograms IDs of selected courses across all pages
+    public $selectAll = false; // @var bool $selectAll Whether all courses are selected
+
     /**
-     * Delete all selected programs.
+     * Delete all selected courses.
      * Resets selection after deletion.
      */
     public function deleteSelected()
     {
-        DegreeProgram::whereIn('id', $this->selectedPrograms)->delete();
+        Course::whereIn('id', $this->selectedPrograms)->delete();
 
         $this->selectedPrograms = [];
         $this->selectAll = false;
 
-        session()->flash('success', 'Selected programs deleted successfully.');
+        session()->flash('success', 'Selected courses deleted successfully.');
     }
 
-    public function updatedSelectAll($value) 
-    { 
-        if ($value) 
-        { 
-            // Grab IDs from the all pages, not just current page
+    public function updatedSelectAll($value)
+    {
+        if ($value) {
+            // Grab IDs from all pages, not just current page
             $this->selectedPrograms = $this->programs->getCollection()
-            ->pluck('id')
-            ->map(fn($id) => (int) $id)
-            ->toArray(); 
-        } else { 
-            $this->selectedPrograms = []; 
-        } 
-    } 
-                     
-    public function updatedSelectedPrograms() 
-    { 
-        // Keep header checkbox in sync 
-        $this->selectAll = count($this->selectedPrograms) === $this->totalProgramsCount(); 
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->toArray();
+        } else {
+            $this->selectedPrograms = [];
+        }
+    }
+
+    public function updatedSelectedPrograms()
+    {
+        // Keep header checkbox in sync
+        $this->selectAll = count($this->selectedPrograms) === $this->totalProgramsCount;
     }
 
     /**
-     * Toggle selection of all programs across pages.
+     * Toggle selection of all courses across pages.
      */
     public function toggleSelectAll()
     {
-        $allIds = DegreeProgram::pluck('id')->map(fn($id) => (int) $id)->toArray();
+        $allIds = Course::pluck('id')->map(fn ($id) => (int) $id)->toArray();
 
-        $selectedCount = count($this->selectedPrograms);
-        $totalCount = $this->totalProgramsCount;
-
-        if (count($this->selectedPrograms) === $this->totalProgramsCount()) 
-            { 
-                $this->selectedPrograms = []; 
-                $this->selectAll = false; 
-            } else { 
-                $this->selectedPrograms = $allIds; $this->selectAll = true; 
-            }
+        if (count($this->selectedPrograms) === $this->totalProgramsCount) {
+            $this->selectedPrograms = [];
+            $this->selectAll = false;
+        } else {
+            $this->selectedPrograms = $allIds;
+            $this->selectAll = true;
+        }
     }
 
     /**
-     * Toggle selection of a single user.
+     * Toggle selection of a single course.
      */
     public function toggleRowSelection($programId)
     {
@@ -80,26 +76,27 @@ new #[Layout('layouts::app-super-admin')] class extends Component
         }
 
         // Sync header checkbox
-        $this->selectAll = count($this->selectedPrograms) === $this->totalProgramsCount();
+        $this->selectAll = count($this->selectedPrograms) === $this->totalProgramsCount;
     }
 
-    
     /**
-     * Computed property: total number of programs.
+     * Computed property: total number of courses.
      */
     #[Computed]
     public function totalProgramsCount()
     {
-        return DegreeProgram::count();
+        return Course::count();
     }
-    
+
     /**
-     * Computed property: paginated programs.
+     * Computed property: paginated courses.
      */
-    #[Computed()]
+    #[Computed]
     public function programs()
     {
-        
-        return DegreeProgram::with('department:id,department_name')->select('id', 'program_name', 'department_id', 'created_at')->latest()->paginate(5);
+        return Course::with('department:id,dept_name')
+            ->select('id', 'course_title', 'department_id', 'created_at')
+            ->latest()
+            ->paginate(5);
     }
 };
