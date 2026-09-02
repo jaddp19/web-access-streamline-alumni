@@ -1,9 +1,8 @@
 <?php
 
-// TODO: AlumniProfile model was removed. Reimplement against UserProfile + WorkHistory.
-// TODO: EducationalBackground model was removed. Reimplement against UserProfile + WorkHistory.
-// TODO: DegreeProgram model was removed. Reimplement against Course.
 use App\Models\Batch;
+use App\Models\Course;
+use App\Models\UserProfile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
@@ -13,15 +12,15 @@ use Livewire\Component;
 new #[Layout('layouts.app-alumni')] class extends Component
 {
     public ?int $batch_year = null;
-    public ?int $degree_program_id = null;
+    public ?int $course_id = null;
     public bool $is_public = true;
 
     protected function rules()
     {
         return [
-            'batch_year'         => 'required|integer|digits:4|min:1950|max:' . (date('Y') + 1),
-            'degree_program_id'  => 'required|exists:degree_programs,id',
-            'is_public'          => 'boolean',
+            'batch_year' => 'required|integer|digits:4|min:1950|max:' . (date('Y') + 1),
+            'course_id'  => 'required|exists:courses,id',
+            'is_public'  => 'boolean',
         ];
     }
 
@@ -33,14 +32,14 @@ new #[Layout('layouts.app-alumni')] class extends Component
             'batch_year.digits'   => 'Batch year must be a 4-digit year (e.g. 2026).',
             'batch_year.min'      => 'Batch year must be a valid year.',
             'batch_year.max'      => 'Batch year cannot be in the future beyond next year.',
+            'course_id.required'  => 'Please select your degree program.',
         ];
     }
 
     public function mount()
     {
-        $user = Auth::user();
-        // TODO: AlumniProfile model was removed. Reimplement against UserProfile + WorkHistory.
-        $profile = null;
+        $user    = Auth::user();
+        $profile = UserProfile::where('user_id', $user->id)->first();
 
         // No personal profile yet — send them there first instead of crashing.
         if (! $profile) {
@@ -49,51 +48,59 @@ new #[Layout('layouts.app-alumni')] class extends Component
             return;
         }
 
-        // TODO: EducationalBackground model was removed. Rebuild against UserProfile + WorkHistory.
-        $educationalBackground = null;
-
-        if ($educationalBackground) {
-            $this->batch_year        = $educationalBackground->batch->batch_year ?? null;
-            $this->degree_program_id = $educationalBackground->degree_program_id;
-            $this->is_public         = $educationalBackground->is_public;
+        if ($profile->batch) {
+            $year = (int) preg_replace('/\D/', '', $profile->batch->batch_name);
+            $this->batch_year = $year > 0 ? $year : null;
         }
+
+        $existingCourse = $profile->courses()->first();
+        if ($existingCourse) {
+            $this->course_id = $existingCourse->id;
+        }
+
+        $this->is_public = ! $profile->is_private;
+    }
+
+    public function pickYear(int $year)
+    {
+        $this->batch_year = $year;
     }
 
     public function update()
     {
         $validated = $this->validate();
 
-        $validated['degree_program_id'] = $this->sanitizeNumeric($validated['degree_program_id']);
-
-        $user = Auth::user();
-        // TODO: AlumniProfile model was removed. Reimplement against UserProfile.
-        $profile = null;
+        $user    = Auth::user();
+        $profile = UserProfile::where('user_id', $user->id)->first();
 
         if (! $profile) {
-            session()->flash('error', 'No alumni profile found. Please complete your personal information first.');
+            session()->flash('error', 'No profile found. Please complete your personal information first.');
             return redirect()->route('alumni.profile.update', $user->id);
         }
 
-        // Find the batch matching the typed year, or create it if it doesn't exist yet.
-        $batch = Batch::firstOrCreate(['batch_year' => $validated['batch_year']]);
+        try {
+            // Find the batch matching the typed year, or create it if it doesn't exist yet.
+            $batch = Batch::firstOrCreate(['batch_name' => (string) $validated['batch_year']]);
 
-        // TODO: EducationalBackground model was removed. Rebuild against UserProfile + WorkHistory.
-        // $profile->educationalBackground()->updateOrCreate(
-        //     [],
-        //     [
-        //         'batch_id'          => $batch->id,
-        //         'degree_program_id' => $validated['degree_program_id'],
-        //         'is_public'         => $validated['is_public'],
-        //     ]
-        // );
+            $profile->update([
+                'batch_id'   => $batch->id,
+                'is_private' => ! $validated['is_public'],
+            ]);
 
-        session()->flash('success', 'Educational Background updated successfully.');
-        return redirect()->route('alumni.profile');
-    }
+            // One course per profile for now — swap sync() for attach() if you need multiple.
+            $profile->courses()->sync([$validated['course_id']]);
 
-    protected function sanitizeNumeric($data)
-    {
-        return $data !== null ? (int) preg_replace('/\D/', '', $data) : null;
+            session()->flash('success', 'Educational Background updated successfully.');
+            return redirect()->route('alumni.profile');
+
+        } catch (\Throwable $e) {
+            logger()->error('Educational background save failed: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            session()->flash('error', 'Something went wrong while saving: ' . $e->getMessage());
+            return;
+        }
     }
 
     protected function sanitizeData($data)
@@ -104,16 +111,25 @@ new #[Layout('layouts.app-alumni')] class extends Component
     }
 
     #[Computed]
-    public function alumniProfile()
+    public function courses()
     {
-        // TODO: AlumniProfile model was removed. Reimplement against UserProfile.
-        return null;
+        return Course::with('department')->where('is_active', true)->orderBy('course_title')->get();
     }
 
     #[Computed]
-    public function degreePrograms()
+    public function selectedCourse()
     {
-        // TODO: DegreeProgram model was removed. Reimplement against Course.
-        return collect();
+        if (! $this->course_id) {
+            return null;
+        }
+
+        return $this->courses->firstWhere('id', (int) $this->course_id);
+    }
+
+    #[Computed]
+    public function recentYears()
+    {
+        $current = (int) date('Y');
+        return range($current, $current - 4);
     }
 };

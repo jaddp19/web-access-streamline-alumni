@@ -6,12 +6,13 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new #[Layout('layouts::app-super-admin')] class extends Component
+new #[Layout('layouts.app-super-admin')] class extends Component
 {
-    use WithPagination; // 🔑 enable pagination methods
-    public $selectedDepartments = []; // @var array $selectedDepartments IDs of selected Departments across all pages
-    public $selectAll = false; // @var bool $selectAll Whether all Departments are selected
-    
+    use WithPagination;
+
+    public $selectedDepartments = [];
+    public $selectAll = false;
+
     /**
      * Delete all selected Departments.
      * Resets selection after deletion.
@@ -26,24 +27,22 @@ new #[Layout('layouts::app-super-admin')] class extends Component
         session()->flash('success', 'Selected departments deleted successfully.');
     }
 
-    public function updatedSelectAll($value) 
-    { 
-        if ($value) 
-        { 
-            // Grab IDs from the all pages, not just current page
-            $this->selectedDepartments = $this->departments->getCollection()
-            ->pluck('id')
-            ->map(fn($id) => (int) $id)
-            ->toArray(); 
-        } else { 
-            $this->selectedDepartments = []; 
-        } 
-    } 
-                     
-    public function updatedSelectedDepartments() 
-    { 
-        // Keep header checkbox in sync 
-        $this->selectAll = count($this->selectedDepartments) === $this->totalDepartmentsCount(); 
+    public function updatedSelectAll($value)
+    {
+        if ($value) {
+            // Grab IDs from all pages, not just current page
+            $this->selectedDepartments = Department::pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->toArray();
+        } else {
+            $this->selectedDepartments = [];
+        }
+    }
+
+    public function updatedSelectedDepartments()
+    {
+        // Keep header checkbox in sync
+        $this->selectAll = count($this->selectedDepartments) === $this->totalDepartmentsCount;
     }
 
     /**
@@ -51,38 +50,31 @@ new #[Layout('layouts::app-super-admin')] class extends Component
      */
     public function toggleSelectAll()
     {
-        $allIds = Department::pluck('id')->map(fn($id) => (int) $id)->toArray();
-
-        $selectedCount = count($this->selectedDepartments);
-        $totalCount = $this->totalDepartmentsCount;
-
-        if (count($this->selectedDepartments) === $this->totalDepartmentsCount()) 
-            { 
-                $this->selectedDepartments = []; 
-                $this->selectAll = false; 
-            } else { 
-                $this->selectedDepartments = $allIds; $this->selectAll = true; 
-            }
+        if (count($this->selectedDepartments) === $this->totalDepartmentsCount) {
+            $this->selectedDepartments = [];
+            $this->selectAll = false;
+        } else {
+            $this->selectedDepartments = Department::pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->toArray();
+            $this->selectAll = true;
+        }
     }
 
     /**
-     * Toggle selection of a single user.
+     * Toggle selection of a single department.
      */
     public function toggleRowSelection($departmentId)
     {
         if (in_array($departmentId, $this->selectedDepartments)) {
-            // Remove if already selected
             $this->selectedDepartments = array_values(array_diff($this->selectedDepartments, [$departmentId]));
         } else {
-            // Add if not selected
             $this->selectedDepartments[] = $departmentId;
         }
 
-        // Sync header checkbox
-        $this->selectAll = count($this->selectedDepartments) === $this->totalDepartmentsCount();
+        $this->selectAll = count($this->selectedDepartments) === $this->totalDepartmentsCount;
     }
 
-    
     /**
      * Computed property: total number of departments.
      */
@@ -91,14 +83,13 @@ new #[Layout('layouts::app-super-admin')] class extends Component
     {
         return Department::count();
     }
-    
+
     /**
      * Computed property: paginated departments.
      */
-    #[Computed()]
+    #[Computed]
     public function departments()
     {
-        
-        return Department::select('id', 'department_name', 'created_at')->latest()->paginate(5);
+        return Department::select('id', 'dept_name', 'dept_desc' ,'dept_code','dept_logo','created_at')->latest()->paginate(5);
     }
 };

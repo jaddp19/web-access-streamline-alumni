@@ -8,7 +8,7 @@ use Livewire\WithPagination;
 
 new #[Layout('layouts.app-super-admin')] class extends Component
 {
-    use WithPagination; // 🔑 enable pagination methods
+    use WithPagination;
 
     #[Computed]
     public function totalBatchesCount()
@@ -19,6 +19,8 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     #[Computed]
     public function batches()
     {
-        return Batch::select('id', 'batch_year', 'created_at')->orderBy('batch_year','asc')->paginate(5);
+        return Batch::select('id', 'batch_name', 'created_at')
+            ->orderBy('batch_name', 'asc')
+            ->paginate(5);
     }
 };

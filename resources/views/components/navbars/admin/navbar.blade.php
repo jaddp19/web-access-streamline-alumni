@@ -1,119 +1,69 @@
-<div clas="select-none">
-    <!-- ========== MAIN SIDEBAR ========== -->
-    <!-- Sidebar -->
+<div class="select-none">
+    <!-- ========== SIDEBAR ========== -->
     <div id="hs-pro-sidebar"
         class="hs-overlay [--body-scroll:true] lg:[--overlay-backdrop:false] [--is-layout-affect:true] [--opened:lg] [--auto-close:lg]
-        hs-overlay-open:translate-x-0 lg:hs-overlay-layout-open:translate-x-0
-        -translate-x-full transition-all duration-300 transform
-        w-60
-        hidden
-        fixed inset-y-0 z-60 start-0
-        bg-green-100
-        lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
+               hs-overlay-open:translate-x-0 lg:hs-overlay-layout-open:translate-x-0
+               -translate-x-full lg:-translate-x-full transition-all duration-300 transform
+               hidden lg:block fixed inset-y-0 z-60 start-0 lg:end-auto lg:bottom-0
+               w-56 bg-[#0f2b1c] border-r border-yellow-500/10"
         role="dialog" tabindex="-1" aria-label="Sidebar">
-        <div class="lg:pt-15 relative flex flex-col h-full max-h-full">
-            <!-- Body -->
-            <nav
-                class="p-3 size-full flex flex-col overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-200 [&::-webkit-scrollbar-thumb]:bg-gray-300">
-                <div class="lg:hidden mb-2 flex items-center justify-between">
 
-                    <!-- Sidebar Toggle -->
-                    <button type="button"
-                        class="p-1.5 size-7.5 inline-flex items-center gap-x-1 text-xs rounded-md text-green-700isabled:pointer-events-none focus:outline-hidden"
-                        aria-haspopup="dialog" aria-expanded="false" aria-controls="hs-pro-sidebar"
-                        data-hs-overlay="#hs-pro-sidebar">
-                        <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M18 6 6 18" />
-                            <path d="m6 6 12 12" />
-                        </svg>
-                        <span class="sr-only">Sidebar Toggle</span>
-                    </button>
-                    <!-- End Sidebar Toggle -->
-                </div>
+        <nav class="pt-16 lg:pt-16 p-2.5 h-full flex flex-col overflow-y-auto text-sm [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-white/5 [&::-webkit-scrollbar-thumb]:bg-white/20">
 
-                <button type="button"
-                    class="p-1.5 ps-2.5 w-full inline-flex items-center gap-x-2 text-sm rounded-lg bg-white border border-gray-200 text-gray-600 shadow-xs hover:border-gray-300 focus:outline-hidden focus:border-gray-300 disabled:opacity-50 disabled:pointer-events-none"
-                    aria-haspopup="dialog" aria-expanded="false" aria-controls="hs-pro-cmsssm"
-                    data-hs-overlay="#hs-pro-cmsssm">
+            <!-- Mobile close button -->
+            <button type="button" class="lg:hidden self-end p-1 mb-1 rounded-md text-yellow-500"
+                aria-haspopup="dialog" aria-expanded="false" aria-controls="hs-pro-sidebar" data-hs-overlay="#hs-pro-sidebar">
+                <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <path d="M18 6 6 18M6 6l12 12"/>
+                </svg>
+                <span class="sr-only">Close Sidebar</span>
+            </button>
 
-                    <!-- Fixed alignment -->
-                    <input type="text"
-                        placeholder="Search"
-                        class="flex-1 bg-transparent border-none text-medium text-black" />
-                </button>
+            <!-- Search -->
+            <input id="sidebar-search" type="text" placeholder="Search"
+                class="w-full py-1.5 px-2.5 mt-2 mb-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/40 text-xs focus:outline-hidden focus:border-yellow-500/40">
 
+            @php
+                $navGroups = [
+                    'Home' => [
+                        ['route' => 'admin.dashboard', 'label' => 'Dashboard'],
+                    ],
+                    'Alumni' => [
+                        ['route' => 'admin.alumni.view', 'label' => 'View All Alumni'],
+                    ],
+                ];
+            @endphp
 
-                <div
-                    class="pt-3 mt-3 flex flex-col border-t border-green-700 first:border-t-0 first:pt-0 first:mt-0">
-                    <span class="block ps-2.5 mb-2 font-extrabold text-xs uppercase text-green-700">
-                        Home
-                    </span>
-
-                    <!-- List -->
-                    <ul class="flex flex-col gap-y-1">
-                        <li>
-                            <a class="w-full flex items-center gap-x-2 py-2 px-2.5 text-sm text-black rounded-lg hover:bg-gray-100 focus:outline-hidden"
-                                wire:current="bg-gray-100"
-                                href="{{ route('admin.dashboard') }}">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
-                                </svg>
-                                Dashboard
-                            </a>
-                        </li>
+            @foreach ($navGroups as $group => $items)
+                <div class="pt-2 mt-2 border-t border-white/10 first:border-t-0 first:pt-0 first:mt-0">
+                    <span class="block ps-2 mb-1 font-bold text-[10px] uppercase text-yellow-500/80">{{ $group }}</span>
+                    <ul class="flex flex-col gap-y-0.5">
+                        @foreach ($items as $item)
+                            <li>
+                                <a href="{{ route($item['route']) }}" wire:current="bg-white/10 text-yellow-400"
+                                    class="flex items-center gap-x-2 py-1.5 px-2 rounded-lg text-white/80 hover:bg-white/5 hover:text-white transition-colors">
+                                    <span class="size-1.5 rounded-full bg-yellow-500/60 shrink-0"></span>
+                                    {{ $item['label'] }}
+                                </a>
+                            </li>
+                        @endforeach
                     </ul>
-                    <!-- End List -->
                 </div>
+            @endforeach
 
-                <div
-                    class="pt-3 mt-3 flex flex-col border-t border-green-700 first:border-t-0 first:pt-0 first:mt-0">
-                    <span class="block ps-2.5 mb-2 font-extrabold text-xs uppercase text-green-700">
-                        Alumni
-                    </span>
-
-                    <!-- List -->
-                    <ul class="flex flex-col gap-y-1">
-                        <li>
-                            <a class="w-full flex items-center gap-x-2 py-2 px-2.5 text-sm text-black rounded-lg hover:bg-gray-100 focus:outline-hidden"
-                                wire:current="bg-gray-100"
-                                href="{{ route('admin.alumni.view') }}">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5" />
-                                </svg>
-                                View All Alumni
-                            </a>
-                        </li>
-                    </ul>
-                    <!-- End List -->
-                </div>
-
-            </nav>
-            <!-- End Body -->
-        </div>
+        </nav>
     </div>
-    <!-- End Sidebar -->
-    <!-- ========== END MAIN SIDEBAR ========== -->
+    <!-- ========== END SIDEBAR ========== -->
+
     <script>
-        document.addEventListener("DOMContentLoaded", function ()
-        {
-            const searchInput = document.querySelector('#hs-pro-sidebar input[type="text"]');
+        document.addEventListener('DOMContentLoaded', () => {
+            const input = document.getElementById('sidebar-search');
             const links = document.querySelectorAll('#hs-pro-sidebar nav a');
 
-            searchInput.addEventListener("input", function ()
-            {
-                const query = this.value.toLowerCase().trim();
-
-                links.forEach(link =>
-                {
-                    const text = link.textContent.toLowerCase();
-                    if (text.includes(query))
-                    {
-                        link.parentElement.style.display = "";
-                    } else {
-                        link.parentElement.style.display = "none";
-                    }
+            input?.addEventListener('input', (e) => {
+                const q = e.target.value.toLowerCase().trim();
+                links.forEach(link => {
+                    link.closest('li').style.display = link.textContent.toLowerCase().includes(q) ? '' : 'none';
                 });
             });
         });

@@ -1,3 +1,16 @@
+@php
+    use App\Models\UserProfile;
+
+    $__authUser = auth()->user();
+    $__authProfile = $__authUser
+        ? UserProfile::where('user_id', $__authUser->id)->first()
+        : null;
+
+    $__authAvatarUrl = $__authProfile?->avatar
+        ? \Illuminate\Support\Facades\Storage::url($__authProfile->avatar)
+        : 'https://ui-avatars.com/api/?name=' . urlencode($__authUser->name ?? '?') . '&background=D4A537&color=123524';
+@endphp
+
 <!-- ========== FACEBOOK-STYLE HEADER ========== -->
 <header class="w-full bg-white dark:bg-[#1a1a1a] border-b border-black/10 dark:border-white/10 shadow-sm sticky top-0 z-50 select-none">
   <nav class="max-w-[1100px] mx-auto flex items-center justify-between px-4 py-2 gap-4">
@@ -50,19 +63,16 @@
 
     <!-- Right: Avatar + Actions (desktop only — mobile users get these in the dropdown menu) -->
     <div class="hidden lg:flex items-center gap-2">
-        <button class="w-10 h-10 rounded-full bg-[#F0F2F5] dark:bg-[#3a3b3c] hover:bg-[#E4E6EB] dark:hover:bg-[#4e4f50] flex items-center justify-center transition" title="Notifications">
-            <svg class="w-5 h-5 text-black dark:text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
-        </button>
-        <a href="{{ route('alumni.profile') }}" class="w-10 h-10 rounded-full bg-[#D4A537] flex items-center justify-center text-[#123524] font-bold hover:opacity-90 transition" title="My Profile">
-            {{ strtoupper(substr(auth()->user()->name ?? '?', 0, 1)) }}
+        <a href="{{ route('alumni.profile') }}" class="w-10 h-10 rounded-full overflow-hidden ring-1 ring-black/10 dark:ring-white/10 hover:opacity-90 transition shrink-0" title="My Profile">
+            <img src="{{ $__authAvatarUrl }}" alt="{{ $__authUser->name ?? 'Profile' }}" class="w-full h-full object-cover">
         </a>
         <livewire:auth::logout />
     </div>
 
     <!-- Mobile: compact avatar (identity at a glance) + Menu Toggle -->
     <div class="flex lg:hidden items-center gap-2">
-        <a href="{{ route('alumni.profile') }}" class="w-9 h-9 rounded-full bg-[#D4A537] flex items-center justify-center text-[#123524] font-bold text-sm" title="My Profile">
-            {{ strtoupper(substr(auth()->user()->name ?? '?', 0, 1)) }}
+        <a href="{{ route('alumni.profile') }}" class="w-9 h-9 rounded-full overflow-hidden ring-1 ring-black/10 dark:ring-white/10 shrink-0" title="My Profile">
+            <img src="{{ $__authAvatarUrl }}" alt="{{ $__authUser->name ?? 'Profile' }}" class="w-full h-full object-cover">
         </a>
         <button class="p-2 rounded-full bg-[#F0F2F5] dark:bg-[#3a3b3c] hover:bg-[#E4E6EB] dark:hover:bg-[#4e4f50] transition" id="menu-toggle">
           <svg class="w-5 h-5 text-black dark:text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">

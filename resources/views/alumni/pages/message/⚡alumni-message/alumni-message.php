@@ -1,8 +1,9 @@
 <?php
 
+use App\Models\Category;
 use App\Models\Post;
-// TODO: PostComment model was removed. Reimplement as a relationship on Post (or a new model).
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -16,47 +17,62 @@ new #[Layout('layouts.app-alumni')] class extends Component
     use WithPagination;
 
     public string $title = '';
-    public string $description = '';
+    public ?int $category_id = null;
     public $image;
 
-    // Per-post comment drafts: [postId => commentBody]
-    public array $commentDrafts = [];
+    public bool $composerOpen = false; // now tracked server-side so polling can respect it
 
     protected function rules()
     {
         return [
             'title'       => 'required|string|max:255',
-            'description' => 'nullable|string|max:2000',
-            'image'       => 'nullable|image|max:5120',
+            'category_id' => 'required|exists:categories,id',
+            'image'       => 'required|image|max:5120',
         ];
     }
 
     public function messages()
     {
         return [
-            'title.required' => 'Please write something before posting.',
-            'image.image'    => 'The file must be an image (JPG, PNG).',
-            'image.max'      => 'The image must not be larger than 5MB.',
+            'title.required'       => 'Please write something before posting.',
+            'category_id.required' => 'Please choose a category.',
+            'image.required'       => 'Please attach an image for this post.',
+            'image.image'          => 'The file must be an image (JPG, PNG).',
+            'image.max'            => 'The image must not be larger than 5MB.',
         ];
+    }
+
+    public function toggleComposer()
+    {
+        $this->composerOpen = ! $this->composerOpen;
+    }
+
+    public function closeComposer()
+    {
+        $this->composerOpen = false;
     }
 
     public function post()
     {
         $validated = $this->validate();
 
-        $validated['title']       = $this->sanitizeData($validated['title']);
-        $validated['description'] = $this->sanitizeData($validated['description']);
+        $validated['title'] = $this->sanitizeData($validated['title']);
 
-        $path = $this->image ? $this->image->store('post-images', 'public') : null;
+        $path = $this->image->store('post-images', 'public');
 
         Post::create([
-            'title'       => $validated['title'],
             'user_id'     => Auth::id(),
-            'description' => $validated['description'],
+            'title'       => $validated['title'],
+            'slug'        => Str::slug($validated['title']) . '-' . Str::random(6),
             'image'       => $path,
+            'category_id' => $validated['category_id'],
+            'status'      => 'public',
+            'attachments' => [],
         ]);
 
-        $this->reset(['title', 'description', 'image']);
+        $this->reset(['title', 'category_id', 'image']);
+        $this->composerOpen = false;
+
         session()->flash('success', 'Posted!');
     }
 
@@ -70,38 +86,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
         }
     }
 
-    public function addComment($postId)
-    {
-        $body = trim($this->commentDrafts[$postId] ?? '');
-
-        if ($body === '') {
-            return;
-        }
-
-        $post = Post::find($postId);
-        if (! $post) {
-            return;
-        }
-
-        // TODO: PostComment model was removed. Rebuild against the new comments schema.
-        // PostComment::create([
-        //     'post_id' => $post->id,
-        //     'user_id' => Auth::id(),
-        //     'body'    => Str::of($body)->stripTags()->trim()->toString(),
-        // ]);
-
-        $this->commentDrafts[$postId] = '';
-    }
-
-    public function deleteComment($commentId)
-    {
-        // TODO: PostComment model was removed. Rebuild against the new comments schema.
-        // $comment = PostComment::find($commentId);
-        // if ($comment && $comment->user_id === Auth::id()) {
-        //     $comment->delete();
-        // }
-    }
-
     protected function sanitizeData($data)
     {
         return is_string($data)
@@ -112,9 +96,22 @@ new #[Layout('layouts.app-alumni')] class extends Component
     #[Computed]
     public function posts()
     {
-        return Post::with(['user', 'comments.user'])
-            ->withCount('comments')
+        return Post::with(['user.userProfile'])
             ->latest()
             ->paginate(6);
+    }
+
+    #[Computed]
+    public function categories()
+    {
+        return Category::orderBy('cat_name')->get();
+    }
+
+    #[Computed]
+    public function myAvatarUrl()
+    {
+        $avatar = Auth::user()->userProfile?->avatar;
+
+        return $avatar ? Storage::url($avatar) : null;
     }
 };

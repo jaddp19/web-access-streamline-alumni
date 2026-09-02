@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\DegreeProgram;
+use App\Models\Course;
 use App\Models\Department;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
@@ -9,13 +9,19 @@ use Livewire\Component;
 
 new #[Layout('layouts.app-super-admin')] class extends Component
 {
-    public string $program_name = '';
+    public string $course_title = '';
+    public string $course_desc = '';
+    public string $course_type = 'non-board';
+    public bool $is_active = true;
     public ?int $department_id = null;
 
     protected function rules()
     {
         return [
-            'program_name'  => 'required|string|max:255|unique:degree_programs,program_name',
+            'course_title'  => 'required|string|max:255|unique:courses,course_title',
+            'course_desc'   => 'required|string|max:1000',
+            'course_type'   => 'required|in:board,non-board',
+            'is_active'     => 'boolean',
             'department_id' => 'required|exists:departments,id',
         ];
     }
@@ -23,10 +29,11 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public function messages()
     {
         return [
-            'program_name.required' => 'Course name is required.',
-            'program_name.string'   => 'Course name must be a string.',
-            'program_name.max'      => 'Course name cannot exceed 255 characters.',
-            'program_name.unique'   => 'Course name must be unique.',
+            'course_title.required'  => 'Course name is required.',
+            'course_title.max'       => 'Course name cannot exceed 255 characters.',
+            'course_title.unique'    => 'Course name must be unique.',
+            'course_desc.required'   => 'Please provide a short description.',
+            'course_type.required'   => 'Please select a course type.',
             'department_id.required' => 'Department selection is required.',
             'department_id.exists'   => 'Selected department does not exist.',
         ];
@@ -36,20 +43,20 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     {
         $validated = $this->validate();
 
-        $validated['program_name'] = $this->sanitizeData($validated['program_name']);
-
-        DegreeProgram::create([
-            'program_name'  => $validated['program_name'],
+        Course::create([
+            'course_title'  => $this->sanitizeData($validated['course_title']),
+            'course_slug'   => Str::slug($validated['course_title']),
+            'course_desc'   => $this->sanitizeData($validated['course_desc']),
+            'course_type'   => $validated['course_type'],
+            'is_active'     => $validated['is_active'],
             'department_id' => $validated['department_id'],
         ]);
 
-        session()->flash('success', 'Degree Program created successfully.');
-        // reset form
-        $this->reset(['program_name', 'department_id']);
-        redirect()->route('super-admin.courses.view');
+        session()->flash('success', 'Course created successfully.');
+        return redirect()->route('super-admin.courses.view');
     }
 
-        protected function sanitizeData($data)
+    protected function sanitizeData($data)
     {
         return is_string($data)
             ? Str::of($data)->stripTags()->trim()->toString()
@@ -59,7 +66,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     #[Computed]
     public function departments()
     {
-        return Department::select('id', 'department_name')->get();
+        return Department::select('id', 'dept_name')->where('is_active', true)->orderBy('dept_name')->get();
     }
-
 };

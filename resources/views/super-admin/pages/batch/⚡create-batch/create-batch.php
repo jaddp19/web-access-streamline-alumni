@@ -11,7 +11,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     protected function rules()
     {
         return [
-            'batch_year' => 'required|integer|min:1900|max:' . date('Y') . '|unique:batches,batch_year',
+            'batch_year' => 'required|integer|min:1900|max:' . date('Y') . '|unique:batches,batch_name',
         ];
     }
 
@@ -31,11 +31,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $this->validate();
 
         Batch::create([
-            'batch_year' => $this->batch_year,
+            'batch_name' => (string) $this->batch_year,
         ]);
 
         session()->flash('success', "Batch {$this->batch_year} created successfully.");
         $this->reset('batch_year');
     }
-
 };
