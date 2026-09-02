@@ -23,7 +23,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     {
         $user = User::findOrFail($userId);
 
-        if ($user->hasAnyRole(['admin', 'super-admin'])) {
+        if ($user->hasAnyRole(['program head', 'registrar'])) {
             abort(403, 'Cannot modify staff accounts from this queue.');
         }
 
@@ -58,7 +58,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     {
         $user = User::findOrFail($this->rejectingUserId);
 
-        if ($user->hasAnyRole(['admin', 'super-admin'])) {
+        if ($user->hasAnyRole(['program head', 'registrar'])) {
             abort(403, 'Cannot modify staff accounts from this queue.');
         }
 

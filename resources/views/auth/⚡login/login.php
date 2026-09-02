@@ -66,11 +66,11 @@ new #[Layout('layouts.auth')] class extends Component
                 return redirect()->route('alumni.dashboard');
             }
 
-            if ($user->hasRole('admin')) {
+            if ($user->hasRole('program head')) {
                 return redirect()->route('admin.dashboard');
             }
 
-            if ($user->hasRole('super-admin')) {
+            if ($user->hasRole('registrar')) {
                 return redirect()->route('super-admin.dashboard');
             }
 
