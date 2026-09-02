@@ -1,101 +1,130 @@
 <?php
 
-use App\Models\ProgramHead;
+use App\Models\Department;
+use App\Models\User;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
-use Livewire\WithPagination;
+use Spatie\Permission\Models\Role;
 
-new #[Layout('layouts::app-super-admin')] class extends Component
+new #[Layout('layouts.app-super-admin')] class extends Component
 {
-    use WithPagination; // 🔑 enable pagination methods
-    
-    public $selectedProgramHeads = []; // @var array $selectedProgramHeads IDs of selected Program Heads across all pages
-    public $selectAll = false; // @var bool $selectAll Whether all Program Heads are selected
-    
-    /**
-     * Delete all selected program heads.
-     * Resets selection after deletion.
-     */
+    public $selectedProgramHeads = []; // keys formatted as "{roleId}-{userId}"
+    public $selectAll = false;
+    public int $page = 1;
+    protected int $perPage = 5;
+
     public function deleteSelected()
     {
-        ProgramHead::whereIn('id', $this->selectedProgramHeads)->delete();
+        foreach ($this->selectedProgramHeads as $key) {
+            [$roleId, $userId] = explode('-', $key, 2);
+
+            $role = Role::find($roleId);
+            $user = User::find($userId);
+
+            if ($role && $user) {
+                $user->removeRole($role);
+
+                if ($role->users()->count() === 0) {
+                    $role->delete();
+                }
+            }
+        }
 
         $this->selectedProgramHeads = [];
         $this->selectAll = false;
 
-        session()->flash('success', 'Selected program heads deleted successfully.');
+        session()->flash('success', 'Selected program head assignment(s) removed successfully.');
     }
 
-    public function updatedSelectAll($value) 
-    { 
-        if ($value) 
-        { 
-            // Grab IDs from the all pages, not just current page
-            $this->selectedProgramHeads = $this->programHeads->getCollection()
-            ->pluck('id')
-            ->map(fn($id) => (int) $id)
-            ->toArray(); 
-        } else { 
-            $this->selectedProgramHeads = []; 
-        } 
-    } 
-                     
-    public function updatedSelectedProgramHeads() 
-    { 
-        // Keep header checkbox in sync 
-        $this->selectAll = count($this->selectedProgramHeads) === $this->totalProgramHeadsCount(); 
+    public function updatedSelectAll($value)
+    {
+        $this->selectedProgramHeads = $value
+            ? $this->allProgramHeadRows->pluck('key')->toArray()
+            : [];
     }
 
-    /**
-     * Toggle selection of all Program Heads across pages.
-     */
+    public function updatedSelectedProgramHeads()
+    {
+        $this->selectAll = count($this->selectedProgramHeads) === $this->totalProgramHeadsCount;
+    }
+
     public function toggleSelectAll()
     {
-        $allIds = ProgramHead::pluck('id')->map(fn($id) => (int) $id)->toArray();
-
-        $selectedCount = count($this->selectedProgramHeads);
-        $totalCount = $this->totalProgramHeadsCount();
-
-        if (count($this->selectedProgramHeads) === $this->totalProgramHeadsCount()) 
-            { 
-                $this->selectedProgramHeads = []; 
-                $this->selectAll = false; 
-            } else { 
-                $this->selectedProgramHeads = $allIds; $this->selectAll = true; 
-            }
+        if (count($this->selectedProgramHeads) === $this->totalProgramHeadsCount) {
+            $this->selectedProgramHeads = [];
+            $this->selectAll = false;
+        } else {
+            $this->selectedProgramHeads = $this->allProgramHeadRows->pluck('key')->toArray();
+            $this->selectAll = true;
+        }
     }
 
-    /**
-     * Toggle selection of a single user.
-     */
-    public function toggleRowSelection($programHeadId)
+    public function toggleRowSelection($key)
     {
-        if (in_array($programHeadId, $this->selectedProgramHeads)) {
-            // Remove if already selected
-            $this->selectedProgramHeads = array_values(array_diff($this->selectedProgramHeads, [$programHeadId]));
+        if (in_array($key, $this->selectedProgramHeads)) {
+            $this->selectedProgramHeads = array_values(array_diff($this->selectedProgramHeads, [$key]));
         } else {
-            // Add if not selected
-            $this->selectedProgramHeads[] = $programHeadId;
+            $this->selectedProgramHeads[] = $key;
         }
 
-        // Sync header checkbox
-        $this->selectAll = count($this->selectedProgramHeads) === $this->totalProgramHeadsCount();
+        $this->selectAll = count($this->selectedProgramHeads) === $this->totalProgramHeadsCount;
     }
-    
-     /**
-     * Get the total count of Program Heads for pagination logic.
-     */
+
+    public function previousPage()
+    {
+        $this->page = max(1, $this->page - 1);
+    }
+
+    public function nextPage()
+    {
+        $this->page++;
+    }
+
+    #[Computed]
+    public function allProgramHeadRows()
+    {
+        $departments = Department::select('id', 'dept_name')->get()->keyBy('id');
+
+        return Role::where('name', 'like', 'program-head-%')
+            ->with('users:id,name')
+            ->get()
+            ->flatMap(function ($role) use ($departments) {
+                $deptId = (int) Str::after($role->name, 'program-head-');
+                $department = $departments->get($deptId);
+
+                return $role->users->map(fn ($user) => (object) [
+                    'key'        => $role->id . '-' . $user->id,
+                    'role_id'    => $role->id,
+                    'user'       => $user,
+                    'department' => $department,
+                    'created_at' => $role->created_at,
+                ]);
+            })
+            ->sortByDesc('created_at')
+            ->values();
+    }
 
     #[Computed]
     public function totalProgramHeadsCount()
     {
-        return ProgramHead::count();
+        return $this->allProgramHeadRows->count();
     }
 
     #[Computed]
     public function programHeads()
     {
-        return ProgramHead::with(['user', 'department'])->select('id', 'user_id', 'department_id', 'created_at')->paginate(5);
+        $items = $this->allProgramHeadRows;
+        $offset = ($this->page - 1) * $this->perPage;
+
+        return new LengthAwarePaginator(
+            $items->slice($offset, $this->perPage)->values(),
+            $items->count(),
+            $this->perPage,
+            $this->page,
+            ['path' => request()->url()]
+        );
     }
 };

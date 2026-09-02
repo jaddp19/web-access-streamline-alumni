@@ -28,6 +28,6 @@ class Course extends Model
 
     public function userProfiles(): BelongsToMany
     {
-        return $this->belongsToMany(UserProfile::class, 'user_course', 'course_id', 'user_profile_id');
+        return $this->belongsToMany(UserProfile::class, 'student_course', 'course_id', 'user_profile_id');
     }
 }

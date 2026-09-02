@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('image');
             $table->foreignId('category_id')->constrained('categories')->cascadeOnDelete();
             $table->enum('status', ['public','private','draft']);
+            $table->json('attachments');
             $table->timestamps();
         });
     }

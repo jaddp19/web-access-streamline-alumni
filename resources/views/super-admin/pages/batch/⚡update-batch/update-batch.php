@@ -12,14 +12,14 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public function mount(Batch $batch)
     {
         $this->batch = $batch;
-        $this->batch_year = $batch->batch_year;
+        $this->batch_year = (int) $batch->batch_name;
     }
 
     protected function rules()
     {
         return [
             'batch_year' => 'required|integer|min:1900|max:' . date('Y') .
-                '|unique:batches,batch_year,' . $this->batch->id,
+                '|unique:batches,batch_name,' . $this->batch->id,
         ];
     }
 
@@ -39,11 +39,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $this->validate();
 
         $this->batch->update([
-            'batch_year' => $this->batch_year,
+            'batch_name' => (string) $this->batch_year,
         ]);
 
         session()->flash('success', "Batch {$this->batch_year} updated successfully.");
         redirect()->route('super-admin.batch.view');
     }
-
 };

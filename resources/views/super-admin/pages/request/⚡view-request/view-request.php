@@ -1,15 +1,12 @@
 <?php
 
-use App\Mail\DynamicEmail;
-use App\Models\Email;
 use App\Models\User;
-use Illuminate\Support\Facades\Mail;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new #[Layout('layouts::app-super-admin')] class extends Component
+new #[Layout('layouts.app-super-admin')] class extends Component
 {
     use WithPagination;
 
@@ -35,12 +32,14 @@ new #[Layout('layouts::app-super-admin')] class extends Component
         $user = User::findOrFail($userId);
         $user->assignRole('alumni'); // Spatie method
 
+        session()->flash('success', "{$user->name} has been accepted as an alumni.");
     }
-    
+
     public function decline(int $userId)
     {
         $user = User::findOrFail($userId);
         $user->delete();
+
         session()->flash('success', "User {$user->name} has been deleted.");
     }
 };

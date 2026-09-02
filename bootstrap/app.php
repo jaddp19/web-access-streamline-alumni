@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\DepartmentMiddleware;
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -18,10 +19,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Added by EnvKit so shared (public) URLs keep the https scheme and
+        // public host. Safe locally; remove to opt out.
+        $middleware->trustProxies(at: '*');
          $middleware->alias([
             'auth' => Authenticate::class,
             'role' => RoleMiddleware::class,
             'permission' => PermissionMiddleware::class,
+            'department' => DepartmentMiddleware::class
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

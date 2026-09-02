@@ -1,20 +1,20 @@
 <?php
 
-use App\Models\Email;
+use App\Models\EmailTemplate;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Illuminate\Support\Str;
 
 new #[Layout('layouts.app-super-admin')] class extends Component
 {
-    public int $email;
+    public int $emailId;
     public string $subject = '';
     public string $message = '';
 
     protected function rules()
     {
         return [
-            'subject' => 'required|string|max:255|unique:emails,subject,' . $this->email,
+            'subject' => 'required|string|max:255',
             'message' => 'required|string|max:5000',
         ];
     }
@@ -25,7 +25,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             'subject.required' => 'The subject field is required.',
             'subject.string'   => 'The subject must be a valid string.',
             'subject.max'      => 'The subject must not exceed 255 characters.',
-            'subject.unique'   => 'This subject already exists.',
             'message.required' => 'The message field is required.',
             'message.string'   => 'The message must be a valid string.',
             'message.max'      => 'The message must not exceed 5000 characters.',
@@ -34,11 +33,12 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function mount($email)
     {
-        $email = Email::find($email);
+        $template = EmailTemplate::findOrFail($email);
+        $data = is_array($template->template) ? $template->template : [];
 
-        $this->email = $email->id;
-        $this->subject = $email->subject;
-        $this->message = $email->message;
+        $this->emailId = $template->id;
+        $this->subject = $data['subject'] ?? '';
+        $this->message = $data['message'] ?? '';
     }
 
     public function update()
@@ -46,17 +46,31 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $validated = $this->validate();
 
         // sanitize subject and message
-        $validated['subject'] = $this->sanitizeData($validated['subject']);
-        $validated['message'] = $this->sanitizeData($validated['message']);
+        $subject = $this->sanitizeData($validated['subject']);
+        $message = $this->sanitizeData($validated['message']);
 
         // auto-generate slug from subject
-        $slug = Str::slug($validated['subject']);
+        $slug = Str::slug($subject);
 
-        $email = Email::find($this->email);
-        $email->update([
-            'slug'    => $slug,
-            'subject' => $validated['subject'],
-            'message' => $validated['message'],
+        // enforce slug uniqueness against every OTHER template, since it
+        // lives inside the `template` JSON column and can't use a normal
+        // `unique` rule
+        $duplicateExists = EmailTemplate::where('id', '!=', $this->emailId)
+            ->whereJsonContains('template->slug', $slug)
+            ->exists();
+
+        if ($duplicateExists) {
+            $this->addError('subject', 'A template with this subject already exists.');
+            return;
+        }
+
+        $template = EmailTemplate::findOrFail($this->emailId);
+        $template->update([
+            'template' => [
+                'slug'    => $slug,
+                'subject' => $subject,
+                'message' => $message,
+            ],
         ]);
 
         session()->flash('success', 'Email template updated successfully.');

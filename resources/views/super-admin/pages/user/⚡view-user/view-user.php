@@ -3,15 +3,33 @@
 use App\Models\User;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new #[Layout('layouts::app-super-admin')] class extends Component
+new #[Layout('layouts.app-super-admin')] class extends Component
 {
-    use WithPagination; // 🔑 enable pagination methods
-    public $selectedUsers = []; // @var array $selectedUsers IDs of selected users across all pages
-    public $selectAll = false; // @var bool $selectAll Whether all users are selected
-    
+    use WithPagination;
+
+    #[Url]
+    public string $roleFilter = 'all';
+
+    public $selectedUsers = [];
+    public $selectAll = false;
+
+    public function updatedRoleFilter()
+    {
+        $this->resetPage();
+        $this->selectedUsers = [];
+        $this->selectAll = false;
+    }
+
+    public function setRoleFilter(string $role)
+    {
+        $this->roleFilter = $role;
+        $this->updatedRoleFilter();
+    }
+
     /**
      * Delete all selected users.
      * Resets selection after deletion.
@@ -26,44 +44,40 @@ new #[Layout('layouts::app-super-admin')] class extends Component
         session()->flash('success', 'Selected users deleted successfully.');
     }
 
-    public function updatedSelectAll($value) 
-    { 
-        if ($value) 
-        { 
-            // Grab IDs from the all pages, not just current page
-            $this->selectedUsers = $this->users->getCollection()
-            ->filter(fn($user) => $user->hasRole(['alumni', 'super-admin', 'admin']))
-            ->pluck('id')
-            ->map(fn($id) => (int) $id)
-            ->toArray(); 
-        } else { 
-            $this->selectedUsers = []; 
-        } 
-    } 
-                     
-    public function updatedSelectedUsers() 
-    { 
-        // Keep header checkbox in sync 
-        $this->selectAll = count($this->selectedUsers) === $this->totalUsersCount(); 
+    public function updatedSelectAll($value)
+    {
+        if ($value) {
+            // Grab IDs from all pages under the current filter, not just current page
+            $this->selectedUsers = $this->filteredQuery()
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->toArray();
+        } else {
+            $this->selectedUsers = [];
+        }
+    }
+
+    public function updatedSelectedUsers()
+    {
+        // Keep header checkbox in sync
+        $this->selectAll = count($this->selectedUsers) === $this->totalUsersCount;
     }
 
     /**
-     * Toggle selection of all users across pages.
+     * Toggle selection of all users across pages (respecting the active filter).
      */
     public function toggleSelectAll()
     {
-        $allIds = User::role(['alumni', 'super-admin', 'admin'])->pluck('id')->map(fn($id) => (int) $id)->toArray();
-
-        $selectedCount = count($this->selectedUsers);
-        $totalCount = $this->totalUsersCount;
-
-        if (count($this->selectedUsers) === $this->totalUsersCount()) 
-            { 
-                $this->selectedUsers = []; 
-                $this->selectAll = false; 
-            } else { 
-                $this->selectedUsers = $allIds; $this->selectAll = true; 
-            }
+        if (count($this->selectedUsers) === $this->totalUsersCount) {
+            $this->selectedUsers = [];
+            $this->selectAll = false;
+        } else {
+            $this->selectedUsers = $this->filteredQuery()
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->toArray();
+            $this->selectAll = true;
+        }
     }
 
     /**
@@ -72,34 +86,41 @@ new #[Layout('layouts::app-super-admin')] class extends Component
     public function toggleRowSelection($userId)
     {
         if (in_array($userId, $this->selectedUsers)) {
-            // Remove if already selected
             $this->selectedUsers = array_values(array_diff($this->selectedUsers, [$userId]));
         } else {
-            // Add if not selected
             $this->selectedUsers[] = $userId;
         }
 
-        // Sync header checkbox
-        $this->selectAll = count($this->selectedUsers) === $this->totalUsersCount();
+        $this->selectAll = count($this->selectedUsers) === $this->totalUsersCount;
     }
-    
+
     /**
-     * Computed property: total number of users.
+     * Shared base query respecting the active role filter tab.
+     */
+    protected function filteredQuery()
+    {
+        return User::role(['alumni', 'super-admin', 'admin'])
+            ->when($this->roleFilter !== 'all', function ($query) {
+                $query->role($this->roleFilter);
+            });
+    }
+
+    /**
+     * Computed property: total number of users under the active filter.
      */
     #[Computed]
     public function totalUsersCount()
     {
-        return User::role(['alumni', 'super-admin', 'admin'])->count();
+        return $this->filteredQuery()->count();
     }
-    
+
     /**
-     * Computed property: paginated users with roles.
+     * Computed property: paginated users with roles, under the active filter.
      */
-    #[Computed()]
+    #[Computed]
     public function users()
     {
-        
-        return User::role(['alumni', 'super-admin', 'admin'])
+        return $this->filteredQuery()
             ->with('roles:id,name')
             ->select('id', 'name', 'email', 'created_at')
             ->latest()
