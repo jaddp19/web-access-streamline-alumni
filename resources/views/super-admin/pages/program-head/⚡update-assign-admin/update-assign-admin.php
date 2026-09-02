@@ -80,7 +80,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     #[Computed]
     public function users()
     {
-        return User::role('admin')
+        return User::role('program head')
             ->select('id', 'name')
             ->orderBy('name')
             ->get();
