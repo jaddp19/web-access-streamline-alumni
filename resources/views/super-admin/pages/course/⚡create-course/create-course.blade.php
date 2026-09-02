@@ -40,6 +40,14 @@
                         @error('course_title') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
 
+                    <!-- Course Code -->
+                    <div>
+                        <label for="course_code" class="block text-xs text-black/60 uppercase tracking-wide font-semibold mb-2">Course Code</label>
+                        <input type="text" wire:model.defer="course_code" id="course_code"
+                            class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F7F5EF] text-black focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition">
+                        @error('course_code') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    </div>
+
                     <!-- Description -->
                     <div>
                         <label for="course_desc" class="block text-xs text-black/60 uppercase tracking-wide font-semibold mb-2">Description</label>

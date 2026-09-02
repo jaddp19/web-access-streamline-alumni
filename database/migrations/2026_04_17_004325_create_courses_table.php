@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('course_title');
             $table->string('course_slug');
             $table->string('course_desc');
+            $table->string('course_code')->unique();
             $table->boolean('is_active');
             $table->foreignId('department_id')->constrained('departments')->cascadeOnDelete();
             $table->enum('course_type', ['board','non-board']);
