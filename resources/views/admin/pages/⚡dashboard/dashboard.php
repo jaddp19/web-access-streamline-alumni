@@ -19,7 +19,7 @@ new #[Layout('layouts.app-admin')] class extends Component
     {
         $user = Auth::user();
 
-        if (! $user || (method_exists($user, 'hasRole') && $user->hasRole('super-admin'))) {
+        if (! $user || (method_exists($user, 'hasRole') && $user->hasRole('registrar'))) {
             return null;
         }
 
@@ -31,7 +31,7 @@ new #[Layout('layouts.app-admin')] class extends Component
     {
         $user = Auth::user();
 
-        return $user && method_exists($user, 'hasRole') && $user->hasRole('super-admin');
+        return $user && method_exists($user, 'hasRole') && $user->hasRole('registrar');
     }
 
     #[Computed]
@@ -70,7 +70,7 @@ new #[Layout('layouts.app-admin')] class extends Component
     public function totalFaculty()
     {
         // Only meaningful institution-wide, so only shown for super-admin (see view).
-        return User::role('admin')->count();
+        return User::role('program head')->count();
     }
 
     #[Computed]
