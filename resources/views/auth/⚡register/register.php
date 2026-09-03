@@ -37,7 +37,7 @@ new #[Layout('layouts.auth')] class extends Component
                     }
                 },
             ],
-            'school_id' => 'required|string|max:50|unique:users,school_id',
+            'school_id' => 'required|string|max:9|unique:users,school_id',
             'password' => 'required|string|min:6|confirmed',
         ];
     }
@@ -51,6 +51,7 @@ new #[Layout('layouts.auth')] class extends Component
             'email.unique' => 'The email address is already registered.',
             'school_id.required' => 'Your school ID number is required.',
             'school_id.unique' => 'This school ID is already registered to an account.',
+            'school_id.max' => 'Your school ID number must not exceed 9 characters.',
             'password.required' => 'The password is required.',
             'password.confirmed' => 'Confirmation password does not match the password.',
         ];

@@ -2,6 +2,7 @@
 
 use App\Models\Batch;
 use App\Models\User;
+use App\Models\Department;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -10,47 +11,47 @@ use Spatie\Permission\Models\Role;
 
 new #[Layout('layouts.app-admin')] class extends Component
 {
-    /**
-     * Resolve the logged-in admin's department_id for scoping.
-     * Returns null for super-admin (unscoped / sees everything)
-     * and for admins with no department assigned yet.
-     */
     protected function resolveDepartmentId(): ?int
     {
         $user = Auth::user();
 
-        if (! $user || (method_exists($user, 'hasRole') && $user->hasRole('registrar'))) {
+        if (! $user) {
             return null;
         }
 
-        return $user->department_id ?? null;
+        // Registrar sees everything
+        if ($user->hasRole('registrar')) {
+            return null;
+        }
+
+        // If assignment stored in departments.program_head_id:
+        $department = Department::where('program_head_id', $user->id)->first();
+        return $department?->id;
     }
 
     #[Computed]
-    public function isSuperAdmin(): bool
+    public function isRegistrar(): bool
     {
         $user = Auth::user();
-
-        return $user && method_exists($user, 'hasRole') && $user->hasRole('registrar');
+        return $user && $user->hasRole('registrar');
     }
 
     #[Computed]
     public function myDepartmentName(): ?string
     {
-        return Auth::user()?->department?->dept_name;
+        $departmentId = $this->resolveDepartmentId();
+        return Department::find($departmentId)?->dept_name;
     }
 
     #[Computed]
     public function totalUsers()
     {
-        // Only meaningful institution-wide, so only shown for super-admin (see view).
         return User::count();
     }
 
     #[Computed]
     public function totalRoles()
     {
-        // Only meaningful institution-wide, so only shown for super-admin (see view).
         return Role::count();
     }
 
@@ -61,7 +62,7 @@ new #[Layout('layouts.app-admin')] class extends Component
 
         return User::role('alumni')
             ->when($departmentId, function ($query, $departmentId) {
-                $query->whereHas('profile.courses', fn ($q) => $q->where('department_id', $departmentId));
+                $query->whereHas('userProfile.courses', fn ($q) => $q->where('department_id', $departmentId));
             })
             ->count();
     }
@@ -69,7 +70,6 @@ new #[Layout('layouts.app-admin')] class extends Component
     #[Computed]
     public function totalFaculty()
     {
-        // Only meaningful institution-wide, so only shown for super-admin (see view).
         return User::role('program head')->count();
     }
 
@@ -101,7 +101,7 @@ new #[Layout('layouts.app-admin')] class extends Component
                 ->whereYear('created_at', $month->year)
                 ->whereMonth('created_at', $month->month)
                 ->when($departmentId, function ($query, $departmentId) {
-                    $query->whereHas('profile.courses', fn ($q) => $q->where('department_id', $departmentId));
+                    $query->whereHas('userProfile.courses', fn ($q) => $q->where('department_id', $departmentId));
                 })
                 ->count();
 

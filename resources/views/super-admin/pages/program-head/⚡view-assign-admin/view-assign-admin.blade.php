@@ -13,8 +13,8 @@
                         </svg>
                     </div>
                     <div>
-                        <h2 class="text-xl font-bold text-[#123524]" style="font-family: 'Fraunces', serif;">All Program Heads</h2>
-                        <p class="text-sm text-black/50">Manage all program heads</p>
+                        <h2 class="text-xl font-bold text-[#123524]" style="font-family: 'Fraunces', serif;">All Department Heads</h2>
+                        <p class="text-sm text-black/50">Manage all department heads</p>
                     </div>
                 </div>
 
@@ -24,7 +24,7 @@
                         <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M5 12h14" /><path d="M12 5v14" />
                         </svg>
-                        Assign Program Head
+                        Assign Department Head
                     </a>
                 </div>
             </div>

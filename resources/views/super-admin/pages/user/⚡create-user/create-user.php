@@ -13,6 +13,7 @@ new #[Layout('layouts::app-super-admin')] class extends Component
     public string $name = '';
     public string $email = '';
     public string $password = '';
+    public string $school_id = '';
     public string $password_confirmation = '';
     public string $selectedRole = '';
 
@@ -37,6 +38,7 @@ new #[Layout('layouts::app-super-admin')] class extends Component
             ],
             'password' => 'required|string|min:6|confirmed',
             'selectedRole' => 'exists:roles,name',
+            'school_id' => 'required|string|max:9|unique:users,school_id',
         ];
     }
 
@@ -48,6 +50,9 @@ new #[Layout('layouts::app-super-admin')] class extends Component
             'name.min' => 'The name must be at least 3 characters.',
             'name.max' => 'The name may not be greater than 255 characters.',
             'name.unique' => 'The name is already taken.',
+            'school_id.required' => 'Your school ID number is required.',
+            'school_id.unique' => 'This school ID is already registered to an account.',
+            'school_id.max' => 'Your school ID number must not exceed 9 characters.',
             'password.required' => 'The password is required.',
             'password.confirmed' => 'Confirmation password does not match the password.',
             'email.unique' => 'The email address is already registered.',
@@ -62,10 +67,12 @@ new #[Layout('layouts::app-super-admin')] class extends Component
 
         $validated['name'] = $this->sanitizeData($validated['name']);
         $validated['email'] = $this->sanitizeData($validated['email']);
+        $validated['school_id'] = $this->sanitizeData($validated['school_id']);
 
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
+            'school_id' => $validated['school_id'],
             'password' => Hash::make($validated['password']),
         ]);
 
