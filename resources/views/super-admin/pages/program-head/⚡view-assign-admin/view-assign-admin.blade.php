@@ -97,7 +97,7 @@
                                     <span class="text-black/50">{{ $row->created_at->diffForHumans() }}</span>
                                 </td>
                                 <td class="px-2 sm:px-6 py-3 text-end">
-                                    <a href="{{ route('super-admin.assign.update', ['programHead' => $row->key]) }}"
+                                    <a href="{{ route('super-admin.assign.update', $row->department->id) }}"
                                         class="inline-flex items-center gap-1 text-[#123524] hover:text-[#0d2819] font-semibold hover:underline">
                                         Edit
                                     </a>

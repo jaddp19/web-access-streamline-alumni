@@ -31,24 +31,27 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     }
 
     public function create()
-    {
-        $validated = $this->validate();
+{
+    $validated = $this->validate();
 
-        $user = User::findOrFail($validated['user_id']);
-        $roleName = 'program-head-' . $validated['department_id'];
+    $user = User::findOrFail($validated['user_id']);
+    $department = Department::findOrFail($validated['department_id']);
 
-        if ($user->hasRole($roleName)) {
-            $this->addError('user_id', 'This user is already the program head for that department.');
-            return;
-        }
-
-        $role = Role::firstOrCreate(['name' => $roleName]);
-
-        $user->assignRole($role);
-
-        session()->flash('success', 'Program Head assigned successfully.');
-        return redirect()->route('super-admin.assign.view');
+    // Ensure user has the program head role
+    if (! $user->hasRole('program head')) {
+        session()->flash('error', 'Selected user must already have the Program Head role.');
+        return;
     }
+
+    // Assign user as program head of the department
+    $department->program_head_id = $user->id;
+    $department->save();
+
+    session()->flash('success', "{$user->name} assigned as Program Head of {$department->dept_name}.");
+    return redirect()->route('super-admin.assign.view');
+}
+
+
 
     #[Computed]
     public function users()

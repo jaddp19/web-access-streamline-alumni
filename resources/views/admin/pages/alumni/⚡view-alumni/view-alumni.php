@@ -19,10 +19,31 @@ new #[Layout('layouts.app-admin')] class extends Component
     #[Computed]
     public function educationalBackgrounds()
     {
-        return UserProfile::query()
-            ->whereHas('user', fn ($q) => $q->role('alumni'))
-            ->with(['user', 'batch', 'courses.department'])
-            ->latest()
-            ->paginate(5);
+        $user = Auth::user();
+
+        // If super-admin, show all alumni
+        if ($user->hasRole('super-admin')) {
+            return UserProfile::query()
+                ->whereHas('user', fn ($q) => $q->role('alumni'))
+                ->with(['user', 'batch', 'courses.department'])
+                ->latest()
+                ->paginate(5);
+        }
+
+        // If program head, filter by their department
+        if ($user->hasRole('program head') && $user->headedDepartment) {
+            $deptId = $user->headedDepartment->id;
+
+            return UserProfile::query()
+                ->whereHas('courses.department', fn ($q) => $q->where('id', $deptId))
+                ->whereHas('user', fn ($q) => $q->role('alumni'))
+                ->with(['user', 'batch', 'courses.department'])
+                ->latest()
+                ->paginate(5);
+        }
+
+        // Default: empty result
+        return UserProfile::query()->whereRaw('0=1')->paginate(5);
     }
+
 };

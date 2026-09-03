@@ -2,31 +2,21 @@
 
 use App\Models\Department;
 use App\Models\User;
-use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
-use Spatie\Permission\Models\Role;
 
 new #[Layout('layouts.app-super-admin')] class extends Component
 {
-    public string $programHead = ''; // "{roleId}-{userId}" — matches the route param name exactly
-    public Role $role;
-    public User $user;
     public ?int $user_id = null;
     public ?int $department_id = null;
+    public Department $department;
 
-    public function mount(string $programHead)
+    public function mount(Department $department)
     {
-        $this->programHead = $programHead;
-
-        [$roleId, $userId] = explode('-', $programHead, 2);
-
-        $this->role = Role::findOrFail($roleId);
-        $this->user = User::findOrFail($userId);
-
-        $this->user_id = $this->user->id;
-        $this->department_id = (int) Str::after($this->role->name, 'program-head-');
+        $this->department = $department;
+        $this->user_id = $department->program_head_id;
+        $this->department_id = $department->id;
     }
 
     protected function rules()
@@ -52,26 +42,17 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $validated = $this->validate();
 
         $newUser = User::findOrFail($validated['user_id']);
-        $newRoleName = 'program-head-' . $validated['department_id'];
 
-        $isUnchanged = $newUser->id === $this->user->id && $newRoleName === $this->role->name;
-
-        if (! $isUnchanged && $newUser->hasRole($newRoleName)) {
-            $this->addError('user_id', 'This user is already the program head for that department.');
+        // Ensure user has the program head role
+        if (! $newUser->hasRole('program head')) {
+            $this->addError('user_id', 'Selected user must already have the Program Head role.');
             return;
         }
 
-        if (! $isUnchanged) {
-            // Remove the old assignment.
-            $this->user->removeRole($this->role);
-            if ($this->role->users()->count() === 0) {
-                $this->role->delete();
-            }
-
-            // Apply the new assignment.
-            $newRole = Role::firstOrCreate(['name' => $newRoleName]);
-            $newUser->assignRole($newRole);
-        }
+        // Update assignment
+        $department = Department::findOrFail($validated['department_id']);
+        $department->program_head_id = $newUser->id;
+        $department->save();
 
         session()->flash('success', 'Program Head updated successfully.');
         return redirect()->route('super-admin.assign.view');

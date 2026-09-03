@@ -30,12 +30,12 @@ Route::middleware(['auth', 'role:registrar'])->prefix('super-admin')->group(func
 
     Route::livewire('/admin/assign/view', 'super-admin::pages.program-head.view-assign-admin')->name('super-admin.assign.view');
     Route::livewire('/admin/assign/create', 'super-admin::pages.program-head.create-assign-admin')->name('super-admin.assign.create');
-    Route::livewire('/admin/assign/update/{programHead}', 'super-admin::pages.program-head.update-assign-admin')->name('super-admin.assign.update');
+    Route::livewire('/admin/assign/update/{department}', 'super-admin::pages.program-head.update-assign-admin')->name('super-admin.assign.update');
 
     Route::livewire('/department/view', 'super-admin::pages.department.view-department')->name('super-admin.department.view');
     Route::livewire('/courses/view', 'super-admin::pages.course.view-course')->name('super-admin.courses.view');
     Route::livewire('/course/create', 'super-admin::pages.course.create-course')->name('super-admin.course.create');
-    Route::livewire('/course/update/{program}', 'super-admin::pages.course.update-course')->name('super-admin.course.update');
+    Route::livewire('/course/update/{course}', 'super-admin::pages.course.update-course')->name('super-admin.course.update');
 
     Route::livewire('/department/create', 'super-admin::pages.department.create-department')->name('super-admin.department.create');
     Route::livewire('/department/update/{department}', 'super-admin::pages.department.update-department')->name('super-admin.department.update');
