@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Batch;
 use App\Models\User;
 use Database\Seeders\CategorySeeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -23,6 +24,7 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             CategorySeeder::class,
             PermissionSeeder::class,
+            BatchSeeder::class,
         ]);
         // Create roles if not already seeded
         $superAdminRole = Role::firstOrCreate(['name' => 'registrar']);
@@ -61,5 +63,6 @@ class DatabaseSeeder extends Seeder
             ]
         );
         $alumni->assignRole($alumniRole);
+
     }
 }

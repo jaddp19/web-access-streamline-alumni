@@ -31,33 +31,47 @@
     <div class="bg-white border border-black/10 rounded-3xl p-8">
         <form wire:submit.prevent="update" class="space-y-6">
 
-            <!-- Batch Year -->
-            <div>
-                <label class="flex items-center gap-2 text-xs text-black/60 uppercase tracking-wide font-semibold mb-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-                    </svg>
-                    Batch Year
-                </label>
-                <input type="number" wire:model.defer="batch_year"
-                    class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black placeholder:text-black/40 focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition"
-                    placeholder="e.g. 2026"
-                    inputmode="numeric" min="1950" max="{{ date('Y') + 1 }}" step="1">
-                @error('batch_year') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+           <!-- Batch -->
+<div>
+    <label class="flex items-center gap-2 text-xs text-black/60 uppercase tracking-wide font-semibold mb-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+        </svg>
+        Batch
+    </label>
 
-                <!-- Quick-pick year chips -->
-                <div class="flex flex-wrap gap-2 mt-3">
-                    @foreach ($this->recentYears as $year)
-                        <button type="button" wire:click="pickYear({{ $year }})"
-                            class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition
-                                {{ $batch_year === $year
-                                    ? 'bg-[#123524] text-white border-[#123524]'
-                                    : 'bg-white text-black/60 border-black/10 hover:border-[#123524]/40 hover:text-black' }}">
-                            {{ $year }}
-                        </button>
-                    @endforeach
-                </div>
-            </div>
+    <!-- Dropdown of batches -->
+    <select wire:model.defer="batch_id"
+            class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black
+                   placeholder:text-black/40 focus:outline-none focus:border-[#123524]
+                   focus:ring-1 focus:ring-[#123524] transition">
+        <option value="">-- Select Batch --</option>
+        @foreach ($this->batches as $batch)
+            <option value="{{ $batch->id }}">{{ $batch->batch_name }}</option>
+        @endforeach
+    </select>
+    @error('batch_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+
+    <!-- Quick-pick year chips (optional shortcut) -->
+    <div class="flex flex-wrap gap-2 mt-3">
+        @foreach ($this->recentYears as $year)
+            @php
+                $existingBatch = $this->batches->firstWhere('batch_name', 'Batch ' . $year);
+            @endphp
+            @if($existingBatch)
+                <button type="button" wire:click="$set('batch_id', {{ $existingBatch->id }})"
+                        class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition
+                            {{ $batch_id === $existingBatch->id
+                                ? 'bg-[#123524] text-white border-[#123524]'
+                                : 'bg-white text-black/60 border-black/10 hover:border-[#123524]/40 hover:text-black' }}">
+                    {{ $year }}
+                </button>
+            @endif
+        @endforeach
+    </div>
+</div>
+
 
             <!-- Degree Program -->
             <div>

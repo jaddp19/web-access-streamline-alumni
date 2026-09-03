@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('user_profiles', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->string('avatar');
+            $table->string('avatar')->nullable();
             $table->json('location');
             $table->foreignId('batch_id')->constrained('batches')->cascadeOnDelete();
             $table->boolean('is_private');

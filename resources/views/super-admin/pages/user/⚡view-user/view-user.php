@@ -13,6 +13,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     #[Url]
     public string $roleFilter = 'all';
+    public string $search = ''; // <-- add search property
 
     public $selectedUsers = [];
     public $selectAll = false;
@@ -30,10 +31,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $this->updatedRoleFilter();
     }
 
-    /**
-     * Delete all selected users.
-     * Resets selection after deletion.
-     */
     public function deleteSelected()
     {
         User::role(['alumni', 'registrar', 'program head'])->whereIn('id', $this->selectedUsers)->delete();
@@ -47,7 +44,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public function updatedSelectAll($value)
     {
         if ($value) {
-            // Grab IDs from all pages under the current filter, not just current page
             $this->selectedUsers = $this->filteredQuery()
                 ->pluck('id')
                 ->map(fn ($id) => (int) $id)
@@ -59,13 +55,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function updatedSelectedUsers()
     {
-        // Keep header checkbox in sync
         $this->selectAll = count($this->selectedUsers) === $this->totalUsersCount;
     }
 
-    /**
-     * Toggle selection of all users across pages (respecting the active filter).
-     */
     public function toggleSelectAll()
     {
         if (count($this->selectedUsers) === $this->totalUsersCount) {
@@ -80,9 +72,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         }
     }
 
-    /**
-     * Toggle selection of a single user.
-     */
     public function toggleRowSelection($userId)
     {
         if (in_array($userId, $this->selectedUsers)) {
@@ -95,28 +84,28 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     }
 
     /**
-     * Shared base query respecting the active role filter tab.
+     * Shared base query respecting the active role filter + search term.
      */
     protected function filteredQuery()
     {
         return User::role(['alumni', 'registrar', 'program head'])
             ->when($this->roleFilter !== 'all', function ($query) {
                 $query->role($this->roleFilter);
+            })
+            ->when($this->search !== '', function ($query) {
+                $query->where(function ($q) {
+                    $q->where('name', 'like', '%' . $this->search . '%')
+                      ->orWhere('email', 'like', '%' . $this->search . '%');
+                });
             });
     }
 
-    /**
-     * Computed property: total number of users under the active filter.
-     */
     #[Computed]
     public function totalUsersCount()
     {
         return $this->filteredQuery()->count();
     }
 
-    /**
-     * Computed property: paginated users with roles, under the active filter.
-     */
     #[Computed]
     public function users()
     {

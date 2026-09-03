@@ -27,16 +27,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             abort(403, 'Cannot modify staff accounts from this queue.');
         }
 
-        $profile = UserProfile::firstOrCreate(['user_id' => $user->id]);
-
-        $location = is_array($profile->location) ? $profile->location : [];
-        unset($location['rejected_at'], $location['rejection_reason']);
-
-        $profile->update([
-            'is_verified' => true,
-            'location'    => $location,
-        ]);
-
         $user->syncRoles(['alumni']);
 
         session()->flash('status', "{$user->name} has been approved as a verified alumni.");
@@ -95,7 +85,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                         ->orWhere('email', 'like', "%{$this->search}%");
                 }))
                 ->latest()
-                ->paginate(8),
+                ->paginate(5),
         ];
     }
 };
