@@ -217,7 +217,7 @@
                                 <td class="px-3 lg:px-6 py-3 text-end">
                                     <a href="{{ route('super-admin.user.update', $user->id) }}"
                                         class="inline-flex items-center gap-1 text-[#123524] hover:text-[#0d2819] font-semibold hover:underline">
-                                        Edit
+                                        View
                                     </a>
                                 </td>
                             </tr>
