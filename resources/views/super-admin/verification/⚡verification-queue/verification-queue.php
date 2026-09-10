@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\User;
-use App\Models\UserProfile;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -27,14 +26,14 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             abort(403, 'Cannot modify staff accounts from this queue.');
         }
 
-        $profile = UserProfile::firstOrCreate(['user_id' => $user->id]);
-
-        $location = is_array($profile->location) ? $profile->location : [];
-        unset($location['rejected_at'], $location['rejection_reason']);
-
-        $profile->update([
-            'is_verified' => true,
-            'location'    => $location,
+        // Verification here is purely: did they register with a legitimate
+        // email + school ID? No profile, batch, or avatar data is required
+        // or touched at this stage — that's completed later by the alumni
+        // themselves once they're in.
+        $user->update([
+            'verification_status' => 'approved',
+            'rejection_reason'    => null,
+            'rejected_at'         => null,
         ]);
 
         $user->syncRoles(['alumni']);
@@ -62,16 +61,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             abort(403, 'Cannot modify staff accounts from this queue.');
         }
 
-        $profile = UserProfile::firstOrCreate(['user_id' => $user->id]);
-
-        $location = is_array($profile->location) ? $profile->location : [];
-
-        $profile->update([
-            'is_verified' => false,
-            'location' => array_merge($location, [
-                'rejected_at'      => now()->toDateTimeString(),
-                'rejection_reason' => $this->rejectReasonInput ?: 'Could not be verified against school records.',
-            ]),
+        $user->update([
+            'verification_status' => 'rejected',
+            'rejection_reason'    => $this->rejectReasonInput ?: 'Could not be verified against school records.',
+            'rejected_at'         => now(),
         ]);
 
         // Rejected applicants keep the 'pending-verification' role so they
@@ -92,7 +85,8 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             'pendingUsers' => User::role('pending-verification')
                 ->when($this->search, fn ($q) => $q->where(function ($q) {
                     $q->where('name', 'like', "%{$this->search}%")
-                        ->orWhere('email', 'like', "%{$this->search}%");
+                        ->orWhere('email', 'like', "%{$this->search}%")
+                        ->orWhere('school_id', 'like', "%{$this->search}%");
                 }))
                 ->latest()
                 ->paginate(8),

@@ -14,6 +14,9 @@ Route::livewire('/login', 'auth::login')->name('login');
 Route::livewire('/register', 'auth::register')->name('register');
 Route::livewire('/pop-up', 'auth::pop-up')->name('pop-up');
 
+//forms
+Route::livewire('/form', 'auth::form.form-answer')->name('form');
+
 Route::middleware(['auth', 'role:super-admin'])->prefix('super-admin')->group(function () {
     Route::livewire('/dashboard', 'super-admin::pages.dashboard')->name('super-admin.dashboard');
 

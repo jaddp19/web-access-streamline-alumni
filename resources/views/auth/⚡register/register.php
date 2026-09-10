@@ -77,8 +77,8 @@ new #[Layout('layouts.auth')] class extends Component
         Auth::login($user);
         request()->session()->regenerate();
 
-        return redirect()->route('verification.pending')
-            ->with('status', 'Thanks for registering! Your account is under review — we\'ll notify you once approved.');
+        return redirect()->route('form')
+            ->with('status', 'Thanks for registering! Please complete the tracer study form below.');
     }
 
     protected function sanitizeData($data)
