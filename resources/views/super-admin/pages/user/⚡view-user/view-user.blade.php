@@ -156,7 +156,7 @@
             <div class="hidden sm:block overflow-x-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-md [&::-webkit-scrollbar-thumb]:bg-black/10">
                 <table class="min-w-full text-xs sm:text-sm">
                     <thead class="bg-[#F7F5EF] border-b border-black/5">
-                        <tr data-user-row>
+                        <tr>
                             <th class="ps-6 py-3 w-4">
                                 <input type="checkbox" wire:click="toggleSelectAll" @checked($selectAll) x-data
                                     x-init="$watch('$wire.selectedUsers', value => {
@@ -188,7 +188,7 @@
                                         class="rounded border-black/20 text-[#123524] focus:ring-[#123524] align-middle">
                                 </td>
                                 <td class="px-3 lg:px-6 py-3">
-                                    <div class="flex items-center gap-3" data-user-row>
+                                    <div class="flex items-center gap-3">
                                         <div class="w-8 h-8 rounded-full bg-[#123524]/10 flex items-center justify-center text-[#123524] text-xs font-bold shrink-0">
                                             {{ strtoupper(substr($user->name, 0, 1)) }}
                                         </div>
@@ -222,7 +222,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr data-user-row>
+                            <tr>
                                 <td colspan="6" class="px-6 py-12 text-center">
                                     <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-[#123524]/5 flex items-center justify-center">
                                         <svg class="w-6 h-6 text-[#123524]/30" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">

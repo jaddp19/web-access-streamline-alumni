@@ -95,9 +95,11 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             ->when($this->search !== '', function ($query) {
                 $query->where(function ($q) {
                     $q->where('name', 'like', '%' . $this->search . '%')
-                      ->orWhere('email', 'like', '%' . $this->search . '%');
+                    ->orWhere('email', 'like', '%' . $this->search . '%')
+                    ->orWhereHas('roles', fn ($r) => $r->where('name', 'like', '%' . $this->search . '%'));
                 });
             });
+
     }
 
     #[Computed]
