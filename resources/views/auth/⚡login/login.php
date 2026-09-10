@@ -63,6 +63,9 @@ new #[Layout('layouts.auth')] class extends Component
             $user = Auth::user();
 
             if ($user->hasRole('alumni')) {
+                if (! \App\Models\TracerStudy::where('user_id', $user->id)->exists()) {
+                    return redirect()->route('form');
+                }
                 return redirect()->route('alumni.dashboard');
             }
 

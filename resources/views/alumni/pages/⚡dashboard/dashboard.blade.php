@@ -116,47 +116,6 @@
 
         {{-- ===== RIGHT SIDEBAR ===== --}}
         <aside class="lg:col-span-3 space-y-4">
-            {{-- Account status / completion --}}
-            <div class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm p-4 sticky top-24 border border-transparent dark:border-white/5">
-                <h3 class="text-sm font-bold text-black/60 dark:text-white/60 uppercase tracking-wide mb-3">Your account</h3>
-
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs text-black/60 dark:text-white/60 font-semibold">Status</span>
-                        @if ($this->userProfile?->is_verified)
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
-                                Verified
-                            </span>
-                        @else
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
-                                Pending
-                            </span>
-                        @endif
-                    </div>
-
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs text-black/60 dark:text-white/60 font-semibold">Profile</span>
-                        <span class="text-sm font-bold text-black dark:text-white">{{ $this->profileCompletion['percent'] }}%</span>
-                    </div>
-                    <div class="w-full h-1.5 bg-[#F0F2F5] dark:bg-[#3A3B3C] rounded-full overflow-hidden">
-                        <div class="h-full bg-[#1877F2] rounded-full transition-all" style="width: {{ $this->profileCompletion['percent'] }}%"></div>
-                    </div>
-
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs text-black/60 dark:text-white/60 font-semibold">Batch</span>
-                        <span class="text-xs font-semibold text-black dark:text-white">
-                            {{ $this->userProfile?->batch?->batch_name ?? 'Not set' }}
-                        </span>
-                    </div>
-                </div>
-
-                @if ($this->profileCompletion['percent'] < 100)
-                    <a href="{{ route('alumni.profile.update', $this->alumni->id) }}" class="mt-4 block w-full text-center py-2 rounded-lg bg-[#F0F2F5] dark:bg-[#3A3B3C] hover:bg-[#E4E6EB] dark:hover:bg-[#4E4F50] text-sm font-semibold text-black dark:text-white transition">
-                        Finish setup
-                    </a>
-                @endif
-            </div>
-
             {{-- Quick links --}}
             <div class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm overflow-hidden border border-transparent dark:border-white/5">
                 <div class="px-4 py-3 border-b border-black/5 dark:border-white/5">

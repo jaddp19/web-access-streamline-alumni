@@ -68,13 +68,7 @@
                             <span class="font-mono">School ID: {{ $user->school_id }}</span>
                         </div>
 
-                        @php
-                            $location = $user->userProfile && is_array($user->userProfile->location)
-                                ? $user->userProfile->location
-                                : [];
-                        @endphp
-
-                        @if (! empty($location['rejected_at']))
+                        @if ($user->rejected_at)
                             <div class="mt-3 text-sm text-red-700 bg-red-50 border border-red-100 rounded-xl p-3.5">
                                 <div class="text-xs text-red-500 font-semibold tracking-wide uppercase flex items-center gap-1.5">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
@@ -82,8 +76,8 @@
                                     </svg>
                                     Previously Rejected
                                 </div>
-                                <div class="mt-1">{{ $location['rejection_reason'] }}</div>
-                                <div class="text-xs text-red-400 mt-1">{{ \Carbon\Carbon::parse($location['rejected_at'])->diffForHumans() }}</div>
+                                <div class="mt-1">{{ $user->rejection_reason }}</div>
+                                <div class="text-xs text-red-400 mt-1">{{ $user->rejected_at->diffForHumans() }}</div>
                             </div>
                         @endif
                     </div>

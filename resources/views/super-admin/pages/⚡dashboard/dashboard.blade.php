@@ -116,9 +116,57 @@
                         <canvas id="comparativeChart" class="w-full h-full"></canvas>
                     </div>
                 </div>
-
             </div>
             <!-- End Charts Grid -->
+
+            <!-- Analytics Section -->
+            <div>
+                <h2 class="text-lg sm:text-xl font-bold text-[#0f2b1c]" style="font-family: 'Fraunces', serif;">Analytics</h2>
+                <p class="text-sm text-black/50 mt-0.5">Deeper breakdown from the tracer study.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+                <!-- Employment Type -->
+                <div class="bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
+                    <h2 class="text-sm font-bold text-[#0f2b1c] mb-1">Employment Type</h2>
+                    <p class="text-xs text-black/40 mb-3">Full-time, part-time, freelance, etc.</p>
+                    <div class="w-full h-64">
+                        <canvas id="employmentTypeChart" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+
+                <!-- Organization Type -->
+                <div class="bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
+                    <h2 class="text-sm font-bold text-[#0f2b1c] mb-1">Organization Type</h2>
+                    <p class="text-xs text-black/40 mb-3">Where alumni currently work</p>
+                    <div class="w-full h-64">
+                        <canvas id="organizationTypeChart" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+                <!-- Employment Area -->
+                <div class="bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
+                    <h2 class="text-sm font-bold text-[#0f2b1c] mb-1">Employment Area</h2>
+                    <p class="text-xs text-black/40 mb-3">Philippines vs. abroad</p>
+                    <div class="w-full h-64">
+                        <canvas id="employmentAreaChart" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+
+                <!-- Time to First Job -->
+                <div class="bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
+                    <h2 class="text-sm font-bold text-[#0f2b1c] mb-1">Time to First Job</h2>
+                    <p class="text-xs text-black/40 mb-3">How long after graduation alumni got employed</p>
+                    <div class="w-full h-64">
+                        <canvas id="monthsToFirstJobChart" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+            </div>
+            <!-- End Analytics Section -->
         </div>
     </div>
 </div>
@@ -127,8 +175,8 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     // Alumni Graduates Chart
-    const rawLabels = @json(array_keys($alumniByDept));
-    const alumniCounts = @json(array_values($alumniByDept));
+    const rawLabels = @json($this->alumniByDept);
+    const alumniCounts = @json(array_values($this->alumniByDept));
 
     const alumniLabels = rawLabels.map(label => {
         return label
@@ -178,7 +226,8 @@
     });
 
     // Comparative Analysis Chart
-    const compRawLabels = @json(array_keys($alumniByDept));
+    const analyticsData = @json($this->courseAnalytics);
+    const compRawLabels = analyticsData.map(item => item.course_title);
     const compLabels = compRawLabels.map(label => {
         return label
             .trim()
@@ -195,14 +244,14 @@
             datasets: [
                 {
                     label: 'Aligned with Work',
-                    data: [80, 70, 60, 75, 65],
+                    data: analyticsData.map(item => item.related_rate),
                     backgroundColor: '#16a34a',
                     borderRadius: 6,
                     maxBarThickness: 28
                 },
                 {
                     label: 'Not Aligned',
-                    data: [20, 30, 40, 25, 35],
+                    data: analyticsData.map(item => 100 - item.related_rate),
                     backgroundColor: '#D4A537',
                     borderRadius: 6,
                     maxBarThickness: 28
@@ -235,6 +284,108 @@
                         }
                     }
                 }
+            }
+        }
+    });
+
+    // Employment Type Chart
+    const typeData = @json($this->employmentTypeBreakdown);
+    const typeCtx = document.getElementById('employmentTypeChart');
+    new Chart(typeCtx, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(typeData).map(l => l.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())),
+            datasets: [{
+                data: Object.values(typeData),
+                backgroundColor: '#16a34a',
+                borderRadius: 6,
+                maxBarThickness: 40
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#f1f1f1' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    // Organization Type Chart
+    const orgData = @json($this->organizationTypeBreakdown);
+    const orgCtx = document.getElementById('organizationTypeChart');
+    new Chart(orgCtx, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(orgData).map(l => l.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())),
+            datasets: [{
+                data: Object.values(orgData),
+                backgroundColor: '#D4A537',
+                borderRadius: 6,
+                maxBarThickness: 40
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { beginAtZero: true, grid: { color: '#f1f1f1' } },
+                y: { grid: { display: false } }
+            }
+        }
+    });
+
+    // Employment Area Chart
+    const areaData = @json($this->employmentAreaBreakdown);
+    const areaCtx = document.getElementById('employmentAreaChart');
+    new Chart(areaCtx, {
+        type: 'pie',
+        data: {
+            labels: Object.keys(areaData).map(l => l.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())),
+            datasets: [{
+                data: Object.values(areaData),
+                backgroundColor: ['#16a34a', '#3b82f6'],
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { boxWidth: 12, padding: 20, font: { size: 11 } }
+                }
+            }
+        }
+    });
+
+    // Months to First Job Chart
+    const monthsData = @json($this->monthsToFirstJobBreakdown);
+    const monthsCtx = document.getElementById('monthsToFirstJobChart');
+    new Chart(monthsCtx, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(monthsData).map(l => l.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())),
+            datasets: [{
+                data: Object.values(monthsData),
+                backgroundColor: '#3b82f6',
+                borderRadius: 6,
+                maxBarThickness: 45
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#f1f1f1' } },
+                x: { grid: { display: false } }
             }
         }
     });
