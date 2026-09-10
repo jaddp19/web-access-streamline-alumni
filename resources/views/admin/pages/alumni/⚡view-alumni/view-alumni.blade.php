@@ -44,7 +44,6 @@
 
                     <tbody class="divide-y divide-black/5">
                         @forelse ($this->educationalBackgrounds as $profile)
-                            @php $course = $profile->courses->first(); @endphp
                             <tr class="hover:bg-black/[0.02] transition-colors">
                                 <td class="px-2 sm:px-6 py-3">
                                     <div class="flex items-center gap-3">
@@ -63,10 +62,14 @@
                                     <span class="text-black/70">{{ $profile->user->email ?? 'N/A' }}</span>
                                 </td>
                                 <td class="hidden sm:table-cell px-2 sm:px-6 py-3">
-                                    <span class="text-black/70">{{ $course->course_title ?? 'N/A' }}</span>
+                                    <span class="text-black/70">
+                                        {{ $profile->courses->pluck('course_title')->join(', ') ?: 'N/A' }}
+                                    </span>
                                 </td>
                                 <td class="hidden lg:table-cell px-2 sm:px-6 py-3">
-                                    <span class="text-black/70">{{ $course->department->dept_name ?? 'N/A' }}</span>
+                                    <span class="text-black/70">
+                                        {{ $profile->courses->pluck('department.dept_name')->filter()->unique()->join(', ') ?: 'N/A' }}
+                                    </span>
                                 </td>
                                 <td class="hidden md:table-cell px-2 sm:px-6 py-3">
                                     <span class="inline-flex items-center text-[10px] px-2 py-0.5 rounded-full bg-[#D4A537]/15 text-[#a97f1f] font-semibold">
@@ -74,10 +77,12 @@
                                     </span>
                                 </td>
                                 <td class="px-2 sm:px-6 py-3 text-end">
-                                    <a href="{{ route('admin.alumni.update', $profile->user->id) }}"
-                                        class="inline-flex items-center gap-1 text-[#123524] hover:text-[#0d2819] font-semibold hover:underline">
-                                        View
-                                    </a>
+                                    @if ($profile->user)
+                                        <a href="{{ route('admin.alumni.update', $profile->user->id) }}"
+                                            class="inline-flex items-center gap-1 text-[#123524] hover:text-[#0d2819] font-semibold hover:underline">
+                                            View
+                                        </a>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
@@ -111,7 +116,6 @@
                 </p>
 
                 <div class="inline-flex gap-x-2">
-                    {{-- Prev Button --}}
                     @if ($this->educationalBackgrounds->onFirstPage())
                         <button disabled
                             class="px-4 py-2 inline-flex items-center justify-center gap-x-1 text-sm font-semibold rounded-lg border border-black/10 text-black/30 cursor-not-allowed">
@@ -130,7 +134,6 @@
                         </button>
                     @endif
 
-                    {{-- Next Button --}}
                     @if ($this->educationalBackgrounds->hasMorePages())
                         <button wire:click="nextPage"
                             class="px-4 py-2 inline-flex items-center justify-center gap-x-1 text-sm font-semibold rounded-lg bg-[#123524] text-white hover:bg-[#0d2819] transition">

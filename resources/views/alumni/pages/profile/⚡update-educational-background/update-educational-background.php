@@ -11,28 +11,25 @@ use Livewire\Component;
 
 new #[Layout('layouts.app-alumni')] class extends Component
 {
-    public ?int $batch_year = null;
+    public ?int $batch_id = null;
     public ?int $course_id = null;
     public bool $is_public = true;
 
     protected function rules()
     {
         return [
-            'batch_year' => 'required|integer|digits:4|min:1950|max:' . (date('Y') + 1),
-            'course_id'  => 'required|exists:courses,id',
-            'is_public'  => 'boolean',
+            'batch_id'  => 'required|exists:batches,id',
+            'course_id' => 'required|exists:courses,id',
+            'is_public' => 'boolean',
         ];
     }
 
     public function messages()
     {
         return [
-            'batch_year.required' => 'Please enter your batch year.',
-            'batch_year.integer'  => 'Batch year must be a number.',
-            'batch_year.digits'   => 'Batch year must be a 4-digit year (e.g. 2026).',
-            'batch_year.min'      => 'Batch year must be a valid year.',
-            'batch_year.max'      => 'Batch year cannot be in the future beyond next year.',
-            'course_id.required'  => 'Please select your degree program.',
+            'batch_id.required' => 'Please select your batch.',
+            'batch_id.exists'   => 'Selected batch is invalid.',
+            'course_id.required'=> 'Please select your degree program.',
         ];
     }
 
@@ -41,7 +38,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
         $user    = Auth::user();
         $profile = UserProfile::where('user_id', $user->id)->first();
 
-        // No personal profile yet — send them there first instead of crashing.
         if (! $profile) {
             session()->flash('error', 'Please complete your personal information first.');
             $this->redirect(route('alumni.profile.update', $user->id));
@@ -49,8 +45,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
         }
 
         if ($profile->batch) {
-            $year = (int) preg_replace('/\D/', '', $profile->batch->batch_name);
-            $this->batch_year = $year > 0 ? $year : null;
+            $this->batch_id = $profile->batch->id;
         }
 
         $existingCourse = $profile->courses()->first();
@@ -59,11 +54,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
         }
 
         $this->is_public = ! $profile->is_private;
-    }
-
-    public function pickYear(int $year)
-    {
-        $this->batch_year = $year;
     }
 
     public function update()
@@ -79,15 +69,11 @@ new #[Layout('layouts.app-alumni')] class extends Component
         }
 
         try {
-            // Find the batch matching the typed year, or create it if it doesn't exist yet.
-            $batch = Batch::firstOrCreate(['batch_name' => (string) $validated['batch_year']]);
-
             $profile->update([
-                'batch_id'   => $batch->id,
+                'batch_id'   => $validated['batch_id'],
                 'is_private' => ! $validated['is_public'],
             ]);
 
-            // One course per profile for now — swap sync() for attach() if you need multiple.
             $profile->courses()->sync([$validated['course_id']]);
 
             session()->flash('success', 'Educational Background updated successfully.');
@@ -103,13 +89,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
         }
     }
 
-    protected function sanitizeData($data)
-    {
-        return is_string($data)
-            ? Str::of($data)->stripTags()->trim()->toString()
-            : $data;
-    }
-
     #[Computed]
     public function courses()
     {
@@ -117,13 +96,9 @@ new #[Layout('layouts.app-alumni')] class extends Component
     }
 
     #[Computed]
-    public function selectedCourse()
+    public function batches()
     {
-        if (! $this->course_id) {
-            return null;
-        }
-
-        return $this->courses->firstWhere('id', (int) $this->course_id);
+        return Batch::orderBy('batch_name')->get();
     }
 
     #[Computed]
@@ -131,5 +106,14 @@ new #[Layout('layouts.app-alumni')] class extends Component
     {
         $current = (int) date('Y');
         return range($current, $current - 4);
+    }
+
+
+    #[Computed]
+    public function selectedCourse()
+    {
+        return $this->course_id
+            ? $this->courses->firstWhere('id', (int) $this->course_id)
+            : null;
     }
 };

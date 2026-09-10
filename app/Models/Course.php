@@ -12,6 +12,7 @@ class Course extends Model
         'course_title',
         'course_slug',
         'course_desc',
+        'course_code',
         'is_active',
         'department_id',
         'course_type',

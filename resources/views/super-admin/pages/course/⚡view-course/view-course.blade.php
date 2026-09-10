@@ -89,7 +89,7 @@
                                 <td class="px-2 sm:px-6 py-3">
                                     <div class="flex items-center gap-3">
                                         <div class="w-8 h-8 rounded-full bg-[#123524]/10 flex items-center justify-center text-[#123524] text-xs font-bold shrink-0">
-                                            {{ strtoupper(substr($program->course_title, 0, 1)) }}
+                                            {{ $program->course_code }}
                                         </div>
                                         <span class="font-semibold text-[#123524]">{{ $program->course_title }}</span>
                                     </div>

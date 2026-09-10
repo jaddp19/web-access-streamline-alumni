@@ -22,19 +22,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     {
         $user = User::findOrFail($userId);
 
-        if ($user->hasAnyRole(['admin', 'super-admin'])) {
+        if ($user->hasAnyRole(['program head', 'registrar'])) {
             abort(403, 'Cannot modify staff accounts from this queue.');
         }
-
-        // Verification here is purely: did they register with a legitimate
-        // email + school ID? No profile, batch, or avatar data is required
-        // or touched at this stage — that's completed later by the alumni
-        // themselves once they're in.
-        $user->update([
-            'verification_status' => 'approved',
-            'rejection_reason'    => null,
-            'rejected_at'         => null,
-        ]);
 
         $user->syncRoles(['alumni']);
 
@@ -57,7 +47,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     {
         $user = User::findOrFail($this->rejectingUserId);
 
-        if ($user->hasAnyRole(['admin', 'super-admin'])) {
+        if ($user->hasAnyRole(['program head', 'registrar'])) {
             abort(403, 'Cannot modify staff accounts from this queue.');
         }
 
@@ -89,7 +79,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                         ->orWhere('school_id', 'like', "%{$this->search}%");
                 }))
                 ->latest()
-                ->paginate(8),
+                ->paginate(5),
         ];
     }
 };

@@ -43,7 +43,12 @@ class User extends Authenticatable
     }
 
     public function userProfile(): HasOne
-{
-    return $this->hasOne(UserProfile::class, 'user_id', 'id');
-}
+    {
+        return $this->hasOne(UserProfile::class, 'user_id', 'id');
+    }
+
+    public function department(): HasOne
+    {
+        return $this->hasOne(Department::class, 'program_head_id');
+    }
 }

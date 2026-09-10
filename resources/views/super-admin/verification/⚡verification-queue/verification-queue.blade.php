@@ -22,7 +22,7 @@
                 <h1 class="text-2xl sm:text-3xl font-bold text-[#123524]" style="font-family: 'Fraunces', serif;">
                     Alumni Verification Queue
                 </h1>
-                <p class="text-[#123524]/60 mt-0.5 text-sm">Review pending registrations awaiting manual approval.</p>
+                <p class="text-[#123524]/60 mt-0.5 text-sm">Review pending verifications awaiting manual approval for board passers.</p>
             </div>
         </div>
 

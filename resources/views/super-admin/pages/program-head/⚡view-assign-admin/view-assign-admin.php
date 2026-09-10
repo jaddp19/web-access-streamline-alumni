@@ -3,15 +3,13 @@
 use App\Models\Department;
 use App\Models\User;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
-use Spatie\Permission\Models\Role;
 
 new #[Layout('layouts.app-super-admin')] class extends Component
 {
-    public $selectedProgramHeads = []; // keys formatted as "{roleId}-{userId}"
+    public $selectedProgramHeads = []; // keys formatted as "{deptId}-{userId}"
     public $selectAll = false;
     public int $page = 1;
     protected int $perPage = 5;
@@ -19,17 +17,13 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public function deleteSelected()
     {
         foreach ($this->selectedProgramHeads as $key) {
-            [$roleId, $userId] = explode('-', $key, 2);
+            [$deptId, $userId] = explode('-', $key, 2);
 
-            $role = Role::find($roleId);
-            $user = User::find($userId);
+            $department = Department::find($deptId);
 
-            if ($role && $user) {
-                $user->removeRole($role);
-
-                if ($role->users()->count() === 0) {
-                    $role->delete();
-                }
+            if ($department && $department->program_head_id == $userId) {
+                $department->program_head_id = null; // clear assignment
+                $department->save();
             }
         }
 
@@ -86,23 +80,15 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     #[Computed]
     public function allProgramHeadRows()
     {
-        $departments = Department::select('id', 'dept_name')->get()->keyBy('id');
-
-        return Role::where('name', 'like', 'program-head-%')
-            ->with('users:id,name')
+        return Department::with('programHead')
+            ->whereNotNull('program_head_id')
             ->get()
-            ->flatMap(function ($role) use ($departments) {
-                $deptId = (int) Str::after($role->name, 'program-head-');
-                $department = $departments->get($deptId);
-
-                return $role->users->map(fn ($user) => (object) [
-                    'key'        => $role->id . '-' . $user->id,
-                    'role_id'    => $role->id,
-                    'user'       => $user,
-                    'department' => $department,
-                    'created_at' => $role->created_at,
-                ]);
-            })
+            ->map(fn ($dept) => (object) [
+                'key'        => $dept->id . '-' . $dept->program_head_id,
+                'department' => $dept,
+                'user'       => $dept->programHead,
+                'created_at' => $dept->updated_at,
+            ])
             ->sortByDesc('created_at')
             ->values();
     }

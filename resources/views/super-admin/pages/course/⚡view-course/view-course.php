@@ -95,7 +95,7 @@ new #[Layout('layouts::app-super-admin')] class extends Component
     public function programs()
     {
         return Course::with('department:id,dept_name')
-            ->select('id', 'course_title', 'department_id', 'created_at')
+            ->select('id', 'course_code', 'course_title', 'department_id', 'created_at')
             ->latest()
             ->paginate(5);
     }

@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\User;
-use Livewire\Attributes\Computed;
+use App\Models\UserProfile;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -10,36 +10,82 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 {
     use WithPagination;
 
-    #[Computed]
-    public function totalUsersCount()
+    public string $search = '';
+    public string $rejectReasonInput = '';
+    public ?int $rejectingUserId = null;
+
+    public function updatingSearch()
     {
-        // Count only users with no roles
-        return User::doesntHave('roles')->count();
+        $this->resetPage();
     }
 
-    #[Computed]
-    public function users()
-    {
-        // Query only users who have no roles
-        return User::doesntHave('roles')
-            ->select('id', 'name', 'email', 'created_at')
-            ->latest()
-            ->paginate(5);
-    }
-
-    public function accept(int $userId)
+    public function approve(int $userId)
     {
         $user = User::findOrFail($userId);
-        $user->assignRole('alumni'); // Spatie method
 
-        session()->flash('success', "{$user->name} has been accepted as an alumni.");
+        if ($user->hasAnyRole(['program head', 'registrar'])) {
+            abort(403, 'Cannot modify staff accounts from this queue.');
+        }
+
+        $user->syncRoles(['alumni']);
+
+        session()->flash('status', "{$user->name} has been approved as a verified alumni.");
     }
 
-    public function decline(int $userId)
+    public function openRejectModal(int $userId)
     {
-        $user = User::findOrFail($userId);
-        $user->delete();
+        $this->rejectingUserId = $userId;
+        $this->rejectReasonInput = '';
+    }
 
-        session()->flash('success', "User {$user->name} has been deleted.");
+    public function closeRejectModal()
+    {
+        $this->rejectingUserId = null;
+        $this->rejectReasonInput = '';
+    }
+
+    public function confirmReject()
+    {
+        $user = User::findOrFail($this->rejectingUserId);
+
+        if ($user->hasAnyRole(['program head', 'registrar'])) {
+            abort(403, 'Cannot modify staff accounts from this queue.');
+        }
+
+        $profile = UserProfile::firstOrCreate(['user_id' => $user->id]);
+
+        $location = is_array($profile->location) ? $profile->location : [];
+
+        $profile->update([
+            'is_verified' => false,
+            'location' => array_merge($location, [
+                'rejected_at'      => now()->toDateTimeString(),
+                'rejection_reason' => $this->rejectReasonInput ?: 'Could not be verified against school records.',
+            ]),
+        ]);
+
+        // Rejected applicants keep the 'pending-verification' role so they
+        // remain visible in this queue (with the rejection banner shown)
+        // and can be re-reviewed if they update their info.
+
+        session()->flash('status', "{$user->name}'s application was rejected.");
+
+        $this->closeRejectModal();
+    }
+
+    public function with(): array
+    {
+        return [
+            // "Pending" = user holds the 'pending-verification' role,
+            // assigned at registration. This matches RoleSeeder and the
+            // actual signup flow — NOT "no roles at all".
+            'pendingUsers' => User::role('pending-verification')
+                ->when($this->search, fn ($q) => $q->where(function ($q) {
+                    $q->where('name', 'like', "%{$this->search}%")
+                        ->orWhere('email', 'like', "%{$this->search}%");
+                }))
+                ->latest()
+                ->paginate(5),
+        ];
     }
 };

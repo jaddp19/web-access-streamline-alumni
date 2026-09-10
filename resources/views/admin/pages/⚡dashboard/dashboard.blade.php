@@ -6,23 +6,23 @@
             <!-- Page heading -->
             <div>
                 <h1 class="text-xl sm:text-2xl font-bold text-[#0f2b1c]" style="font-family: 'Fraunces', serif;">Overview</h1>
-                @if ($this->isSuperAdmin)
+                @if ($this->isRegistrar)
                     <p class="text-sm text-black/50 mt-0.5">A snapshot of the alumni network.</p>
                 @else
                     <p class="text-sm text-black/50 mt-0.5">
                         @if ($this->myDepartmentName)
                             A snapshot of {{ $this->myDepartmentName }} alumni.
                         @else
-                            You haven't been assigned a department yet. Ask the super admin to assign one.
+                            You haven't been assigned a department yet. Ask the registrar to assign one.
                         @endif
                     </p>
                 @endif
             </div>
 
             <!-- Stats Grid -->
-            <div class="grid grid-cols-2 {{ $this->isSuperAdmin ? 'md:grid-cols-4' : 'md:grid-cols-1 max-w-xs' }} gap-4 sm:gap-5">
+            <div class="grid grid-cols-2 {{ $this->isRegistrar ? 'md:grid-cols-4' : 'md:grid-cols-1 max-w-xs' }} gap-4 sm:gap-5">
 
-                @if ($this->isSuperAdmin)
+                @if ($this->isRegistrar)
                     <!-- Total Users Card -->
                     <div class="relative overflow-hidden bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5 hover:shadow-md transition-shadow">
                         <div class="absolute -right-4 -top-4 w-16 h-16 rounded-full bg-green-700/5"></div>
@@ -67,14 +67,14 @@
                         </div>
                         <div class="min-w-0">
                             <p class="text-[10px] sm:text-xs uppercase tracking-wide text-black/50 font-semibold truncate">
-                                {{ $this->isSuperAdmin ? 'Total Alumni' : 'Alumni in Your Department' }}
+                                {{ $this->isRegistrar ? 'Total Alumni' : 'Alumni in Your Department' }}
                             </p>
                             <h3 class="text-xl sm:text-2xl font-bold text-[#0f2b1c] mt-0.5">{{ $this->totalAlumni }}</h3>
                         </div>
                     </div>
                 </div>
 
-                @if ($this->isSuperAdmin)
+                @if ($this->isRegistrar)
                     <!-- Total Faculty Card -->
                     <div class="relative overflow-hidden bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5 hover:shadow-md transition-shadow">
                         <div class="absolute -right-4 -top-4 w-16 h-16 rounded-full bg-emerald-500/5"></div>
@@ -102,7 +102,7 @@
                     <div class="flex items-center justify-between mb-1">
                         <div>
                             <h2 class="text-sm font-bold text-[#0f2b1c]">Alumni Graduates</h2>
-                            <p class="text-xs text-black/40 mt-0.5">By batch year{{ $this->isSuperAdmin ? '' : ' · ' . ($this->myDepartmentName ?? 'No department') }}</p>
+                            <p class="text-xs text-black/40 mt-0.5">By batch year{{ $this->isRegistrar ? '' : ' · ' . ($this->myDepartmentName ?? 'No department') }}</p>
                         </div>
                         <span class="w-8 h-8 rounded-lg bg-green-700/10 flex items-center justify-center text-green-700 shrink-0">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
@@ -121,7 +121,7 @@
                     <div class="flex items-center justify-between mb-1">
                         <div>
                             <h2 class="text-sm font-bold text-[#0f2b1c]">New Alumni</h2>
-                            <p class="text-xs text-black/40 mt-0.5">Registrations, last 6 months{{ $this->isSuperAdmin ? '' : ' · ' . ($this->myDepartmentName ?? 'No department') }}</p>
+                            <p class="text-xs text-black/40 mt-0.5">Registrations, last 6 months{{ $this->isRegistrar ? '' : ' · ' . ($this->myDepartmentName ?? 'No department') }}</p>
                         </div>
                         <span class="w-8 h-8 rounded-lg bg-[#D4A537]/15 flex items-center justify-center text-[#a97f1f] shrink-0">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
@@ -141,67 +141,76 @@
     </div>
 </div>
 
-<!-- Chart.js Script -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+@script
 <script>
     const batchLabels = @json($this->alumniByBatch->keys());
     const batchCounts = @json($this->alumniByBatch->values());
-
-    new Chart(document.getElementById('alumniBatchChart'), {
-        type: 'bar',
-        data: {
-            labels: batchLabels,
-            datasets: [{
-                label: 'Alumni',
-                data: batchCounts,
-                backgroundColor: '#16a34a',
-                borderRadius: 6,
-                maxBarThickness: 36
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: { beginAtZero: true, grid: { color: '#f1f1f1' } },
-                x: { grid: { display: false } }
-            },
-            plugins: {
-                legend: { display: false },
-                tooltip: { backgroundColor: '#0f2b1c', padding: 10, cornerRadius: 8 }
-            }
-        }
-    });
-
     const trendLabels = @json($this->newAlumniLast6Months->keys());
     const trendCounts = @json($this->newAlumniLast6Months->values());
 
-    new Chart(document.getElementById('newAlumniChart'), {
-        type: 'line',
-        data: {
-            labels: trendLabels,
-            datasets: [{
-                label: 'New Alumni',
-                data: trendCounts,
-                borderColor: '#D4A537',
-                backgroundColor: 'rgba(212, 165, 55, 0.15)',
-                fill: true,
-                tension: 0.35,
-                pointBackgroundColor: '#D4A537',
-                pointRadius: 4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: { beginAtZero: true, grid: { color: '#f1f1f1' } },
-                x: { grid: { display: false } }
+    const batchCanvas = document.getElementById('alumniBatchChart');
+    const trendCanvas = document.getElementById('newAlumniChart');
+
+    if (batchCanvas && !batchCanvas.dataset.chartReady) {
+        batchCanvas.dataset.chartReady = '1';
+        new Chart(batchCanvas, {
+            type: 'bar',
+            data: {
+                labels: batchLabels,
+                datasets: [{
+                    label: 'Alumni',
+                    data: batchCounts,
+                    backgroundColor: '#16a34a',
+                    borderRadius: 6,
+                    maxBarThickness: 36
+                }]
             },
-            plugins: {
-                legend: { display: false },
-                tooltip: { backgroundColor: '#0f2b1c', padding: 10, cornerRadius: 8 }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#f1f1f1' } },
+                    x: { grid: { display: false } }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { backgroundColor: '#0f2b1c', padding: 10, cornerRadius: 8 }
+                }
             }
-        }
-    });
+        });
+    }
+
+    if (trendCanvas && !trendCanvas.dataset.chartReady) {
+        trendCanvas.dataset.chartReady = '1';
+        new Chart(trendCanvas, {
+            type: 'line',
+            data: {
+                labels: trendLabels,
+                datasets: [{
+                    label: 'New Alumni',
+                    data: trendCounts,
+                    borderColor: '#D4A537',
+                    backgroundColor: 'rgba(212, 165, 55, 0.15)',
+                    fill: true,
+                    tension: 0.35,
+                    pointBackgroundColor: '#D4A537',
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#f1f1f1' } },
+                    x: { grid: { display: false } }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { backgroundColor: '#0f2b1c', padding: 10, cornerRadius: 8 }
+                }
+            }
+        });
+    }
 </script>
+@endscript
