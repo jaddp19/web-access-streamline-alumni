@@ -47,6 +47,10 @@ class User extends Authenticatable
         return $this->hasOne(UserProfile::class, 'user_id', 'id');
     }
 
+    public function tracerStudy(): HasOne
+    { 
+        return $this->hasOne(TracerStudy::class, 'user_id', 'id'); 
+    }
     public function department(): HasOne
     {
         return $this->hasOne(Department::class, 'program_head_id');

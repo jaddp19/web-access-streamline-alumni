@@ -8,7 +8,6 @@
             <p class="text-[#123524]/60 mt-2">Section {{ $step }} of {{ $totalSteps }}</p>
         </div>
 
-        <!-- Progress bar -->
         <div class="flex items-center gap-2 mb-8">
             @for ($i = 1; $i <= $totalSteps; $i++)
                 <div class="flex-1 h-1.5 rounded-full {{ $i <= $step ? 'bg-[#123524]' : 'bg-[#123524]/15' }}"></div>
@@ -17,7 +16,7 @@
 
         <div class="bg-white rounded-2xl shadow-sm border border-[#123524]/10 p-8">
 
-            <!-- STEP 1: Personal Information -->
+            {{-- STEP 1: Personal Information --}}
             @if ($step === 1)
                 <div class="mb-6">
                     <span class="inline-block px-3 py-1 bg-[#123524] text-white text-xs font-bold rounded-full">Section 1 of 4</span>
@@ -47,20 +46,22 @@
                         @error('phone_number_1') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
                     </div>
 
+                    <div>
+                        <label class="block text-sm font-semibold text-[#123524] mb-2">Current Address <span class="text-red-500">*</span></label>
                         <textarea wire:model="current_address" rows="3" placeholder="House No., Street, Barangay, City/Municipality"
                             class="w-full px-4 py-3 rounded-xl border border-[#123524]/15 text-[#123524] focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition"></textarea>
                         @error('current_address') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
                     </div>
+
                     <div class="space-y-2">
                         <label class="block text-sm font-semibold text-[#123524] mb-2">Pin your location on the map <span class="text-red-500">*</span></label>
-                        <div wire:ignore class="h-64 w-full rounded-xl border border-[#123524]/15 overflow-hidden" id="map"></div>
+                        <div wire:ignore class="h-64 w-full rounded-xl border border-[#123524]/15 overflow-hidden z-[1]" id="map"></div>
                         <p class="text-xs text-[#123524]/60 text-center">Drag the marker to your exact location</p>
                     </div>
                 </div>
-                </div>
             @endif
 
-            <!-- STEP 2: Civil Status & Program -->
+            {{-- STEP 2: Civil Status & Program --}}
             @if ($step === 2)
                 <div class="mb-6">
                     <span class="inline-block px-3 py-1 bg-[#123524] text-white text-xs font-bold rounded-full">Section 2 of 4</span>
@@ -107,7 +108,7 @@
                 </div>
             @endif
 
-            <!-- STEP 3: Employment Data -->
+            {{-- STEP 3: Employment Data --}}
             @if ($step === 3)
                 <div class="mb-6">
                     <span class="inline-block px-3 py-1 bg-[#123524] text-white text-xs font-bold rounded-full">Section 3 of 4</span>
@@ -209,7 +210,7 @@
                 </div>
             @endif
 
-            <!-- STEP 4: Further Studies -->
+            {{-- STEP 4: Further Studies --}}
             @if ($step === 4)
                 <div class="mb-6">
                     <span class="inline-block px-3 py-1 bg-[#123524] text-white text-xs font-bold rounded-full">Section 4 of 4</span>
@@ -248,7 +249,7 @@
                 </div>
             @endif
 
-            <!-- Navigation -->
+            {{-- Navigation --}}
             <div class="flex items-center justify-between mt-8 pt-6 border-t border-[#123524]/10">
                 @if ($step > 1)
                     <button type="button" wire:click="previousStep"
@@ -275,33 +276,41 @@
     </div>
 </div>
 
-{{-- Leaflet Map Assets --}}
+@assets
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<style>
-    #map { z-index: 1; }
-</style>
+@endassets
 
+@script
 <script>
-    document.addEventListener('livewire:init', () => {
-        const map = L.map('map').setView([10.45, 123.88], 13); // Default to Victorias/ Negros Occidental area
+    const initMap = () => {
+        const el = document.getElementById('map');
+        if (!el || typeof L === 'undefined' || el._leaflet_id) return;
+
+        const lat = Number($wire.latitude) || 10.45;
+        const lng = Number($wire.longitude) || 123.88;
+
+        const map = L.map(el).setView([lat, lng], 13);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        let marker = L.marker([10.45, 123.88], { draggable: true }).addTo(map);
+        const marker = L.marker([lat, lng], { draggable: true }).addTo(map);
 
-        marker.on('dragend', function (event) {
-            const position = marker.getLatLng();
-            @this.set('latitude', position.lat);
-            @this.set('longitude', position.lng);
+        marker.on('dragend', (event) => {
+            const pos = event.target.getLatLng();
+            $wire.set('latitude', pos.lat);
+            $wire.set('longitude', pos.lng);
         });
 
-        // If we have existing coordinates, move the marker
-        @if($latitude && $longitude)
-            marker.setLatLng([{{ $latitude }}, {{ $longitude }}]);
-            map.setView([{{ $latitude }}, {{ $longitude }}], 13);
-        @endif
+        queueMicrotask(() => map.invalidateSize());
+    };
+
+    initMap();
+
+    $wire.on('step-changed', () => {
+        queueMicrotask(initMap);
     });
 </script>
+@endscript

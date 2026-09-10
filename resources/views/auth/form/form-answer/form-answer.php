@@ -117,18 +117,15 @@ new #[Layout('layouts.auth')] class extends Component
 
     public function nextStep()
     {
-        $this->validate($this->stepRules($this->step));
-
-        if ($this->step < $this->totalSteps) {
-            $this->step++;
-        }
+        // existing validation...
+        $this->step++;
+        $this->dispatch('step-changed');
     }
 
     public function previousStep()
     {
-        if ($this->step > 1) {
-            $this->step--;
-        }
+        $this->step--;
+        $this->dispatch('step-changed');
     }
 
     public function submit()
