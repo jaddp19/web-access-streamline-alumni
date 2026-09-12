@@ -183,7 +183,21 @@
 
 @script
     <script>
-        const pretty = (label) => String(label).replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+        const pretty = (label) => {
+            const str = String(label).toLowerCase();
+
+            if (str === 'not-yet-employed') return 'Not yet Employed';
+            if (str === 'more-than-6-months') return 'More than 6 Months';
+            if (str === 'more-than-1-year') return 'More than 1 Year';
+
+            const rangeMatch = str.match(/^(\d+)-(\d+)-months$/);
+            if (rangeMatch) {
+                return `${rangeMatch[1]} - ${rangeMatch[2]} Months`;
+            }
+
+            return str.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+        };
+
         const initials = (label) => String(label).trim().split(/\s+/).map((w) => w.charAt(0).toUpperCase()).join('');
 
         const waitForChart = () => new Promise((resolve) => {
@@ -216,12 +230,17 @@
 
         waitForChart().then((ChartLib) => {
             const rawLabels = Object.keys(alumniByDept || {});
+
+            const deptData = alumniByDept || {};
+            const deptCodes = Object.keys(deptData);
+            const deptTotals = deptCodes.map(code => deptData[code].total);
+
             makeChart(ChartLib, 'alumniDynamicChart', {
                 type: 'bar',
                 data: {
-                    labels: rawLabels.map(initials),
+                    labels: deptCodes, // axis labels = dept_code
                     datasets: [{
-                        data: Object.values(alumniByDept || {}),
+                        data: deptTotals,
                         backgroundColor: '#16a34a',
                         borderRadius: 6,
                         maxBarThickness: 42
@@ -236,13 +255,23 @@
                         },
                         tooltip: {
                             callbacks: {
-                                title: (i) => rawLabels[i[0]?.dataIndex] ?? ''
+                                // show dept_name on hover
+                                title: (items) => {
+                                    const code = deptCodes[items[0]?.dataIndex];
+                                    return deptData[code].name;
+                                },
+                                label: (ctx) => ctx.raw
                             }
                         }
                     },
                     scales: {
                         y: {
                             beginAtZero: true,
+                            ticks: {
+                                stepSize: 1,
+                                precision: 0,
+                                callback: (value) => Number.isInteger(value) ? value : null
+                            },
                             grid: {
                                 color: '#f1f1f1'
                             }
@@ -256,14 +285,13 @@
                 }
             });
 
-            const analyticsData = @json($this->courseAnalytics);
-            const compLabels = (analyticsData || []).map((item) => item.course_code);
-            const compTitles = (analyticsData || []).map((item) => item.course_title);
+            const courseCode = (analyticsData || []).map((item) => item.course_code);
+            const courseTitle = (analyticsData || []).map((item) => item.course_title);
 
             makeChart(ChartLib, 'comparativeChart', {
                 type: 'bar',
                 data: {
-                    labels: compLabels,
+                    labels: courseCode,
                     datasets: [{
                             label: 'Aligned with Work',
                             data: (analyticsData || []).map((i) => i.related_rate),
@@ -325,7 +353,7 @@
                         ctx.textBaseline = 'bottom';
                         chart.data.datasets.forEach((dataset, datasetIndex) => {
                             chart.getDatasetMeta(datasetIndex).data.forEach((bar,
-                            index) => {
+                                index) => {
                                 const value = dataset.data[index];
                                 if (value === null || value === undefined) return;
                                 ctx.fillText(value + '%', bar.x, bar.y - 4);
@@ -353,10 +381,48 @@
                     plugins: {
                         legend: {
                             position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => {
+                                    let dataset = ctx.dataset.data;
+                                    let total = dataset.reduce((a, b) => a + b, 0);
+                                    let value = ctx.raw;
+                                    let percentage = ((value / total) * 100).toFixed(1) + '%';
+                                    return `${ctx.label}: ${value} (${percentage})`;
+                                }
+                            }
                         }
                     }
-                }
+                },
+                plugins: [{
+                    id: 'piePercentLabels',
+                    afterDatasetsDraw(chart) {
+                        const {
+                            ctx
+                        } = chart;
+                        const dataset = chart.data.datasets[0];
+                        const total = dataset.data.reduce((a, b) => a + b, 0);
+
+                        chart.getDatasetMeta(0).data.forEach((arc, i) => {
+                            const value = dataset.data[i];
+                            if (!value) return;
+
+                            const percentage = ((value / total) * 100).toFixed(1) + '%';
+                            const pos = arc.tooltipPosition();
+
+                            ctx.save();
+                            ctx.fillStyle = '#000'; // text color
+                            ctx.font = 'bold 12px sans-serif';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(percentage, pos.x, pos.y);
+                            ctx.restore();
+                        });
+                    }
+                }]
             });
+
 
             makeChart(ChartLib, 'employmentTypeChart', {
                 type: 'bar',
@@ -382,6 +448,12 @@
                             beginAtZero: true,
                             grid: {
                                 color: '#f1f1f1'
+                            },
+                            ticks: {
+                                stepSize: 1,
+                                callback: function(value) {
+                                    return Number.isInteger(value) ? value : null;
+                                }
                             }
                         },
                         x: {
@@ -392,6 +464,7 @@
                     }
                 }
             });
+
 
             makeChart(ChartLib, 'organizationTypeChart', {
                 type: 'bar',
@@ -418,6 +491,12 @@
                             beginAtZero: true,
                             grid: {
                                 color: '#f1f1f1'
+                            },
+                            ticks: {
+                                stepSize: 1,
+                                callback: function(value) {
+                                    return Number.isInteger(value) ? value : null;
+                                }
                             }
                         },
                         y: {
@@ -428,6 +507,7 @@
                     }
                 }
             });
+
 
             makeChart(ChartLib, 'employmentAreaChart', {
                 type: 'pie',
@@ -446,10 +526,48 @@
                     plugins: {
                         legend: {
                             position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => {
+                                    let dataset = ctx.dataset.data;
+                                    let total = dataset.reduce((a, b) => a + b, 0);
+                                    let value = ctx.raw;
+                                    let percentage = ((value / total) * 100).toFixed(1) + '%';
+                                    return `${ctx.label}: ${value} (${percentage})`;
+                                }
+                            }
                         }
                     }
-                }
+                },
+                plugins: [{
+                    id: 'piePercentLabels',
+                    afterDatasetsDraw(chart) {
+                        const {
+                            ctx
+                        } = chart;
+                        const dataset = chart.data.datasets[0];
+                        const total = dataset.data.reduce((a, b) => a + b, 0);
+
+                        chart.getDatasetMeta(0).data.forEach((arc, i) => {
+                            const value = dataset.data[i];
+                            if (!value) return;
+
+                            const percentage = ((value / total) * 100).toFixed(1) + '%';
+                            const pos = arc.tooltipPosition();
+
+                            ctx.save();
+                            ctx.fillStyle = '#000'; // text color
+                            ctx.font = 'bold 12px sans-serif';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(percentage, pos.x, pos.y);
+                            ctx.restore();
+                        });
+                    }
+                }]
             });
+
 
             makeChart(ChartLib, 'monthsToFirstJobChart', {
                 type: 'bar',
@@ -462,6 +580,7 @@
                         maxBarThickness: 45
                     }]
                 },
+
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
@@ -475,16 +594,23 @@
                             beginAtZero: true,
                             grid: {
                                 color: '#f1f1f1'
+                            },
+                            ticks: {
+                                stepSize: 1,
+                                callback: function(value) {
+                                    return Number.isInteger(value) ? value : null;
+                                }
                             }
                         },
                         x: {
                             grid: {
                                 display: false
                             }
-                        }
+                        },
                     }
                 }
             });
+
         });
     </script>
 @endscript

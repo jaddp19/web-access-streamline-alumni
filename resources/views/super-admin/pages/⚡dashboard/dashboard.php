@@ -8,19 +8,25 @@ use Livewire\Component;
 
 new #[Layout('layouts.app-super-admin')] class extends Component
 {
-    #[Computed]
-    public function alumniByDept()
-    {
-        return DB::table('departments')
-            ->join('courses', 'courses.department_id', '=', 'departments.id')
-            ->join('student_course', 'courses.id', '=', 'student_course.course_id')
-            ->join('user_profiles', 'student_course.user_profile_id', '=', 'user_profiles.id')
-            ->select('departments.dept_name', DB::raw('COUNT(DISTINCT user_profiles.user_id) as total'))
-            ->groupBy('departments.id', 'departments.dept_name')
-            ->orderBy('departments.dept_name')
-            ->pluck('total', 'dept_name')
-            ->toArray();
-    }
+#[Computed]
+public function alumniByDept()
+{
+    return DB::table('departments')
+        ->join('courses', 'courses.department_id', '=', 'departments.id')
+        ->join('student_course', 'courses.id', '=', 'student_course.course_id')
+        ->join('user_profiles', 'student_course.user_profile_id', '=', 'user_profiles.id')
+        ->select('departments.dept_name', 'departments.dept_code', DB::raw('COUNT(DISTINCT user_profiles.user_id) as total'))
+        ->groupBy('departments.id', 'departments.dept_name', 'departments.dept_code')
+        ->orderBy('departments.dept_name')
+        ->get()
+        ->mapWithKeys(fn($row) => [
+            $row->dept_code => [
+                'name' => $row->dept_name,
+                'total' => $row->total
+            ]
+        ])
+        ->toArray();
+}
 
     #[Computed]
     public function courseAnalytics()
