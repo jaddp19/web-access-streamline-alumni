@@ -85,48 +85,80 @@ new #[Layout('layouts.auth')] class extends Component
     }
 
     protected function stepRules(int $step): array
-    {
-        return match ($step) {
-            1 => [
-                'gender' => 'required|in:Male,Female',
-                'phone_number_1' => 'required|string|max:20',
-                'current_address' => 'required|string|max:500',
-            ],
-            2 => [
-                'civil_status' => 'required|in:single,married,widowed,separated,single-parent',
-                'course_id' => 'required|exists:courses,id',
-                'batch_id' => 'required|exists:batches,id',
-            ],
-            3 => [
-                'employment_status' => 'required|in:employed,unemployed,self-employed,other',
-                'current_job_position' => 'nullable|string|max:255',
-                'employed_related_to_degree' => 'nullable|in:yes,no,partially-related',
-                'employment_type' => 'nullable|in:full-time,part-time,contractual-project-based,freelance,other',
-                'organization_type' => 'nullable|in:private-company,government-agency,non-government-organization,educational-institution,self-employed-business,other',
-                'employment_area' => 'nullable|in:philippines,abroad',
-                'abroad_country' => 'nullable|required_if:employment_area,abroad|string|max:255',
-                'months_to_first_job' => 'nullable|in:1-3-months,4-6-months,more-than-6-months,more-than-1-year,not-yet-employed',
-            ],
-            4 => [
-                'is_pursued_further_studies' => 'boolean',
-                'level_of_study' => 'nullable|required_if:is_pursued_further_studies,true|in:Bachelor,Master,Certificate,Post Doctorate',
-            ],
-            default => [],
-        };
-    }
+{
+    return match ($step) {
+        1 => [
+            'gender' => 'required|in:Male,Female',
+            'phone_number_1' => 'required|string|max:20',
+            'current_address' => 'required|string|max:500',
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+        ],
+        2 => [
+            'civil_status' => 'required|in:single,married,widowed,separated,single-parent',
+            'course_id' => 'required|exists:courses,id',
+            'batch_id' => 'required|exists:batches,id',
+        ],
+        3 => [
+            'employment_status' => 'required|in:employed,unemployed,self-employed,other',
+            'current_job_position' => 'required_if:employment_status,employed|nullable|string|max:255',
+            'employed_related_to_degree' => 'required_if:employment_status,employed|nullable|in:yes,no,partially-related',
+            'employment_type' => 'required_if:employment_status,employed|nullable|in:full-time,part-time,contractual-project-based,freelance,other',
+            'organization_type' => 'required_if:employment_status,employed|nullable|in:private-company,government-agency,non-government-organization,educational-institution,self-employed-business,other',
+            'employment_area' => 'required_if:employment_status,employed|nullable|in:philippines,abroad',
+            'abroad_country' => 'required_if:employment_area,abroad|nullable|string|max:255',
+            'months_to_first_job' => 'required_if:employment_status,employed|nullable|in:1-3-months,4-6-months,more-than-6-months,more-than-1-year,not-yet-employed',
+        ],
+        4 => [
+            'is_pursued_further_studies' => 'required|boolean',
+            'level_of_study' => 'required_if:is_pursued_further_studies,true|nullable|in:Certificate,Bachelor,Master,Post Doctorate',
+        ],
+        default => [],
+    };
+}
 
-    public function nextStep()
-    {
-        // existing validation...
+protected function stepMessages(): array
+{
+    return [
+        'gender.required' => 'Please select your sex.',
+        'phone_number_1.required' => 'Mobile number is required.',
+        'current_address.required' => 'Current address is required.',
+        'latitude.required' => 'Please pin your location on the map.',
+        'longitude.required' => 'Please pin your location on the map.',
+        'civil_status.required' => 'Please select your civil status.',
+        'course_id.required' => 'Please select your program.',
+        'batch_id.required' => 'Please select your year graduated.',
+        'employment_status.required' => 'Please select your employment status.',
+        'current_job_position.required_if' => 'Job position is required.',
+        'employed_related_to_degree.required_if' => 'Please answer if your job is related to your degree.',
+        'employment_type.required_if' => 'Please select type of employment.',
+        'organization_type.required_if' => 'Please select type of organization.',
+        'employment_area.required_if' => 'Please select employment area.',
+        'abroad_country.required_if' => 'Please specify the country.',
+        'months_to_first_job.required_if' => 'Please select how long it took to get your first job.',
+        'is_pursued_further_studies.required' => 'Please answer the further studies question.',
+        'level_of_study.required_if' => 'Please select the level of study.',
+    ];
+}
+
+public function nextStep()
+{
+    $this->validate($this->stepRules($this->step), $this->stepMessages());
+
+    if ($this->step < $this->totalSteps) {
         $this->step++;
         $this->dispatch('step-changed');
     }
+}
 
-    public function previousStep()
-    {
+public function previousStep()
+{
+    if ($this->step > 1) {
         $this->step--;
+        $this->resetErrorBag();
         $this->dispatch('step-changed');
     }
+}
 
     public function submit()
     {

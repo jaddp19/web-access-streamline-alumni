@@ -146,6 +146,7 @@
                                     </label>
                                 @endforeach
                             </div>
+                            @error('employed_related_to_degree') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
                         </div>
 
                         <div>
@@ -158,6 +159,7 @@
                                     </label>
                                 @endforeach
                             </div>
+                            @error('employment_type') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
                         </div>
 
                         <div>
@@ -170,6 +172,7 @@
                                     </label>
                                 @endforeach
                             </div>
+                            @error('organization_type') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
                         </div>
 
                         <div>
@@ -184,6 +187,7 @@
                                     <span class="text-sm text-[#123524]">Abroad</span>
                                 </label>
                             </div>
+                            @error('employment_area') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
                         </div>
 
                         @if ($employment_area === 'abroad')
@@ -205,6 +209,7 @@
                                     </label>
                                 @endforeach
                             </div>
+                            @error('months_to_first_job') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
                         </div>
                     @endif
                 </div>
@@ -230,6 +235,7 @@
                                 <span class="text-sm text-[#123524]">No</span>
                             </label>
                         </div>
+                        @error('is_pursued_further_studies') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
                     </div>
 
                     @if ($is_pursued_further_studies)
