@@ -21,7 +21,7 @@ new #[Layout('layouts.auth')] class extends Component
 
     // Step 1 — Personal Information
     public string $gender = '';
-    public string $phone_number_1 = ''; // stored in full international E.164 format
+    public string $phone_number_1 = '';
 
     // Step 1 — Address (cascading PH address)
     public string $regionCode = '';
@@ -29,6 +29,10 @@ new #[Layout('layouts.auth')] class extends Component
     public string $cityCode = '';
     public string $barangayCode = '';
     public string $street_address = '';
+
+    // Step 1 — Map coordinates
+    public float $latitude = 10.45;
+    public float $longitude = 123.88;
 
     // Step 2 — Civil Status & Program
     public string $civil_status = '';
@@ -71,6 +75,9 @@ new #[Layout('layouts.auth')] class extends Component
             $this->cityCode = $location['city_code'] ?? '';
             $this->barangayCode = $location['barangay_code'] ?? '';
             $this->batch_id = $profile->batch_id ?? '';
+
+            $this->latitude = (float) ($location['latitude'] ?? 10.45);
+            $this->longitude = (float) ($location['longitude'] ?? 123.88);
         }
 
         $tracerStudy = TracerStudy::where('user_id', $user->id)->first();
@@ -148,80 +155,88 @@ new #[Layout('layouts.auth')] class extends Component
     }
 
     protected function stepRules(int $step): array
-{
-    return match ($step) {
-        1 => [
-            'gender' => 'required|in:Male,Female',
-            'phone_number_1' => 'required|string|max:20',
-            'current_address' => 'required|string|max:500',
-            'latitude' => 'required|numeric',
-            'longitude' => 'required|numeric',
-        ],
-        2 => [
-            'civil_status' => 'required|in:single,married,widowed,separated,single-parent',
-            'course_id' => 'required|exists:courses,id',
-            'batch_id' => 'required|exists:batches,id',
-        ],
-        3 => [
-            'employment_status' => 'required|in:employed,unemployed,self-employed,other',
-            'current_job_position' => 'required_if:employment_status,employed|nullable|string|max:255',
-            'employed_related_to_degree' => 'required_if:employment_status,employed|nullable|in:yes,no,partially-related',
-            'employment_type' => 'required_if:employment_status,employed|nullable|in:full-time,part-time,contractual-project-based,freelance,other',
-            'organization_type' => 'required_if:employment_status,employed|nullable|in:private-company,government-agency,non-government-organization,educational-institution,self-employed-business,other',
-            'employment_area' => 'required_if:employment_status,employed|nullable|in:philippines,abroad',
-            'abroad_country' => 'required_if:employment_area,abroad|nullable|string|max:255',
-            'months_to_first_job' => 'required_if:employment_status,employed|nullable|in:1-3-months,4-6-months,more-than-6-months,more-than-1-year,not-yet-employed',
-        ],
-        4 => [
-            'is_pursued_further_studies' => 'required|boolean',
-            'level_of_study' => 'required_if:is_pursued_further_studies,true|nullable|in:Certificate,Bachelor,Master,Post Doctorate',
-        ],
-        default => [],
-    };
-}
-
-protected function stepMessages(): array
-{
-    return [
-        'gender.required' => 'Please select your sex.',
-        'phone_number_1.required' => 'Mobile number is required.',
-        'current_address.required' => 'Current address is required.',
-        'latitude.required' => 'Please pin your location on the map.',
-        'longitude.required' => 'Please pin your location on the map.',
-        'civil_status.required' => 'Please select your civil status.',
-        'course_id.required' => 'Please select your program.',
-        'batch_id.required' => 'Please select your year graduated.',
-        'employment_status.required' => 'Please select your employment status.',
-        'current_job_position.required_if' => 'Job position is required.',
-        'employed_related_to_degree.required_if' => 'Please answer if your job is related to your degree.',
-        'employment_type.required_if' => 'Please select type of employment.',
-        'organization_type.required_if' => 'Please select type of organization.',
-        'employment_area.required_if' => 'Please select employment area.',
-        'abroad_country.required_if' => 'Please specify the country.',
-        'months_to_first_job.required_if' => 'Please select how long it took to get your first job.',
-        'is_pursued_further_studies.required' => 'Please answer the further studies question.',
-        'level_of_study.required_if' => 'Please select the level of study.',
-    ];
-}
-
-public function nextStep()
-{
-    $this->validate($this->stepRules($this->step), $this->stepMessages());
-
-    if ($this->step < $this->totalSteps) {
-        $this->step++;
-        $this->dispatch('step-changed');
+    {
+        return match ($step) {
+            1 => [
+                'gender'         => 'required|in:Male,Female',
+                'phone_number_1' => ['required', 'string', 'max:20', new Phone('PH')],
+                'street_address' => 'required|string|max:500',
+                'regionCode'     => 'required|string',
+                'provinceCode'   => 'required|string',
+                'cityCode'       => 'required|string',
+                'barangayCode'   => 'required|string',
+                'latitude'       => 'required|numeric',
+                'longitude'      => 'required|numeric',
+            ],
+            2 => [
+                'civil_status' => 'required|in:single,married,widowed,separated,single-parent',
+                'course_id'    => 'required|exists:courses,id',
+                'batch_id'     => 'required|exists:batches,id',
+            ],
+            3 => [
+                'employment_status'          => 'required|in:employed,unemployed,self-employed,other',
+                'current_job_position'       => 'required_if:employment_status,employed|nullable|string|max:255',
+                'employed_related_to_degree' => 'required_if:employment_status,employed|nullable|in:yes,no,partially-related',
+                'employment_type'            => 'required_if:employment_status,employed|nullable|in:full-time,part-time,contractual-project-based,freelance,other',
+                'organization_type'          => 'required_if:employment_status,employed|nullable|in:private-company,government-agency,non-government-organization,educational-institution,self-employed-business,other',
+                'employment_area'            => 'required_if:employment_status,employed|nullable|in:philippines,abroad',
+                'abroad_country'             => 'required_if:employment_area,abroad|nullable|string|max:255',
+                'months_to_first_job'        => 'required_if:employment_status,employed|nullable|in:1-3-months,4-6-months,more-than-6-months,more-than-1-year,not-yet-employed',
+            ],
+            4 => [
+                'is_pursued_further_studies' => 'required|boolean',
+                'level_of_study'             => 'required_if:is_pursued_further_studies,true|nullable|in:Certificate,Bachelor,Master,Post Doctorate',
+            ],
+            default => [],
+        };
     }
-}
 
-public function previousStep()
-{
-    if ($this->step > 1) {
-        $this->step--;
-        $this->resetErrorBag();
-        $this->dispatch('step-changed');
+    protected function stepMessages(): array
+    {
+        return [
+            'gender.required'                            => 'Please select your sex.',
+            'phone_number_1.required'                    => 'Mobile number is required.',
+            'street_address.required'                    => 'Street address is required.',
+            'regionCode.required'                        => 'Please select your region.',
+            'provinceCode.required'                      => 'Please select your province.',
+            'cityCode.required'                          => 'Please select your city/municipality.',
+            'barangayCode.required'                      => 'Please select your barangay.',
+            'latitude.required'                          => 'Please pin your location on the map.',
+            'longitude.required'                         => 'Please pin your location on the map.',
+            'civil_status.required'                      => 'Please select your civil status.',
+            'course_id.required'                         => 'Please select your program.',
+            'batch_id.required'                          => 'Please select your year graduated.',
+            'employment_status.required'                 => 'Please select your employment status.',
+            'current_job_position.required_if'           => 'Job position is required.',
+            'employed_related_to_degree.required_if'     => 'Please answer if your job is related to your degree.',
+            'employment_type.required_if'                => 'Please select type of employment.',
+            'organization_type.required_if'              => 'Please select type of organization.',
+            'employment_area.required_if'                => 'Please select employment area.',
+            'abroad_country.required_if'                 => 'Please specify the country.',
+            'months_to_first_job.required_if'            => 'Please select how long it took to get your first job.',
+            'is_pursued_further_studies.required'        => 'Please answer the further studies question.',
+            'level_of_study.required_if'                 => 'Please select the level of study.',
+        ];
     }
-}
+
+    public function nextStep()
+    {
+        $this->validate($this->stepRules($this->step), $this->stepMessages());
+
+        if ($this->step < $this->totalSteps) {
+            $this->step++;
+            $this->dispatch('step-changed');
+        }
+    }
+
+    public function previousStep()
+    {
+        if ($this->step > 1) {
+            $this->step--;
+            $this->resetErrorBag();
+            $this->dispatch('step-changed');
+        }
+    }
 
     public function submit()
     {
@@ -260,22 +275,24 @@ public function previousStep()
                     'location' => array_merge(
                         $existingProfile->location ?? [],
                         [
-                            'gender' => $this->gender,
+                            'gender'         => $this->gender,
                             'phone_number_1' => $this->phone_number_1,
                             'street_address' => $this->street_address,
-                            'region_code' => $this->regionCode,
-                            'region_name' => $region->name ?? null,
-                            'province_code' => $this->provinceCode,
-                            'province_name' => $province->name ?? null,
-                            'city_code' => $this->cityCode,
-                            'city_name' => $city->name ?? null,
-                            'barangay_code' => $this->barangayCode,
-                            'barangay_name' => $barangay->name ?? null,
-                            'address' => $fullAddress,
+                            'region_code'    => $this->regionCode,
+                            'region_name'    => $region->name ?? null,
+                            'province_code'  => $this->provinceCode,
+                            'province_name'  => $province->name ?? null,
+                            'city_code'      => $this->cityCode,
+                            'city_name'      => $city->name ?? null,
+                            'barangay_code'  => $this->barangayCode,
+                            'barangay_name'  => $barangay->name ?? null,
+                            'address'        => $fullAddress,
+                            'latitude'       => $this->latitude,
+                            'longitude'      => $this->longitude,
                         ]
                     ),
-                    'batch_id' => $this->batch_id,
-                    'is_private' => $existingProfile->is_private ?? false,
+                    'batch_id'    => $this->batch_id,
+                    'is_private'  => $existingProfile->is_private ?? false,
                     'is_verified' => $existingProfile->is_verified ?? false,
                 ]
             );
@@ -287,15 +304,15 @@ public function previousStep()
             CivilStatusEmployment::updateOrCreate(
                 ['tracer_study_id' => $tracerStudy->id],
                 [
-                    'civil_status' => $this->civil_status,
-                    'employment_status' => $this->employment_status,
-                    'current_job_position' => $this->current_job_position ?: null,
+                    'civil_status'               => $this->civil_status,
+                    'employment_status'          => $this->employment_status,
+                    'current_job_position'       => $this->current_job_position ?: null,
                     'employed_related_to_degree' => $this->employed_related_to_degree ?: null,
-                    'employment_type' => $this->employment_type ?: null,
-                    'organization_type' => $this->organization_type ?: null,
-                    'employment_area' => $this->employment_area ?: null,
-                    'abroad_country' => $this->abroad_country ?: null,
-                    'months_to_first_job' => $this->months_to_first_job ?: null,
+                    'employment_type'            => $this->employment_type ?: null,
+                    'organization_type'          => $this->organization_type ?: null,
+                    'employment_area'            => $this->employment_area ?: null,
+                    'abroad_country'             => $this->abroad_country ?: null,
+                    'months_to_first_job'        => $this->months_to_first_job ?: null,
                 ]
             );
 
@@ -303,13 +320,13 @@ public function previousStep()
                 ['tracer_study_id' => $tracerStudy->id],
                 [
                     'is_pursued_further_studies' => $this->is_pursued_further_studies,
-                    'level_of_study' => $this->is_pursued_further_studies ? $this->level_of_study : null,
+                    'level_of_study'             => $this->is_pursued_further_studies ? $this->level_of_study : null,
                 ]
             );
         });
 
         session()->flash('status', 'Thank you! Please wait for the admin to approve your form.');
 
-        return redirect()->route('verification.pending');
+        return redirect()->route('alumni.dashboard');
     }
 };

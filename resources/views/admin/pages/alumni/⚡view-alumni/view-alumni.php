@@ -8,12 +8,12 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new #[Layout('layouts.app-admin')] class extends Component
+new #[Layout('layouts::app-admin')] class extends Component
 {
     use WithPagination;
 
     #[Computed]
-    public function educationalBackgrounds()
+    public function alumni()
     {
         $user = Auth::user();
 
@@ -47,4 +47,5 @@ new #[Layout('layouts.app-admin')] class extends Component
 
         return $query->latest()->paginate(5);
     }
+    
 };

@@ -69,8 +69,7 @@ new #[Layout('layouts.auth')] class extends Component
             return redirect()->route('admin.dashboard');
 
         } elseif ($user->hasRole('alumni')) {
-            // Only alumni ever get routed to the onboarding form,
-            // and only if they haven't submitted a tracer study yet.
+            
             if (! \App\Models\TracerStudy::where('user_id', $user->id)->exists()) {
                 return redirect()->route('form');
             }

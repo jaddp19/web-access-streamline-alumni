@@ -63,6 +63,7 @@ Route::middleware(['auth', 'role:program head|registrar'])->prefix('admin')->gro
     Route::livewire('/dashboard', 'admin::pages.dashboard')->name('admin.dashboard');
 
     Route::livewire('/alumni/view', 'admin::pages.alumni.view-alumni')->name('admin.alumni.view');
+    Route::livewire('/alumni/view/{user}', 'admin::pages.alumni.view-single-alumni')->name('admin.alumni.view-single');
     Route::livewire('/alumni/create', 'admin::pages.alumni.create-alumni')->name('admin.alumni.create');
     Route::livewire('/alumni/update/{user}', 'admin::pages.alumni.update-alumni')->name('admin.alumni.update');
 });
