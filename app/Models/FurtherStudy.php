@@ -17,4 +17,8 @@ class FurtherStudy extends Model
     {
         return $this->belongsTo(TracerStudy::class);
     }
+
+    protected $casts = [
+    'is_pursued_further_studies' => 'boolean',
+    ];
 }

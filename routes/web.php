@@ -12,6 +12,7 @@ Route::livewire('/verification', 'public::verification.verification-pending')->n
 
 Route::livewire('/login', 'auth::login')->name('login');
 Route::livewire('/pop-up', 'auth::pop-up')->name('pop-up');
+Route::livewire('/form', 'auth::form.form-answer')->name('form');
 
 //forms
 Route::middleware('auth')->group(function () {
@@ -26,8 +27,6 @@ Route::middleware(['auth', 'role:registrar'])->prefix('super-admin')->group(func
     Route::livewire('/roles/update/{role}', 'super-admin::pages.role.update-role')->name('update-role');
 
     Route::livewire('/user/view', 'super-admin::pages.user.view-user')->name('super-admin.user.view');
-    Route::livewire('/alumni/view', 'super-admin::pages.user.view-alumni')->name('super-admin.alumni.view');
-    Route::livewire('/admin/view', 'super-admin::pages.user.view-admin')->name('super-admin.admin.view');
 
     //single view alumni
     Route::livewire('/alumni/view/{user}', 'super-admin::pages.user.view-single-user')->name('super-admin.alumni.view-single');

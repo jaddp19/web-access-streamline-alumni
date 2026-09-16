@@ -8,8 +8,7 @@
             <p class="text-sm sm:text-base text-[#123524]/60 mt-1.5 sm:mt-2">Section {{ $step }} of {{ $totalSteps }}</p>
         </div>
 
-        <!-- Progress bar -->
-        <div class="flex items-center gap-1.5 sm:gap-2 mb-6 sm:mb-8">
+        <div class="flex items-center gap-2 mb-8">
             @for ($i = 1; $i <= $totalSteps; $i++)
                 <div class="flex-1 h-1.5 rounded-full {{ $i <= $step ? 'bg-[#123524]' : 'bg-[#123524]/15' }}"></div>
             @endfor
@@ -17,7 +16,7 @@
 
         <div class="bg-white rounded-2xl shadow-sm border border-[#123524]/10 p-4 sm:p-6 md:p-8">
 
-            <!-- STEP 1: Personal Information -->
+            {{-- STEP 1: Personal Information --}}
             @if ($step === 1)
                 <div class="mb-5 sm:mb-6">
                     <span class="inline-block px-3 py-1 bg-[#123524] text-white text-xs font-bold rounded-full">Section 1 of 4</span>
@@ -56,76 +55,22 @@
                             >
                         </div>
 
-                        @error('phone_number_1')
-                            <span class="text-red-500 text-sm mt-1.5 block">{{ $message }}</span>
-                        @enderror
+                    <div>
+                        <label class="block text-sm font-semibold text-[#123524] mb-2">Current Address <span class="text-red-500">*</span></label>
+                        <textarea wire:model="current_address" rows="3" placeholder="House No., Street, Barangay, City/Municipality"
+                            class="w-full px-4 py-3 rounded-xl border border-[#123524]/15 text-[#123524] focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition"></textarea>
+                        @error('current_address') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
                     </div>
 
-                    <!-- Cascading Address -->
-                    <div class="space-y-4 pt-2 border-t border-[#123524]/10">
-                        <label class="block text-sm font-semibold text-[#123524]">Current Address <span class="text-red-500">*</span></label>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs text-[#123524]/60 uppercase tracking-wide font-semibold mb-1.5">Region</label>
-                                <select wire:model.live="regionCode"
-                                    class="w-full px-4 py-2.5 rounded-xl border border-[#123524]/15 text-[#123524] text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
-                                    <option value="">Select Region</option>
-                                    @foreach ($this->regions as $region)
-                                        <option value="{{ $region->code }}">{{ $region->name }}</option>
-                                    @endforeach
-                                </select>
-                                @error('regionCode') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
-                            </div>
-
-                            <div>
-                                <label class="block text-xs text-[#123524]/60 uppercase tracking-wide font-semibold mb-1.5">Province / District</label>
-                                <select wire:model.live="provinceCode" @disabled(!$regionCode)
-                                    class="w-full px-4 py-2.5 rounded-xl border border-[#123524]/15 text-[#123524] text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition disabled:opacity-50">
-                                    <option value="">Select Province</option>
-                                    @foreach ($this->provinces as $province)
-                                        <option value="{{ $province->code }}">{{ $province->name }}</option>
-                                    @endforeach
-                                </select>
-                                @error('provinceCode') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
-                            </div>
-
-                            <div>
-                                <label class="block text-xs text-[#123524]/60 uppercase tracking-wide font-semibold mb-1.5">City / Municipality</label>
-                                <select wire:model.live="cityCode" @disabled(!$provinceCode)
-                                    class="w-full px-4 py-2.5 rounded-xl border border-[#123524]/15 text-[#123524] text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition disabled:opacity-50">
-                                    <option value="">Select City/Municipality</option>
-                                    @foreach ($this->cities as $city)
-                                        <option value="{{ $city->code }}">{{ $city->name }}</option>
-                                    @endforeach
-                                </select>
-                                @error('cityCode') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
-                            </div>
-
-                            <div>
-                                <label class="block text-xs text-[#123524]/60 uppercase tracking-wide font-semibold mb-1.5">Barangay</label>
-                                <select wire:model.live="barangayCode" @disabled(!$cityCode)
-                                    class="w-full px-4 py-2.5 rounded-xl border border-[#123524]/15 text-[#123524] text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition disabled:opacity-50">
-                                    <option value="">Select Barangay</option>
-                                    @foreach ($this->barangays as $barangay)
-                                        <option value="{{ $barangay->code }}">{{ $barangay->name }}</option>
-                                    @endforeach
-                                </select>
-                                @error('barangayCode') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs text-[#123524]/60 uppercase tracking-wide font-semibold mb-1.5">House No. / Street</label>
-                            <input type="text" wire:model="street_address" placeholder="e.g. Blk 4 Lot 12, Rizal St."
-                                class="w-full px-4 py-2.5 rounded-xl border border-[#123524]/15 text-[#123524] text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
-                            @error('street_address') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
-                        </div>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-[#123524] mb-2">Pin your location on the map <span class="text-red-500">*</span></label>
+                        <div wire:ignore class="h-64 w-full rounded-xl border border-[#123524]/15 overflow-hidden z-[1]" id="map"></div>
+                        <p class="text-xs text-[#123524]/60 text-center">Drag the marker to your exact location</p>
                     </div>
                 </div>
             @endif
 
-            <!-- STEP 2: Civil Status & Program -->
+            {{-- STEP 2: Civil Status & Program --}}
             @if ($step === 2)
                 <div class="mb-5 sm:mb-6">
                     <span class="inline-block px-3 py-1 bg-[#123524] text-white text-xs font-bold rounded-full">Section 2 of 4</span>
@@ -172,7 +117,7 @@
                 </div>
             @endif
 
-            <!-- STEP 3: Employment Data -->
+            {{-- STEP 3: Employment Data --}}
             @if ($step === 3)
                 <div class="mb-5 sm:mb-6">
                     <span class="inline-block px-3 py-1 bg-[#123524] text-white text-xs font-bold rounded-full">Section 3 of 4</span>
@@ -210,6 +155,7 @@
                                     </label>
                                 @endforeach
                             </div>
+                            @error('employed_related_to_degree') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
                         </div>
 
                         <div>
@@ -222,6 +168,7 @@
                                     </label>
                                 @endforeach
                             </div>
+                            @error('employment_type') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
                         </div>
 
                         <div>
@@ -234,6 +181,7 @@
                                     </label>
                                 @endforeach
                             </div>
+                            @error('organization_type') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
                         </div>
 
                         <div>
@@ -248,6 +196,7 @@
                                     <span class="text-sm text-[#123524]">Abroad</span>
                                 </label>
                             </div>
+                            @error('employment_area') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
                         </div>
 
                         @if ($employment_area === 'abroad')
@@ -269,12 +218,13 @@
                                     </label>
                                 @endforeach
                             </div>
+                            @error('months_to_first_job') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
                         </div>
                     @endif
                 </div>
             @endif
 
-            <!-- STEP 4: Further Studies -->
+            {{-- STEP 4: Further Studies --}}
             @if ($step === 4)
                 <div class="mb-5 sm:mb-6">
                     <span class="inline-block px-3 py-1 bg-[#123524] text-white text-xs font-bold rounded-full">Section 4 of 4</span>
@@ -294,6 +244,7 @@
                                 <span class="text-sm text-[#123524]">No</span>
                             </label>
                         </div>
+                        @error('is_pursued_further_studies') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
                     </div>
 
                     @if ($is_pursued_further_studies)
@@ -313,8 +264,8 @@
                 </div>
             @endif
 
-            <!-- Navigation -->
-            <div class="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 mt-8 pt-6 border-t border-[#123524]/10">
+            {{-- Navigation --}}
+            <div class="flex items-center justify-between mt-8 pt-6 border-t border-[#123524]/10">
                 @if ($step > 1)
                     <button type="button" wire:click="previousStep"
                         class="w-full sm:w-auto px-6 py-3 sm:py-2.5 rounded-xl border border-[#123524]/20 text-[#123524] font-semibold hover:bg-[#123524]/5 active:bg-[#123524]/10 transition">
@@ -339,121 +290,39 @@
         </div>
     </div>
 
-    {{-- ===== PHONE INPUT STYLES + SCRIPT ===== --}}
-    <style>
-        .phone-wrapper .iti {
-            width: 100%;
-            display: block;
-        }
+@assets
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+@endassets
 
-        .phone-wrapper .iti__tel-input {
-            width: 100% !important;
-            height: 48px !important;
-            padding: 0.75rem 1rem !important;
-            padding-left: 92px !important;
-            border-radius: 0.75rem !important;
-            border: 1px solid rgba(18, 53, 36, 0.15) !important;
-            color: #123524 !important;
-            background: #fff !important;
-            font-size: 16px !important; /* prevents iOS auto-zoom on focus */
-            transition: box-shadow 0.15s, border-color 0.15s;
-        }
+@script
+<script>
+    const initMap = () => {
+        const el = document.getElementById('map');
+        if (!el || typeof L === 'undefined' || el._leaflet_id) return;
 
-        .phone-wrapper .iti__tel-input:focus {
-            outline: none !important;
-            border-color: transparent !important;
-            box-shadow: 0 0 0 2px #D4A537 !important;
-        }
+        const lat = Number($wire.latitude) || 10.45;
+        const lng = Number($wire.longitude) || 123.88;
 
-        .phone-wrapper .iti__selected-flag {
-            padding: 0 8px 0 12px !important;
-            border-radius: 0.75rem 0 0 0.75rem !important;
-        }
-
-        .phone-wrapper .iti__selected-flag:hover {
-            background: rgba(18, 53, 36, 0.05) !important;
-        }
-
-        .phone-wrapper .iti__selected-dial-code {
-            color: #123524 !important;
-            font-weight: 500;
-        }
-
-        .iti__country-list {
-            border-radius: 0.75rem !important;
-            border: 1px solid rgba(18, 53, 36, 0.12) !important;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1) !important;
-            z-index: 9999 !important;
-            max-width: 90vw;
-        }
-
-        @media (max-width: 480px) {
-            .phone-wrapper .iti__tel-input {
-                padding-left: 80px !important;
-            }
-        }
-    </style>
-
-    <script>
-    document.addEventListener('livewire:init', () => {
-        const ITI_JS    = 'https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/intlTelInput.min.js';
-        const ITI_UTILS = 'https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/utils.js';
+        const map = L.map(el).setView([lat, lng], 13);
 
         let iti = null;
 
-        function initPhone() {
-            const input = document.querySelector('#phone-input');
-            if (!input || input.closest('.iti')) return;
+        const marker = L.marker([lat, lng], { draggable: true }).addTo(map);
 
-            if (iti) {
-                try { iti.destroy(); } catch (e) {}
-                iti = null;
-            }
-
-            iti = window.intlTelInput(input, {
-                initialCountry: 'ph',
-                preferredCountries: ['ph', 'us', 'ae', 'sg', 'jp', 'kr', 'gb'],
-                separateDialCode: true,
-                utilsScript: ITI_UTILS,
-                autoPlaceholder: 'aggressive',
-            });
-
-            const sync = () => {
-                if (!iti) return;
-                const number = iti.getNumber();
-                @this.set('phone_number_1', number || '');
-            };
-
-            input.addEventListener('input', sync);
-            input.addEventListener('countrychange', sync);
-            input.addEventListener('blur', sync);
-
-            @if($phone_number_1)
-                iti.setNumber(@js($phone_number_1));
-            @endif
-        }
-
-        function boot() {
-            if (window.intlTelInput) {
-                initPhone();
-            } else {
-                const s = document.createElement('script');
-                s.src = ITI_JS;
-                s.onload = initPhone;
-                document.head.appendChild(s);
-            }
-        }
-
-        boot();
-
-        Livewire.hook('morph.updated', () => {
-            setTimeout(() => {
-                const input = document.querySelector('#phone-input');
-                if (input && !input.closest('.iti')) {
-                    initPhone();
-                }
-            }, 60);
+        marker.on('dragend', (event) => {
+            const pos = event.target.getLatLng();
+            $wire.set('latitude', pos.lat);
+            $wire.set('longitude', pos.lng);
         });
+
+        queueMicrotask(() => map.invalidateSize());
+    };
+
+    initMap();
+
+    $wire.on('step-changed', () => {
+        queueMicrotask(initMap);
     });
 </script>
-</div>
+@endscript

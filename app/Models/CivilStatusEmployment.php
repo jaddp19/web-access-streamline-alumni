@@ -10,6 +10,8 @@ class CivilStatusEmployment extends Model
     protected $fillable = [
         'tracer_study_id',
         'civil_status',
+        'employment_status',       
+        'current_job_position',       
         'employed_related_to_degree',
         'employment_type',
         'organization_type',
