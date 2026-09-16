@@ -159,24 +159,10 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
           </svg>
         </button>
-
-        <!-- Divider -->
-        <div class="flex items-center gap-3 pt-1">
-          <span class="flex-1 h-px bg-[#123524]/10"></span>
-          <span class="text-xs text-[#123524]/40 font-medium tracking-wide">OR</span>
-          <span class="flex-1 h-px bg-[#123524]/10"></span>
-        </div>
-
-        <!-- Register Link -->
-        <p class="text-center text-sm text-[#123524]/70">
-          Don't have an account?
-          <a href="{{ route('register') }}" class="font-semibold text-[#123524] hover:text-[#D4A537] transition-colors">
-            Register here
-          </a>
-        </p>
       </form>
     </div>
   </div>
   <!-- ========== END RIGHT PANEL ========== -->
+
 
 </div>

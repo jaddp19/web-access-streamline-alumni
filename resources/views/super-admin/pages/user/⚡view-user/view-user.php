@@ -6,6 +6,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 new #[Layout('layouts.app-super-admin')] class extends Component
 {
@@ -13,12 +14,21 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     #[Url]
     public string $roleFilter = 'all';
-    public string $search = ''; // <-- add search property
+
+    #[Url]
+    public string $search = '';
 
     public $selectedUsers = [];
     public $selectAll = false;
 
     public function updatedRoleFilter()
+    {
+        $this->resetPage();
+        $this->selectedUsers = [];
+        $this->selectAll = false;
+    }
+
+    public function updatedSearch()
     {
         $this->resetPage();
         $this->selectedUsers = [];
@@ -112,9 +122,82 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public function users()
     {
         return $this->filteredQuery()
-            ->with('roles:id,name')
+            ->with(['roles:id,name', 'tracerStudy:id,user_id'])
             ->select('id', 'name', 'email', 'created_at')
             ->latest()
             ->paginate(5);
+    }
+
+    /**
+     * Human-readable tracer study status for a user.
+     * Only meaningful for alumni — other roles return null.
+     */
+    protected function tracerStatusFor(User $user): ?string
+    {
+        if (! $user->hasRole('alumni')) {
+            return null;
+        }
+
+        return $user->tracerStudy ? 'Completed' : 'Pending';
+    }
+
+    /**
+     * Export the currently filtered/searched result set (respects
+     * role tab + search box, ignores pagination — exports everything
+     * matching, not just the current page).
+     */
+    public function exportFilteredCsv(): StreamedResponse
+    {
+        $users = $this->filteredQuery()
+            ->with(['roles:id,name', 'tracerStudy:id,user_id'])
+            ->select('id', 'name', 'email', 'school_id', 'created_at')
+            ->latest()
+            ->get();
+
+        return $this->streamUsersAsCsv($users, 'users-filtered');
+    }
+
+    /**
+     * Export only the checked rows.
+     */
+    public function exportSelectedCsv(): StreamedResponse
+    {
+        $users = User::role(['alumni', 'registrar', 'program head'])
+            ->whereIn('id', $this->selectedUsers)
+            ->with(['roles:id,name', 'tracerStudy:id,user_id'])
+            ->select('id', 'name', 'email', 'school_id', 'created_at')
+            ->latest()
+            ->get();
+
+        return $this->streamUsersAsCsv($users, 'users-selected');
+    }
+
+    protected function streamUsersAsCsv($users, string $filenamePrefix): StreamedResponse
+    {
+        $filename = $filenamePrefix . '-' . now()->format('Y-m-d_His') . '.csv';
+
+        return response()->streamDownload(function () use ($users) {
+            $handle = fopen('php://output', 'w');
+
+            // UTF-8 BOM so Excel doesn't mangle special characters
+            fwrite($handle, "\xEF\xBB\xBF");
+
+            fputcsv($handle, ['Name', 'Email', 'School ID', 'Roles', 'Tracer Study', 'Created At']);
+
+            foreach ($users as $user) {
+                fputcsv($handle, [
+                    $user->name,
+                    $user->email,
+                    $user->school_id ?? '',
+                    $user->roles->pluck('name')->implode(', '),
+                    $this->tracerStatusFor($user) ?? 'N/A',
+                    $user->created_at?->format('Y-m-d H:i:s'),
+                ]);
+            }
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv',
+        ]);
     }
 };

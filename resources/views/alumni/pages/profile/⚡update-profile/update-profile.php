@@ -2,9 +2,11 @@
 
 use App\Models\Batch;
 use App\Models\UserProfile;
+use App\Services\PhAddressService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -27,6 +29,19 @@ new #[Layout('layouts.app-alumni')] class extends Component
     public ?float $longitude = null;
     public ?string $address = null;       // human-readable reverse-geocoded address
 
+    // ----- Philippine address cascade -----
+    public string $region_code = '';
+    public string $province_code = '';
+    public string $city_code = '';
+    public string $barangay_code = '';
+
+    public string $region_name = '';
+    public string $province_name = '';
+    public string $city_name = '';
+    public string $barangay_name = '';
+
+    public string $street_address = '';
+
     public bool $hasProfile = false;      // tracks whether we're creating or updating
 
     protected function rules()
@@ -40,6 +55,12 @@ new #[Layout('layouts.app-alumni')] class extends Component
             'avatarFile'        => 'nullable|image|max:2048',
             'latitude'          => 'required|numeric|between:-90,90',
             'longitude'         => 'required|numeric|between:-180,180',
+
+            'region_code'       => 'required|string',
+            'province_code'     => 'required|string',
+            'city_code'         => 'required|string',
+            'barangay_code'     => 'required|string',
+            'street_address'    => 'required|string|max:255',
         ];
     }
 
@@ -58,6 +79,12 @@ new #[Layout('layouts.app-alumni')] class extends Component
             'avatarFile.max' => 'The avatar may not be larger than 2MB.',
             'latitude.required' => 'Please pin your location on the map.',
             'longitude.required' => 'Please pin your location on the map.',
+
+            'region_code.required'    => 'Please select a region.',
+            'province_code.required'  => 'Please select a province.',
+            'city_code.required'      => 'Please select a city or municipality.',
+            'barangay_code.required'  => 'Please select a barangay.',
+            'street_address.required' => 'Please enter your street address.',
         ];
     }
 
@@ -140,7 +167,98 @@ new #[Layout('layouts.app-alumni')] class extends Component
             $this->longitude      = isset($location['longitude']) ? (float) $location['longitude'] : null;
             $this->address        = $location['address'] ?? null;
             $this->currentAvatar  = $profile->avatar;
+
+            $this->region_code    = $location['region_code'] ?? '';
+            $this->province_code  = $location['province_code'] ?? '';
+            $this->city_code      = $location['city_code'] ?? '';
+            $this->barangay_code  = $location['barangay_code'] ?? '';
+            $this->region_name    = $location['region_name'] ?? '';
+            $this->province_name  = $location['province_name'] ?? '';
+            $this->city_name      = $location['city_name'] ?? '';
+            $this->barangay_name  = $location['barangay_name'] ?? '';
+            $this->street_address = $location['street_address'] ?? '';
         }
+    }
+
+    // ----- Philippine address cascade: computed option lists -----
+
+    #[Computed]
+    public function regions()
+    {
+        return app(PhAddressService::class)->regions();
+    }
+
+    #[Computed]
+    public function provinces()
+    {
+        if (! $this->region_code) {
+            return collect();
+        }
+
+        return app(PhAddressService::class)->provinces($this->region_code);
+    }
+
+    #[Computed]
+    public function cities()
+    {
+        if (! $this->province_code) {
+            return collect();
+        }
+
+        return app(PhAddressService::class)->cities($this->province_code);
+    }
+
+    #[Computed]
+    public function barangays()
+    {
+        if (! $this->city_code) {
+            return collect();
+        }
+
+        return app(PhAddressService::class)->barangays($this->city_code);
+    }
+
+    // ----- Cascade reset + name capture when a level changes -----
+
+    public function updatedRegionCode($value)
+    {
+        $this->province_code = '';
+        $this->city_code     = '';
+        $this->barangay_code = '';
+        $this->province_name = '';
+        $this->city_name     = '';
+        $this->barangay_name = '';
+
+        $this->region_name = optional(app(PhAddressService::class)->findByCode($value))->name ?? '';
+
+        unset($this->provinces, $this->cities, $this->barangays);
+    }
+
+    public function updatedProvinceCode($value)
+    {
+        $this->city_code     = '';
+        $this->barangay_code = '';
+        $this->city_name     = '';
+        $this->barangay_name = '';
+
+        $this->province_name = optional(app(PhAddressService::class)->findByCode($value))->name ?? '';
+
+        unset($this->cities, $this->barangays);
+    }
+
+    public function updatedCityCode($value)
+    {
+        $this->barangay_code = '';
+        $this->barangay_name = '';
+
+        $this->city_name = optional(app(PhAddressService::class)->findByCode($value))->name ?? '';
+
+        unset($this->barangays);
+    }
+
+    public function updatedBarangayCode($value)
+    {
+        $this->barangay_name = optional(app(PhAddressService::class)->findByCode($value))->name ?? '';
     }
 
     // Called from the map/geolocation JS: this.$wire.setLocation(lat, lng, address)
@@ -162,6 +280,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
         $validated['name']  = $this->sanitizeData($validated['name']);
         $validated['email'] = $this->sanitizeData($validated['email']);
+        $validated['street_address'] = $this->sanitizeData($validated['street_address']);
 
         $user = Auth::user();
 
@@ -173,6 +292,14 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
             $profile = UserProfile::where('user_id', $user->id)->first();
 
+            $composedPhAddress = collect([
+                $validated['street_address'],
+                $this->barangay_name,
+                $this->city_name,
+                $this->province_name,
+                $this->region_name,
+            ])->filter()->implode(', ');
+
             $location = $this->decodeLocation($profile);
             $location = array_merge($location, [
                 'gender'         => $validated['gender'],
@@ -181,6 +308,17 @@ new #[Layout('layouts.app-alumni')] class extends Component
                 'latitude'       => $validated['latitude'],
                 'longitude'      => $validated['longitude'],
                 'address'        => $this->address,
+
+                'region_code'    => $validated['region_code'],
+                'province_code'  => $validated['province_code'],
+                'city_code'      => $validated['city_code'],
+                'barangay_code'  => $validated['barangay_code'],
+                'region_name'    => $this->region_name,
+                'province_name'  => $this->province_name,
+                'city_name'      => $this->city_name,
+                'barangay_name'  => $this->barangay_name,
+                'street_address' => $validated['street_address'],
+                'ph_address'     => $composedPhAddress,
             ]);
 
             $avatarPath = $profile->avatar ?? '';

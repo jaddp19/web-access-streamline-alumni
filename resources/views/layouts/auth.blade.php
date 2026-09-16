@@ -8,6 +8,7 @@
     <title>{{ $title ?? 'Log In' }}</title>
 
     <link rel="icon" type="image/png" href="https://upload.wikimedia.org/wikipedia/commons/5/55/LogoCSAV.png">
+    <link rel="stylesheet" href="https://unpkg.com/intl-tel-input@17.0.19/build/css/intlTelInput.css">
 
     <!-- Styles / Scripts -->
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))

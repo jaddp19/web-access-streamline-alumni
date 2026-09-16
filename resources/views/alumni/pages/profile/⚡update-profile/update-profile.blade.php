@@ -97,6 +97,69 @@
                 </div>
             </div>
 
+            <!-- Philippine Address (cascading dropdowns) -->
+            <div>
+                <label class="block text-xs text-black/60 uppercase tracking-wide font-semibold mb-2">Home Address</label>
+
+                <div class="grid sm:grid-cols-2 gap-5">
+                    <div>
+                        <label class="block text-[11px] text-black/50 font-semibold mb-1.5">Region</label>
+                        <select wire:model.live="region_code"
+                            class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition">
+                            <option value="">Select region</option>
+                            @foreach ($this->regions as $region)
+                                <option value="{{ $region->code }}">{{ $region->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('region_code') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] text-black/50 font-semibold mb-1.5">Province</label>
+                        <select wire:model.live="province_code" @disabled(! $region_code)
+                            class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition disabled:opacity-50 disabled:cursor-not-allowed">
+                            <option value="">Select province</option>
+                            @foreach ($this->provinces as $province)
+                                <option value="{{ $province->code }}">{{ $province->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('province_code') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] text-black/50 font-semibold mb-1.5">City / Municipality</label>
+                        <select wire:model.live="city_code" @disabled(! $province_code)
+                            class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition disabled:opacity-50 disabled:cursor-not-allowed">
+                            <option value="">Select city / municipality</option>
+                            @foreach ($this->cities as $city)
+                                <option value="{{ $city->code }}">{{ $city->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('city_code') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] text-black/50 font-semibold mb-1.5">Barangay</label>
+                        <select wire:model.live="barangay_code" @disabled(! $city_code)
+                            class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition disabled:opacity-50 disabled:cursor-not-allowed">
+                            <option value="">Select barangay</option>
+                            @foreach ($this->barangays as $barangay)
+                                <option value="{{ $barangay->code }}">{{ $barangay->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('barangay_code') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    </div>
+                </div>
+
+                <div class="mt-5">
+                    <label class="block text-[11px] text-black/50 font-semibold mb-1.5">Street Address</label>
+                    <input type="text" wire:model.defer="street_address"
+                        placeholder="House no., street, subdivision, etc."
+                        class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black placeholder:text-black/40 focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition">
+                    @error('street_address') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                </div>
+            </div>
+
             <!-- Location (map, one-click) -->
             <div>
                 <div class="flex items-center justify-between mb-2">
