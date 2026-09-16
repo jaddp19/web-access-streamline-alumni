@@ -28,7 +28,7 @@
         <svg class="w-5 h-5 mt-0.5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
         </svg>
-        <span>Only the name, email, and batch are set here. The alumni will complete their own avatar, contact info, location, and course after logging in and using "Forgot Password" to set their password.</span>
+        <span>Only the name, email, school ID, batch, and course are set here. The alumni will complete their own avatar, contact info, and location after logging in and using "Forgot Password" to set their password.</span>
     </div>
 
     <!-- ========== FORM CARD ========== -->
@@ -51,6 +51,14 @@
                 @error('email') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
             </div>
 
+            <!-- School ID -->
+            <div>
+                <label class="block text-xs text-black/60 uppercase tracking-wide font-semibold mb-2">School ID</label>
+                <input type="text" wire:model.defer="school_id"
+                    class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition">
+                @error('school_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+            </div>
+
             <!-- Batch -->
             <div>
                 <label class="block text-xs text-black/60 uppercase tracking-wide font-semibold mb-2">Batch</label>
@@ -62,6 +70,25 @@
                     @endforeach
                 </select>
                 @error('batch_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+            </div>
+
+            <!-- Course (department is derived automatically, not selected) -->
+            <div>
+                <label class="block text-xs text-black/60 uppercase tracking-wide font-semibold mb-2">Course</label>
+                <select wire:model.live="course_id"
+                    class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition">
+                    <option value="">-- Select course --</option>
+                    @foreach ($this->courses as $course)
+                        <option value="{{ $course->id }}">{{ $course->course_title }}</option>
+                    @endforeach
+                </select>
+                @error('course_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+
+                @if ($this->selectedDepartment)
+                    <p class="mt-2 text-xs text-black/50">
+                        Department: <span class="font-semibold text-[#123524]">{{ $this->selectedDepartment->dept_name }}</span>
+                    </p>
+                @endif
             </div>
 
             <!-- Actions -->
@@ -80,4 +107,4 @@
             </div>
         </form>
     </div>
-</div>      
+</div>

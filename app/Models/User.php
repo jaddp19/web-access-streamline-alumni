@@ -51,4 +51,9 @@ class User extends Authenticatable
     {
         return $this->hasOne(Department::class, 'program_head_id');
     }
+
+    public function tracerStudy(): HasOne
+{
+    return $this->hasOne(TracerStudy::class, 'user_id', 'id');
+}
 }

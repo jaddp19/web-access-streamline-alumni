@@ -6,10 +6,13 @@ use App\Models\TracerStudy;
 use App\Models\CivilStatusEmployment;
 use App\Models\FurtherStudy;
 use App\Models\UserProfile;
+use App\Services\PhAddressService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Propaganistas\LaravelPhone\Rules\Phone;
 
 new #[Layout('layouts.auth')] class extends Component
 {
@@ -18,10 +21,14 @@ new #[Layout('layouts.auth')] class extends Component
 
     // Step 1 — Personal Information
     public string $gender = '';
-    public string $phone_number_1 = '';
-    public string $current_address = '';
-    public ?float $latitude = null;
-    public ?float $longitude = null;
+    public string $phone_number_1 = ''; // stored in full international E.164 format
+
+    // Step 1 — Address (cascading PH address)
+    public string $regionCode = '';
+    public string $provinceCode = '';
+    public string $cityCode = '';
+    public string $barangayCode = '';
+    public string $street_address = '';
 
     // Step 2 — Civil Status & Program
     public string $civil_status = '';
@@ -54,9 +61,15 @@ new #[Layout('layouts.auth')] class extends Component
         $profile = UserProfile::where('user_id', $user->id)->first();
 
         if ($profile) {
-            $this->gender = $profile->gender ?? '';
-            $this->phone_number_1 = $profile->phone_number_1 ?? '';
-            $this->current_address = $profile->current_address ?? '';
+            $location = $profile->location ?? [];
+
+            $this->gender = $location['gender'] ?? '';
+            $this->phone_number_1 = $location['phone_number_1'] ?? '';
+            $this->street_address = $location['street_address'] ?? '';
+            $this->regionCode = $location['region_code'] ?? '';
+            $this->provinceCode = $location['province_code'] ?? '';
+            $this->cityCode = $location['city_code'] ?? '';
+            $this->barangayCode = $location['barangay_code'] ?? '';
             $this->batch_id = $profile->batch_id ?? '';
         }
 
@@ -84,13 +97,67 @@ new #[Layout('layouts.auth')] class extends Component
         }
     }
 
+    // ===== Cascading address behavior =====
+
+    public function updatedRegionCode()
+    {
+        $this->provinceCode = '';
+        $this->cityCode = '';
+        $this->barangayCode = '';
+    }
+
+    public function updatedProvinceCode()
+    {
+        $this->cityCode = '';
+        $this->barangayCode = '';
+    }
+
+    public function updatedCityCode()
+    {
+        $this->barangayCode = '';
+    }
+
+    #[Computed]
+    public function regions()
+    {
+        return app(PhAddressService::class)->regions();
+    }
+
+    #[Computed]
+    public function provinces()
+    {
+        return $this->regionCode
+            ? app(PhAddressService::class)->provinces($this->regionCode)
+            : collect();
+    }
+
+    #[Computed]
+    public function cities()
+    {
+        return $this->provinceCode
+            ? app(PhAddressService::class)->cities($this->provinceCode)
+            : collect();
+    }
+
+    #[Computed]
+    public function barangays()
+    {
+        return $this->cityCode
+            ? app(PhAddressService::class)->barangays($this->cityCode)
+            : collect();
+    }
+
     protected function stepRules(int $step): array
     {
         return match ($step) {
             1 => [
                 'gender' => 'required|in:Male,Female',
-                'phone_number_1' => 'required|string|max:20',
-                'current_address' => 'required|string|max:500',
+                'phone_number_1' => ['required', 'string', (new Phone())->international()],
+                'street_address' => 'required|string|max:255',
+                'regionCode' => 'required|string',
+                'provinceCode' => 'required|string',
+                'cityCode' => 'required|string',
+                'barangayCode' => 'required|string',
             ],
             2 => [
                 'civil_status' => 'required|in:single,married,widowed,separated,single-parent',
@@ -115,12 +182,21 @@ new #[Layout('layouts.auth')] class extends Component
         };
     }
 
+    public function messages()
+    {
+        return [
+            'phone_number_1.required' => 'The mobile number field is required.',
+            'phone_number_1.phone' => 'Please enter a valid mobile number for the selected country.',
+        ];
+    }
+
     public function nextStep()
     {
         $this->validate($this->stepRules($this->step));
 
         if ($this->step < $this->totalSteps) {
             $this->step++;
+            $this->dispatch('step-changed');
         }
     }
 
@@ -128,6 +204,7 @@ new #[Layout('layouts.auth')] class extends Component
     {
         if ($this->step > 1) {
             $this->step--;
+            $this->dispatch('step-changed');
         }
     }
 
@@ -143,8 +220,22 @@ new #[Layout('layouts.auth')] class extends Component
         $this->validate($rules);
 
         $user = Auth::user();
+        $service = app(PhAddressService::class);
 
-        DB::transaction(function () use ($user) {
+        $region = $service->findByCode($this->regionCode);
+        $province = $service->findByCode($this->provinceCode);
+        $city = $service->findByCode($this->cityCode);
+        $barangay = $service->findByCode($this->barangayCode);
+
+        $fullAddress = collect([
+            $this->street_address,
+            $barangay->name ?? null,
+            $city->name ?? null,
+            $province->name ?? null,
+            $region->name ?? null,
+        ])->filter()->implode(', ');
+
+        DB::transaction(function () use ($user, $region, $province, $city, $barangay, $fullAddress) {
             $existingProfile = UserProfile::where('user_id', $user->id)->first();
 
             $profile = UserProfile::updateOrCreate(
@@ -156,9 +247,16 @@ new #[Layout('layouts.auth')] class extends Component
                         [
                             'gender' => $this->gender,
                             'phone_number_1' => $this->phone_number_1,
-                            'address' => $this->current_address,
-                            'latitude' => $this->latitude,
-                            'longitude' => $this->longitude,
+                            'street_address' => $this->street_address,
+                            'region_code' => $this->regionCode,
+                            'region_name' => $region->name ?? null,
+                            'province_code' => $this->provinceCode,
+                            'province_name' => $province->name ?? null,
+                            'city_code' => $this->cityCode,
+                            'city_name' => $city->name ?? null,
+                            'barangay_code' => $this->barangayCode,
+                            'barangay_name' => $barangay->name ?? null,
+                            'address' => $fullAddress,
                         ]
                     ),
                     'batch_id' => $this->batch_id,

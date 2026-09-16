@@ -37,7 +37,7 @@ new #[Layout('layouts::app-super-admin')] class extends Component
                 },
             ],
             'password' => 'nullable|string|min:6|confirmed',
-            'selectedRole' => 'exists:roles,name',
+            'selectedRole' => 'nullable|exists:roles,name',
             'school_id' => 'required|string|max:9|unique:users,school_id,' . $this->user->id,
         ];
     }
@@ -66,7 +66,7 @@ new #[Layout('layouts::app-super-admin')] class extends Component
         $this->name = $user->name;
         $this->email = $user->email;
         $this->school_id = $user->school_id;
-        $this->selectedRole = $user->roles->pluck('name')->first(); 
+        $this->selectedRole = $user->roles->pluck('name')->first();
     }
 
     public function update()
@@ -81,12 +81,17 @@ new #[Layout('layouts::app-super-admin')] class extends Component
             'name' => $validated['name'],
             'email' => $validated['email'],
             'school_id' => $validated['school_id'],
-            'password' => $validated['password'] 
-                ? Hash::make($validated['password']) 
+            'password' => $validated['password']
+                ? Hash::make($validated['password'])
                 : $this->user->password,
         ]);
 
-        $this->user->syncRoles($this->selectedRole);
+        // Guard against a cleared role selection before syncing
+        if ($this->selectedRole) {
+            $this->user->syncRoles($this->selectedRole);
+        } else {
+            $this->user->syncRoles([]);
+        }
 
         session()->flash('success', 'User updated successfully.');
         return redirect()->route('super-admin.user.view');

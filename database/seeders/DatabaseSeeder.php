@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             PermissionSeeder::class,
             BatchSeeder::class,
+            EmailSeeder::class,
         ]);
         // Create roles if not already seeded
         $superAdminRole = Role::firstOrCreate(['name' => 'registrar']);

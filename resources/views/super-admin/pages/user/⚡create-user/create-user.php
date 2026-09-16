@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Services\EmailTemplateService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
@@ -78,7 +79,19 @@ new #[Layout('layouts::app-super-admin')] class extends Component
 
         $user->syncRoles($validated['selectedRole']);
 
-        session()->flash('success', 'User created successfully.');
+        // The password is never emailed — this just confirms the account
+        // exists and points them to log in.
+        EmailTemplateService::send(
+            'your-csav-alumni-network-staff-account-has-been-created',
+            $validated['email'],
+            [
+                'name'         => $validated['name'],
+                'school_email' => $validated['email'],
+                'login_url'    => route('login'),
+            ]
+        );
+
+        session()->flash('success', 'User created successfully. A notification was sent to their email.');
         return redirect()->route('super-admin.user.view');
     }
 

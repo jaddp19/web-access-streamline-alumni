@@ -19,7 +19,22 @@
                     </div>
                 </div>
 
-                <div class="flex items-center gap-x-2">
+                <div class="flex flex-wrap items-center gap-2">
+                    <button type="button" wire:click="exportFilteredCsv"
+                        wire:loading.attr="disabled"
+                        wire:target="exportFilteredCsv"
+                        class="w-full sm:w-auto justify-center py-2.5 px-3.5 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg bg-white border border-black/10 text-[#123524] hover:bg-black/5 transition disabled:opacity-50">
+                        <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <path d="M7 10l5 5 5-5" />
+                            <path d="M12 15V3" />
+                        </svg>
+                        <span wire:loading.remove wire:target="exportFilteredCsv">Export</span>
+                        <span wire:loading wire:target="exportFilteredCsv">Exporting...</span>
+                    </button>
+
                     <a href="{{ route('super-admin.user.create') }}"
                         class="w-full sm:w-auto justify-center py-2.5 px-3.5 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg bg-[#123524] text-white hover:bg-[#0d2819] transition">
                         <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
@@ -64,9 +79,11 @@
 
                     <!-- Search Bar: full width on mobile -->
                     <div class="relative w-full md:w-64 pb-3 md:pb-0">
-                        <input id="user-search" type="text" placeholder="Search users..."
-                            class="w-full py-2 px-4 text-sm rounded-lg bg-white/5 border border-black/20
-               text-black placeholder:text-gray-400 focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524]">
+                        <input
+                            type="text"
+                            wire:model.live.debounce.400ms="search"
+                            placeholder="Search users..."
+                            class="w-full py-2 px-4 text-sm rounded-lg bg-white/5 border border-black/20 text-black placeholder:text-gray-400 focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524]">
                         <svg xmlns="http://www.w3.org/2000/svg" class="absolute right-3 top-2.5 h-4 w-4 text-gray-400"
                             fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -81,22 +98,31 @@
             @if (!empty($selectedUsers))
                 <div class="px-4 sm:px-6 py-3 bg-red-50 border-b border-red-100 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <p class="text-sm text-red-700 font-medium">{{ count($selectedUsers) }} user(s) selected</p>
-                    <button x-data
-                        @click="
-                            if (confirm('Are you sure you want to delete ' + {{ count($selectedUsers) }} + ' user(s)?')) {
-                                $wire.deleteSelected()
-                            }
-                        "
-                        class="w-full sm:w-auto px-4 py-1.5 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition">
-                        Delete Selected
-                    </button>
+                    <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                        <button type="button" wire:click="exportSelectedCsv"
+                            wire:loading.attr="disabled"
+                            wire:target="exportSelectedCsv"
+                            class="w-full sm:w-auto px-4 py-1.5 bg-white border border-black/10 text-[#123524] text-sm font-semibold rounded-lg hover:bg-black/5 transition disabled:opacity-50">
+                            <span wire:loading.remove wire:target="exportSelectedCsv">Export Selected</span>
+                            <span wire:loading wire:target="exportSelectedCsv">Exporting...</span>
+                        </button>
+                        <button x-data
+                            @click="
+                                if (confirm('Are you sure you want to delete ' + {{ count($selectedUsers) }} + ' user(s)?')) {
+                                    $wire.deleteSelected()
+                                }
+                            "
+                            class="w-full sm:w-auto px-4 py-1.5 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition">
+                            Delete Selected
+                        </button>
+                    </div>
                 </div>
             @endif
 
             <!-- ============ MOBILE CARD LIST (below sm) ============ -->
-            <div class="sm:hidden divide-y divide-black/5">
+            <div class="sm:hidden divide-y divide-black/5" wire:loading.class="opacity-50">
                 @forelse ($this->users as $user)
-                    <div class="p-4 flex items-start gap-3" data-user-row>
+                    <div class="p-4 flex items-start gap-3">
                         <input type="checkbox" wire:click="toggleRowSelection({{ $user->id }})" x-data
                             x-bind:checked="@js($selectedUsers).includes({{ $user->id }})"
                             class="mt-1.5 rounded border-black/20 text-[#123524] focus:ring-[#123524] shrink-0">
@@ -108,10 +134,17 @@
                         <div class="flex-1 min-w-0">
                             <div class="flex items-start justify-between gap-2">
                                 <p class="font-semibold text-[#123524] truncate">{{ $user->name }}</p>
-                                <a href="{{ route('super-admin.user.update', $user->id) }}"
-                                    class="shrink-0 text-xs font-semibold text-[#123524] hover:underline">
-                                    Edit
-                                </a>
+                                <div class="shrink-0 flex items-center gap-2">
+                                    <a href="{{ route('super-admin.alumni.view-single', $user->id) }}"
+                                        class="text-xs font-semibold text-[#123524] hover:underline">
+                                        View
+                                    </a>
+                                    <span class="text-black/20">|</span>
+                                    <a href="{{ route('super-admin.user.update', $user->id) }}"
+                                        class="text-xs font-semibold text-black/50 hover:underline">
+                                        Edit
+                                    </a>
+                                </div>
                             </div>
                             <p class="text-xs text-black/60 truncate">{{ $user->email }}</p>
 
@@ -125,6 +158,20 @@
                                     <span class="text-xs text-black/40 italic">No role</span>
                                 @endforelse
                             </div>
+
+                            @if ($user->hasRole('alumni'))
+                                <div class="mt-1.5">
+                                    @if ($user->tracerStudy)
+                                        <span class="inline-flex items-center text-[10px] px-2 py-0.5 rounded-full bg-green-600/10 text-green-700 font-semibold uppercase tracking-wide">
+                                            Tracer: Completed
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 font-semibold uppercase tracking-wide">
+                                            Tracer: Pending
+                                        </span>
+                                    @endif
+                                </div>
+                            @endif
 
                             <p class="mt-1.5 text-[11px] text-black/40">{{ $user->created_at->diffForHumans() }}</p>
                         </div>
@@ -153,10 +200,10 @@
             <!-- ============ END MOBILE CARD LIST ============ -->
 
             <!-- ============ TABLE (sm and up) ============ -->
-            <div class="hidden sm:block overflow-x-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-md [&::-webkit-scrollbar-thumb]:bg-black/10">
+            <div class="hidden sm:block overflow-x-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-md [&::-webkit-scrollbar-thumb]:bg-black/10" wire:loading.class="opacity-50">
                 <table class="min-w-full text-xs sm:text-sm">
                     <thead class="bg-[#F7F5EF] border-b border-black/5">
-                        <tr data-user-row>
+                        <tr>
                             <th class="ps-6 py-3 w-4">
                                 <input type="checkbox" wire:click="toggleSelectAll" @checked($selectAll) x-data
                                     x-init="$watch('$wire.selectedUsers', value => {
@@ -174,6 +221,8 @@
                             <th class="hidden md:table-cell px-3 lg:px-6 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 text-[11px]">
                                 Role</th>
                             <th class="hidden lg:table-cell px-3 lg:px-6 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 text-[11px]">
+                                Tracer Study</th>
+                            <th class="hidden lg:table-cell px-3 lg:px-6 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 text-[11px]">
                                 Created</th>
                             <th class="px-3 lg:px-6 py-3 text-end"></th>
                         </tr>
@@ -181,14 +230,14 @@
 
                     <tbody class="divide-y divide-black/5">
                         @forelse ($this->users as $user)
-                            <tr class="hover:bg-black/[0.02] transition-colors" data-user-row>
+                            <tr class="hover:bg-black/[0.02] transition-colors">
                                 <td class="w-4 ps-6 py-3 text-center align-middle">
                                     <input type="checkbox" wire:click="toggleRowSelection({{ $user->id }})" x-data
                                         x-bind:checked="@js($selectedUsers).includes({{ $user->id }})"
                                         class="rounded border-black/20 text-[#123524] focus:ring-[#123524] align-middle">
                                 </td>
                                 <td class="px-3 lg:px-6 py-3">
-                                    <div class="flex items-center gap-3" data-user-row>
+                                    <div class="flex items-center gap-3">
                                         <div class="w-8 h-8 rounded-full bg-[#123524]/10 flex items-center justify-center text-[#123524] text-xs font-bold shrink-0">
                                             {{ strtoupper(substr($user->name, 0, 1)) }}
                                         </div>
@@ -212,18 +261,39 @@
                                     @endforelse
                                 </td>
                                 <td class="hidden lg:table-cell px-3 lg:px-6 py-3">
+                                    @if ($user->hasRole('alumni'))
+                                        @if ($user->tracerStudy)
+                                            <span class="inline-flex items-center text-[10px] px-2 py-0.5 rounded-full bg-green-600/10 text-green-700 font-semibold uppercase tracking-wide">
+                                                Completed
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 font-semibold uppercase tracking-wide">
+                                                Pending
+                                            </span>
+                                        @endif
+                                    @else
+                                        <span class="text-xs text-black/30 italic">N/A</span>
+                                    @endif
+                                </td>
+                                <td class="hidden lg:table-cell px-3 lg:px-6 py-3">
                                     <span class="text-black/50">{{ $user->created_at->diffForHumans() }}</span>
                                 </td>
                                 <td class="px-3 lg:px-6 py-3 text-end">
-                                    <a href="{{ route('super-admin.user.update', $user->id) }}"
-                                        class="inline-flex items-center gap-1 text-[#123524] hover:text-[#0d2819] font-semibold hover:underline">
-                                        View
-                                    </a>
+                                    <div class="flex items-center justify-end gap-3">
+                                        <a href="{{ route('super-admin.alumni.view-single', $user->id) }}"
+                                            class="inline-flex items-center gap-1 text-[#123524] hover:text-[#0d2819] font-semibold hover:underline">
+                                            View
+                                        </a>
+                                        <a href="{{ route('super-admin.user.update', $user->id) }}"
+                                            class="inline-flex items-center gap-1 text-black/50 hover:text-[#123524] font-semibold hover:underline">
+                                            Edit
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
-                            <tr data-user-row>
-                                <td colspan="6" class="px-6 py-12 text-center">
+                            <tr>
+                                <td colspan="7" class="px-6 py-12 text-center">
                                     <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-[#123524]/5 flex items-center justify-center">
                                         <svg class="w-6 h-6 text-[#123524]/30" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -295,18 +365,3 @@
     </div>
     <!-- End Table Section -->
 </div>
-
-<!-- JS for live filtering -->
-<script>
-  document.addEventListener('input', (e) => {
-    if (e.target.id !== 'user-search') return;
-
-    const q = e.target.value.toLowerCase().trim();
-
-    // Mobile cards AND table rows
-    document.querySelectorAll('[data-user-row]').forEach((el) => {
-      const text = el.textContent.toLowerCase();
-      el.style.display = text.includes(q) ? '' : 'none';
-    });
-  });
-</script>
