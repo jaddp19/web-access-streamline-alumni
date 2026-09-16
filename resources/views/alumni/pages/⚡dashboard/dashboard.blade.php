@@ -9,8 +9,9 @@
             <div class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm overflow-hidden sticky top-24 border border-transparent dark:border-white/5">
                 <div class="h-16 bg-gradient-to-r from-[#123524] to-[#1C6B45]"></div>
                 <div class="px-4 pb-4 text-center -mt-10">
-                    <img src="{{ $this->avatarUrl }}" alt="{{ $this->alumni->name }}"
-                        class="w-20 h-20 mx-auto rounded-full object-cover ring-4 ring-white dark:ring-[#242526] bg-[#D4A537]">
+                    <span class="w-20 h-20 mx-auto flex items-center justify-center text-3xl font-bold text-[#0f2b1c] bg-yellow-500 rounded-full ring-4 ring-white dark:ring-[#242526] shadow-md shrink-0">
+                        {{ strtoupper(substr($this->alumni->name ?? '?', 0, 1)) }}
+                    </span>
                     <p class="font-bold text-black dark:text-white mt-2" style="font-family: 'Fraunces', serif;">{{ $this->alumni->name }}</p>
                     <p class="text-xs text-black/50 dark:text-white/50">Alumni Member</p>
 
@@ -33,8 +34,9 @@
             {{-- Create post (FB home composer) --}}
             <div class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm p-4 border border-transparent dark:border-white/5">
                 <div class="flex items-center gap-3">
-                    <img src="{{ $this->avatarUrl }}" alt="{{ $this->alumni->name }}"
-                        class="w-10 h-10 rounded-full object-cover shrink-0 bg-[#D4A537]">
+                    <span class="w-10 h-10 flex items-center justify-center text-base font-bold text-[#0f2b1c] bg-yellow-500 rounded-full shrink-0">
+                        {{ strtoupper(substr($this->alumni->name ?? '?', 0, 1)) }}
+                    </span>
                     <a href="{{ route('alumni.message') }}" class="flex-1 text-left px-4 py-2.5 rounded-full bg-[#F0F2F5] dark:bg-[#3A3B3C] hover:bg-[#E4E6EB] dark:hover:bg-[#4E4F50] text-black/50 dark:text-white/60 text-sm transition">
                         What's on your mind, {{ explode(' ', $this->alumni->name)[0] }}?
                     </a>
@@ -56,14 +58,9 @@
                 <article class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm overflow-hidden border border-transparent dark:border-white/5">
                     <header class="flex items-center justify-between p-4 pb-2">
                         <div class="flex items-center gap-3">
-                            @if ($post->user?->userProfile?->avatar)
-                                <img src="{{ Storage::url($post->user->userProfile->avatar) }}" alt="{{ $post->user->name }}"
-                                    class="w-10 h-10 rounded-full object-cover shrink-0 bg-[#D4A537]">
-                            @else
-                                <div class="w-10 h-10 rounded-full bg-[#D4A537] flex items-center justify-center text-[#123524] font-bold shrink-0">
-                                    {{ strtoupper(substr($post->user->name ?? '?', 0, 1)) }}
-                                </div>
-                            @endif
+                            <span class="w-10 h-10 flex items-center justify-center text-base font-bold text-[#0f2b1c] bg-yellow-500 rounded-full shrink-0">
+                                {{ strtoupper(substr($post->user->name ?? '?', 0, 1)) }}
+                            </span>
                             <div>
                                 <p class="font-semibold text-black dark:text-white text-sm leading-tight">{{ $post->user->name ?? 'Unknown Alumni' }}</p>
                                 <p class="text-xs text-black/50 dark:text-white/50">{{ $post->created_at->diffForHumans() }} &middot; {{ ucfirst($post->status) }}</p>
@@ -98,11 +95,10 @@
 
             @php
                 $totalAlumni  = \App\Models\User::role('alumni')->count();
-                $totalBatches = \App\Models\Batch::count();
                 $myBatchName  = $this->userProfile?->batch?->batch_name;
             @endphp
 
-            {{-- Alumni at a glance (replaces redundant Quick Links) --}}
+            {{-- Alumni at a glance --}}
             <div class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm overflow-hidden border border-transparent dark:border-white/5">
                 <div class="px-4 py-3 border-b border-black/5 dark:border-white/5">
                     <h3 class="text-sm font-bold text-black/60 dark:text-white/60 uppercase tracking-wide">Alumni at a glance</h3>
@@ -110,7 +106,7 @@
                 <div class="p-4 space-y-3">
                     <div class="flex items-center gap-3">
                         <div class="w-9 h-9 rounded-lg bg-[#1877F2]/10 flex items-center justify-center text-[#1877F2] shrink-0">
-                            <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" style="width:18px;height:18px;">
+                            <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
                             </svg>
                         </div>

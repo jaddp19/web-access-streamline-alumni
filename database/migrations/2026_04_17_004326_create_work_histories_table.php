@@ -17,8 +17,7 @@ return new class extends Migration
             $table->string('work_name');
             $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
             $table->date('date_hired');
-            $table->boolean('is_current_job');
-            $table->boolean('is_current_employed');
+            $table->boolean('is_current_job')->default(0);
             $table->timestamps();
         });
     }

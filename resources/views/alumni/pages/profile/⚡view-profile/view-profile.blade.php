@@ -18,21 +18,26 @@
             <div class="px-4 pb-4 -mt-16 sm:-mt-20 relative">
                 <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                     <div class="flex flex-col sm:flex-row sm:items-end gap-4">
-                        <img src="{{ $this->avatarUrl }}" alt="{{ $this->alumni->name }}"
-                            class="w-32 h-32 sm:w-40 sm:h-40 rounded-full object-cover ring-4 ring-white dark:ring-[#242526] shadow-lg bg-[#D4A537]">
-                        <div class="pb-2">
-                            <h1 class="text-3xl font-bold text-black dark:text-white"
+                        <<span
+                            class="w-32 h-32 sm:w-40 sm:h-40 rounded-full ring-4 ring-white dark:ring-[#242526] shadow-lg bg-yellow-500 flex items-center justify-center shrink-0">
+                            <span class="text-[#0f2b1c] font-bold text-5xl sm:text-6xl"
                                 style="font-family: 'Fraunces', serif;">
-                                {{ $this->alumni->name }}
-                            </h1>
-                            <p class="text-black/60 dark:text-white/60 text-sm mt-0.5">
-                                @if ($this->userProfile?->batch)
-                                    Batch {{ $this->userProfile->batch->batch_name }}
-                                @else
-                                    Alumni Member
-                                @endif
-                            </p>
-                        </div>
+                                {{ strtoupper(substr($this->alumni->name ?? '?', 0, 1)) }}
+                            </span>
+                            </span>
+                            <div class="pb-2">
+                                <h1 class="text-3xl font-bold text-black dark:text-white"
+                                    style="font-family: 'Fraunces', serif;">
+                                    {{ $this->alumni->name }}
+                                </h1>
+                                <p class="text-black/60 dark:text-white/60 text-sm mt-0.5">
+                                    @if ($this->userProfile?->batch)
+                                        Batch {{ $this->userProfile->batch->batch_name }}
+                                    @else
+                                        Alumni Member
+                                    @endif
+                                </p>
+                            </div>
                     </div>
                     <div class="flex flex-wrap gap-2 pb-2">
                         @if ($this->userProfile?->is_verified)

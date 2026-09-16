@@ -12,8 +12,7 @@ class WorkHistory extends Model
         'work_name',
         'company_id',
         'date_hired',
-        'is_current_job',
-        'is_current_employed',
+        'is_current_job'
     ];
 
     protected $casts = [
