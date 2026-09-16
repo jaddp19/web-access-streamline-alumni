@@ -1,6 +1,6 @@
 <div class="bg-[#F0F2F5] dark:bg-[#18191A] min-h-screen">
 
-    {{-- ========== TWO-COLUMN FEED LAYOUT (FB HOME STYLE) ========== --}}
+    {{-- ========== THREE-COLUMN FEED LAYOUT (FB HOME STYLE) ========== --}}
     <div class="max-w-[1100px] mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-4">
 
         {{-- ===== LEFT SIDEBAR ===== --}}
@@ -19,27 +19,6 @@
                             <span class="flex items-center gap-2">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
                                 My Profile
-                            </span>
-                            <span class="text-xs text-black/40 dark:text-white/40">&rarr;</span>
-                        </a>
-                        <a href="{{ route('alumni.profile.update', $this->alumni->id) }}" class="flex items-center justify-between py-1.5 text-sm text-black/70 dark:text-white/70 hover:text-[#1877F2] transition">
-                            <span class="flex items-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" /></svg>
-                                Edit Profile
-                            </span>
-                            <span class="text-xs text-black/40 dark:text-white/40">&rarr;</span>
-                        </a>
-                        <a href="{{ route('alumni.message') }}" class="flex items-center justify-between py-1.5 text-sm text-black/70 dark:text-white/70 hover:text-[#1877F2] transition">
-                            <span class="flex items-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" /></svg>
-                                Messages
-                            </span>
-                            <span class="text-xs text-black/40 dark:text-white/40">&rarr;</span>
-                        </a>
-                        <a href="{{ route('alumni.settings') }}" class="flex items-center justify-between py-1.5 text-sm text-black/70 dark:text-white/70 hover:text-[#1877F2] transition">
-                            <span class="flex items-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.28z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                                Settings
                             </span>
                             <span class="text-xs text-black/40 dark:text-white/40">&rarr;</span>
                         </a>
@@ -116,24 +95,44 @@
 
         {{-- ===== RIGHT SIDEBAR ===== --}}
         <aside class="lg:col-span-3 space-y-4">
-            {{-- Quick links --}}
+
+            @php
+                $totalAlumni  = \App\Models\User::role('alumni')->count();
+                $totalBatches = \App\Models\Batch::count();
+                $myBatchName  = $this->userProfile?->batch?->batch_name;
+            @endphp
+
+            {{-- Alumni at a glance (replaces redundant Quick Links) --}}
             <div class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm overflow-hidden border border-transparent dark:border-white/5">
                 <div class="px-4 py-3 border-b border-black/5 dark:border-white/5">
-                    <h3 class="text-sm font-bold text-black/60 dark:text-white/60 uppercase tracking-wide">Quick links</h3>
+                    <h3 class="text-sm font-bold text-black/60 dark:text-white/60 uppercase tracking-wide">Alumni at a glance</h3>
                 </div>
-                <div class="py-2">
-                    <a href="{{ route('alumni.profile') }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-black/80 dark:text-white/80 hover:bg-[#F0F2F5] dark:hover:bg-[#3A3B3C] transition">
-                        <svg class="w-5 h-5 text-[#1877F2]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
-                        My Profile
-                    </a>
-                    <a href="{{ route('alumni.message') }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-black/80 dark:text-white/80 hover:bg-[#F0F2F5] dark:hover:bg-[#3A3B3C] transition">
-                        <svg class="w-5 h-5 text-[#1877F2]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" /></svg>
-                        Messages
-                    </a>
-                    <a href="{{ route('alumni.settings') }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-black/80 dark:text-white/80 hover:bg-[#F0F2F5] dark:hover:bg-[#3A3B3C] transition">
-                        <svg class="w-5 h-5 text-[#1877F2]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.28z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                        Settings
-                    </a>
+                <div class="p-4 space-y-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-lg bg-[#1877F2]/10 flex items-center justify-center text-[#1877F2] shrink-0">
+                            <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" style="width:18px;height:18px;">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-lg font-bold text-black dark:text-white leading-none">{{ number_format($totalAlumni) }}</p>
+                            <p class="text-xs text-black/50 dark:text-white/50 mt-0.5">Registered alumni</p>
+                        </div>
+                    </div>
+
+                    @if ($myBatchName)
+                        <div class="flex items-center gap-3 pt-3 border-t border-black/5 dark:border-white/5">
+                            <div class="w-9 h-9 rounded-lg bg-[#123524]/10 flex items-center justify-center text-[#123524] shrink-0">
+                                <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.62 48.62 0 0112 20.904a48.62 48.62 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-black dark:text-white leading-tight">Class of {{ $myBatchName }}</p>
+                                <p class="text-xs text-black/50 dark:text-white/50 mt-0.5">Your batch</p>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
 

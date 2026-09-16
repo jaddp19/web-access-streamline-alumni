@@ -1,18 +1,10 @@
 @php
-    use App\Models\UserProfile;
-
     $__authUser = auth()->user();
-    $__authProfile = $__authUser
-        ? UserProfile::where('user_id', $__authUser->id)->first()
-        : null;
-
-    $__authAvatarUrl = $__authProfile?->avatar
-        ? \Illuminate\Support\Facades\Storage::url($__authProfile->avatar)
-        : 'https://ui-avatars.com/api/?name=' . urlencode($__authUser->name ?? '?') . '&background=D4A537&color=123524';
+    $__initial = strtoupper(substr($__authUser->name ?? '?', 0, 1));
 @endphp
 
 <!-- ========== FACEBOOK-STYLE HEADER ========== -->
-<header class="w-full bg-white dark:bg-[#1a1a1a] border-b border-black/10 dark:border-white/10 shadow-sm sticky top-0 z-50 select-none">
+<header class="w-full bg-gradient-to-r from-[#0f2b1c] via-green-800 to-[#0f2b1c] border-b border-black/10 dark:border-white/10 shadow-sm sticky top-0 z-50 select-none">
   <nav class="max-w-[1100px] mx-auto flex items-center justify-between px-4 py-2 gap-4">
 
     <!-- Logo + Search -->
@@ -61,31 +53,71 @@
         </li>
     </ul>
 
-    <!-- Right: Avatar + Actions (desktop only — mobile users get these in the dropdown menu) -->
-    <div class="hidden lg:flex items-center gap-2">
-        <a href="{{ route('alumni.profile') }}" class="w-10 h-10 rounded-full overflow-hidden ring-1 ring-black/10 dark:ring-white/10 hover:opacity-90 transition shrink-0" title="My Profile">
-            <img src="{{ $__authAvatarUrl }}" alt="{{ $__authUser->name ?? 'Profile' }}" class="w-full h-full object-cover">
-        </a>
-        <livewire:auth::logout />
+    <!-- Desktop: Profile Dropdown (avatar trigger) -->
+    <div class="hidden lg:block relative" x-data="{ open: false }" @click.outside="open = false">
+        <button @click="open = !open"
+                class="flex items-center gap-2 p-1.5 rounded-full hover:bg-black/5 dark:hover:bg-[#3a3b3c] transition"
+                :aria-expanded="open">
+            <span class="w-9 h-9 flex items-center justify-center text-base font-bold text-[#0f2b1c] bg-yellow-500 rounded-full shrink-0">
+                {{ $__initial }}
+            </span>
+        </button>
+
+        <div x-show="open"
+             x-transition:enter="transition ease-out duration-150"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-100"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             x-cloak
+             class="absolute right-0 mt-2 w-64 bg-[#12331f] border border-yellow-500/20 rounded-xl shadow-2xl overflow-hidden z-50"
+             role="menu">
+            <div class="flex items-center gap-x-3 py-3 px-4 bg-white/5">
+                <span class="w-10 h-10 flex items-center justify-center text-lg font-bold text-[#0f2b1c] bg-yellow-500 rounded-full shrink-0">
+                    {{ $__initial }}
+                </span>
+                <div class="min-w-0">
+                    <p class="font-bold text-white text-sm truncate">{{ $__authUser->name ?? 'Alumni' }}</p>
+                    <p class="text-xs text-white/60 truncate">{{ $__authUser->email ?? '' }}</p>
+                </div>
+            </div>
+
+            <div class="p-2 border-t border-white/10">
+                <livewire:auth::logout />
+            </div>
+        </div>
     </div>
 
-    <!-- Mobile: compact avatar (identity at a glance) + Menu Toggle -->
-    <div class="flex lg:hidden items-center gap-2">
-        <a href="{{ route('alumni.profile') }}" class="w-9 h-9 rounded-full overflow-hidden ring-1 ring-black/10 dark:ring-white/10 shrink-0" title="My Profile">
-            <img src="{{ $__authAvatarUrl }}" alt="{{ $__authUser->name ?? 'Profile' }}" class="w-full h-full object-cover">
-        </a>
+    <!-- Mobile: Menu Toggle only -->
+    <div class="flex lg:hidden items-center">
         <button class="p-2 rounded-full bg-[#F0F2F5] dark:bg-[#3a3b3c] hover:bg-[#E4E6EB] dark:hover:bg-[#4e4f50] transition" id="menu-toggle">
-          <svg class="w-5 h-5 text-black dark:text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <line x1="4" x2="20" y1="6" y2="6"/>
-            <line x1="4" x2="20" y1="12" y2="12"/>
-            <line x1="4" x2="20" y1="18" y2="18"/>
-          </svg>
+            <svg class="w-5 h-5 text-black dark:text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <line x1="4" x2="20" y1="6" y2="6"/>
+                <line x1="4" x2="20" y1="12" y2="12"/>
+                <line x1="4" x2="20" y1="18" y2="18"/>
+            </svg>
         </button>
     </div>
   </nav>
 
   <!-- Mobile Menu -->
   <div id="mobile-menu" class="hidden flex-col gap-y-1 px-4 pb-3 lg:hidden bg-white dark:bg-[#1a1a1a] border-t border-black/10 dark:border-white/5">
+
+      {{-- Profile header inside mobile menu --}}
+      <a href="{{ route('alumni.profile') }}"
+         class="flex items-center gap-x-3 py-4 px-3 rounded-lg hover:bg-[#F0F2F5] dark:hover:bg-[#3a3b3c] transition-colors mt-2">
+          <span class="w-11 h-11 flex items-center justify-center text-lg font-bold text-[#0f2b1c] bg-yellow-500 rounded-full shrink-0">
+              {{ $__initial }}
+          </span>
+          <div class="min-w-0">
+              <p class="font-bold text-black dark:text-white text-sm truncate">{{ $__authUser->name ?? 'Alumni' }}</p>
+              <p class="text-xs text-black/50 dark:text-white/50 truncate">{{ $__authUser->email ?? '' }}</p>
+          </div>
+      </a>
+
+      <div class="my-1 border-t border-black/10 dark:border-white/10"></div>
+
       <a href="{{ route('alumni.dashboard') }}" class="flex items-center gap-x-3 px-3 py-3 rounded-lg text-black/80 dark:text-white/80 hover:bg-[#F0F2F5] dark:hover:bg-[#3a3b3c] transition-colors">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
           <span class="font-medium">Home</span>

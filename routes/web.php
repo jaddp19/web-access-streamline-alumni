@@ -74,7 +74,9 @@ Route::middleware(['auth', 'role:alumni|registrar'])->prefix('alumni')->group(fu
     Route::livewire('/profile/view', 'alumni::pages.profile.view-profile')->name('alumni.profile');
     Route::livewire('/profile/update/{user}', 'alumni::pages.profile.update-profile')->name('alumni.profile.update');
     Route::livewire('/profile/update-educational/{alumni}', 'alumni::pages.profile.update-educational-background')->name('alumni.profile.update-educational');
-
+    Route::livewire('/profile/create-employment', 'alumni::pages.profile.create-work-history')->name('alumni.profile.create-employment');
+    Route::livewire('/profile/update-employment/{history}', 'alumni::pages.profile.update-work-history')->name('alumni.profile.update-employment');
+    
     Route::livewire('/settings', 'alumni::pages.settings')->name('alumni.settings');
 
     Route::livewire('/message', 'alumni::pages.message.alumni-message')->name('alumni.message');
