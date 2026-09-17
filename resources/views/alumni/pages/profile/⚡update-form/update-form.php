@@ -17,26 +17,26 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use Propaganistas\LaravelPhone\Rules\Phone;
 
-new #[Layout('layouts.auth')] class extends Component
+new #[Layout('layouts.app-alumni')] class extends Component
 {
     use WithFileUploads;
 
     public int $step = 1;
     public int $totalSteps = 4;
 
-    // Step 1 — Personal
+    // Step 1 — Personal (now real columns)
     public string $gender = '';
     public string $contact_number_1 = '';
     public string $contact_number_2 = '';
 
-    // Step 1 — Address
+    // Step 1 — Address (stays in location JSON)
     public string $regionCode = '';
     public string $provinceCode = '';
     public string $cityCode = '';
     public string $barangayCode = '';
     public string $street_address = '';
 
-    // Step 1 — Coordinates
+    // Step 1 — Coordinates (location JSON)
     public float $latitude = 10.45;
     public float $longitude = 123.88;
 
@@ -45,7 +45,7 @@ new #[Layout('layouts.auth')] class extends Component
     public $course_id = '';
     public $batch_id = '';
 
-    // Step 3
+    // Step 3 — Employment
     public string $employment_status = '';
     public string $current_job_position = '';
     public string $employed_related_to_degree = '';
@@ -82,14 +82,18 @@ new #[Layout('layouts.auth')] class extends Component
         $profile = UserProfile::where('user_id', $user->id)->first();
 
         if ($profile) {
+            // --- Columns ---
             $this->gender           = $profile->gender ? ucfirst($profile->gender) : '';
             $this->contact_number_1 = $profile->contact_number_1 ?? '';
             $this->contact_number_2 = $profile->contact_number_2 ?? '';
             $this->batch_id         = $profile->batch_id ?? '';
 
+            // --- course_id from pivot ---
             $this->course_id = $profile->courses()->value('courses.id') ?? '';
 
+            // --- location JSON ---
             $location = $profile->location ?? [];
+
             $this->street_address = $location['street_address'] ?? '';
             $this->regionCode     = $location['region_code'] ?? '';
             $this->provinceCode   = $location['province_code'] ?? '';
@@ -234,14 +238,13 @@ new #[Layout('layouts.auth')] class extends Component
             unset($this->companies);
 
             session()->flash('company_created', 'Company "' . $company->company_name . '" created and selected.');
-
         } catch (\Throwable $e) {
             logger()->error('Company creation failed: ' . $e->getMessage());
             session()->flash('error', 'Failed to create company: ' . $e->getMessage());
         }
     }
 
-    // ===== Rules =====
+    // ===== Validation rules =====
 
     protected function stepRules(int $step): array
     {
@@ -288,6 +291,7 @@ new #[Layout('layouts.auth')] class extends Component
         return [
             'gender.required'                        => 'Please select your sex.',
             'contact_number_1.required'              => 'Mobile number is required.',
+            'contact_number_2.required'              => 'Alternate number is required.',
             'street_address.required'                => 'Street address is required.',
             'regionCode.required'                    => 'Please select your region.',
             'provinceCode.required'                  => 'Please select your province.',
@@ -313,6 +317,8 @@ new #[Layout('layouts.auth')] class extends Component
         ];
     }
 
+    // ===== Navigation =====
+
     public function nextStep()
     {
         $this->validate($this->stepRules($this->step), $this->stepMessages());
@@ -331,6 +337,8 @@ new #[Layout('layouts.auth')] class extends Component
             $this->dispatch('step-changed');
         }
     }
+
+    // ===== Submit =====
 
     public function submit()
     {
@@ -366,7 +374,7 @@ new #[Layout('layouts.auth')] class extends Component
                 ['user_id' => $user->id],
                 [
                     'avatar'           => $existingProfile->avatar ?? null,
-                    'gender'           => strtolower($this->gender),
+                    'gender'           => strtolower($this->gender), // enum: male|female|other
                     'contact_number_1' => $this->contact_number_1,
                     'contact_number_2' => $this->contact_number_2 ?: null,
                     'location' => array_merge(
@@ -396,18 +404,26 @@ new #[Layout('layouts.auth')] class extends Component
 
             $tracerStudy = TracerStudy::firstOrCreate(['user_id' => $user->id]);
 
+            $isEmployed = $this->employment_status === 'employed';
+
             CivilStatusEmployment::updateOrCreate(
                 ['tracer_study_id' => $tracerStudy->id],
                 [
-                    'civil_status'               => $this->civil_status,
-                    'employment_status'          => $this->employment_status,
-                    'current_job_position'       => $this->current_job_position ?: null,
-                    'employed_related_to_degree' => $this->employed_related_to_degree ?: null,
-                    'employment_type'            => $this->employment_type ?: null,
-                    'organization_type'          => $this->organization_type ?: null,
-                    'employment_area'            => $this->employment_area ?: null,
-                    'abroad_country'             => $this->abroad_country ?: null,
-                    'months_to_first_job'        => $this->months_to_first_job ?: null,
+                    'civil_status'      => $this->civil_status,
+                    'employment_status' => $this->employment_status,
+
+                    // Only persist employment details when the alumnus is employed.
+                    // Everything else gets wiped so a switch from employed → unemployed
+                    // doesn't leave stale data in the record.
+                    'current_job_position'       => $isEmployed ? ($this->current_job_position ?: null) : null,
+                    'employed_related_to_degree' => $isEmployed ? ($this->employed_related_to_degree ?: null) : null,
+                    'employment_type'            => $isEmployed ? ($this->employment_type ?: null) : null,
+                    'organization_type'          => $isEmployed ? ($this->organization_type ?: null) : null,
+                    'employment_area'            => $isEmployed ? ($this->employment_area ?: null) : null,
+                    'abroad_country'             => $isEmployed && $this->employment_area === 'abroad'
+                        ? ($this->abroad_country ?: null)
+                        : null,
+                    'months_to_first_job'        => $isEmployed ? ($this->months_to_first_job ?: null) : null,
                 ]
             );
 
@@ -419,6 +435,7 @@ new #[Layout('layouts.auth')] class extends Component
                 ]
             );
 
+            // ===== Work history =====
             if ($this->employment_status === 'employed' && $this->company_id && $this->date_hired) {
                 $existingCurrent = WorkHistory::where('user_id', $user->id)
                     ->where('is_current_job', true)
@@ -442,7 +459,7 @@ new #[Layout('layouts.auth')] class extends Component
             }
         });
 
-        session()->flash('status', 'Thank you! Please wait for the admin to approve your form.');
+        session()->flash('status', 'Your tracer study has been updated successfully.');
 
         return redirect()->route('alumni.dashboard');
     }

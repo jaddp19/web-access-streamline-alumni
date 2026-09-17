@@ -57,12 +57,12 @@ new #[Layout('layouts.app-alumni')] class extends Component
         $location = $this->decodeLocation();
 
         return [
-            'gender'          => $this->userProfile?->gender ?? $location['gender'] ?? null,
-            'phone_number_1'  => $this->userProfile?->phone_number_1 ?? $location['phone_number_1'] ?? null,
-            'phone_number_2'  => $location['phone_number_2'] ?? null,
-            'latitude'        => $location['latitude'] ?? null,
-            'longitude'       => $location['longitude'] ?? null,
-            'address'         => $this->userProfile?->current_address ?? $location['address'] ?? null,
+            'gender'         => $this->userProfile?->gender ?? $location['gender'] ?? null,
+            'phone_number_1' => $this->userProfile?->contact_number_1 ?? null,
+            'phone_number_2' => $this->userProfile?->contact_number_2 ?? null,
+            'latitude'       => $location['latitude'] ?? null,
+            'longitude'      => $location['longitude'] ?? null,
+            'address'        => $location['address'] ?? null,
         ];
     }
 

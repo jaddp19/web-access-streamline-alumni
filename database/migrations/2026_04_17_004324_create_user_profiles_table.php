@@ -15,6 +15,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->string('avatar')->nullable();
+            $table->enum('gender', ['male', 'female', 'other'])->nullable();
+            $table->string('contact_number_1');
+            $table->string('contact_number_2')->nullable();
             $table->json('location');
             $table->foreignId('batch_id')->constrained('batches')->cascadeOnDelete();
             $table->boolean('is_private');

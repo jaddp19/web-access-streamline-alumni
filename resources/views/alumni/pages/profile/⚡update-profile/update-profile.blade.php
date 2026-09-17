@@ -14,8 +14,7 @@
             </div>
             <div>
                 <p class="text-white/50 text-sm">Edit Profile</p>
-                <h1 class="text-2xl font-bold text-white" style="font-family: 'Fraunces', serif;">Personal Information
-                </h1>
+                <h1 class="text-2xl font-bold text-white" style="font-family: 'Fraunces', serif;">Personal Information</h1>
             </div>
         </div>
     </div>
@@ -80,41 +79,108 @@
                     class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition">
                     <option value="male">Male</option>
                     <option value="female">Female</option>
+                    <option value="other">Other</option>
                 </select>
                 @error('gender')
                     <span class="text-red-500 text-sm">{{ $message }}</span>
                 @enderror
             </div>
 
-            <!-- Phone Numbers -->
+            <!-- Phone Numbers (intl-tel-input) -->
             <div class="grid sm:grid-cols-2 gap-5">
+
+                {{-- Primary contact --}}
                 <div>
-                    <label class="block text-xs text-black/60 uppercase tracking-wide font-semibold mb-2">Phone Number
-                        1</label>
-                    <input type="text" wire:model.defer="phone_number_1"
-                        class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black placeholder:text-black/40 focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition"
-                        placeholder="Enter 10-digit number" inputmode="numeric" pattern="[0-9]*" maxlength="10">
-                    @error('phone_number_1')
-                        <span class="text-red-500 text-sm">{{ $message }}</span>
+                    <label class="block text-xs text-black/60 uppercase tracking-wide font-semibold mb-2">
+                        Contact Number 1 <span class="text-red-500">*</span>
+                    </label>
+
+                    <div wire:ignore x-data="{
+                        iti: null,
+                        init() {
+                            if (!window.intlTelInput) {
+                                setTimeout(() => this.init(), 150);
+                                return;
+                            }
+                            const el = this.$refs.input;
+                            if (!el || el._iti) return;
+
+                            this.iti = window.intlTelInput(el, {
+                                initialCountry: 'ph',
+                                preferredCountries: ['ph'],
+                                separateDialCode: true,
+                                strictMode: true,
+                                utilsScript: 'https://cdn.jsdelivr.net/npm/intl-tel-input@23.0.4/build/js/utils.js',
+                            });
+                            el._iti = this.iti;
+
+                            const initial = el.dataset.initial;
+                            if (initial) this.iti.setNumber(initial);
+
+                            const sync = () => {
+                                $wire.set('contact_number_1', this.iti.getNumber() || '');
+                            };
+                            el.addEventListener('blur', sync);
+                            el.addEventListener('countrychange', sync);
+                        }
+                    }" x-init="init()">
+                        <input x-ref="input" type="tel"
+                            class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black text-sm focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition"
+                            autocomplete="tel" inputmode="tel" data-initial="{{ $contact_number_1 }}">
+                    </div>
+                    @error('contact_number_1')
+                        <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
                     @enderror
                 </div>
 
+                {{-- Alternate contact --}}
                 <div>
-                    <label class="block text-xs text-black/60 uppercase tracking-wide font-semibold mb-2">Phone Number
-                        2</label>
-                    <input type="text" wire:model.defer="phone_number_2"
-                        class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black placeholder:text-black/40 focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition"
-                        placeholder="Optional 10-digit number" inputmode="numeric" pattern="[0-9]*" maxlength="10">
-                    @error('phone_number_2')
-                        <span class="text-red-500 text-sm">{{ $message }}</span>
+                    <label class="block text-xs text-black/60 uppercase tracking-wide font-semibold mb-2">
+                        Contact Number 2 <span class="text-black/40 text-[10px] font-normal normal-case">(optional)</span>
+                    </label>
+
+                    <div wire:ignore x-data="{
+                        iti: null,
+                        init() {
+                            if (!window.intlTelInput) {
+                                setTimeout(() => this.init(), 150);
+                                return;
+                            }
+                            const el = this.$refs.input;
+                            if (!el || el._iti) return;
+
+                            this.iti = window.intlTelInput(el, {
+                                initialCountry: 'ph',
+                                preferredCountries: ['ph'],
+                                separateDialCode: true,
+                                strictMode: true,
+                                utilsScript: 'https://cdn.jsdelivr.net/npm/intl-tel-input@23.0.4/build/js/utils.js',
+                            });
+                            el._iti = this.iti;
+
+                            const initial = el.dataset.initial;
+                            if (initial) this.iti.setNumber(initial);
+
+                            const sync = () => {
+                                $wire.set('contact_number_2', this.iti.getNumber() || '');
+                            };
+                            el.addEventListener('blur', sync);
+                            el.addEventListener('countrychange', sync);
+                        }
+                    }" x-init="init()">
+                        <input x-ref="input" type="tel"
+                            class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black text-sm focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition"
+                            autocomplete="tel" inputmode="tel" data-initial="{{ $contact_number_2 }}">
+                    </div>
+                    @error('contact_number_2')
+                        <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
                     @enderror
                 </div>
             </div>
 
             <!-- Philippine Address (cascading dropdowns) -->
             <div>
-                <label class="block text-xs text-black/60 uppercase tracking-wide font-semibold mb-2">Home
-                    Address</label>
+                <label class="block text-xs text-black/60 uppercase tracking-wide font-semibold mb-2">Home Address</label>
 
                 <div class="grid sm:grid-cols-2 gap-5">
                     <div>
@@ -184,14 +250,11 @@
                     @enderror
                 </div>
 
-                {{-- Previously saved location (read-only) --}}
                 @if ($address)
                     <div class="mt-4">
                         <label class="block text-[11px] text-black/50 font-semibold mb-1.5">Saved Location</label>
-                        <p
-                            class="text-sm text-[#123524] bg-[#D4A537]/15 border border-[#D4A537]/30 rounded-xl px-4 py-2.5 flex items-start gap-2">
-                            <svg class="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor"
-                                stroke-width="2" viewBox="0 0 24 24">
+                        <p class="text-sm text-[#123524] bg-[#D4A537]/15 border border-[#D4A537]/30 rounded-xl px-4 py-2.5 flex items-start gap-2">
+                            <svg class="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -220,10 +283,22 @@
         </form>
 
         @if (session('success'))
-            <div
-                class="mt-6 bg-emerald-50 border border-emerald-200 text-emerald-700 font-semibold rounded-xl p-4 text-sm">
+            <div class="mt-6 bg-emerald-50 border border-emerald-200 text-emerald-700 font-semibold rounded-xl p-4 text-sm">
                 {{ session('success') }}
             </div>
         @endif
     </div>
+
+    @assets
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@23.0.4/build/css/intlTelInput.css" />
+        <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@23.0.4/build/js/intlTelInput.min.js"></script>
+
+        <style>
+            .iti__flag.iti__ph {
+                background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 8"><rect width="12" height="4" fill="%23003" /><rect y="4" width="12" height="4" fill="%23CE1126" /><polygon points="0,0 4,4 0,8" fill="%23FFF" /><circle cx="1.5" cy="4" r="0.8" fill="%23FCD116" /></svg>');
+                background-position: 0 0;
+                background-size: 100% 100%;
+            }
+        </style>
+    @endassets
 </div>
