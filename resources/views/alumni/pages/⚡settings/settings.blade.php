@@ -79,13 +79,6 @@
                                 </div>
                             </div>
 
-                            <div class="space-y-1.5">
-                                <label class="block text-xs font-bold text-black/60 dark:text-white/60 uppercase tracking-wider">Graduation Batch</label>
-                                <input type="text" value="{{ $this->userProfile?->batch?->batch_name ?? 'Not set' }}" disabled
-                                    class="w-full px-3.5 py-2.5 rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 text-black/50 dark:text-white/40 cursor-not-allowed text-sm">
-                                <p class="text-xs text-black/40 dark:text-white/40">Verified by the registrar.</p>
-                            </div>
-
                             <div class="flex items-center justify-end pt-4">
                                 <button type="submit"
                                     class="px-6 py-2 text-sm font-bold rounded-lg bg-[#1C6B45] text-white hover:bg-[#165a3b] transition shadow-sm">

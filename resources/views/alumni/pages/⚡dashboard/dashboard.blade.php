@@ -14,16 +14,6 @@
                     </span>
                     <p class="font-bold text-black dark:text-white mt-2" style="font-family: 'Fraunces', serif;">{{ $this->alumni->name }}</p>
                     <p class="text-xs text-black/50 dark:text-white/50">Alumni Member</p>
-
-                    <div class="border-t border-black/5 dark:border-white/5 mt-4 pt-3 text-left">
-                        <a href="{{ route('alumni.profile') }}" class="flex items-center justify-between py-1.5 text-sm text-black/70 dark:text-white/70 hover:text-[#1877F2] transition">
-                            <span class="flex items-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
-                                My Profile
-                            </span>
-                            <span class="text-xs text-black/40 dark:text-white/40">&rarr;</span>
-                        </a>
-                    </div>
                 </div>
             </div>
         </aside>
