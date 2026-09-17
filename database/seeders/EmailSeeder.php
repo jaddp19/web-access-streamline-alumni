@@ -24,8 +24,16 @@ class EmailSeeder extends Seeder
                 'message' => 'Hi {{name}}, we are hosting an event you might be interested in — details inside.',
             ],
             [
-                'subject' => 'Your CSAV Alumni account has been created',
-                'message' => 'Hi {{name}}, an account has been created for you on the CSAV Alumni Network. Please log in here and complete your profile form: {{login_url}}. If this is your first time logging in, use "Forgot Password" to set your password.',
+            'subject' => 'Welcome to the CSAV Alumni Network, {{name}}!',
+            'message' => "Hi {{name}},\n\n"
+                . "Your CSAV Alumni Network account has been created by the {{department}} department.\n\n"
+                . "Login details:\n"
+                . "• Email: {{school_email}}\n"
+                . "• Default password: csav.alumni\n\n"
+                . "You are enrolled as a {{course}} graduate of Batch {{batch}}.\n\n"
+                . "Please log in at {{login_url}} and change your password immediately.\n\n"
+                . "Welcome to the community!\n\n"
+                . "— Colegio de Sta. Ana de Victorias",
             ],
             [
                 'subject' => 'Your CSAV Alumni Network staff account has been created',

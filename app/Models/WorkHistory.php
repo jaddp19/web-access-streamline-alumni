@@ -18,7 +18,6 @@ class WorkHistory extends Model
     protected $casts = [
         'date_hired' => 'date',
         'is_current_job' => 'boolean',
-        'is_current_employed' => 'boolean',
     ];
 
     public function user(): BelongsTo

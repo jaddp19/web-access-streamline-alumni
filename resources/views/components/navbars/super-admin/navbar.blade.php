@@ -35,7 +35,6 @@
                         ['route' => 'super-admin.batch.view', 'label' => 'Batch Years'],
                     ],
                     'Requests' => [
-                        ['route' => 'super-admin.request.view', 'label' => 'Applications'],
                         ['route' => 'super-admin.email.view', 'label' => 'Email Templates'],
                         ['route' => 'super-admin.verification-queue', 'label' => 'Verification Queue'],
                     ],

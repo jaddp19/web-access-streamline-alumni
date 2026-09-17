@@ -2,10 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use App\Models\Post;
-use App\Models\UserProfile;
-use App\Models\WorkHistory;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -16,21 +12,22 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'email', 'password' , 'school_id'])]
+#[Fillable(['name', 'email', 'password', 'school_id'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
-    use HasRoles;
+    use HasFactory, Notifiable, HasRoles;
 
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'password'          => 'hashed',
         ];
     }
+
+    // ===== Relations =====
 
     public function posts(): HasMany
     {
@@ -48,12 +45,40 @@ class User extends Authenticatable
     }
 
     public function tracerStudy(): HasOne
-    { 
-        return $this->hasOne(TracerStudy::class, 'user_id', 'id'); 
+    {
+        return $this->hasOne(TracerStudy::class, 'user_id', 'id');
     }
+
     public function department(): HasOne
     {
         return $this->hasOne(Department::class, 'program_head_id');
     }
 
+    // ===== Employment helpers =====
+
+    /**
+     * The current job record — single source of truth.
+     */
+    public function currentWork(): ?WorkHistory
+    {
+        return $this->workHistories()->where('is_current_job', true)->first();
+    }
+
+    /**
+     * Prefers live WorkHistory; falls back to tracer snapshot.
+     */
+    public function currentJobTitle(): ?string
+    {
+        return $this->currentWork()?->work_name
+            ?? $this->tracerStudy?->civilStatusEmployment?->current_job_position;
+    }
+
+    /**
+     * True if the user has a current job OR the tracer snapshot says employed.
+     */
+    public function isCurrentlyEmployed(): bool
+    {
+        return $this->currentWork() !== null
+            || $this->tracerStudy?->civilStatusEmployment?->employment_status === 'employed';
+    }
 }

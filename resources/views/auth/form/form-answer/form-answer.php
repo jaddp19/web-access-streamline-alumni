@@ -1,21 +1,26 @@
 <?php
 
 use App\Models\Batch;
+use App\Models\Company;
 use App\Models\Course;
 use App\Models\TracerStudy;
 use App\Models\CivilStatusEmployment;
 use App\Models\FurtherStudy;
 use App\Models\UserProfile;
+use App\Models\WorkHistory;
 use App\Services\PhAddressService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Propaganistas\LaravelPhone\Rules\Phone;
 
 new #[Layout('layouts.auth')] class extends Component
 {
+    use WithFileUploads;
+
     public int $step = 1;
     public int $totalSteps = 4;
 
@@ -48,6 +53,17 @@ new #[Layout('layouts.auth')] class extends Component
     public string $employment_area = '';
     public string $abroad_country = '';
     public string $months_to_first_job = '';
+
+    // Step 3 — Company for WorkHistory
+    public ?int $company_id = null;
+    public string $date_hired = '';
+
+    // Step 3 — Inline new company form
+    public bool $showNewCompanyForm = false;
+    public $new_company_logo = null;
+    public string $new_company_name = '';
+    public string $new_company_address = '';
+    public string $new_company_desc = '';
 
     // Step 4 — Further Studies
     public bool $is_pursued_further_studies = false;
@@ -102,6 +118,16 @@ new #[Layout('layouts.auth')] class extends Component
                 $this->level_of_study = $further->level_of_study ?? '';
             }
         }
+
+        // Hydrate company + date from existing WorkHistory
+        $currentWork = WorkHistory::where('user_id', $user->id)
+            ->where('is_current_job', true)
+            ->first();
+
+        if ($currentWork) {
+            $this->company_id = $currentWork->company_id;
+            $this->date_hired = $currentWork->date_hired?->format('Y-m-d') ?? '';
+        }
     }
 
     // ===== Cascading address behavior =====
@@ -123,6 +149,8 @@ new #[Layout('layouts.auth')] class extends Component
     {
         $this->barangayCode = '';
     }
+
+    // ===== Computed =====
 
     #[Computed]
     public function regions()
@@ -154,6 +182,66 @@ new #[Layout('layouts.auth')] class extends Component
             : collect();
     }
 
+    #[Computed]
+    public function companies()
+    {
+        return Company::orderBy('company_name')
+            ->get(['id', 'company_name', 'company_logo', 'company_address']);
+    }
+
+    // ===== Inline company creation =====
+
+    public function toggleNewCompanyForm(): void
+    {
+        $this->showNewCompanyForm = ! $this->showNewCompanyForm;
+
+        if (! $this->showNewCompanyForm) {
+            $this->reset(['new_company_logo', 'new_company_name', 'new_company_address', 'new_company_desc']);
+            $this->resetErrorBag(['new_company_logo', 'new_company_name', 'new_company_address', 'new_company_desc']);
+        } else {
+            $this->company_id = null;
+        }
+    }
+
+    public function createCompany(): void
+    {
+        $this->validate([
+            'new_company_name'    => 'required|string|max:255|unique:companies,company_name',
+            'new_company_logo'    => 'nullable|image|max:2048',
+            'new_company_address' => 'nullable|string|max:500',
+            'new_company_desc'    => 'nullable|string|max:2000',
+        ]);
+
+        try {
+            $logoPath = null;
+            if ($this->new_company_logo) {
+                $logoPath = $this->new_company_logo->store('companies', 'public');
+            }
+
+            $company = Company::create([
+                'company_name'    => trim($this->new_company_name),
+                'company_address' => trim($this->new_company_address) ?: null,
+                'company_logo'    => $logoPath,
+                'company_desc'    => trim($this->new_company_desc) ?: null,
+            ]);
+
+            $this->company_id = $company->id;
+            $this->showNewCompanyForm = false;
+
+            $this->reset(['new_company_logo', 'new_company_name', 'new_company_address', 'new_company_desc']);
+
+            unset($this->companies);
+
+            session()->flash('company_created', 'Company "' . $company->company_name . '" created and selected.');
+
+        } catch (\Throwable $e) {
+            logger()->error('Company creation failed: ' . $e->getMessage());
+            session()->flash('error', 'Failed to create company: ' . $e->getMessage());
+        }
+    }
+
+    // ===== Validation =====
+
     protected function stepRules(int $step): array
     {
         return match ($step) {
@@ -176,6 +264,8 @@ new #[Layout('layouts.auth')] class extends Component
             3 => [
                 'employment_status'          => 'required|in:employed,unemployed,self-employed,other',
                 'current_job_position'       => 'required_if:employment_status,employed|nullable|string|max:255',
+                'company_id'                 => 'required_if:employment_status,employed|nullable|exists:companies,id',
+                'date_hired'                 => 'required_if:employment_status,employed|nullable|date|before_or_equal:today',
                 'employed_related_to_degree' => 'required_if:employment_status,employed|nullable|in:yes,no,partially-related',
                 'employment_type'            => 'required_if:employment_status,employed|nullable|in:full-time,part-time,contractual-project-based,freelance,other',
                 'organization_type'          => 'required_if:employment_status,employed|nullable|in:private-company,government-agency,non-government-organization,educational-institution,self-employed-business,other',
@@ -208,6 +298,8 @@ new #[Layout('layouts.auth')] class extends Component
             'batch_id.required'                          => 'Please select your year graduated.',
             'employment_status.required'                 => 'Please select your employment status.',
             'current_job_position.required_if'           => 'Job position is required.',
+            'company_id.required_if'                     => 'Please select a company.',
+            'date_hired.required_if'                     => 'Please enter the date you were hired.',
             'employed_related_to_degree.required_if'     => 'Please answer if your job is related to your degree.',
             'employment_type.required_if'                => 'Please select type of employment.',
             'organization_type.required_if'              => 'Please select type of organization.',
@@ -323,6 +415,33 @@ new #[Layout('layouts.auth')] class extends Component
                     'level_of_study'             => $this->is_pursued_further_studies ? $this->level_of_study : null,
                 ]
             );
+
+            // ===== Create or update WorkHistory if employed =====
+            if (
+                $this->employment_status === 'employed'
+                && $this->company_id
+                && $this->date_hired
+            ) {
+                $existingCurrent = WorkHistory::where('user_id', $user->id)
+                    ->where('is_current_job', true)
+                    ->first();
+
+                if ($existingCurrent) {
+                    $existingCurrent->update([
+                        'work_name'  => $this->current_job_position ?: 'Position not specified',
+                        'company_id' => $this->company_id,
+                        'date_hired' => $this->date_hired,
+                    ]);
+                } else {
+                    WorkHistory::create([
+                        'user_id'        => $user->id,
+                        'work_name'      => $this->current_job_position ?: 'Position not specified',
+                        'company_id'     => $this->company_id,
+                        'date_hired'     => $this->date_hired,
+                        'is_current_job' => true,
+                    ]);
+                }
+            }
         });
 
         session()->flash('status', 'Thank you! Please wait for the admin to approve your form.');

@@ -51,18 +51,18 @@
       <!-- Bottom stats -->
       <div class="flex items-center gap-8">
         <div>
-          <div class="text-2xl font-bold text-white" style="font-family: 'Fraunces', serif;">12,000+</div>
+          <div class="text-2xl font-bold text-white" style="font-family: 'Fraunces', serif;">{{ $this->alumni }}</div>
           <div class="text-xs text-white/50 font-medium tracking-wide mt-1">ALUMNI MEMBERS</div>
         </div>
         <div class="w-px h-10 bg-white/15"></div>
         <div>
-          <div class="text-2xl font-bold text-white" style="font-family: 'Fraunces', serif;">128</div>
-          <div class="text-xs text-white/50 font-medium tracking-wide mt-1">GLOBAL CHAPTERS</div>
+          <div class="text-2xl font-bold text-white" style="font-family: 'Fraunces', serif;">{{ $this->departments }}</div>
+          <div class="text-xs text-white/50 font-medium tracking-wide mt-1">Departments</div>
         </div>
         <div class="w-px h-10 bg-white/15"></div>
         <div>
-          <div class="text-2xl font-bold text-white" style="font-family: 'Fraunces', serif;">30+</div>
-          <div class="text-xs text-white/50 font-medium tracking-wide mt-1">YEARS STRONG</div>
+          <div class="text-2xl font-bold text-white" style="font-family: 'Fraunces', serif;">{{ $this->courses }}</div>
+          <div class="text-xs text-white/50 font-medium tracking-wide mt-1">Courses</div>
         </div>
       </div>
     </div>

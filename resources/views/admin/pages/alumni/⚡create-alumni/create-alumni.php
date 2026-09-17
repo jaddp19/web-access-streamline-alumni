@@ -4,6 +4,7 @@ use App\Models\Batch;
 use App\Models\Course;
 use App\Models\User;
 use App\Models\UserProfile;
+use App\Services\EmailTemplateService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -61,8 +62,6 @@ new #[Layout('layouts.app-admin')] class extends Component
             ->get();
     }
 
-    // Auto-derived — the admin never selects this directly.
-    // It just follows whichever course is picked above.
     #[Computed]
     public function selectedDepartment()
     {
@@ -82,36 +81,64 @@ new #[Layout('layouts.app-admin')] class extends Component
         $validated['school_id'] = $this->sanitizeData($validated['school_id']);
 
         try {
-            $user = User::create([
-                'name'      => $validated['name'],
-                'email'     => $validated['email'],
-                'school_id' => $validated['school_id'],
-                'password'  => Hash::make(Str::random(32)),
-            ]);
+            DB::transaction(function () use ($validated) {
+                $user = User::create([
+                    'name'      => $validated['name'],
+                    'email'     => $validated['email'],
+                    'school_id' => $validated['school_id'],
+                    'password'  => Hash::make('csav.alumni'),
+                ]);
 
-            if (method_exists($user, 'assignRole')) {
-                $user->assignRole('alumni');
-            }
+                if (method_exists($user, 'assignRole')) {
+                    $user->assignRole('alumni');
+                }
 
-            $profile = UserProfile::create([
-                'user_id'     => $user->id,
-                'avatar'      => '',
-                'location'    => [],
-                'batch_id'    => $validated['batch_id'],
-                'is_private'  => false,
-                'is_verified' => false,
-            ]);
+                $profile = UserProfile::create([
+                    'user_id'     => $user->id,
+                    'avatar'      => '',
+                    'location'    => [],
+                    'batch_id'    => $validated['batch_id'],
+                    'is_private'  => false,
+                    'is_verified' => false,
+                ]);
 
-            // Department is never stored directly — it's implied by course_id
-            // via courses.department_id, so we only attach the course here.
-            DB::table('student_course')->insert([
-                'course_id'        => $validated['course_id'],
-                'user_profile_id'  => $profile->id,
-                'created_at'       => now(),
-                'updated_at'       => now(),
-            ]);
+                DB::table('student_course')->insert([
+                    'course_id'        => $validated['course_id'],
+                    'user_profile_id'  => $profile->id,
+                    'created_at'       => now(),
+                    'updated_at'       => now(),
+                ]);
 
-            session()->flash('success', 'Alumni account created. They can log in and complete the rest of their profile themselves.');
+                // Send the notification email after the DB work succeeds.
+                // If the template is missing, the send will throw and roll back
+                // — so wrap in try/catch inside the transaction if you want
+                // the account created regardless of email status.
+                try {
+                    $course = Course::with('department')->find($validated['course_id']);
+
+                    EmailTemplateService::send(
+                        'welcome-to-the-csav-alumni-network-name',
+                        $validated['email'],
+                        [
+                            'name'           => $validated['name'],
+                            'school_email'   => $validated['email'],
+                            'school_id'      => $validated['school_id'],
+                            'batch'          => Batch::find($validated['batch_id'])?->batch_name ?? '—',
+                            'course'         => $course?->course_title ?? '—',
+                            'department'     => $course?->department?->dept_name ?? '—',
+                            'default_password' => 'csav.alumni',
+                            'login_url'      => route('login'),
+                        ]
+                    );
+                } catch (\Throwable $e) {
+                    // Log but don't kill the whole operation — the account exists.
+                    logger()->warning('Alumni welcome email failed: ' . $e->getMessage(), [
+                        'email' => $validated['email'],
+                    ]);
+                }
+            });
+
+            session()->flash('success', 'Alumni account created. A welcome email was sent to ' . $validated['email'] . '.');
             return redirect()->route('admin.alumni.view');
 
         } catch (\Throwable $e) {

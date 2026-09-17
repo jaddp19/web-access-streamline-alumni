@@ -1,8 +1,12 @@
 <?php
 
+use App\Models\Course;
+use App\Models\Department;
+use App\Models\TracerStudy;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -85,5 +89,23 @@ new #[Layout('layouts.auth')] class extends Component
             $this->addError('email', 'This account has no assigned role. Please contact the registrar.');
             return;
         }
+    }
+
+    #[Computed]
+    public function alumni()
+    {
+        return User::role('alumni')->count();
+    }
+
+    #[Computed]
+    public function courses()
+    {
+        return Course::count();
+    }
+
+    #[Computed]
+    public function departments()
+    {
+        return Department::count();
     }
 };

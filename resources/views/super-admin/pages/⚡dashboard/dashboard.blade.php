@@ -2,12 +2,41 @@
     <div class="w-full shrink-0 p-4 sm:p-6 lg:p-8">
         <div class="space-y-6">
 
-            <div>
-                <h1 class="text-xl sm:text-2xl font-bold text-[#0f2b1c]" style="font-family: 'Fraunces', serif;">Overview
-                </h1>
-                <p class="text-sm text-black/50 mt-0.5">A snapshot of your alumni network.</p>
+            {{-- Header with batch selector --}}
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold text-[#0f2b1c]" style="font-family: 'Fraunces', serif;">
+                        Overview
+                    </h1>
+                    <p class="text-sm text-black/50 mt-0.5">
+                        @if ($selectedBatchId)
+                            Showing analytics for Batch
+                            {{ collect($this->batches)->firstWhere('id', (int) $selectedBatchId)['batch_name'] ?? '—' }}.
+                        @else
+                            A snapshot of your alumni network across all batches.
+                        @endif
+                    </p>
+                </div>
+
+                {{-- Batch filter --}}
+                <div class="shrink-0 flex items-center gap-2">
+                    <label for="batch-filter"
+                        class="text-[11px] font-bold text-black/50 uppercase tracking-wide whitespace-nowrap">
+                        Batch
+                    </label>
+                    <select id="batch-filter" wire:model.live="selectedBatchId"
+                        class="px-3 py-2 text-sm rounded-xl border border-black/10 bg-white text-[#0f2b1c] font-semibold
+                               focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition
+                               min-w-[150px] cursor-pointer">
+                        <option value="">Overall</option>
+                        @foreach ($this->batches as $batch)
+                            <option value="{{ $batch['id'] }}">{{ $batch['batch_name'] }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
 
+            {{-- Top stat cards --}}
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5">
                 <div class="relative overflow-hidden bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
                     <div class="relative flex items-center gap-3">
@@ -87,6 +116,7 @@
                 </div>
             </div>
 
+            {{-- Main charts --}}
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                 <div class="bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
                     <h2 class="text-sm font-bold text-[#0f2b1c]">Alumni Graduates</h2>
@@ -110,6 +140,17 @@
                 </div>
             </div>
 
+                        {{-- Alumni by Year --}}
+            <div class="bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
+                <h2 class="text-sm font-bold text-[#0f2b1c]">Alumni Graduates by Year</h2>
+                <p class="text-xs text-black/40 mt-0.5 mb-3">Total graduates per batch</p>
+                @if (empty($this->alumniByBatch))
+                    <p class="text-sm text-black/40 py-16 text-center">No batch records yet.</p>
+                @else
+                    <div class="w-full h-72"><canvas id="alumniByBatchChart"></canvas></div>
+                @endif
+            </div>
+
             <div>
                 <h2 class="text-lg sm:text-xl font-bold text-[#0f2b1c]" style="font-family: 'Fraunces', serif;">
                     Analytics</h2>
@@ -121,8 +162,7 @@
                     <h2 class="text-sm font-bold text-[#0f2b1c] mb-1">Employment Status</h2>
                     <p class="text-xs text-black/40 mb-3">Employed, unemployed, self-employed</p>
                     @if (empty($this->employmentStatusBreakdown))
-                        <p class="text-sm text-black/40 py-16 text-center">No tracer employment data yet. Submit a
-                            tracer study first.</p>
+                        <p class="text-sm text-black/40 py-16 text-center">No tracer employment data yet.</p>
                     @else
                         <div class="w-full h-64"><canvas id="employmentStatusChart"></canvas></div>
                     @endif
@@ -132,8 +172,7 @@
                     <h2 class="text-sm font-bold text-[#0f2b1c] mb-1">Employment Type</h2>
                     <p class="text-xs text-black/40 mb-3">Full-time, part-time, freelance, etc.</p>
                     @if (empty($this->employmentTypeBreakdown))
-                        <p class="text-sm text-black/40 py-16 text-center">No employment type yet. Alumni must mark
-                            themselves as employed in the tracer form.</p>
+                        <p class="text-sm text-black/40 py-16 text-center">No employment type yet.</p>
                     @else
                         <div class="w-full h-64"><canvas id="employmentTypeChart"></canvas></div>
                     @endif
@@ -175,6 +214,20 @@
             </div>
         </div>
     </div>
+
+    {{-- Data payload for charts — updated on every render --}}
+    <script type="application/json" id="analytics-payload">
+        {!! json_encode([
+            'alumniByDept'            => $this->alumniByDept,
+            'alumniByBatch'           => $this->alumniByBatch,
+            'courseAnalytics'         => $this->courseAnalytics,
+            'employmentStatus'        => $this->employmentStatusBreakdown,
+            'employmentType'          => $this->employmentTypeBreakdown,
+            'organizationType'        => $this->organizationTypeBreakdown,
+            'employmentArea'          => $this->employmentAreaBreakdown,
+            'monthsToFirstJob'        => $this->monthsToFirstJobBreakdown,
+        ]) !!}
+    </script>
 </div>
 
 @assets
@@ -185,20 +238,13 @@
     <script>
         const pretty = (label) => {
             const str = String(label).toLowerCase();
-
             if (str === 'not-yet-employed') return 'Not yet Employed';
             if (str === 'more-than-6-months') return 'More than 6 Months';
             if (str === 'more-than-1-year') return 'More than 1 Year';
-
             const rangeMatch = str.match(/^(\d+)-(\d+)-months$/);
-            if (rangeMatch) {
-                return `${rangeMatch[1]} - ${rangeMatch[2]} Months`;
-            }
-
+            if (rangeMatch) return `${rangeMatch[1]} - ${rangeMatch[2]} Months`;
             return str.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
         };
-
-        const initials = (label) => String(label).trim().split(/\s+/).map((w) => w.charAt(0).toUpperCase()).join('');
 
         const waitForChart = () => new Promise((resolve) => {
             if (window.Chart) return resolve(window.Chart);
@@ -214,403 +260,453 @@
             }, 4000);
         });
 
+        const getPayload = () => {
+            try {
+                const el = document.getElementById('analytics-payload');
+                return el ? JSON.parse(el.textContent) : {};
+            } catch (e) {
+                console.warn('Analytics payload parse failed', e);
+                return {};
+            }
+        };
+
+        const destroyChart = (id) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const existing = window.Chart.getChart(el);
+            if (existing) existing.destroy();
+        };
+
         const makeChart = (ChartLib, id, config) => {
             const el = document.getElementById(id);
             if (!el || !ChartLib) return;
+            destroyChart(id);
             new ChartLib(el, config);
         };
 
-        const alumniByDept = @json($this->alumniByDept);
-        const analyticsData = @json($this->courseAnalytics);
-        const statusData = @json($this->employmentStatusBreakdown);
-        const typeData = @json($this->employmentTypeBreakdown);
-        const orgData = @json($this->organizationTypeBreakdown);
-        const areaData = @json($this->employmentAreaBreakdown);
-        const monthsData = @json($this->monthsToFirstJobBreakdown);
+        const initCharts = async () => {
+            const ChartLib = await waitForChart();
+            if (!ChartLib) return;
 
-        waitForChart().then((ChartLib) => {
-            const rawLabels = Object.keys(alumniByDept || {});
+            const payload = getPayload();
 
-            const deptData = alumniByDept || {};
+            const alumniByDept = payload.alumniByDept || {};
+            const alumniByBatch = payload.alumniByBatch || {};
+            const analyticsData = payload.courseAnalytics || [];
+            const statusData = payload.employmentStatus || {};
+            const typeData = payload.employmentType || {};
+            const orgData = payload.organizationType || {};
+            const areaData = payload.employmentArea || {};
+            const monthsData = payload.monthsToFirstJob || {};
+
+            // ===== Alumni by Department =====
+            const deptData = alumniByDept;
             const deptCodes = Object.keys(deptData);
             const deptTotals = deptCodes.map(code => deptData[code].total);
 
-            makeChart(ChartLib, 'alumniDynamicChart', {
-                type: 'bar',
-                data: {
-                    labels: deptCodes, // axis labels = dept_code
-                    datasets: [{
-                        data: deptTotals,
-                        backgroundColor: '#16a34a',
-                        borderRadius: 6,
-                        maxBarThickness: 42
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            callbacks: {
-                                // show dept_name on hover
-                                title: (items) => {
-                                    const code = deptCodes[items[0]?.dataIndex];
-                                    return deptData[code].name;
-                                },
-                                label: (ctx) => ctx.raw
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1,
-                                precision: 0,
-                                callback: (value) => Number.isInteger(value) ? value : null
-                            },
-                            grid: {
-                                color: '#f1f1f1'
-                            }
-                        },
-                        x: {
-                            grid: {
-                                display: false
-                            }
-                        }
-                    }
-                }
-            });
-
-            const courseCode = (analyticsData || []).map((item) => item.course_code);
-            const courseTitle = (analyticsData || []).map((item) => item.course_title);
-
-            makeChart(ChartLib, 'comparativeChart', {
-                type: 'bar',
-                data: {
-                    labels: courseCode,
-                    datasets: [{
-                            label: 'Aligned with Work',
-                            data: (analyticsData || []).map((i) => i.related_rate),
+            if (deptCodes.length > 0) {
+                makeChart(ChartLib, 'alumniDynamicChart', {
+                    type: 'bar',
+                    data: {
+                        labels: deptCodes,
+                        datasets: [{
+                            data: deptTotals,
                             backgroundColor: '#16a34a',
                             borderRadius: 6,
-                            maxBarThickness: 28
+                            maxBarThickness: 42
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    title: (items) => {
+                                        const code = deptCodes[items[0]?.dataIndex];
+                                        return deptData[code]?.name || code;
+                                    },
+                                    label: (ctx) => ctx.raw
+                                }
+                            }
                         },
-                        {
-                            label: 'Not Aligned',
-                            data: (analyticsData || []).map((i) => 100 - i.related_rate),
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1,
+                                    precision: 0,
+                                    callback: (v) => Number.isInteger(v) ? v : null
+                                },
+                                grid: {
+                                    color: '#f1f1f1'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // ===== Comparative Analysis =====
+            const courseCode = (analyticsData || []).map((item) => item.course_code);
+
+            if (courseCode.length > 0) {
+                makeChart(ChartLib, 'comparativeChart', {
+                    type: 'bar',
+                    data: {
+                        labels: courseCode,
+                        datasets: [{
+                                label: 'Aligned with Work',
+                                data: analyticsData.map((i) => i.related_rate),
+                                backgroundColor: '#16a34a',
+                                borderRadius: 6,
+                                maxBarThickness: 28
+                            },
+                            {
+                                label: 'Not Aligned',
+                                data: analyticsData.map((i) => 100 - i.related_rate),
+                                backgroundColor: '#D4A537',
+                                borderRadius: 6,
+                                maxBarThickness: 28
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 110,  // ← changed from 100 to give headroom
+                                grid: { color: '#f1f1f1' },
+                                ticks: {
+                                    stepSize: 25,
+                                    callback: (v) => v > 100 ? '' : v + '%'  // hide ticks above 100
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                align: 'end'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: (ctx) => `${ctx.dataset.label}: ${ctx.formattedValue}%`
+                                }
+                            }
+                        }
+                    },
+                    plugins: [{
+                        id: 'barPercentLabels',
+                        afterDatasetsDraw(chart) {
+                            const {
+                                ctx
+                            } = chart;
+                            ctx.save();
+                            ctx.font = 'bold 11px sans-serif';
+                            ctx.fillStyle = '#0f2b1c';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'bottom';
+                            chart.data.datasets.forEach((dataset, di) => {
+                                chart.getDatasetMeta(di).data.forEach((bar, i) => {
+                                    const value = dataset.data[i];
+                                    if (value === null || value === undefined)
+                                        return;
+                                    ctx.fillText(value + '%', bar.x, bar.y - 4);
+                                });
+                            });
+                            ctx.restore();
+                        }
+                    }]
+                });
+            }
+
+            // ===== Pie helper =====
+            const pieLabelPlugin = {
+                id: 'piePercentLabels',
+                afterDatasetsDraw(chart) {
+                    const {
+                        ctx
+                    } = chart;
+                    const dataset = chart.data.datasets[0];
+                    const total = dataset.data.reduce((a, b) => a + b, 0);
+                    if (!total) return;
+
+                    chart.getDatasetMeta(0).data.forEach((arc, i) => {
+                        const value = dataset.data[i];
+                        if (!value) return;
+                        const pct = ((value / total) * 100).toFixed(1) + '%';
+                        const pos = arc.tooltipPosition();
+                        ctx.save();
+                        ctx.fillStyle = '#000';
+                        ctx.font = 'bold 12px sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(pct, pos.x, pos.y);
+                        ctx.restore();
+                    });
+                }
+            };
+
+            const pieTooltip = {
+                callbacks: {
+                    label: (ctx) => {
+                        const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                        const pct = total > 0 ? ((ctx.raw / total) * 100).toFixed(1) + '%' : '0%';
+                        return `${ctx.label}: ${ctx.raw} (${pct})`;
+                    }
+                }
+            };
+
+                        // ===== Alumni by Year =====
+            const batchData   = alumniByBatch;
+            const batchIds    = Object.keys(batchData);
+            const batchLabels = batchIds.map(id => batchData[id].batch_name);
+            const batchTotals = batchIds.map(id => batchData[id].total);
+
+            if (batchIds.length > 0) {
+                makeChart(ChartLib, 'alumniByBatchChart', {
+                    type: 'bar',
+                    data: {
+                        labels: batchLabels,
+                        datasets: [{
+                            data: batchTotals,
                             backgroundColor: '#D4A537',
                             borderRadius: 6,
-                            maxBarThickness: 28
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 100,
-                            grid: {
-                                color: '#f1f1f1'
-                            },
-                            ticks: {
-                                callback: (value) => value + '%'
+                            maxBarThickness: 50
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: (ctx) => `${ctx.raw} graduate${ctx.raw === 1 ? '' : 's'}`
+                                }
                             }
                         },
-                        x: {
-                            grid: {
-                                display: false
-                            }
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1,
+                                    precision: 0,
+                                    callback: (v) => Number.isInteger(v) ? v : null
+                                },
+                                grid: { color: '#f1f1f1' }
+                            },
+                            x: { grid: { display: false } }
+                        }
+                    }
+                });
+            }
+
+            // ===== Employment Status (pie) =====
+            if (Object.keys(statusData).length > 0) {
+                makeChart(ChartLib, 'employmentStatusChart', {
+                    type: 'pie',
+                    data: {
+                        labels: Object.keys(statusData).map(pretty),
+                        datasets: [{
+                            data: Object.values(statusData),
+                            backgroundColor: ['#16a34a', '#D4A537', '#3b82f6', '#94a3b8', '#ef4444',
+                                '#8b5cf6'
+                            ],
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            },
+                            tooltip: pieTooltip
                         }
                     },
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                            align: 'end'
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: (ctx) => `${ctx.dataset.label}: ${ctx.formattedValue}%`
-                            }
-                        }
-                    }
-                },
-                plugins: [{
-                    id: 'barPercentLabels',
-                    afterDatasetsDraw(chart) {
-                        const {
-                            ctx
-                        } = chart;
-                        ctx.save();
-                        ctx.font = 'bold 11px sans-serif';
-                        ctx.fillStyle = '#0f2b1c';
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'bottom';
-                        chart.data.datasets.forEach((dataset, datasetIndex) => {
-                            chart.getDatasetMeta(datasetIndex).data.forEach((bar,
-                                index) => {
-                                const value = dataset.data[index];
-                                if (value === null || value === undefined) return;
-                                ctx.fillText(value + '%', bar.x, bar.y - 4);
-                            });
-                        });
-                        ctx.restore();
-                    }
-                }]
-            });
+                    plugins: [pieLabelPlugin]
+                });
+            }
 
-            makeChart(ChartLib, 'employmentStatusChart', {
-                type: 'pie',
-                data: {
-                    labels: Object.keys(statusData || {}).map(pretty),
-                    datasets: [{
-                        data: Object.values(statusData || {}),
-                        backgroundColor: ['#16a34a', '#D4A537', '#3b82f6', '#94a3b8'],
-                        borderWidth: 2,
-                        borderColor: '#fff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: (ctx) => {
-                                    let dataset = ctx.dataset.data;
-                                    let total = dataset.reduce((a, b) => a + b, 0);
-                                    let value = ctx.raw;
-                                    let percentage = ((value / total) * 100).toFixed(1) + '%';
-                                    return `${ctx.label}: ${value} (${percentage})`;
-                                }
-                            }
-                        }
-                    }
-                },
-                plugins: [{
-                    id: 'piePercentLabels',
-                    afterDatasetsDraw(chart) {
-                        const {
-                            ctx
-                        } = chart;
-                        const dataset = chart.data.datasets[0];
-                        const total = dataset.data.reduce((a, b) => a + b, 0);
-
-                        chart.getDatasetMeta(0).data.forEach((arc, i) => {
-                            const value = dataset.data[i];
-                            if (!value) return;
-
-                            const percentage = ((value / total) * 100).toFixed(1) + '%';
-                            const pos = arc.tooltipPosition();
-
-                            ctx.save();
-                            ctx.fillStyle = '#000'; // text color
-                            ctx.font = 'bold 12px sans-serif';
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'middle';
-                            ctx.fillText(percentage, pos.x, pos.y);
-                            ctx.restore();
-                        });
-                    }
-                }]
-            });
-
-
-            makeChart(ChartLib, 'employmentTypeChart', {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(typeData || {}).map(pretty),
-                    datasets: [{
-                        data: Object.values(typeData || {}),
-                        backgroundColor: '#16a34a',
-                        borderRadius: 6,
-                        maxBarThickness: 40
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
+            // ===== Employment Type (bar) =====
+            if (Object.keys(typeData).length > 0) {
+                makeChart(ChartLib, 'employmentTypeChart', {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(typeData).map(pretty),
+                        datasets: [{
+                            data: Object.values(typeData),
+                            backgroundColor: '#16a34a',
+                            borderRadius: 6,
+                            maxBarThickness: 40
+                        }]
                     },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: '#f1f1f1'
-                            },
-                            ticks: {
-                                stepSize: 1,
-                                callback: function(value) {
-                                    return Number.isInteger(value) ? value : null;
-                                }
-                            }
-                        },
-                        x: {
-                            grid: {
-                                display: false
-                            }
-                        }
-                    }
-                }
-            });
-
-
-            makeChart(ChartLib, 'organizationTypeChart', {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(orgData || {}).map(pretty),
-                    datasets: [{
-                        data: Object.values(orgData || {}),
-                        backgroundColor: '#D4A537',
-                        borderRadius: 6,
-                        maxBarThickness: 40
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    indexAxis: 'y',
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        x: {
-                            beginAtZero: true,
-                            grid: {
-                                color: '#f1f1f1'
-                            },
-                            ticks: {
-                                stepSize: 1,
-                                callback: function(value) {
-                                    return Number.isInteger(value) ? value : null;
-                                }
-                            }
-                        },
-                        y: {
-                            grid: {
-                                display: false
-                            }
-                        }
-                    }
-                }
-            });
-
-
-            makeChart(ChartLib, 'employmentAreaChart', {
-                type: 'pie',
-                data: {
-                    labels: Object.keys(areaData || {}).map(pretty),
-                    datasets: [{
-                        data: Object.values(areaData || {}),
-                        backgroundColor: ['#16a34a', '#3b82f6'],
-                        borderWidth: 2,
-                        borderColor: '#fff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: (ctx) => {
-                                    let dataset = ctx.dataset.data;
-                                    let total = dataset.reduce((a, b) => a + b, 0);
-                                    let value = ctx.raw;
-                                    let percentage = ((value / total) * 100).toFixed(1) + '%';
-                                    return `${ctx.label}: ${value} (${percentage})`;
-                                }
-                            }
-                        }
-                    }
-                },
-                plugins: [{
-                    id: 'piePercentLabels',
-                    afterDatasetsDraw(chart) {
-                        const {
-                            ctx
-                        } = chart;
-                        const dataset = chart.data.datasets[0];
-                        const total = dataset.data.reduce((a, b) => a + b, 0);
-
-                        chart.getDatasetMeta(0).data.forEach((arc, i) => {
-                            const value = dataset.data[i];
-                            if (!value) return;
-
-                            const percentage = ((value / total) * 100).toFixed(1) + '%';
-                            const pos = arc.tooltipPosition();
-
-                            ctx.save();
-                            ctx.fillStyle = '#000'; // text color
-                            ctx.font = 'bold 12px sans-serif';
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'middle';
-                            ctx.fillText(percentage, pos.x, pos.y);
-                            ctx.restore();
-                        });
-                    }
-                }]
-            });
-
-
-            makeChart(ChartLib, 'monthsToFirstJobChart', {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(monthsData || {}).map(pretty),
-                    datasets: [{
-                        data: Object.values(monthsData || {}),
-                        backgroundColor: '#3b82f6',
-                        borderRadius: 6,
-                        maxBarThickness: 45
-                    }]
-                },
-
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: '#f1f1f1'
-                            },
-                            ticks: {
-                                stepSize: 1,
-                                callback: function(value) {
-                                    return Number.isInteger(value) ? value : null;
-                                }
-                            }
-                        },
-                        x: {
-                            grid: {
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
                                 display: false
                             }
                         },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: '#f1f1f1'
+                                },
+                                ticks: {
+                                    stepSize: 1,
+                                    callback: (v) => Number.isInteger(v) ? v : null
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
                     }
-                }
-            });
+                });
+            }
 
+            // ===== Organization Type (horizontal bar) =====
+            if (Object.keys(orgData).length > 0) {
+                makeChart(ChartLib, 'organizationTypeChart', {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(orgData).map(pretty),
+                        datasets: [{
+                            data: Object.values(orgData),
+                            backgroundColor: '#D4A537',
+                            borderRadius: 6,
+                            maxBarThickness: 40
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: '#f1f1f1'
+                                },
+                                ticks: {
+                                    stepSize: 1,
+                                    callback: (v) => Number.isInteger(v) ? v : null
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // ===== Employment Area (pie) =====
+            if (Object.keys(areaData).length > 0) {
+                makeChart(ChartLib, 'employmentAreaChart', {
+                    type: 'pie',
+                    data: {
+                        labels: Object.keys(areaData).map(pretty),
+                        datasets: [{
+                            data: Object.values(areaData),
+                            backgroundColor: ['#16a34a', '#3b82f6'],
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            },
+                            tooltip: pieTooltip
+                        }
+                    },
+                    plugins: [pieLabelPlugin]
+                });
+            }
+
+            // ===== Months to First Job =====
+            if (Object.keys(monthsData).length > 0) {
+                makeChart(ChartLib, 'monthsToFirstJobChart', {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(monthsData).map(pretty),
+                        datasets: [{
+                            data: Object.values(monthsData),
+                            backgroundColor: '#3b82f6',
+                            borderRadius: 6,
+                            maxBarThickness: 45
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: '#f1f1f1'
+                                },
+                                ticks: {
+                                    stepSize: 1,
+                                    callback: (v) => Number.isInteger(v) ? v : null
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        };
+
+        // Init on mount
+        initCharts();
+
+        // Re-init after batch change
+        $wire.on('batch-changed', () => {
+            requestAnimationFrame(() => initCharts());
         });
     </script>
 @endscript

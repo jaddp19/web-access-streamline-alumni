@@ -7,7 +7,8 @@
             <div class="absolute -top-32 -right-32 w-[32rem] h-[32rem] bg-[#123524]/10 rounded-full blur-3xl"></div>
             <div class="absolute -bottom-40 -left-40 w-[28rem] h-[28rem] bg-[#D4A537]/20 rounded-full blur-3xl"></div>
             <div class="absolute inset-0 opacity-[0.04]"
-                 style="background-image: radial-gradient(#123524 1px, transparent 1px); background-size: 24px 24px;"></div>
+                style="background-image: radial-gradient(#123524 1px, transparent 1px); background-size: 24px 24px;">
+            </div>
         </div>
 
         <div class="relative max-w-7xl mx-auto px-6">
@@ -19,7 +20,8 @@
                     <span class="text-white text-xs font-bold tracking-[0.2em]">COLEGIO DE STA. ANA DE VICTORIAS</span>
                 </div>
 
-                <h1 class="text-4xl lg:text-5xl font-bold text-[#123524] mb-3 tracking-tight" style="font-family: 'Fraunces', serif;">
+                <h1 class="text-4xl lg:text-5xl font-bold text-[#123524] mb-3 tracking-tight"
+                    style="font-family: 'Fraunces', serif;">
                     Academic Departments
                     <span class="block mt-2 relative inline-block">
                         <span class="relative z-10">Excellence in Every Field</span>
@@ -36,20 +38,20 @@
             <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @forelse ($this->departments as $department)
                     <div wire:key="dept-{{ $department->id }}"
-                         class="group bg-white rounded-2xl p-6 border border-[#123524]/5 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+                        class="group bg-white rounded-2xl p-6 border border-[#123524]/5 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col">
 
                         {{-- Icon / Logo --}}
-                        <div class="w-14 h-14 mb-4 rounded-full bg-[#123524]/5 flex items-center justify-center group-hover:bg-[#D4A537]/15 transition-colors overflow-hidden">
+                        <div
+                            class="w-14 h-14 mb-4 rounded-full bg-[#123524]/5 flex items-center justify-center group-hover:bg-[#D4A537]/15 transition-colors overflow-hidden shrink-0">
                             @if ($department->dept_logo)
-                                <img src="{{ Storage::url($department->dept_logo) }}"
-                                     alt="{{ $department->dept_name }}"
-                                     class="w-full h-full object-cover"
-                                     loading="lazy">
+                                <img src="{{ Storage::url($department->dept_logo) }}" alt="{{ $department->dept_name }}"
+                                    class="w-full h-full object-cover" loading="lazy">
                             @else
                                 {{-- Fallback icon --}}
-                                <svg class="w-7 h-7 text-[#123524]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                <svg class="w-7 h-7 text-[#123524]" fill="none" stroke="currentColor"
+                                    stroke-width="1.5" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round"
-                                          d="M4.26 10.147a60.438 60.438 0 00-.491 6.347A48.62 48.62 0 0112 20.904a48.62 48.62 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.636 50.636 0 00-2.658-.813A59.906 59.906 0 0112 3.493a59.903 59.903 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5" />
+                                        d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
                                 </svg>
                             @endif
                         </div>
@@ -71,13 +73,37 @@
                             <span class="w-1.5 h-1.5 rounded-full bg-[#D4A537]"></span>
                             {{ number_format($department->students_count) }} Students
                         </div>
+
+                        {{-- Courses list --}}
+                        @if ($department->courses->isNotEmpty())
+                            <div class="mt-4 pt-4 border-t border-[#123524]/5">
+                                <p class="text-xs font-bold text-[#123524]/40 uppercase tracking-wider mb-2">
+                                    {{ $department->courses->count() }}
+                                    {{ Str::plural('Program', $department->courses->count()) }}
+                                </p>
+                                <ul class="space-y-1.5">
+                                    @foreach ($department->courses as $course)
+                                        <li class="flex items-start gap-2 text-sm text-[#123524]/70">
+                                            <svg class="w-3.5 h-3.5 mt-0.5 shrink-0 text-[#D4A537]" fill="none"
+                                                stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <span class="leading-snug">{{ $course->course_title }}</span>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
                     </div>
                 @empty
                     <div class="col-span-full text-center py-16">
-                        <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-[#123524]/5 flex items-center justify-center">
-                            <svg class="w-8 h-8 text-[#123524]/30" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <div
+                            class="w-16 h-16 mx-auto mb-4 rounded-full bg-[#123524]/5 flex items-center justify-center">
+                            <svg class="w-8 h-8 text-[#123524]/30" fill="none" stroke="currentColor"
+                                stroke-width="1.5" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round"
-                                      d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                                    d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
                             </svg>
                         </div>
                         <p class="text-[#123524]/60">No departments available yet.</p>

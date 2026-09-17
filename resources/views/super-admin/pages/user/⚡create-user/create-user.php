@@ -82,7 +82,7 @@ new #[Layout('layouts::app-super-admin')] class extends Component
         // The password is never emailed — this just confirms the account
         // exists and points them to log in.
         EmailTemplateService::send(
-            'your-csav-alumni-network-staff-account-has-been-created',
+            'welcome-to-the-csav-alumni-network-name',
             $validated['email'],
             [
                 'name'         => $validated['name'],
