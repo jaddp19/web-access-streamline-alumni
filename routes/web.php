@@ -56,6 +56,10 @@ Route::middleware(['auth', 'role:registrar'])->prefix('super-admin')->group(func
     Route::livewire('/email/create', 'super-admin::pages.email.create-email')->name('super-admin.email.create');
     Route::livewire('/email/update/{email}', 'super-admin::pages.email.update-email')->name('super-admin.email.update');
 
+    Route::livewire('/company/view', 'super-admin::pages.company.view-company')->name('super-admin.company.view');
+    Route::livewire('/company/create', 'super-admin::pages.company.create-company')->name('super-admin.company.create');
+    Route::livewire('/company/update/{company}', 'super-admin::pages.company.update-company')->name('super-admin.company.update');
+
     Route::livewire('/verification-queue', 'super-admin::verification.verification-queue')->name('super-admin.verification-queue');
 });
 

@@ -57,12 +57,12 @@
         <div class="w-px h-10 bg-white/15"></div>
         <div>
           <div class="text-2xl font-bold text-white" style="font-family: 'Fraunces', serif;">{{ $this->departments }}</div>
-          <div class="text-xs text-white/50 font-medium tracking-wide mt-1">Departments</div>
+          <div class="text-xs text-white/50 font-medium tracking-wide mt-1">DEPARTMENTS</div>
         </div>
         <div class="w-px h-10 bg-white/15"></div>
         <div>
           <div class="text-2xl font-bold text-white" style="font-family: 'Fraunces', serif;">{{ $this->courses }}</div>
-          <div class="text-xs text-white/50 font-medium tracking-wide mt-1">Courses</div>
+          <div class="text-xs text-white/50 font-medium tracking-wide mt-1">COURSES</div>
         </div>
       </div>
     </div>

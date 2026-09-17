@@ -21,7 +21,7 @@
     </div>
 
     <!-- Center Navigation (Desktop) -->
-    <ul class="hidden lg:flex flex-row items-center justify-center flex-1 gap-1 text-black/60 dark:text-white/60">
+    <ul class="hidden lg:flex flex-row items-center justify-center flex-1 gap-1 text-white/60 dark:text-white/60">
 
         <li>
             <a href="{{ route('alumni.dashboard') }}"
