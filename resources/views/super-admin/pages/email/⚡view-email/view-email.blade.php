@@ -78,7 +78,6 @@
                                     })"
                                     class="rounded border-black/20 text-[#123524] focus:ring-[#123524]">
                             </th>
-                            <th class="ps-2 sm:ps-6 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 text-[11px]">ID</th>
                             <th class="px-2 sm:px-6 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 text-[11px]">Template</th>
                             <th class="hidden md:table-cell px-2 sm:px-6 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 text-[11px]">Created</th>
                             <th class="px-2 sm:px-6 py-3 text-end"></th>
@@ -94,9 +93,6 @@
                                         x-data
                                         x-bind:checked="@js($selectedEmails).includes({{ $email->id }})"
                                         class="rounded border-black/20 text-[#123524] focus:ring-[#123524] align-middle">
-                                </td>
-                                <td class="ps-2 sm:ps-6 py-3">
-                                    <span class="text-black/40 font-mono text-xs">#{{ $email->id }}</span>
                                 </td>
                                 <td class="px-2 sm:px-6 py-3 max-w-md">
                                     <span class="block font-mono text-xs text-black/70 truncate">

@@ -121,7 +121,7 @@
                         <label class="block text-[11px] text-black/50 font-semibold mb-1.5">Region</label>
                         <select wire:model.live="region_code"
                             class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition">
-                            <option value="">Select region</option>
+                            <option value="">Select Region</option>
                             @foreach ($this->regions as $region)
                                 <option value="{{ $region->code }}">{{ $region->name }}</option>
                             @endforeach
@@ -135,7 +135,7 @@
                         <label class="block text-[11px] text-black/50 font-semibold mb-1.5">Province</label>
                         <select wire:model.live="province_code" @disabled(!$region_code)
                             class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition disabled:opacity-50 disabled:cursor-not-allowed">
-                            <option value="">Select province</option>
+                            <option value="">Select Province</option>
                             @foreach ($this->provinces as $province)
                                 <option value="{{ $province->code }}">{{ $province->name }}</option>
                             @endforeach
@@ -149,7 +149,7 @@
                         <label class="block text-[11px] text-black/50 font-semibold mb-1.5">City / Municipality</label>
                         <select wire:model.live="city_code" @disabled(!$province_code)
                             class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition disabled:opacity-50 disabled:cursor-not-allowed">
-                            <option value="">Select city / municipality</option>
+                            <option value="">Select City / Municipality</option>
                             @foreach ($this->cities as $city)
                                 <option value="{{ $city->code }}">{{ $city->name }}</option>
                             @endforeach
@@ -163,7 +163,7 @@
                         <label class="block text-[11px] text-black/50 font-semibold mb-1.5">Barangay</label>
                         <select wire:model.live="barangay_code" @disabled(!$city_code)
                             class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition disabled:opacity-50 disabled:cursor-not-allowed">
-                            <option value="">Select barangay</option>
+                            <option value="">Select Barangay</option>
                             @foreach ($this->barangays as $barangay)
                                 <option value="{{ $barangay->code }}">{{ $barangay->name }}</option>
                             @endforeach
