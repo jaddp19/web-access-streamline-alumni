@@ -1,28 +1,18 @@
-<div class="bg-[#F0F2F5] dark:bg-[#18191A] min-h-screen"
-     @if (! $composerOpen) wire:poll.5s="$refresh" @endif>
+<div class="bg-[#F0F2F5] dark:bg-[#18191A] min-h-screen">
 
-    {{-- ========== FACEBOOK-STYLE HEADER BANNER ========== --}}
+    {{-- ========== HEADER BANNER ========== --}}
     <div class="bg-white dark:bg-[#242526] border-b border-black/10 dark:border-white/10 shadow-sm sticky top-0 z-40">
         <div class="max-w-[1100px] mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                @if ($this->myAvatarUrl)
-                    <img src="{{ $this->myAvatarUrl }}" alt="{{ auth()->user()->name }}" class="w-12 h-12 rounded-full object-cover shrink-0">
-                @else
-                    <div class="w-12 h-12 rounded-full bg-[#123524] flex items-center justify-center text-white font-bold text-xl shrink-0" style="font-family: 'Fraunces', serif;">
-                        {{ strtoupper(substr(auth()->user()->name ?? '?', 0, 1)) }}
-                    </div>
-                @endif
                 <div>
-                    <h1 class="text-xl font-bold text-black dark:text-white leading-tight" style="font-family: 'Fraunces', serif;">Alumni Wall</h1>
-                    <p class="text-xs text-black/50 dark:text-white/50">Your community feed</p>
+                    <h1 class="text-xl font-bold text-black dark:text-white leading-tight" style="font-family: 'Fraunces', serif;">Notifications</h1>
+                    <p class="text-xs text-black/50 dark:text-white/50">Stay updated with your community</p>
                 </div>
             </div>
             <div class="hidden sm:flex items-center gap-2">
                 <div class="px-4 py-1.5 rounded-full bg-[#123524]/5 dark:bg-[#D4A537]/10 text-[#123524] dark:text-[#D4A537] text-xs font-semibold flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-                    </svg>
-                    {{ $this->posts->total() }} Alumni posts
+                    <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                    3 unread
                 </div>
             </div>
         </div>
@@ -31,190 +21,163 @@
     {{-- ========== TWO-COLUMN LAYOUT ========== --}}
     <div class="max-w-[1100px] mx-auto px-4 sm:px-6 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-        {{-- ===== LEFT SIDEBAR (Profile quick card) ===== --}}
-        <aside class="hidden lg:block lg:col-span-3">
-            <div class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm overflow-hidden sticky top-24">
+        {{-- ===== LEFT SIDEBAR ===== --}}
+        <aside class="lg:col-span-3 space-y-4">
+            {{-- Profile quick card --}}
+            <div class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm overflow-hidden sticky top-24 border border-transparent dark:border-white/5">
                 <div class="h-16 bg-gradient-to-r from-[#123524] to-[#1C6B45]"></div>
                 <div class="px-4 pb-4 text-center -mt-10">
-                    @if ($this->myAvatarUrl)
-                        <img src="{{ $this->myAvatarUrl }}" alt="{{ auth()->user()->name }}" class="w-20 h-20 mx-auto rounded-full ring-4 ring-white dark:ring-[#242526] object-cover">
-                    @else
-                        <div class="w-20 h-20 mx-auto rounded-full bg-[#D4A537] ring-4 ring-white dark:ring-[#242526] flex items-center justify-center text-[#123524] font-bold text-3xl" style="font-family: 'Fraunces', serif;">
-                            {{ strtoupper(substr(auth()->user()->name ?? '?', 0, 1)) }}
-                        </div>
-                    @endif
-                    <p class="font-bold text-black dark:text-white mt-2" style="font-family: 'Fraunces', serif;">{{ auth()->user()->name }}</p>
+                    <span class="w-20 h-20 mx-auto flex items-center justify-center text-3xl font-bold text-[#0f2b1c] bg-yellow-500 rounded-full ring-4 ring-white dark:ring-[#242526] shadow-md shrink-0">
+                        {{ strtoupper(substr($this->alumni->name ?? '?', 0, 1)) }}
+                    </span>
+                    <p class="font-bold text-black dark:text-white mt-2" style="font-family: 'Fraunces', serif;">{{ $this->alumni->name }}</p>
                     <p class="text-xs text-black/50 dark:text-white/50">Alumni Member</p>
-
-                    <div class="border-t border-black/5 dark:border-white/5 mt-4 pt-3 text-left">
-                        <a href="{{ route('alumni.profile') }}" class="flex items-center justify-between py-1.5 text-sm text-black/70 dark:text-white/70 hover:text-[#123524] dark:hover:text-[#D4A537] transition">
-                            <span class="flex items-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
-                                My Profile
-                            </span>
-                            <span class="text-xs text-black/40 dark:text-white/40">&rarr;</span>
-                        </a>
-                        <a href="{{ route('alumni.dashboard') }}" class="flex items-center justify-between py-1.5 text-sm text-black/70 dark:text-white/70 hover:text-[#123524] dark:hover:text-[#D4A537] transition">
-                            <span class="flex items-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
-                                Dashboard
-                            </span>
-                            <span class="text-xs text-black/40 dark:text-white/40">&rarr;</span>
-                        </a>
-                        <a href="{{ route('alumni.settings') }}" class="flex items-center justify-between py-1.5 text-sm text-black/70 dark:text-white/70 hover:text-[#123524] dark:hover:text-[#D4A537] transition">
-                            <span class="flex items-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.28z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                                Settings
-                            </span>
-                            <span class="text-xs text-black/40 dark:text-white/40">&rarr;</span>
-                        </a>
-                    </div>
                 </div>
             </div>
         </aside>
 
-        {{-- ===== MAIN FEED COLUMN ===== --}}
+        {{-- ===== MAIN COLUMN — NOTIFICATIONS ===== --}}
         <main class="lg:col-span-9 space-y-4">
 
-            {{-- ========== CREATE POST (FB-style) ========== --}}
-            <div class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm p-4">
-                <div class="flex items-start gap-3">
-                    @if ($this->myAvatarUrl)
-                        <img src="{{ $this->myAvatarUrl }}" alt="{{ auth()->user()->name }}" class="w-10 h-10 rounded-full object-cover shrink-0">
-                    @else
-                        <div class="w-10 h-10 rounded-full bg-[#D4A537] flex items-center justify-center text-[#123524] font-bold shrink-0">
-                            {{ strtoupper(substr(auth()->user()->name ?? '?', 0, 1)) }}
-                        </div>
-                    @endif
-                    <button type="button" wire:click="toggleComposer"
-                        class="flex-1 text-left px-4 py-2.5 rounded-full bg-[#F0F2F5] dark:bg-[#3A3B3C] hover:bg-[#E4E6EB] dark:hover:bg-[#4E4F50] text-black/50 dark:text-white/60 text-sm transition">
-                        What's on your mind, {{ explode(' ', auth()->user()->name)[0] }}?
-                    </button>
-                </div>
-
-                @if ($composerOpen)
-                    <div class="mt-3 pt-3 border-t border-black/5 dark:border-white/5 space-y-3">
-                        <form wire:submit.prevent="post">
-                            <input type="text" wire:model.defer="title" placeholder="Title of your post"
-                                class="w-full px-4 py-2.5 rounded-xl bg-[#F0F2F5] dark:bg-[#3A3B3C] border-0 text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#1877F2]/40 text-sm font-semibold">
-                            @error('title') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-
-                            <select wire:model.defer="category_id"
-                                class="mt-2 w-full px-4 py-2.5 rounded-xl bg-[#F0F2F5] dark:bg-[#3A3B3C] border-0 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-[#1877F2]/40 text-sm">
-                                <option value="">Choose a category&hellip;</option>
-                                @foreach ($this->categories as $category)
-                                    <option value="{{ $category->id }}">{{ $category->cat_name }}</option>
-                                @endforeach
-                            </select>
-                            @error('category_id') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-
-                            @if ($image)
-                                <div class="mt-2 text-xs text-black/50 dark:text-white/50 inline-flex items-center gap-2 bg-[#F0F2F5] dark:bg-[#3A3B3C] px-3 py-1.5 rounded-full">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
-                                    {{ $image->getClientOriginalName() }}
-                                </div>
-                            @endif
-                            @error('image') <span class="block text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
-
-                            <div class="mt-3 flex items-center justify-between border border-black/10 dark:border-white/10 rounded-xl px-2 py-1.5">
-                                <span class="text-xs font-semibold text-black/60 dark:text-white/60 pl-2">Add a photo</span>
-                                <div class="flex items-center gap-1">
-                                    <label class="p-2 rounded-full hover:bg-[#F0F2F5] dark:hover:bg-[#3A3B3C] cursor-pointer text-[#45BD62]" title="Photo">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
-                                        <input type="file" wire:model="image" accept="image/*" class="hidden">
-                                    </label>
-                                </div>
-                            </div>
-                            <div wire:loading wire:target="image" class="text-xs text-black/50 dark:text-white/50 mt-1">Uploading image...</div>
-
-                            <div class="mt-3 flex items-center justify-end gap-2">
-                                <button type="button" wire:click="closeComposer"
-                                    class="px-4 py-2 text-sm font-semibold rounded-lg text-black/70 dark:text-white/70 hover:bg-[#F0F2F5] dark:hover:bg-[#3A3B3C] transition">
-                                    Cancel
-                                </button>
-                                <button type="submit"
-                                    wire:loading.attr="disabled" wire:target="post,image"
-                                    class="px-5 py-2 text-sm font-semibold rounded-lg bg-[#1877F2] text-white hover:bg-[#166FE5] transition inline-flex items-center gap-2 disabled:opacity-60">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" /></svg>
-                                    <span wire:loading.remove wire:target="post">Post</span>
-                                    <span wire:loading wire:target="post">Posting&hellip;</span>
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                @endif
+            {{-- Filter tabs --}}
+            <div class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm p-2 flex items-center gap-1 overflow-x-auto">
+                <button type="button" class="shrink-0 px-4 py-2 rounded-xl bg-[#123524] text-white text-sm font-semibold transition">
+                    All
+                </button>
+                <button type="button" class="shrink-0 px-4 py-2 rounded-xl text-black/60 dark:text-white/60 hover:bg-[#F0F2F5] dark:hover:bg-[#3A3B3C] text-sm font-semibold transition">
+                    Unread
+                </button>
+                <button type="button" class="shrink-0 px-4 py-2 rounded-xl text-black/60 dark:text-white/60 hover:bg-[#F0F2F5] dark:hover:bg-[#3A3B3C] text-sm font-semibold transition">
+                    Mentions
+                </button>
+                <button type="button" class="shrink-0 px-4 py-2 rounded-xl text-black/60 dark:text-white/60 hover:bg-[#F0F2F5] dark:hover:bg-[#3A3B3C] text-sm font-semibold transition">
+                    System
+                </button>
             </div>
 
-            @if (session('success'))
-                <div class="text-sm text-emerald-800 dark:text-emerald-300 font-medium bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl px-4 py-2.5 inline-flex items-center gap-2 w-full">
-                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    {{ session('success') }}
-                </div>
-            @endif
+            @php
+                // ===== STATIC SAMPLE DATA =====
+                // Swap with a real DB query later
+                $notifications = [
+                    [
+                        'id' => 1,
+                        'type' => 'like',
+                        'actor' => 'Maria Santos',
+                        'message' => 'liked your post "Batch 2024 Reunion Photos"',
+                        'time' => '2 minutes ago',
+                        'read' => false,
+                        'link' => '#',
+                    ],
+                    [
+                        'id' => 2,
+                        'type' => 'comment',
+                        'actor' => 'Juan Dela Cruz',
+                        'message' => 'commented on your post: "Great memories! Miss everyone."',
+                        'time' => '15 minutes ago',
+                        'read' => false,
+                        'link' => '#',
+                    ],
+                    [
+                        'id' => 3,
+                        'type' => 'event',
+                        'actor' => 'CSAV Alumni Office',
+                        'message' => 'posted a new event: "Annual Alumni Homecoming 2026"',
+                        'time' => '1 hour ago',
+                        'read' => false,
+                        'link' => '#',
+                    ],
+                    [
+                        'id' => 4,
+                        'type' => 'follow',
+                        'actor' => 'Ana Reyes',
+                        'message' => 'started following you',
+                        'time' => '3 hours ago',
+                        'read' => true,
+                        'link' => '#',
+                    ],
+                    [
+                        'id' => 5,
+                        'type' => 'system',
+                        'actor' => 'System',
+                        'message' => 'Your profile has been verified by the registrar.',
+                        'time' => '1 day ago',
+                        'read' => true,
+                        'link' => '#',
+                    ],
+                    [
+                        'id' => 6,
+                        'type' => 'mention',
+                        'actor' => 'Pedro Bautista',
+                        'message' => 'mentioned you in a comment on "Career Opportunities Abroad"',
+                        'time' => '2 days ago',
+                        'read' => true,
+                        'link' => '#',
+                    ],
+                    [
+                        'id' => 7,
+                        'type' => 'event',
+                        'actor' => 'CSAV Alumni Office',
+                        'message' => 'reminder: "Career Talk with Batch 2015" starts tomorrow at 9:00 AM',
+                        'time' => '3 days ago',
+                        'read' => true,
+                        'link' => '#',
+                    ],
+                ];
 
-            {{-- ========== POSTS FEED ========== --}}
-            @forelse ($this->posts as $post)
-                <article class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm overflow-hidden">
+                // Icon + color mapping per notification type
+                $iconMap = [
+                    'like'    => ['bg' => 'bg-[#1877F2]/10', 'text' => 'text-[#1877F2]', 'path' => 'M6.633 10.25c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V2.75a.75.75 0 01.75-.75 2.25 2.25 0 012.25 2.25c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 01-2.649 7.521c-.388.482-.987.729-1.605.729H14.23c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 00-1.423-.23H5.904M14.25 9h2.25M5.904 18.75c.083.205.173.405.27.602.197.4-.078.898-.523.898h-.908c-.889 0-1.713-.518-1.972-1.368a12 12 0 01-.521-3.507c0-1.553.295-3.036.831-4.398C3.387 9.953 4.167 9.5 5 9.5h1.053c.472 0 .745.556.5.96a8.958 8.958 0 00-1.302 4.665c0 1.194.232 2.333.654 3.375z'],
+                    'comment' => ['bg' => 'bg-emerald-500/10', 'text' => 'text-emerald-600', 'path' => 'M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 01-.923 1.785A5.969 5.969 0 006 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337z'],
+                    'event'   => ['bg' => 'bg-[#D4A537]/15', 'text' => 'text-[#a97f1f]', 'path' => 'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5'],
+                    'follow'  => ['bg' => 'bg-purple-500/10', 'text' => 'text-purple-600', 'path' => 'M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM3 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 019.374 21c-2.331 0-4.512-.645-6.374-1.766z'],
+                    'mention' => ['bg' => 'bg-orange-500/10', 'text' => 'text-orange-600', 'path' => 'M16.5 12a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zm0 0c0 1.657 1.007 3 2.25 3S21 13.657 21 12a9 9 0 10-2.636 6.364M16.5 12V8.25'],
+                    'system'  => ['bg' => 'bg-[#123524]/10', 'text' => 'text-[#123524]', 'path' => 'M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z'],
+                ];
+            @endphp
 
-                    {{-- Post header --}}
-                    <header class="flex items-center justify-between p-4 pb-2">
-                        <div class="flex items-center gap-3">
-                            @if ($post->user?->userProfile?->avatar)
-                                <img src="{{ Storage::url($post->user->userProfile->avatar) }}" alt="{{ $post->user->name }}" class="w-10 h-10 rounded-full object-cover shrink-0">
-                            @else
-                                <div class="w-10 h-10 rounded-full bg-[#D4A537] flex items-center justify-center text-[#123524] font-bold shrink-0">
-                                    {{ strtoupper(substr($post->user->name ?? '?', 0, 1)) }}
-                                </div>
-                            @endif
-                            <div>
-                                <p class="font-semibold text-black dark:text-white text-sm leading-tight">{{ $post->user->name ?? 'Unknown Alumni' }}</p>
-                                <p class="text-xs text-black/50 dark:text-white/50 flex items-center gap-1 mt-0.5">
-                                    {{ $post->created_at->diffForHumans() }} &middot; {{ ucfirst($post->status) }}
-                                </p>
-                            </div>
+            {{-- Notifications list --}}
+            <div class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm overflow-hidden">
+
+                @foreach ($notifications as $notification)
+                    @php $icon = $iconMap[$notification['type']]; @endphp
+
+                    <a href="{{ $notification['link'] }}"
+                       class="flex items-start gap-3 px-4 py-4 border-b border-black/5 dark:border-white/5 last:border-b-0 hover:bg-[#F0F2F5] dark:hover:bg-[#3A3B3C]/50 transition
+                              {{ $notification['read'] ? '' : 'bg-[#1877F2]/[0.03] dark:bg-[#1877F2]/[0.06]' }}">
+
+                        {{-- Type icon --}}
+                        <div class="w-11 h-11 rounded-full {{ $icon['bg'] }} flex items-center justify-center shrink-0">
+                            <svg class="w-5 h-5 {{ $icon['text'] }}" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="{{ $icon['path'] }}" />
+                            </svg>
                         </div>
-                        @if ($post->user_id === auth()->id())
-                            <button wire:click="deletePost({{ $post->id }})"
-                                wire:confirm="Delete this post?"
-                                class="w-9 h-9 rounded-full hover:bg-[#F0F2F5] dark:hover:bg-[#3A3B3C] flex items-center justify-center text-black/50 dark:text-white/50 transition">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                            </button>
-                        @endif
-                    </header>
 
-                    {{-- Post body --}}
-                    <div class="px-4 pb-3">
-                        <p class="font-bold text-black dark:text-white text-base" style="font-family: 'Fraunces', serif;">{{ $post->title }}</p>
-                        @if ($post->category)
-                            <span class="inline-block mt-1 text-[11px] font-semibold text-[#1877F2] bg-[#1877F2]/10 px-2 py-0.5 rounded-full">
-                                {{ $post->category->cat_name }}
-                            </span>
-                        @endif
-                    </div>
-
-                    {{-- Post image (FB-style, full-width with no side padding) --}}
-                    @if ($post->image)
-                        <div class="bg-black">
-                            <img src="{{ Storage::url($post->image) }}" alt="Post image" class="w-full max-h-[500px] object-contain">
+                        {{-- Content --}}
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm text-black dark:text-white leading-snug">
+                                <span class="font-semibold">{{ $notification['actor'] }}</span>
+                                <span class="text-black/70 dark:text-white/70"> {{ $notification['message'] }}</span>
+                            </p>
+                            <p class="text-xs text-black/50 dark:text-white/50 mt-1">{{ $notification['time'] }}</p>
                         </div>
-                    @endif
 
-                </article>
-            @empty
-                <div class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm p-12 text-center">
-                    <div class="w-16 h-16 rounded-full bg-[#F0F2F5] dark:bg-[#3A3B3C] flex items-center justify-center mx-auto mb-3">
-                        <svg class="w-8 h-8 text-black/40 dark:text-white/40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>
-                    </div>
-                    <p class="font-bold text-black dark:text-white text-lg" style="font-family: 'Fraunces', serif;">No posts yet</p>
-                    <p class="text-black/50 dark:text-white/50 text-sm mt-1">Be the first to share something with your fellow alumni.</p>
-                </div>
-            @endforelse
+                        {{-- Unread dot --}}
+                        @unless ($notification['read'])
+                            <span class="w-2.5 h-2.5 rounded-full bg-[#1877F2] shrink-0 mt-2" title="Unread"></span>
+                        @endunless
+                    </a>
+                @endforeach
 
-            @if ($this->posts->hasPages())
-                <div class="pt-2 flex justify-center">
-                    {{ $this->posts->links() }}
-                </div>
-            @endif
+            </div>
+
+            {{-- "Load more" (static placeholder) --}}
+            <div class="flex justify-center pt-2">
+                <button type="button"
+                    class="px-5 py-2.5 rounded-xl bg-white dark:bg-[#242526] shadow-sm text-sm font-semibold text-black/70 dark:text-white/70 hover:bg-[#F0F2F5] dark:hover:bg-[#3A3B3C] transition">
+                    Load older notifications
+                </button>
+            </div>
+
         </main>
     </div>
 </div>

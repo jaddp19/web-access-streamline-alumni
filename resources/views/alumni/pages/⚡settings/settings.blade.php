@@ -1,7 +1,7 @@
-<div class="bg-[#F8FAFC] dark:bg-[#111827] min-h-screen">
+<div class="bg-[#F8FAFC] dark:bg-[#18191A] min-h-screen">
 
     {{-- ========== TOP NAVIGATION BAR ========== --}}
-    <header class="bg-white dark:bg-[#1F2937] border-b border-black/5 dark:border-white/5 sticky top-0 z-30">
+    <header class="bg-white dark:bg-[#242526] border-b border-black/5 dark:border-white/5 sticky top-0 z-30">
         <div class="max-w-[1200px] mx-auto px-6 py-4 flex items-center justify-between">
             <div class="flex items-center gap-4">
                 <div>
@@ -62,19 +62,19 @@
                         </div>
                     </div>
 
-                    <section class="bg-white dark:bg-[#1F2937] rounded-2xl shadow-sm border border-black/5 dark:border-white/5 p-6">
+                    <section class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm border border-black/5 dark:border-white/5 p-6">
                         <form wire:submit.prevent="updateProfile" class="space-y-6">
                             <div class="grid sm:grid-cols-2 gap-6">
                                 <div class="space-y-1.5">
                                     <label class="block text-xs font-bold text-black/60 dark:text-white/60 uppercase tracking-wider">Full Name</label>
                                     <input type="text" wire:model.defer="name"
-                                        class="w-full px-3.5 py-2.5 rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-[#111827] text-black dark:text-white focus:outline-none focus:border-[#1C6B45] focus:ring-1 focus:ring-[#1C6B45] transition text-sm">
+                                        class="w-full px-3.5 py-2.5 rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#1C6B45] focus:ring-1 focus:ring-[#1C6B45] transition text-sm">
                                     @error('name') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                 </div>
                                 <div class="space-y-1.5">
                                     <label class="block text-xs font-bold text-black/60 dark:text-white/60 uppercase tracking-wider">Email Address</label>
                                     <input type="email" wire:model.defer="email"
-                                        class="w-full px-3.5 py-2.5 rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-[#111827] text-black dark:text-white focus:outline-none focus:border-[#1C6B45] focus:ring-1 focus:ring-[#1C6B45] transition text-sm">
+                                        class="w-full px-3.5 py-2.5 rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#1C6B45] focus:ring-1 focus:ring-[#1C6B45] transition text-sm">
                                     @error('email') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                 </div>
                             </div>
@@ -107,25 +107,25 @@
                         </div>
                     </div>
 
-                    <section class="bg-white dark:bg-[#1F2937] rounded-2xl shadow-sm border border-black/5 dark:border-white/5 p-6">
+                    <section class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm border border-black/5 dark:border-white/5 p-6">
                         <form wire:submit.prevent="updatePassword" class="space-y-6">
                             <div class="space-y-1.5">
                                 <label class="block text-xs font-bold text-black/60 dark:text-white/60 uppercase tracking-wider">Current Password</label>
                                 <input type="password" wire:model.defer="current_password"
-                                    class="w-full px-3.5 py-2.5 rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-[#111827] text-black dark:text-white focus:outline-none focus:border-[#1C6B45] focus:ring-1 focus:ring-[#1C6B45] transition text-sm">
+                                    class="w-full px-3.5 py-2.5 rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#1C6B45] focus:ring-1 focus:ring-[#1C6B45] transition text-sm">
                                 @error('current_password') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                             </div>
                             <div class="grid sm:grid-cols-2 gap-6">
                                 <div class="space-y-1.5">
                                     <label class="block text-xs font-bold text-black/60 dark:text-white/60 uppercase tracking-wider">New Password</label>
                                     <input type="password" wire:model.defer="new_password"
-                                        class="w-full px-3.5 py-2.5 rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-[#111827] text-black dark:text-white focus:outline-none focus:border-[#1C6B45] focus:ring-1 focus:ring-[#1C6B45] transition text-sm">
+                                        class="w-full px-3.5 py-2.5 rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#1C6B45] focus:ring-1 focus:ring-[#1C6B45] transition text-sm">
                                     @error('new_password') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                 </div>
                                 <div class="space-y-1.5">
                                     <label class="block text-xs font-bold text-black/60 dark:text-white/60 uppercase tracking-wider">Confirm New Password</label>
                                     <input type="password" wire:model.defer="new_password_confirmation"
-                                        class="w-full px-3.5 py-2.5 rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-[#111827] text-black dark:text-white focus:outline-none focus:border-[#1C6B45] focus:ring-1 focus:ring-[#1C6B45] transition text-sm">
+                                        class="w-full px-3.5 py-2.5 rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#1C6B45] focus:ring-1 focus:ring-[#1C6B45] transition text-sm">
                                 </div>
                             </div>
 
@@ -157,11 +157,11 @@
                         </div>
                     </div>
 
-                    <section class="bg-white dark:bg-[#1F2937] rounded-2xl shadow-sm border border-black/5 dark:border-white/5 overflow-hidden">
+                    <section class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm border border-black/5 dark:border-white/5 overflow-hidden">
                         <div class="p-6">
                             <form wire:submit.prevent="savePreferences" class="space-y-4">
                                 <div class="space-y-3">
-                                    <label class="flex items-center justify-between bg-[#F8FAFC] dark:bg-[#111827] border border-black/5 dark:border-white/10 rounded-xl px-4 py-4 cursor-pointer hover:bg-white dark:hover:bg-white/5 transition group">
+                                    <label class="flex items-center justify-between bg-[#F8FAFC] dark:bg-[#3A3B3C] border border-black/5 dark:border-white/10 rounded-xl px-4 py-4 cursor-pointer hover:bg-white dark:hover:bg-white/5 transition group">
                                         <div class="flex flex-col">
                                             <p class="font-semibold text-sm text-black dark:text-white group-hover:text-[#1C6B45] transition">Email Notifications</p>
                                             <p class="text-xs text-black/60 dark:text-white/60 mt-0.5">Stay updated via email.</p>
@@ -173,7 +173,7 @@
                                         </div>
                                     </label>
 
-                                    <label class="flex items-center justify-between bg-[#F8FAFC] dark:bg-[#111827] border border-black/5 dark:border-white/10 rounded-xl px-4 py-4 cursor-pointer hover:bg-white dark:hover:bg-white/5 transition group">
+                                    <label class="flex items-center justify-between bg-[#F8FAFC] dark:bg-[#3A3B3C] border border-black/5 dark:border-white/10 rounded-xl px-4 py-4 cursor-pointer hover:bg-white dark:hover:bg-white/5 transition group">
                                         <div class="flex flex-col">
                                             <p class="font-semibold text-sm text-black dark:text-white group-hover:text-[#1C6B45] transition">Event Alerts</p>
                                             <p class="text-xs text-black/60 dark:text-white/60 mt-0.5">Receive instant alumni gathering alerts.</p>
@@ -185,7 +185,7 @@
                                         </div>
                                     </label>
 
-                                    <label class="flex items-center justify-between bg-[#F8FAFC] dark:bg-[#111827] border border-black/5 dark:border-white/10 rounded-xl px-4 py-4 cursor-pointer hover:bg-white dark:hover:bg-white/5 transition group">
+                                    <label class="flex items-center justify-between bg-[#F8FAFC] dark:bg-[#3A3B3C] border border-black/5 dark:border-white/10 rounded-xl px-4 py-4 cursor-pointer hover:bg-white dark:hover:bg-white/5 transition group">
                                         <div class="flex flex-col">
                                             <p class="font-semibold text-sm text-black dark:text-white group-hover:text-[#1C6B45] transition">Public Profile Visibility</p>
                                             <p class="text-xs text-black/60 dark:text-white/60 mt-0.5">Allow other alumni to find your profile.</p>

@@ -22,6 +22,12 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
     public bool $composerOpen = false; // now tracked server-side so polling can respect it
 
+    #[Computed]
+    public function alumni()
+    {
+        return Auth::user();
+    }
+
     protected function rules()
     {
         return [
