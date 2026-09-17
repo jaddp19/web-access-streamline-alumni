@@ -9,8 +9,6 @@
                     <p class="text-xs text-black/50 dark:text-white/50 mt-1">Manage your alumni portal preferences</p>
                 </div>
             </div>
-
-            
         </div>
     </header>
 
@@ -52,7 +50,7 @@
         {{-- ===== CONTENT PANEL ===== --}}
         <main class="lg:col-span-9">
 
-            {{-- Personal details --}}
+            {{-- ========== PERSONAL DETAILS ========== --}}
             @if ($activeTab === 'profile')
                 <div class="space-y-6">
                     <div class="flex items-center justify-between">
@@ -62,42 +60,68 @@
                         </div>
                     </div>
 
+                    @if (session('profile_success'))
+                        <div class="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-semibold rounded-xl p-4 text-sm flex items-center gap-3">
+                            <svg class="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                            {{ session('profile_success') }}
+                        </div>
+                    @endif
+
                     <section class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm border border-black/5 dark:border-white/5 p-6">
                         <form wire:submit.prevent="updateProfile" class="space-y-6">
                             <div class="grid sm:grid-cols-2 gap-6">
+
+                                {{-- Full Name --}}
                                 <div class="space-y-1.5">
-                                    <label class="block text-xs font-bold text-black/60 dark:text-white/60 uppercase tracking-wider">Full Name</label>
-                                    <input type="text" wire:model.defer="name"
-                                        class="w-full px-3.5 py-2.5 rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#1C6B45] focus:ring-1 focus:ring-[#1C6B45] transition text-sm">
-                                    @error('name') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                                    <label for="name" class="block text-xs font-bold text-black/60 dark:text-white/60 uppercase tracking-wider">
+                                        Full Name <span class="text-red-500">*</span>
+                                    </label>
+                                    <input id="name" type="text" wire:model.blur="name"
+                                        class="w-full px-3.5 py-2.5 rounded-lg border bg-white dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:ring-1 transition text-sm
+                                            @error('name') border-red-400 focus:border-red-500 focus:ring-red-500
+                                            @else border-black/10 dark:border-white/10 focus:border-[#1C6B45] focus:ring-[#1C6B45]
+                                            @enderror">
+                                    @error('name')
+                                        <span class="flex items-start gap-1.5 text-red-500 text-xs font-medium">
+                                            <svg class="w-3.5 h-3.5 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" /></svg>
+                                            {{ $message }}
+                                        </span>
+                                    @enderror
                                 </div>
+
+                                {{-- Email --}}
                                 <div class="space-y-1.5">
-                                    <label class="block text-xs font-bold text-black/60 dark:text-white/60 uppercase tracking-wider">Email Address</label>
-                                    <input type="email" wire:model.defer="email"
-                                        class="w-full px-3.5 py-2.5 rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#1C6B45] focus:ring-1 focus:ring-[#1C6B45] transition text-sm">
-                                    @error('email') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                                    <label for="email" class="block text-xs font-bold text-black/60 dark:text-white/60 uppercase tracking-wider">
+                                        Email Address <span class="text-red-500">*</span>
+                                    </label>
+                                    <input id="email" type="email" wire:model.blur="email"
+                                        class="w-full px-3.5 py-2.5 rounded-lg border bg-white dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:ring-1 transition text-sm
+                                            @error('email') border-red-400 focus:border-red-500 focus:ring-red-500
+                                            @else border-black/10 dark:border-white/10 focus:border-[#1C6B45] focus:ring-[#1C6B45]
+                                            @enderror">
+                                    @error('email')
+                                        <span class="flex items-start gap-1.5 text-red-500 text-xs font-medium">
+                                            <svg class="w-3.5 h-3.5 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" /></svg>
+                                            {{ $message }}
+                                        </span>
+                                    @enderror
                                 </div>
                             </div>
 
                             <div class="flex items-center justify-end pt-4">
                                 <button type="submit"
-                                    class="px-6 py-2 text-sm font-bold rounded-lg bg-[#1C6B45] text-white hover:bg-[#165a3b] transition shadow-sm">
-                                    Save Changes
+                                    wire:loading.attr="disabled" wire:target="updateProfile"
+                                    class="px-6 py-2 text-sm font-bold rounded-lg bg-[#1C6B45] text-white hover:bg-[#165a3b] transition shadow-sm disabled:opacity-60">
+                                    <span wire:loading.remove wire:target="updateProfile">Save Changes</span>
+                                    <span wire:loading wire:target="updateProfile">Saving&hellip;</span>
                                 </button>
                             </div>
                         </form>
-
-                        @if (session('profile_success'))
-                            <div class="mt-6 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-semibold rounded-xl p-4 text-sm flex items-center gap-3">
-                                <svg class="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
-                                {{ session('profile_success') }}
-                            </div>
-                        @endif
-                    </div>
-                </section>
+                    </section>
+                </div>
             @endif
 
-            {{-- Password --}}
+            {{-- ========== SECURITY / PASSWORD ========== --}}
             @if ($activeTab === 'password')
                 <div class="space-y-6">
                     <div class="flex items-center justify-between">
@@ -107,47 +131,90 @@
                         </div>
                     </div>
 
+                    @if (session('password_success'))
+                        <div class="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-semibold rounded-xl p-4 text-sm flex items-center gap-3">
+                            <svg class="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                            {{ session('password_success') }}
+                        </div>
+                    @endif
+
                     <section class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm border border-black/5 dark:border-white/5 p-6">
                         <form wire:submit.prevent="updatePassword" class="space-y-6">
+
+                            {{-- Current password --}}
                             <div class="space-y-1.5">
-                                <label class="block text-xs font-bold text-black/60 dark:text-white/60 uppercase tracking-wider">Current Password</label>
-                                <input type="password" wire:model.defer="current_password"
-                                    class="w-full px-3.5 py-2.5 rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#1C6B45] focus:ring-1 focus:ring-[#1C6B45] transition text-sm">
-                                @error('current_password') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                                <label for="current_password" class="block text-xs font-bold text-black/60 dark:text-white/60 uppercase tracking-wider">
+                                    Current Password <span class="text-red-500">*</span>
+                                </label>
+                                <input id="current_password" type="password" wire:model.blur="current_password" autocomplete="current-password"
+                                    class="w-full px-3.5 py-2.5 rounded-lg border bg-white dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:ring-1 transition text-sm
+                                        @error('current_password') border-red-400 focus:border-red-500 focus:ring-red-500
+                                        @else border-black/10 dark:border-white/10 focus:border-[#1C6B45] focus:ring-[#1C6B45]
+                                        @enderror">
+                                @error('current_password')
+                                    <span class="flex items-start gap-1.5 text-red-500 text-xs font-medium">
+                                        <svg class="w-3.5 h-3.5 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" /></svg>
+                                        {{ $message }}
+                                    </span>
+                                @enderror
                             </div>
+
                             <div class="grid sm:grid-cols-2 gap-6">
+
+                                {{-- New password --}}
                                 <div class="space-y-1.5">
-                                    <label class="block text-xs font-bold text-black/60 dark:text-white/60 uppercase tracking-wider">New Password</label>
-                                    <input type="password" wire:model.defer="new_password"
-                                        class="w-full px-3.5 py-2.5 rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#1C6B45] focus:ring-1 focus:ring-[#1C6B45] transition text-sm">
-                                    @error('new_password') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                                    <label for="new_password" class="block text-xs font-bold text-black/60 dark:text-white/60 uppercase tracking-wider">
+                                        New Password <span class="text-red-500">*</span>
+                                    </label>
+                                    <input id="new_password" type="password" wire:model.blur="new_password" autocomplete="new-password"
+                                        class="w-full px-3.5 py-2.5 rounded-lg border bg-white dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:ring-1 transition text-sm
+                                            @error('new_password') border-red-400 focus:border-red-500 focus:ring-red-500
+                                            @else border-black/10 dark:border-white/10 focus:border-[#1C6B45] focus:ring-[#1C6B45]
+                                            @enderror">
+                                    <p class="text-[11px] text-black/50 dark:text-white/50">
+                                        Min 8 characters, with uppercase, lowercase, number &amp; symbol.
+                                    </p>
+                                    @error('new_password')
+                                        <span class="flex items-start gap-1.5 text-red-500 text-xs font-medium">
+                                            <svg class="w-3.5 h-3.5 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" /></svg>
+                                            {{ $message }}
+                                        </span>
+                                    @enderror
                                 </div>
+
+                                {{-- Confirm password --}}
                                 <div class="space-y-1.5">
-                                    <label class="block text-xs font-bold text-black/60 dark:text-white/60 uppercase tracking-wider">Confirm New Password</label>
-                                    <input type="password" wire:model.defer="new_password_confirmation"
-                                        class="w-full px-3.5 py-2.5 rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#1C6B45] focus:ring-1 focus:ring-[#1C6B45] transition text-sm">
+                                    <label for="new_password_confirmation" class="block text-xs font-bold text-black/60 dark:text-white/60 uppercase tracking-wider">
+                                        Confirm New Password <span class="text-red-500">*</span>
+                                    </label>
+                                    <input id="new_password_confirmation" type="password" wire:model.blur="new_password_confirmation" autocomplete="new-password"
+                                        class="w-full px-3.5 py-2.5 rounded-lg border bg-white dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:ring-1 transition text-sm
+                                            @error('new_password_confirmation') border-red-400 focus:border-red-500 focus:ring-red-500
+                                            @else border-black/10 dark:border-white/10 focus:border-[#1C6B45] focus:ring-[#1C6B45]
+                                            @enderror">
+                                    @error('new_password_confirmation')
+                                        <span class="flex items-start gap-1.5 text-red-500 text-xs font-medium">
+                                            <svg class="w-3.5 h-3.5 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" /></svg>
+                                            {{ $message }}
+                                        </span>
+                                    @enderror
                                 </div>
                             </div>
 
                             <div class="flex items-center justify-end pt-4">
                                 <button type="submit"
-                                    class="px-6 py-2 text-sm font-bold rounded-lg bg-[#1C6B45] text-white hover:bg-[#165a3b] transition shadow-sm">
-                                    Update Password
+                                    wire:loading.attr="disabled" wire:target="updatePassword"
+                                    class="px-6 py-2 text-sm font-bold rounded-lg bg-[#1C6B45] text-white hover:bg-[#165a3b] transition shadow-sm disabled:opacity-60">
+                                    <span wire:loading.remove wire:target="updatePassword">Update Password</span>
+                                    <span wire:loading wire:target="updatePassword">Updating&hellip;</span>
                                 </button>
                             </div>
                         </form>
-
-                        @if (session('password_success'))
-                            <div class="mt-6 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-semibold rounded-xl p-4 text-sm flex items-center gap-3">
-                                <svg class="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
-                                {{ session('password_success') }}
-                            </div>
-                        @endif
-                    </div>
-                </section>
+                    </section>
+                </div>
             @endif
 
-            {{-- Preferences --}}
+            {{-- ========== PREFERENCES ========== --}}
             @if ($activeTab === 'preferences')
                 <div class="space-y-6">
                     <div class="flex items-center justify-between">
@@ -157,14 +224,27 @@
                         </div>
                     </div>
 
+                    @if (session('preferences_success'))
+                        <div class="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-semibold rounded-xl p-4 text-sm flex items-center gap-3">
+                            <svg class="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                            {{ session('preferences_success') }}
+                        </div>
+                    @endif
+
                     <section class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm border border-black/5 dark:border-white/5 overflow-hidden">
                         <div class="p-6">
                             <form wire:submit.prevent="savePreferences" class="space-y-4">
                                 <div class="space-y-3">
-                                    <label class="flex items-center justify-between bg-[#F8FAFC] dark:bg-[#3A3B3C] border border-black/5 dark:border-white/10 rounded-xl px-4 py-4 cursor-pointer hover:bg-white dark:hover:bg-white/5 transition group">
+
+                                    {{-- Email notifications --}}
+                                    <label class="flex items-center justify-between bg-[#F8FAFC] dark:bg-[#3A3B3C] border rounded-xl px-4 py-4 cursor-pointer hover:bg-white dark:hover:bg-white/5 transition group
+                                        @error('emailNotifications') border-red-400 @else border-black/5 dark:border-white/10 @enderror">
                                         <div class="flex flex-col">
                                             <p class="font-semibold text-sm text-black dark:text-white group-hover:text-[#1C6B45] transition">Email Notifications</p>
                                             <p class="text-xs text-black/60 dark:text-white/60 mt-0.5">Stay updated via email.</p>
+                                            @error('emailNotifications')
+                                                <span class="text-red-500 text-xs font-medium mt-1">{{ $message }}</span>
+                                            @enderror
                                         </div>
                                         <div class="relative inline-flex items-center shrink-0 ml-3">
                                             <input type="checkbox" wire:model.defer="emailNotifications" class="sr-only peer">
@@ -173,10 +253,15 @@
                                         </div>
                                     </label>
 
-                                    <label class="flex items-center justify-between bg-[#F8FAFC] dark:bg-[#3A3B3C] border border-black/5 dark:border-white/10 rounded-xl px-4 py-4 cursor-pointer hover:bg-white dark:hover:bg-white/5 transition group">
+                                    {{-- Event alerts --}}
+                                    <label class="flex items-center justify-between bg-[#F8FAFC] dark:bg-[#3A3B3C] border rounded-xl px-4 py-4 cursor-pointer hover:bg-white dark:hover:bg-white/5 transition group
+                                        @error('eventNotifications') border-red-400 @else border-black/5 dark:border-white/10 @enderror">
                                         <div class="flex flex-col">
                                             <p class="font-semibold text-sm text-black dark:text-white group-hover:text-[#1C6B45] transition">Event Alerts</p>
                                             <p class="text-xs text-black/60 dark:text-white/60 mt-0.5">Receive instant alumni gathering alerts.</p>
+                                            @error('eventNotifications')
+                                                <span class="text-red-500 text-xs font-medium mt-1">{{ $message }}</span>
+                                            @enderror
                                         </div>
                                         <div class="relative inline-flex items-center shrink-0 ml-3">
                                             <input type="checkbox" wire:model.defer="eventNotifications" class="sr-only peer">
@@ -185,10 +270,15 @@
                                         </div>
                                     </label>
 
-                                    <label class="flex items-center justify-between bg-[#F8FAFC] dark:bg-[#3A3B3C] border border-black/5 dark:border-white/10 rounded-xl px-4 py-4 cursor-pointer hover:bg-white dark:hover:bg-white/5 transition group">
+                                    {{-- Profile visibility --}}
+                                    <label class="flex items-center justify-between bg-[#F8FAFC] dark:bg-[#3A3B3C] border rounded-xl px-4 py-4 cursor-pointer hover:bg-white dark:hover:bg-white/5 transition group
+                                        @error('profileVisible') border-red-400 @else border-black/5 dark:border-white/10 @enderror">
                                         <div class="flex flex-col">
                                             <p class="font-semibold text-sm text-black dark:text-white group-hover:text-[#1C6B45] transition">Public Profile Visibility</p>
                                             <p class="text-xs text-black/60 dark:text-white/60 mt-0.5">Allow other alumni to find your profile.</p>
+                                            @error('profileVisible')
+                                                <span class="text-red-500 text-xs font-medium mt-1">{{ $message }}</span>
+                                            @enderror
                                         </div>
                                         <div class="relative inline-flex items-center shrink-0 ml-3">
                                             <input type="checkbox" wire:model.defer="profileVisible" class="sr-only peer">
@@ -200,18 +290,13 @@
 
                                 <div class="flex items-center justify-end pt-4">
                                     <button type="submit"
-                                        class="px-6 py-2 text-sm font-bold rounded-lg bg-[#1C6B45] text-white hover:bg-[#165a3b] transition shadow-sm">
-                                        Save Preferences
+                                        wire:loading.attr="disabled" wire:target="savePreferences"
+                                        class="px-6 py-2 text-sm font-bold rounded-lg bg-[#1C6B45] text-white hover:bg-[#165a3b] transition shadow-sm disabled:opacity-60">
+                                        <span wire:loading.remove wire:target="savePreferences">Save Preferences</span>
+                                        <span wire:loading wire:target="savePreferences">Saving&hellip;</span>
                                     </button>
                                 </div>
                             </form>
-
-                            @if (session('preferences_success'))
-                                <div class="mt-6 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-semibold rounded-xl p-4 text-sm flex items-center gap-3">
-                                    <svg class="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
-                                    {{ session('preferences_success') }}
-                                </div>
-                            @endif
                         </div>
                     </section>
                 </div>
