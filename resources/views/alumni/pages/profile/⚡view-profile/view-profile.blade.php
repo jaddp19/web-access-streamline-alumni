@@ -213,10 +213,8 @@
 
             <div class="grid sm:grid-cols-3 gap-x-6 gap-y-4 pt-4 border-t border-black/5 dark:border-white/10">
                 <div>
-                    <p class="text-xs text-black/50 dark:text-white/50 font-semibold uppercase tracking-wide">Course
-                    </p>
-                    <p class="font-medium text-black dark:text-white mt-1">{{ $this->course->course_title ?? '—' }}
-                    </p>
+                    <p class="text-xs text-black/50 dark:text-white/50 font-semibold uppercase tracking-wide">Course</p>
+                    <p class="font-medium text-black dark:text-white mt-1">{{ $this->course->course_title ?? '—' }}</p>
                 </div>
                 <div>
                     <p class="text-xs text-black/50 dark:text-white/50 font-semibold uppercase tracking-wide">
@@ -230,6 +228,83 @@
                         {{ $this->userProfile?->batch?->batch_name ?? '—' }}</p>
                 </div>
             </div>
+
+            {{-- ========== BOARD EXAMINATION (only for verified board-program alumni) ========== --}}
+            @if ($this->course?->course_type === 'board' && $this->userProfile?->is_verified)
+                <div class="mt-5 pt-5 border-t border-black/5 dark:border-white/10">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div
+                            class="w-9 h-9 rounded-lg bg-[#D4A537]/15 flex items-center justify-center text-[#a97f1f] shrink-0">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-sm font-bold text-[#123524] dark:text-[#D4A537] uppercase tracking-wide">
+                            Board Examination
+                        </h3>
+                        <span
+                            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold uppercase tracking-wide">
+                            <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Verified
+                        </span>
+                    </div>
+
+                    <div class="grid sm:grid-cols-2 gap-x-6 gap-y-4">
+                        {{-- Board Exam Date --}}
+                        <div>
+                            <p class="text-xs text-black/50 dark:text-white/50 font-semibold uppercase tracking-wide">
+                                Date Taken
+                            </p>
+                            <p class="font-medium text-black dark:text-white mt-1">
+                                @if ($this->userProfile?->board_taken)
+                                    {{ \Carbon\Carbon::parse($this->userProfile->board_taken)->format('F d, Y') }}
+                                @else
+                                    <span class="text-black/40 dark:text-white/40 italic">Not set</span>
+                                @endif
+                            </p>
+                        </div>
+
+                        {{-- Board Rating --}}
+                        <div>
+                            <p class="text-xs text-black/50 dark:text-white/50 font-semibold uppercase tracking-wide">
+                                Rating
+                            </p>
+                            @if ($this->userProfile?->board_rate !== null)
+                                @php
+                                    $rate = (float) $this->userProfile->board_rate;
+                                    $passed = $rate >= 75;
+                                @endphp
+                                <p
+                                    class="mt-1 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold
+                              {{ $passed
+                                  ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
+                                  : 'bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400' }}">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
+                                        viewBox="0 0 24 24">
+                                        @if ($passed)
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M4.5 12.75l6 6 9-13.5" />
+                                        @else
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M6 18L18 6M6 6l12 12" />
+                                        @endif
+                                    </svg>
+                                    {{ number_format($rate, 2) }}%
+                                </p>
+                                <p class="text-[11px] text-black/40 dark:text-white/40 mt-1">
+                                    {{ $passed ? 'Passed' : 'Below passing mark (75%)' }}
+                                </p>
+                            @else
+                                <p class="font-medium text-black/40 dark:text-white/40 italic mt-1">Not set</p>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            @endif
 
             @unless ($this->userProfile)
                 <div

@@ -22,7 +22,7 @@
                 <h1 class="text-2xl sm:text-3xl font-bold text-[#123524]" style="font-family: 'Fraunces', serif;">
                     Alumni Verification Queue
                 </h1>
-                <p class="text-[#123524]/60 mt-0.5 text-sm">Review pending verifications awaiting manual approval for board passers.</p>
+                <p class="text-[#123524]/60 mt-0.5 text-sm">Board-program alumni awaiting manual verification of their PRC board exam results.</p>
             </div>
         </div>
 
@@ -40,14 +40,37 @@
     {{-- Queue list --}}
     <div class="space-y-4">
         @forelse ($pendingUsers as $user)
+            @php
+                $profile = $user->userProfile;
+                $course  = $profile?->courses->first();
+
+                $rawAvatar = $profile?->avatar;
+                $avatarUrl = $rawAvatar
+                    ? (filter_var($rawAvatar, FILTER_VALIDATE_URL) ? $rawAvatar : \Illuminate\Support\Facades\Storage::url($rawAvatar))
+                    : null;
+                $initial = strtoupper(substr($user->name, 0, 1));
+            @endphp
+
             <div wire:key="user-{{ $user->id }}" class="bg-white rounded-2xl p-6 shadow-sm border border-[#123524]/5 hover:shadow-md transition-shadow flex flex-col md:flex-row md:items-start justify-between gap-6">
 
                 <div class="flex-1 flex items-start gap-4">
-                    <div class="w-11 h-11 rounded-full bg-[#123524]/10 flex items-center justify-center text-[#123524] font-bold shrink-0">
-                        {{ strtoupper(substr($user->name, 0, 1)) }}
-                    </div>
+                    {{-- Avatar --}}
+                    @if ($avatarUrl)
+                        <img src="{{ $avatarUrl }}"
+                             alt="{{ $user->name }}"
+                             class="w-11 h-11 rounded-full object-cover shrink-0 bg-[#123524]/10"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div style="display: none;" class="w-11 h-11 rounded-full bg-[#123524]/10 items-center justify-center text-[#123524] font-bold shrink-0">
+                            {{ $initial }}
+                        </div>
+                    @else
+                        <div class="w-11 h-11 rounded-full bg-[#123524]/10 flex items-center justify-center text-[#123524] font-bold shrink-0">
+                            {{ $initial }}
+                        </div>
+                    @endif
 
                     <div class="min-w-0 flex-1">
+                        {{-- Name + status badges --}}
                         <div class="flex flex-wrap items-center gap-2 mb-1">
                             <h3 class="font-bold text-[#123524]">{{ $user->name }}</h3>
                             <span class="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-semibold uppercase tracking-wide">
@@ -61,6 +84,7 @@
 
                         <p class="text-sm text-[#123524]/60">{{ $user->email }}</p>
 
+                        {{-- School ID --}}
                         <div class="mt-2 inline-flex items-center gap-1.5 text-xs text-[#123524]/50 bg-[#F7F5EF] rounded-lg px-2.5 py-1">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5h-15A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5z" />
@@ -68,6 +92,57 @@
                             <span class="font-mono">School ID: {{ $user->school_id }}</span>
                         </div>
 
+                        {{-- Board Program Info Grid --}}
+                        <div class="mt-3 grid sm:grid-cols-2 gap-2">
+                            {{-- Program --}}
+                            @if ($course)
+                                <div class="flex items-center gap-2 text-xs text-[#123524]/70 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2">
+                                    <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.62 48.62 0 0112 20.904a48.62 48.62 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342" />
+                                    </svg>
+                                    <span class="font-semibold truncate">{{ $course->course_title }}</span>
+                                </div>
+                            @endif
+
+                            {{-- Batch --}}
+                            @if ($profile?->batch)
+                                <div class="flex items-center gap-2 text-xs text-[#123524]/70 bg-[#F7F5EF] border border-black/5 rounded-lg px-3 py-2">
+                                    <svg class="w-4 h-4 text-[#a97f1f] shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                                    </svg>
+                                    <span class="font-semibold">Batch {{ $profile->batch->batch_name }}</span>
+                                </div>
+                            @endif
+
+                            {{-- Board Exam Date --}}
+                            @if ($profile?->board_taken)
+                                <div class="flex items-center gap-2 text-xs text-[#123524]/70 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
+                                    <svg class="w-4 h-4 text-blue-600 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                                    </svg>
+                                    <span class="font-semibold">
+                                        Took exam {{ \Carbon\Carbon::parse($profile->board_taken)->format('M d, Y') }}
+                                    </span>
+                                </div>
+                            @endif
+
+                            {{-- Board Rating --}}
+                            @if ($profile?->board_rate !== null)
+                                @php
+                                    $rate = (float) $profile->board_rate;
+                                    $passed = $rate >= 75;
+                                @endphp
+                                <div class="flex items-center gap-2 text-xs font-semibold rounded-lg px-3 py-2 border
+                                            {{ $passed ? 'text-emerald-700 bg-emerald-50 border-emerald-100' : 'text-red-700 bg-red-50 border-red-100' }}">
+                                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span>Board Rating: {{ number_format($rate, 2) }}%</span>
+                                </div>
+                            @endif
+                        </div>
+
+                        {{-- Rejection banner --}}
                         @if ($user->rejected_at)
                             <div class="mt-3 text-sm text-red-700 bg-red-50 border border-red-100 rounded-xl p-3.5">
                                 <div class="text-xs text-red-500 font-semibold tracking-wide uppercase flex items-center gap-1.5">
@@ -83,6 +158,7 @@
                     </div>
                 </div>
 
+                {{-- Actions --}}
                 <div class="flex md:flex-col gap-2 shrink-0 md:w-36">
                     <button wire:click="approve({{ $user->id }})"
                         wire:confirm="Approve {{ $user->name }} as a verified alumni?"
@@ -108,7 +184,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                     </svg>
                 </div>
-                <p class="text-[#123524]/50">No pending verifications right now.</p>
+                <p class="text-[#123524]/50">No pending board exam verifications right now.</p>
             </div>
         @endforelse
     </div>
@@ -134,7 +210,7 @@
                     Optionally add a reason. This may be shared with the applicant.
                 </p>
 
-                <textarea wire:model="rejectReasonInput" rows="3" placeholder="e.g. School ID does not match our records."
+                <textarea wire:model="rejectReasonInput" rows="3" placeholder="e.g. Board exam date does not match PRC records."
                     class="w-full px-4 py-3 rounded-xl border border-[#123524]/15 text-sm text-[#123524] placeholder-[#123524]/30 focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition"></textarea>
 
                 <div class="flex gap-3 mt-5">
@@ -151,5 +227,4 @@
         </div>
     @endif
 
-    {{-- He who is contented is rich. - Laozi --}}
 </div>

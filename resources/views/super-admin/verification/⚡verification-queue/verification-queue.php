@@ -26,7 +26,24 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             abort(403, 'Cannot modify staff accounts from this queue.');
         }
 
+        $profile = $user->userProfile;
+
+        if (! $profile
+            || ! $profile->board_taken
+            || $profile->board_rate === null
+            || ! $profile->courses()->where('course_type', 'board')->exists()
+        ) {
+            session()->flash('status', "{$user->name} is not eligible for verification (missing board exam details or non-board program).");
+            return;
+        }
+
+        // Ensure they hold the alumni role
         $user->syncRoles(['alumni']);
+
+        // Mark profile as verified — removes them from this queue
+        $profile->update([
+            'is_verified' => true,
+        ]);
 
         session()->flash('status', "{$user->name} has been approved as a verified alumni.");
     }
@@ -57,9 +74,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             'rejected_at'         => now(),
         ]);
 
-        // Rejected applicants keep the 'pending-verification' role so they
-        // remain visible in this queue (with the rejection banner shown)
-        // and can be re-reviewed if they update their info.
+        if ($user->userProfile) {
+            $user->userProfile->update(['is_verified' => false]);
+        }
 
         session()->flash('status', "{$user->name}'s application was rejected.");
 
@@ -69,15 +86,27 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public function with(): array
     {
         return [
-            // "Pending" = user holds the 'pending-verification' role,
-            // assigned at registration. This matches RoleSeeder and the
-            // actual signup flow — NOT "no roles at all".
-            'pendingUsers' => User::role('pending-verification')
+            // Users who:
+            //   1. Hold the 'alumni' role
+            //   2. Have a user profile that is NOT yet verified
+            //   3. Have board_taken + board_rate filled
+            //   4. Are enrolled in a board program
+            'pendingUsers' => User::role('alumni')
+                ->whereHas('userProfile', function ($q) {
+                    $q->where('is_verified', false)
+                      ->whereNotNull('board_taken')
+                      ->whereNotNull('board_rate')
+                      ->whereHas('courses', fn ($c) => $c->where('course_type', 'board'));
+                })
                 ->when($this->search, fn ($q) => $q->where(function ($q) {
                     $q->where('name', 'like', "%{$this->search}%")
-                        ->orWhere('email', 'like', "%{$this->search}%")
-                        ->orWhere('school_id', 'like', "%{$this->search}%");
+                      ->orWhere('email', 'like', "%{$this->search}%")
+                      ->orWhere('school_id', 'like', "%{$this->search}%");
                 }))
+                ->with([
+                    'userProfile.batch',
+                    'userProfile.courses.department',
+                ])
                 ->latest()
                 ->paginate(5),
         ];

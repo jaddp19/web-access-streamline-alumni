@@ -15,8 +15,8 @@ new #[Layout('layouts.app-alumni')] class extends Component
     public bool $is_public = true;
 
     // Board exam fields (only shown when course_type === 'board')
-    public string $board_taken = '';
-    public string $board_rate = '';
+    public ?string $board_taken = null;   // date, stored as 'YYYY-MM-DD'
+    public string $board_rate = '';        // decimal(5,2) — max 999.99
 
     protected function rules()
     {
@@ -24,7 +24,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
             'batch_id'    => 'required|exists:batches,id',
             'course_id'   => 'required|exists:courses,id',
             'is_public'   => 'boolean',
-            'board_taken' => 'nullable|string|max:255',
+            'board_taken' => 'nullable|date|before_or_equal:today',
             'board_rate'  => 'nullable|numeric|min:0|max:100',
         ];
     }
@@ -32,15 +32,17 @@ new #[Layout('layouts.app-alumni')] class extends Component
     public function messages()
     {
         return [
-            'batch_id.required'   => 'Please select your batch.',
-            'batch_id.exists'     => 'Selected batch is invalid.',
-            'course_id.required'  => 'Please select your degree program.',
-            'course_id.exists'    => 'Selected degree program is invalid.',
-            'board_taken.required' => 'Please enter the board exam you took.',
-            'board_rate.required'  => 'Please enter your board exam rating.',
-            'board_rate.numeric'   => 'Board rating must be a number.',
-            'board_rate.min'       => 'Board rating cannot be less than 0.',
-            'board_rate.max'       => 'Board rating cannot be more than 100.',
+            'batch_id.required'        => 'Please select your batch.',
+            'batch_id.exists'          => 'Selected batch is invalid.',
+            'course_id.required'       => 'Please select your degree program.',
+            'course_id.exists'         => 'Selected degree program is invalid.',
+            'board_taken.required'     => 'Please enter the date you took the board exam.',
+            'board_taken.date'         => 'Board exam date must be a valid date.',
+            'board_taken.before_or_equal' => 'Board exam date cannot be in the future.',
+            'board_rate.required'      => 'Please enter your board exam rating.',
+            'board_rate.numeric'       => 'Board rating must be a number.',
+            'board_rate.min'           => 'Board rating cannot be less than 0.',
+            'board_rate.max'           => 'Board rating cannot be more than 100.',
         ];
     }
 
@@ -64,9 +66,16 @@ new #[Layout('layouts.app-alumni')] class extends Component
             $this->course_id = $existingCourse->id;
         }
 
-        $this->is_public   = ! $profile->is_private;
-        $this->board_taken = $profile->board_taken ?? '';
-        $this->board_rate  = (string) ($profile->board_rate ?? '');
+        $this->is_public = ! $profile->is_private;
+
+        // Parse the date column into 'Y-m-d' for the date input
+        $this->board_taken = $profile->board_taken
+            ? \Carbon\Carbon::parse($profile->board_taken)->format('Y-m-d')
+            : null;
+
+        $this->board_rate = $profile->board_rate !== null
+            ? (string) $profile->board_rate
+            : '';
     }
 
     /**
@@ -75,7 +84,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
     public function updatedCourseId(): void
     {
         if ($this->selectedCourse?->course_type !== 'board') {
-            $this->board_taken = '';
+            $this->board_taken = null;
             $this->board_rate  = '';
             $this->resetErrorBag(['board_taken', 'board_rate']);
         }
@@ -87,7 +96,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
         $rules = $this->rules();
 
         if ($this->selectedCourse?->course_type === 'board') {
-            $rules['board_taken'] = 'required|string|max:255';
+            $rules['board_taken'] = 'required|date|before_or_equal:today';
             $rules['board_rate']  = 'required|numeric|min:0|max:100';
         }
 
@@ -106,7 +115,9 @@ new #[Layout('layouts.app-alumni')] class extends Component
                 'batch_id'    => $validated['batch_id'],
                 'is_private'  => ! $validated['is_public'],
                 'board_taken' => $validated['board_taken'] ?: null,
-                'board_rate'  => $validated['board_rate'] !== '' ? $validated['board_rate'] : null,
+                'board_rate'  => ($validated['board_rate'] !== '' && $validated['board_rate'] !== null)
+                    ? round((float) $validated['board_rate'], 2)
+                    : null,
             ]);
 
             $profile->courses()->sync([$validated['course_id']]);
