@@ -217,8 +217,8 @@
                                 and
                                 <a href="{{ route('terms-and-conditions') }}" target="_blank"
                                    class="text-[#1877F2] font-semibold hover:underline">
-                                    Terms and Conditions
-                                </a>.
+                                    Terms and Conditions<span class="text-sm text-[#123524]/80 leading-relaxed">.</span>
+                                </a>
                             </span>
                         </label>
                         @error('consentGiven')

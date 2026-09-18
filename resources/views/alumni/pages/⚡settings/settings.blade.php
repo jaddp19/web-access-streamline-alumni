@@ -104,20 +104,21 @@
                     <section
                         class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm border border-black/5 dark:border-white/5 p-6">
                         <form wire:submit.prevent="updateProfile" class="space-y-6">
+                            <!-- Name parts: First + Last side-by-side -->
                             <div class="grid sm:grid-cols-2 gap-6">
 
-                                {{-- Full Name --}}
+                                {{-- First Name --}}
                                 <div class="space-y-1.5">
-                                    <label for="name"
+                                    <label for="first_name"
                                         class="block text-xs font-bold text-black/60 dark:text-white/60 uppercase tracking-wider">
-                                        Full Name <span class="text-red-500">*</span>
+                                        First Name <span class="text-red-500">*</span>
                                     </label>
-                                    <input id="name" type="text" wire:model.blur="name"
+                                    <input id="first_name" type="text" wire:model.blur="first_name"
                                         class="w-full px-3.5 py-2.5 rounded-lg border bg-white dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:ring-1 transition text-sm
-                                            @error('name') border-red-400 focus:border-red-500 focus:ring-red-500
-                                            @else border-black/10 dark:border-white/10 focus:border-[#1C6B45] focus:ring-[#1C6B45]
-                                            @enderror">
-                                    @error('name')
+                @error('first_name') border-red-400 focus:border-red-500 focus:ring-red-500
+                @else border-black/10 dark:border-white/10 focus:border-[#1C6B45] focus:ring-[#1C6B45]
+                @enderror">
+                                    @error('first_name')
                                         <span class="flex items-start gap-1.5 text-red-500 text-xs font-medium">
                                             <svg class="w-3.5 h-3.5 mt-0.5 shrink-0" fill="currentColor"
                                                 viewBox="0 0 20 20">
@@ -130,18 +131,18 @@
                                     @enderror
                                 </div>
 
-                                {{-- Email --}}
+                                {{-- Last Name --}}
                                 <div class="space-y-1.5">
-                                    <label for="email"
+                                    <label for="last_name"
                                         class="block text-xs font-bold text-black/60 dark:text-white/60 uppercase tracking-wider">
-                                        Email Address <span class="text-red-500">*</span>
+                                        Last Name <span class="text-red-500">*</span>
                                     </label>
-                                    <input id="email" type="email" wire:model.blur="email"
+                                    <input id="last_name" type="text" wire:model.blur="last_name"
                                         class="w-full px-3.5 py-2.5 rounded-lg border bg-white dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:ring-1 transition text-sm
-                                            @error('email') border-red-400 focus:border-red-500 focus:ring-red-500
-                                            @else border-black/10 dark:border-white/10 focus:border-[#1C6B45] focus:ring-[#1C6B45]
-                                            @enderror">
-                                    @error('email')
+                @error('last_name') border-red-400 focus:border-red-500 focus:ring-red-500
+                @else border-black/10 dark:border-white/10 focus:border-[#1C6B45] focus:ring-[#1C6B45]
+                @enderror">
+                                    @error('last_name')
                                         <span class="flex items-start gap-1.5 text-red-500 text-xs font-medium">
                                             <svg class="w-3.5 h-3.5 mt-0.5 shrink-0" fill="currentColor"
                                                 viewBox="0 0 20 20">
@@ -153,6 +154,53 @@
                                         </span>
                                     @enderror
                                 </div>
+                            </div>
+
+                            <!-- Middle Name (full width) -->
+                            <div class="space-y-1.5">
+                                <label for="middle_name"
+                                    class="block text-xs font-bold text-black/60 dark:text-white/60 uppercase tracking-wider">
+                                    Middle Name <span
+                                        class="text-black/40 dark:text-white/40 text-[10px] font-normal normal-case">(optional)</span>
+                                </label>
+                                <input id="middle_name" type="text" wire:model.blur="middle_name"
+                                    class="w-full px-3.5 py-2.5 rounded-lg border bg-white dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:ring-1 transition text-sm
+                                @error('middle_name') border-red-400 focus:border-red-500 focus:ring-red-500
+                                @else border-black/10 dark:border-white/10 focus:border-[#1C6B45] focus:ring-[#1C6B45]
+                                @enderror">
+                                @error('middle_name')
+                                    <span class="flex items-start gap-1.5 text-red-500 text-xs font-medium">
+                                        <svg class="w-3.5 h-3.5 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd"
+                                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z"
+                                                clip-rule="evenodd" />
+                                        </svg>
+                                        {{ $message }}
+                                    </span>
+                                @enderror
+                            </div>
+
+                            <!-- Email (full width) -->
+                            <div class="space-y-1.5">
+                                <label for="email"
+                                    class="block text-xs font-bold text-black/60 dark:text-white/60 uppercase tracking-wider">
+                                    Email Address <span class="text-red-500">*</span>
+                                </label>
+                                <input id="email" type="email" wire:model.blur="email"
+                                    class="w-full px-3.5 py-2.5 rounded-lg border bg-white dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:ring-1 transition text-sm
+                                @error('email') border-red-400 focus:border-red-500 focus:ring-red-500
+                                @else border-black/10 dark:border-white/10 focus:border-[#1C6B45] focus:ring-[#1C6B45]
+                                @enderror">
+                                @error('email')
+                                    <span class="flex items-start gap-1.5 text-red-500 text-xs font-medium">
+                                        <svg class="w-3.5 h-3.5 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd"
+                                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z"
+                                                clip-rule="evenodd" />
+                                        </svg>
+                                        {{ $message }}
+                                    </span>
+                                @enderror
                             </div>
 
                             <div class="flex items-center justify-end pt-4">

@@ -21,9 +21,9 @@ return new class extends Migration
             $table->json('location');
             $table->foreignId('batch_id')->constrained('batches')->cascadeOnDelete();
             $table->boolean('is_private');
-            $table->string('board_taken')->nullable();
-            $table->string('board_rate')->nullable();
-            $table->boolean('is_verified');
+            $table->date('board_taken')->nullable();
+            $table->decimal('board_rate', 5, 2)->nullable();
+            $table->boolean('is_verified')->default(false);
             $table->timestamps();
         });
     }

@@ -11,7 +11,9 @@ use Spatie\Permission\Models\Role;
 
 new #[Layout('layouts::app-super-admin')] class extends Component
 {
-    public string $name = '';
+    public string $first_name = '';
+    public string $middle_name = '';
+    public string $last_name = '';
     public string $email = '';
     public string $school_id = '';
     public string $selectedRole = '';
@@ -35,6 +37,19 @@ new #[Layout('layouts::app-super-admin')] class extends Component
     }
 
     /**
+     * Composed full name — matches what will be saved in `users.name`.
+     */
+    #[Computed]
+    public function fullName(): string
+    {
+        return trim(implode(' ', array_filter([
+            $this->first_name,
+            $this->middle_name,
+            $this->last_name,
+        ])));
+    }
+
+    /**
      * Map role name → email template slug.
      */
     protected function templateSlugForRole(string $role): string
@@ -50,7 +65,9 @@ new #[Layout('layouts::app-super-admin')] class extends Component
     protected function rules()
     {
         return [
-            'name' => 'required|string|min:3|max:255|unique:users,name',
+            'first_name'  => 'required|string|min:2|max:255',
+            'middle_name' => 'nullable|string|max:255',
+            'last_name'   => 'required|string|min:2|max:255',
             'email' => [
                 'required',
                 'email',
@@ -73,10 +90,12 @@ new #[Layout('layouts::app-super-admin')] class extends Component
     public function messages()
     {
         return [
-            'name.required'         => 'The name is required.',
-            'name.min'              => 'The name must be at least 3 characters.',
-            'name.max'              => 'The name may not be greater than 255 characters.',
-            'name.unique'           => 'The name is already taken.',
+            'first_name.required'   => 'The first name is required.',
+            'first_name.min'        => 'The first name must be at least 2 characters.',
+            'first_name.max'        => 'The first name may not be greater than 255 characters.',
+            'last_name.required'    => 'The last name is required.',
+            'last_name.min'         => 'The last name must be at least 2 characters.',
+            'last_name.max'         => 'The last name may not be greater than 255 characters.',
             'school_id.required'    => 'Your school ID number is required.',
             'school_id.unique'      => 'This school ID is already registered to an account.',
             'school_id.max'         => 'Your school ID number must not exceed 9 characters.',
@@ -91,18 +110,24 @@ new #[Layout('layouts::app-super-admin')] class extends Component
     {
         $validated = $this->validate();
 
-        $validated['name']      = $this->sanitizeData($validated['name']);
-        $validated['email']     = $this->sanitizeData($validated['email']);
-        $validated['school_id'] = $this->sanitizeData($validated['school_id']);
+        $validated['first_name']  = $this->sanitizeData($validated['first_name']);
+        $validated['middle_name'] = $validated['middle_name'] ? $this->sanitizeData($validated['middle_name']) : null;
+        $validated['last_name']   = $this->sanitizeData($validated['last_name']);
+        $validated['email']       = $this->sanitizeData($validated['email']);
+        $validated['school_id']   = $this->sanitizeData($validated['school_id']);
 
         $plainPassword = $this->generatedPassword;
         $templateSlug  = $this->templateSlugForRole($validated['selectedRole']);
+        $fullName      = $this->fullName;
 
         $user = User::create([
-            'name'      => $validated['name'],
-            'email'     => $validated['email'],
-            'school_id' => $validated['school_id'],
-            'password'  => Hash::make($plainPassword),
+            'first_name'  => $validated['first_name'],
+            'middle_name' => $validated['middle_name'],
+            'last_name'   => $validated['last_name'],
+            // 'name' auto-fills via the User model's saving hook
+            'email'       => $validated['email'],
+            'school_id'   => $validated['school_id'],
+            'password'    => Hash::make($plainPassword),
         ]);
 
         $user->syncRoles($validated['selectedRole']);
@@ -111,7 +136,7 @@ new #[Layout('layouts::app-super-admin')] class extends Component
             $templateSlug,
             $validated['email'],
             [
-                'name'          => $validated['name'],
+                'name'          => $fullName,
                 'school_email'  => $validated['email'],
                 'login_url'     => route('login'),
                 'temp_password' => $plainPassword,

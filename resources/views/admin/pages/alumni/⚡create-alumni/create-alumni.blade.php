@@ -37,13 +37,41 @@
     <div class="bg-white border border-black/10 rounded-3xl p-8">
         <form wire:submit.prevent="saveAlumni" class="space-y-5">
 
-            <!-- Name -->
-            <div>
-                <label class="block text-xs text-black/60 uppercase tracking-wide font-semibold mb-2">Name</label>
-                <input type="text" wire:model.defer="name"
-                    class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition">
-                @error('name') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+            <!-- Name (first / middle / last) -->
+            <div class="grid sm:grid-cols-2 gap-5">
+                <!-- First Name -->
+                <div>
+                    <label class="block text-xs text-black/60 uppercase tracking-wide font-semibold mb-2">First Name</label>
+                    <input type="text" wire:model.defer="first_name"
+                        class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition">
+                    @error('first_name') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                </div>
+
+                <!-- Last Name -->
+                <div>
+                    <label class="block text-xs text-black/60 uppercase tracking-wide font-semibold mb-2">Last Name</label>
+                    <input type="text" wire:model.defer="last_name"
+                        class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition">
+                    @error('last_name') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                </div>
             </div>
+
+            <!-- Middle Name (optional) -->
+            <div>
+                <label class="block text-xs text-black/60 uppercase tracking-wide font-semibold mb-2">
+                    Middle Name <span class="text-black/40 text-[10px] font-normal normal-case">(optional)</span>
+                </label>
+                <input type="text" wire:model.defer="middle_name"
+                    class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition">
+                @error('middle_name') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+            </div>
+
+            <!-- Live preview of full name -->
+            @if ($this->fullName)
+                <div class="text-xs text-black/50 -mt-2">
+                    Full name: <span class="font-semibold text-[#123524]">{{ $this->fullName }}</span>
+                </div>
+            @endif
 
             <!-- Email -->
             <div>

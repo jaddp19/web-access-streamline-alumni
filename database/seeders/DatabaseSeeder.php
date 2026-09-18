@@ -12,7 +12,6 @@ use Spatie\Permission\Models\Role;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
 
     /**
      * Seed the application's database.
@@ -30,29 +29,34 @@ class DatabaseSeeder extends Seeder
             CourseSeeder::class,
             PhAddressSeeder::class,
         ]);
+
         // Create roles if not already seeded
         $superAdminRole = Role::firstOrCreate(['name' => 'registrar']);
-        $adminRole = Role::firstOrCreate(['name' => 'program head']);
-        $alumniRole = Role::firstOrCreate(['name' => 'alumni']);
+        $adminRole      = Role::firstOrCreate(['name' => 'program head']);
+        $alumniRole     = Role::firstOrCreate(['name' => 'alumni']);
 
-        // Admin account
+        // Registrar account
         $superAdmin = User::firstOrCreate(
             ['email' => 'registrar@example.com'],
             [
-                'name' => 'Registrar User',
-                'school_id' => '2021-2022', // Add a school_id for the super-admin
-                'password' => Hash::make('password123'),
+                'first_name'  => 'Registrar',
+                'middle_name' => null,
+                'last_name'   => 'User',
+                'school_id'   => '2021-2022',
+                'password'    => Hash::make('password123'),
             ]
         );
         $superAdmin->assignRole($superAdminRole);
 
-        // Admin account
+        // Program Head account
         $admin = User::firstOrCreate(
             ['email' => 'program-head@example.com'],
             [
-                'name' => 'Program Head User',
-                'school_id' => '2022-2023', // Add a school_id for the admin
-                'password' => Hash::make('password123'),
+                'first_name'  => 'Program',
+                'middle_name' => 'Head',
+                'last_name'   => 'User',
+                'school_id'   => '2022-2023',
+                'password'    => Hash::make('password123'),
             ]
         );
         $admin->assignRole($adminRole);
@@ -61,12 +65,13 @@ class DatabaseSeeder extends Seeder
         $alumni = User::firstOrCreate(
             ['email' => 'alumni@example.com'],
             [
-                'name' => 'Alumni User',
-                'school_id' => '2023-2024', // Add a school_id for the alumni
-                'password' => Hash::make('password123'),
+                'first_name'  => 'Alumni',
+                'middle_name' => null,
+                'last_name'   => 'User',
+                'school_id'   => '2023-2024',
+                'password'    => Hash::make('password123'),
             ]
         );
         $alumni->assignRole($alumniRole);
-
     }
 }

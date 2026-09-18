@@ -206,16 +206,43 @@
                 </label>
 
                 {{-- Actions --}}
-                <div class="flex items-center justify-end gap-2 pt-2 border-t border-black/5 dark:border-white/10">
-                    <a href="{{ route('alumni.profile') }}"
-                        class="px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 text-sm font-semibold text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition">
-                        Cancel
-                    </a>
-                    <button type="submit" wire:loading.attr="disabled" wire:target="saveWorkHistory"
-                        class="px-5 py-2.5 rounded-xl bg-[#1877F2] hover:bg-[#166FE5] text-white text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed">
-                        <span wire:loading.remove wire:target="saveWorkHistory">Save Work Experience</span>
-                        <span wire:loading wire:target="saveWorkHistory">Saving…</span>
+                <div
+                    class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-4 border-t border-black/5 dark:border-white/10">
+
+                    {{-- Delete on the left --}}
+                    <button type="button" wire:click="deleteWorkHistory"
+                        wire:confirm="Delete this work experience? This cannot be undone."
+                        wire:loading.attr="disabled" wire:target="deleteWorkHistory"
+                        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 text-red-600 dark:text-red-400 text-sm font-semibold hover:bg-black/5 dark:hover:bg-white/5 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg wire:loading.remove wire:target="deleteWorkHistory" class="w-4 h-4" fill="none"
+                            stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                        </svg>
+                        <svg wire:loading wire:target="deleteWorkHistory" class="w-4 h-4 animate-spin" fill="none"
+                            viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z">
+                            </path>
+                        </svg>
+                        <span wire:loading.remove wire:target="deleteWorkHistory">Delete</span>
+                        <span wire:loading wire:target="deleteWorkHistory">Deleting…</span>
                     </button>
+
+                    {{-- Cancel + Save on the right --}}
+                    <div
+                        class="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                        <a href="{{ route('alumni.profile') }}"
+                            class="text-center px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 text-sm font-semibold text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition">
+                            Cancel
+                        </a>
+                        <button type="submit" wire:loading.attr="disabled" wire:target="updateWorkHistory"
+                            class="px-5 py-2.5 rounded-xl bg-[#1877F2] hover:bg-[#166FE5] text-white text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span wire:loading.remove wire:target="updateWorkHistory">Save Changes</span>
+                            <span wire:loading wire:target="updateWorkHistory">Saving…</span>
+                        </button>
+                    </div>
                 </div>
 
             </form>

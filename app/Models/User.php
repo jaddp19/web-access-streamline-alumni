@@ -12,7 +12,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'email', 'password', 'school_id'])]
+#[Fillable(['first_name', 'middle_name', 'last_name', 'email', 'password', 'school_id'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -25,6 +25,37 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password'          => 'hashed',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (User $user) {
+            if ($user->isDirty(['first_name', 'middle_name', 'last_name'])) {
+                $parts = array_filter([
+                    $user->first_name,
+                    $user->middle_name,
+                    $user->last_name,
+                ]);
+
+                if (! empty($parts)) {
+                    $user->name = implode(' ', $parts);
+                }
+            }
+        });
+    }
+    
+    /**
+     * Composed full name — falls back to the `name` column if parts are empty.
+     */
+    public function getFullNameAttribute(): string
+    {
+        $parts = array_filter([
+            $this->first_name,
+            $this->middle_name,
+            $this->last_name,
+        ]);
+
+        return $parts ? implode(' ', $parts) : ($this->name ?? '');
     }
 
     // ===== Relations =====

@@ -14,17 +14,49 @@ new #[Layout('layouts.app-admin')] class extends Component
 {
     public User $user;
 
-    public string $name = '';
+    public string $first_name = '';
+    public string $middle_name = '';
+    public string $last_name = '';
     public string $email = '';
     public string $school_id = '';
     public ?int $batch_id = null;
     public ?int $course_id = null;
 
+    /**
+     * Composed full name — matches the auto-synced `users.name`.
+     */
+    #[Computed]
+    public function fullName(): string
+    {
+        return trim(implode(' ', array_filter([
+            $this->first_name,
+            $this->middle_name,
+            $this->last_name,
+        ])));
+    }
+
     public function mount(User $user): void
     {
         $this->user = $user;
 
-        $this->name      = $user->name;
+        // Hydrate name parts. If empty (legacy user), split from `name`.
+        $first  = $user->first_name;
+        $middle = $user->middle_name;
+        $last   = $user->last_name;
+
+        if (! $first && ! $last && $user->name) {
+            $split  = preg_split('/\s+/', trim($user->name));
+            $first  = $split[0] ?? '';
+            $last   = count($split) > 1 ? end($split) : '';
+            $middle = count($split) > 2
+                ? implode(' ', array_slice($split, 1, -1))
+                : '';
+        }
+
+        $this->first_name  = $first ?? '';
+        $this->middle_name = $middle ?? '';
+        $this->last_name   = $last ?? '';
+
         $this->email     = $user->email;
         $this->school_id = $user->school_id ?? '';
 
@@ -37,44 +69,37 @@ new #[Layout('layouts.app-admin')] class extends Component
     protected function rules()
     {
         return [
-            'name'      => 'required|string|max:255',
-            'email'     => 'required|email|max:255|unique:users,email,' . $this->user->id,
-            'school_id' => 'required|string|max:255|unique:users,school_id,' . $this->user->id,
-            'batch_id'  => 'required|exists:batches,id',
-            'course_id' => 'required|exists:courses,id',
+            'first_name'  => 'required|string|min:2|max:255',
+            'middle_name' => 'nullable|string|max:255',
+            'last_name'   => 'required|string|min:2|max:255',
+            'email'       => 'required|email|max:255|unique:users,email,' . $this->user->id,
+            'school_id'   => 'required|string|max:255|unique:users,school_id,' . $this->user->id,
+            'batch_id'    => 'required|exists:batches,id',
+            'course_id'   => 'required|exists:courses,id',
         ];
     }
 
     public function messages()
     {
         return [
-            'name.required'      => 'The name field is required.',
-            'email.required'     => 'The email field is required.',
-            'email.email'        => 'The email must be a valid email address.',
-            'email.unique'       => 'This email is already registered.',
-            'school_id.required' => 'The school ID field is required.',
-            'school_id.unique'   => 'This school ID is already registered.',
-            'batch_id.required'  => 'Please select a batch.',
-            'batch_id.exists'    => 'The selected batch is invalid.',
-            'course_id.required' => 'Please select a course.',
-            'course_id.exists'   => 'The selected course is invalid.',
+            'first_name.required' => 'The first name is required.',
+            'first_name.min'      => 'The first name must be at least 2 characters.',
+            'first_name.max'      => 'The first name may not be greater than 255 characters.',
+            'last_name.required'  => 'The last name is required.',
+            'last_name.min'       => 'The last name must be at least 2 characters.',
+            'last_name.max'       => 'The last name may not be greater than 255 characters.',
+            'email.required'      => 'The email field is required.',
+            'email.email'         => 'The email must be a valid email address.',
+            'email.unique'        => 'This email is already registered.',
+            'school_id.required'  => 'The school ID field is required.',
+            'school_id.unique'    => 'This school ID is already registered.',
+            'batch_id.required'   => 'Please select a batch.',
+            'batch_id.exists'     => 'The selected batch is invalid.',
+            'course_id.required'  => 'Please select a course.',
+            'course_id.exists'    => 'The selected course is invalid.',
         ];
     }
 
-    #[Computed]
-    public function batches()
-    {
-        return Batch::orderBy('batch_name')->get();
-    }
-
-    #[Computed]
-    public function courses()
-    {
-        return Course::with('department')
-            ->where('is_active', true)
-            ->orderBy('course_title')
-            ->get();
-    }
 
     // Auto-derived — the admin never selects this directly.
     #[Computed]
@@ -91,17 +116,22 @@ new #[Layout('layouts.app-admin')] class extends Component
     {
         $validated = $this->validate();
 
-        $validated['name']      = $this->sanitizeData($validated['name']);
-        $validated['email']     = $this->sanitizeData($validated['email']);
-        $validated['school_id'] = $this->sanitizeData($validated['school_id']);
+        $validated['first_name']  = $this->sanitizeData($validated['first_name']);
+        $validated['middle_name'] = $validated['middle_name'] ? $this->sanitizeData($validated['middle_name']) : null;
+        $validated['last_name']   = $this->sanitizeData($validated['last_name']);
+        $validated['email']       = $this->sanitizeData($validated['email']);
+        $validated['school_id']   = $this->sanitizeData($validated['school_id']);
 
         try {
             DB::transaction(function () use ($validated) {
                 // 1. Update the user record
                 $this->user->update([
-                    'name'      => $validated['name'],
-                    'email'     => $validated['email'],
-                    'school_id' => $validated['school_id'],
+                    'first_name'  => $validated['first_name'],
+                    'middle_name' => $validated['middle_name'],
+                    'last_name'   => $validated['last_name'],
+                    // 'name' auto-fills via the User model's saving hook
+                    'email'       => $validated['email'],
+                    'school_id'   => $validated['school_id'],
                 ]);
 
                 // 2. Update the profile (create it if it somehow doesn't exist)

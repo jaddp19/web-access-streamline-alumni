@@ -15,8 +15,10 @@ new #[Layout('layouts.app-alumni')] class extends Component
 {
     public string $activeTab = 'profile';
 
-    // Profile info
-    public string $name = '';
+    // Profile info — split into parts
+    public string $first_name = '';
+    public string $middle_name = '';
+    public string $last_name = '';
     public string $email = '';
 
     // Password
@@ -32,7 +34,23 @@ new #[Layout('layouts.app-alumni')] class extends Component
     public function mount()
     {
         $user = Auth::user();
-        $this->name  = $user->name;
+
+        // Hydrate name parts. If empty (legacy user), split from `name`.
+        $first  = $user->first_name;
+        $middle = $user->middle_name;
+        $last   = $user->last_name;
+
+        if (! $first && ! $last && $user->name) {
+            $split  = preg_split('/\s+/', trim($user->name));
+            $first  = $split[0] ?? '';
+            $last   = count($split) > 1 ? end($split) : '';
+            $middle = count($split) > 2 ? implode(' ', array_slice($split, 1, -1)) : '';
+        }
+
+        $this->first_name  = $first ?? '';
+        $this->middle_name = $middle ?? '';
+        $this->last_name   = $last ?? '';
+
         $this->email = $user->email;
 
         $this->profileVisible = ! ($this->userProfile?->is_private ?? false);
@@ -42,6 +60,19 @@ new #[Layout('layouts.app-alumni')] class extends Component
     public function userProfile()
     {
         return UserProfile::where('user_id', Auth::id())->first();
+    }
+
+    /**
+     * Composed full name — matches the auto-synced `users.name` value.
+     */
+    #[Computed]
+    public function fullName(): string
+    {
+        return trim(implode(' ', array_filter([
+            $this->first_name,
+            $this->middle_name,
+            $this->last_name,
+        ])));
     }
 
     /**
@@ -56,14 +87,12 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
     protected function profileRules(): array
     {
+        $nameRule = ['string', 'min:2', 'max:255', 'regex:/^[\p{L}\p{M}\s\.\-\'\,]+$/u'];
+
         return [
-            'name' => [
-                'required',
-                'string',
-                'min:2',
-                'max:255',
-                'regex:/^[\p{L}\p{M}\s\.\-\'\,]+$/u', // letters, marks, spaces, . - ' ,
-            ],
+            'first_name' => array_merge(['required'], $nameRule),
+            'middle_name' => array_merge(['nullable'], $nameRule),
+            'last_name'  => array_merge(['required'], $nameRule),
             'email' => [
                 'required',
                 'string',
@@ -77,14 +106,21 @@ new #[Layout('layouts.app-alumni')] class extends Component
     protected function profileMessages(): array
     {
         return [
-            'name.required' => 'Please enter your full name.',
-            'name.min'      => 'Your name must be at least 2 characters.',
-            'name.max'      => 'Your name cannot exceed 255 characters.',
-            'name.regex'    => 'Your name can only contain letters, spaces, and basic punctuation (. - \' ,).',
-            'email.required' => 'Please enter your email address.',
-            'email.email'    => 'Please enter a valid email address (e.g. juan@gmail.com).',
-            'email.unique'   => 'This email is already registered to another account.',
-            'email.max'      => 'Your email cannot exceed 255 characters.',
+            'first_name.required' => 'Please enter your first name.',
+            'first_name.min'      => 'Your first name must be at least 2 characters.',
+            'first_name.max'      => 'Your first name cannot exceed 255 characters.',
+            'first_name.regex'    => 'Your first name can only contain letters, spaces, and basic punctuation (. - \' ,).',
+            'middle_name.min'     => 'Your middle name must be at least 2 characters.',
+            'middle_name.max'     => 'Your middle name cannot exceed 255 characters.',
+            'middle_name.regex'   => 'Your middle name can only contain letters, spaces, and basic punctuation (. - \' ,).',
+            'last_name.required'  => 'Please enter your last name.',
+            'last_name.min'       => 'Your last name must be at least 2 characters.',
+            'last_name.max'       => 'Your last name cannot exceed 255 characters.',
+            'last_name.regex'     => 'Your last name can only contain letters, spaces, and basic punctuation (. - \' ,).',
+            'email.required'      => 'Please enter your email address.',
+            'email.email'         => 'Please enter a valid email address (e.g. juan@gmail.com).',
+            'email.unique'        => 'This email is already registered to another account.',
+            'email.max'           => 'Your email cannot exceed 255 characters.',
         ];
     }
 
@@ -92,14 +128,24 @@ new #[Layout('layouts.app-alumni')] class extends Component
     {
         $validated = $this->validate($this->profileRules(), $this->profileMessages());
 
-        $validated['name']  = $this->sanitizeData($validated['name']);
-        $validated['email'] = Str::lower($this->sanitizeData($validated['email']));
+        $validated['first_name']  = $this->sanitizeData($validated['first_name']);
+        $validated['middle_name'] = $validated['middle_name'] ? $this->sanitizeData($validated['middle_name']) : null;
+        $validated['last_name']   = $this->sanitizeData($validated['last_name']);
+        $validated['email']       = Str::lower($this->sanitizeData($validated['email']));
 
-        Auth::user()->update($validated);
+        Auth::user()->update([
+            'first_name'  => $validated['first_name'],
+            'middle_name' => $validated['middle_name'],
+            'last_name'   => $validated['last_name'],
+            // 'name' auto-fills via the User model's saving hook
+            'email'       => $validated['email'],
+        ]);
 
-        // Refresh the local form values with the sanitized versions
-        $this->name  = $validated['name'];
-        $this->email = $validated['email'];
+        // Refresh local form values with the sanitized versions
+        $this->first_name  = $validated['first_name'];
+        $this->middle_name = $validated['middle_name'] ?? '';
+        $this->last_name   = $validated['last_name'];
+        $this->email       = $validated['email'];
 
         session()->flash('profile_success', 'Profile updated successfully.');
     }
@@ -111,7 +157,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
             'new_password'     => [
                 'required',
                 'string',
-                'confirmed',         
+                'confirmed',
                 'different:current_password',
                 Password::min(8)
                     ->letters()
@@ -182,11 +228,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
             unset($this->userProfile);
         }
-
-        // NOTE: emailNotifications & eventNotifications are not yet backed by DB
-        // columns. Add these in a migration to persist them:
-        //   $table->boolean('email_notifications')->default(true);
-        //   $table->boolean('event_notifications')->default(true);
 
         session()->flash('preferences_success', 'Preferences saved.');
     }
