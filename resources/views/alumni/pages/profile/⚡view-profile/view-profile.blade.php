@@ -17,13 +17,36 @@
             <div class="px-4 pb-4 -mt-16 sm:-mt-20 relative">
                 <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                     <div class="flex flex-col sm:flex-row sm:items-end gap-4">
-                        <span
-                            class="w-32 h-32 sm:w-40 sm:h-40 rounded-full ring-4 ring-white dark:ring-[#242526] shadow-lg bg-yellow-500 flex items-center justify-center shrink-0">
-                            <span class="text-[#0f2b1c] font-bold text-5xl sm:text-6xl"
-                                style="font-family: 'Fraunces', serif;">
-                                {{ strtoupper(substr($this->alumni->name ?? '?', 0, 1)) }}
+                        @php
+                            $rawAvatar = $this->userProfile?->avatar;
+                            $avatarUrl = $rawAvatar
+                                ? (filter_var($rawAvatar, FILTER_VALIDATE_URL)
+                                    ? $rawAvatar
+                                    : \Illuminate\Support\Facades\Storage::url($rawAvatar))
+                                : null;
+                            $initial = strtoupper(substr($this->alumni->name ?? '?', 0, 1));
+                        @endphp
+
+                        @if ($avatarUrl)
+                            <img src="{{ $avatarUrl }}" alt="{{ $this->alumni->name }}"
+                                class="w-32 h-32 sm:w-40 sm:h-40 rounded-full object-cover ring-4 ring-white dark:ring-[#242526] shadow-lg bg-[#D4A537] shrink-0"
+                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <span style="display: none;"
+                                class="w-32 h-32 sm:w-40 sm:h-40 rounded-full ring-4 ring-white dark:ring-[#242526] shadow-lg bg-yellow-500 items-center justify-center shrink-0">
+                                <span class="text-[#0f2b1c] font-bold text-5xl sm:text-6xl"
+                                    style="font-family: 'Fraunces', serif;">
+                                    {{ $initial }}
+                                </span>
                             </span>
-                        </span>
+                        @else
+                            <span
+                                class="w-32 h-32 sm:w-40 sm:h-40 rounded-full ring-4 ring-white dark:ring-[#242526] shadow-lg bg-yellow-500 flex items-center justify-center shrink-0">
+                                <span class="text-[#0f2b1c] font-bold text-5xl sm:text-6xl"
+                                    style="font-family: 'Fraunces', serif;">
+                                    {{ $initial }}
+                                </span>
+                            </span>
+                        @endif
                         <div class="pb-2">
                             <h1 class="text-3xl font-bold text-black dark:text-white"
                                 style="font-family: 'Fraunces', serif;">

@@ -41,8 +41,17 @@
                 </div>
                 <!-- End Social Links -->
 
+                {{-- Legal Links --}}
+                <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 mt-1 text-xs">
+                    <a href="{{ route('privacy-policy') }}"
+                       class="text-white/60 hover:text-[#D4A537] transition-colors">
+                        Privacy Policy
+                    </a>
+                </div>
+                {{-- End Legal Links --}}
+
                 <!-- Copyright -->
-                <p class="text-sm text-white/70 mt-2">
+                <p class="text-sm text-white/70 mt-1">
                     © 2026 Colegio de Sta. Ana de Victorias — All rights reserved.
                 </p>
 

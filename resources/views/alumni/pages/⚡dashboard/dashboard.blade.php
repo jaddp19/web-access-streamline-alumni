@@ -21,18 +21,6 @@
         {{-- ===== MAIN FEED COLUMN ===== --}}
         <main class="lg:col-span-6 space-y-4">
 
-            {{-- Create post (FB home composer) --}}
-            <div class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm p-4 border border-transparent dark:border-white/5">
-                <div class="flex items-center gap-3">
-                    <span class="w-10 h-10 flex items-center justify-center text-base font-bold text-[#0f2b1c] bg-yellow-500 rounded-full shrink-0">
-                        {{ strtoupper(substr($this->alumni->name ?? '?', 0, 1)) }}
-                    </span>
-                    <a href="{{ route('alumni.message') }}" class="flex-1 text-left px-4 py-2.5 rounded-full bg-[#F0F2F5] dark:bg-[#3A3B3C] hover:bg-[#E4E6EB] dark:hover:bg-[#4E4F50] text-black/50 dark:text-white/60 text-sm transition">
-                        What's on your mind, {{ explode(' ', $this->alumni->name)[0] }}?
-                    </a>
-                </div>
-            </div>
-
             {{-- Filter row --}}
             <div class="flex items-center justify-between px-2">
                 <h2 class="text-sm font-semibold text-black/60 dark:text-white/60 uppercase tracking-wide">Recent posts from alumni</h2>

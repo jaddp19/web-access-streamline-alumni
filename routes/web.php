@@ -13,6 +13,7 @@ Route::livewire('/verification', 'public::verification.verification-pending')->n
 Route::livewire('/login', 'auth::login')->name('login');
 Route::livewire('/pop-up', 'auth::pop-up')->name('pop-up');
 Route::livewire('/form', 'auth::form.form-answer')->name('form');
+Route::livewire('/privacy-policy', 'auth::privacy-policy')->name('privacy-policy');
 
 //forms
 Route::middleware('auth')->group(function () {

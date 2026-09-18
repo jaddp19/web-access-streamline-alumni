@@ -210,6 +210,31 @@
                             @enderror
                         </div>
                     @endif
+
+                    {{-- Consent checkbox (DPA compliance) — Step 1 --}}
+                    <div class="pt-4 mt-2 border-t border-[#123524]/10">
+                        <label class="flex items-start gap-3 cursor-pointer p-4 rounded-xl bg-[#F7F5EF] border border-[#123524]/10 hover:border-[#D4A537] transition">
+                            <input type="checkbox" wire:model="consentGiven"
+                                class="mt-0.5 rounded border-[#123524]/20 text-[#123524] focus:ring-[#D4A537] h-4 w-4 shrink-0">
+                            <span class="text-sm text-[#123524]/80 leading-relaxed">
+                                I have read and agree to the
+                                <a href="{{ route('privacy-policy') }}" target="_blank"
+                                   class="text-[#1877F2] font-semibold hover:underline">
+                                    Privacy Policy
+                                </a>
+                                and
+                                <a href="#" target="_blank"
+                                   class="text-[#1877F2] font-semibold hover:underline">
+                                    Terms and Conditions
+                                </a>
+                                . I consent to the processing of my personal data in accordance with the
+                                <strong>Data Privacy Act of 2012 (RA 10173)</strong>.
+                            </span>
+                        </label>
+                        @error('consentGiven')
+                            <span class="text-red-500 text-sm mt-2 block">{{ $message }}</span>
+                        @enderror
+                    </div>
                 </div>
             @endif
 

@@ -81,32 +81,15 @@
                     @enderror
                 </div>
 
-                <!-- Password -->
-                <div>
-                    <label for="hs-password" class="block mb-2 text-xs text-black/60 uppercase tracking-wide font-semibold">Password</label>
-                    <input wire:model.defer='password' type="password" name="hs-password" id="hs-password"
-                        class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition">
-                    @error('password')
-                        <span class="text-red-500 text-xs">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                <!-- Password Confirmation -->
-                <div>
-                    <label for="hs-password_confirmation" class="block mb-2 text-xs text-black/60 uppercase tracking-wide font-semibold">Confirm Password</label>
-                    <input wire:model.defer='password_confirmation' type="password"
-                        name="hs-password_confirmation" id="hs-password_confirmation"
-                        class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition">
-                    @error('password_confirmation')
-                        <span class="text-red-500 text-xs">{{ $message }}</span>
-                    @enderror
-                </div>
-
                 <!-- Role -->
                 <div class="pt-2">
                     <h2 class="mb-1 text-sm font-bold text-[#123524]">
-                        Assign Role
+                        Assign Role <span class="text-red-500">*</span>
                     </h2>
+                    <p class="text-xs text-black/50 mb-3">
+                        The password is generated automatically based on the selected role.
+                    </p>
+
                     @error('selectedRole')
                         <div>
                             <span class="mt-2 text-sm text-red-600">{{ $message }}</span>
@@ -116,12 +99,13 @@
                     <div class="mt-3 grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
                         @forelse ($this->roles as $role)
                             <label
-                                class="flex items-center p-3 w-full bg-[#F1EFE7] border border-black/5 rounded-xl text-sm hover:border-[#D4A537] transition cursor-pointer">
-                                <input type="checkbox" value="{{ $role->name }}" x-data x-init="$watch('$wire.selectedRole', value => {
-                                    $el.checked = value === '{{ $role->name }}';
-                                })"
-                                    @click="$wire.set('selectedRole', '{{ $role->name }}')"
-                                    class="shrink-0 size-4 rounded-sm text-[#123524] focus:ring-[#123524]">
+                                class="flex items-center p-3 w-full bg-[#F1EFE7] border rounded-xl text-sm transition cursor-pointer
+                                {{ $selectedRole === $role->name ? 'border-[#D4A537] ring-1 ring-[#D4A537]/40' : 'border-black/5 hover:border-[#D4A537]' }}">
+                                <input type="radio"
+                                    name="role"
+                                    value="{{ $role->name }}"
+                                    wire:model.live="selectedRole"
+                                    class="shrink-0 size-4 text-[#123524] focus:ring-[#123524]">
                                 <span class="ms-3 text-black font-medium">
                                     {{ Str::ucfirst($role->name) }}
                                 </span>
@@ -132,12 +116,46 @@
                     </div>
                 </div>
 
+                <!-- Generated password preview -->
+                @if ($this->generatedPassword)
+                    <div class="rounded-xl border border-[#D4A537]/40 bg-[#D4A537]/5 p-4">
+                        <div class="flex items-start gap-3">
+                            <div class="w-9 h-9 rounded-lg bg-[#D4A537]/20 flex items-center justify-center text-[#123524] shrink-0">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                          d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                </svg>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-xs text-black/50 uppercase tracking-wide font-semibold">
+                                    Generated Password
+                                </p>
+                                <p class="font-mono text-base font-bold text-[#123524] mt-1 break-all">
+                                    {{ $this->generatedPassword }}
+                                </p>
+                                <p class="text-xs text-black/50 mt-1.5">
+                                    This will be emailed to {{ $email ?: 'the new user' }}. They should change it after first login.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                @else
+                    <div class="rounded-xl border border-black/10 bg-[#F1EFE7] p-4 text-center">
+                        <p class="text-xs text-black/50 italic">
+                            Select a role above to generate the password.
+                        </p>
+                    </div>
+                @endif
+
                 <!-- Actions -->
                 <div class="flex flex-wrap gap-3 pt-4 border-t border-black/5">
                     <button type="submit"
-                        class="inline-flex items-center gap-x-2 text-sm font-semibold rounded-xl bg-[#D4A537] text-[#123524] hover:bg-[#E5B94A] transition py-2.5 px-5">
-                        Create
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        wire:loading.attr="disabled"
+                        wire:target="create"
+                        class="inline-flex items-center gap-x-2 text-sm font-semibold rounded-xl bg-[#D4A537] text-[#123524] hover:bg-[#E5B94A] transition py-2.5 px-5 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span wire:loading.remove wire:target="create">Create</span>
+                        <span wire:loading wire:target="create">Creating…</span>
+                        <svg wire:loading.remove wire:target="create" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                         </svg>
                     </button>

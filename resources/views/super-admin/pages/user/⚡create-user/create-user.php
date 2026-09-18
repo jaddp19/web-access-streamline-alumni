@@ -13,11 +13,39 @@ new #[Layout('layouts::app-super-admin')] class extends Component
 {
     public string $name = '';
     public string $email = '';
-    public string $password = '';
     public string $school_id = '';
-    public string $password_confirmation = '';
     public string $selectedRole = '';
 
+    /**
+     * Password is auto-derived from the selected role.
+     */
+    #[Computed]
+    public function generatedPassword(): ?string
+    {
+        if (blank($this->selectedRole)) {
+            return null;
+        }
+
+        $slug = Str::of($this->selectedRole)
+            ->lower()
+            ->replace(' ', '-')
+            ->toString();
+
+        return 'csav.' . $slug;
+    }
+
+    /**
+     * Map role name → email template slug.
+     */
+    protected function templateSlugForRole(string $role): string
+    {
+        return match (Str::lower($role)) {
+            'alumni'         => 'welcome-to-the-csav-alumni-network-name',
+            'program head'   => 'welcome-program-head',
+            'registrar'      => 'welcome-registrar',
+            default          => 'your-csav-alumni-network-staff-account-has-been-created',
+        };
+    }
 
     protected function rules()
     {
@@ -37,61 +65,61 @@ new #[Layout('layouts::app-super-admin')] class extends Component
                     }
                 },
             ],
-            'password' => 'required|string|min:6|confirmed',
-            'selectedRole' => 'exists:roles,name',
-            'school_id' => 'required|string|max:9|unique:users,school_id',
+            'school_id'    => 'required|string|max:9|unique:users,school_id',
+            'selectedRole' => 'required|exists:roles,name',
         ];
     }
 
     public function messages()
     {
         return [
-            'name.required' => 'The name is required.',
-            'name.string' => 'The name must be a string.',
-            'name.min' => 'The name must be at least 3 characters.',
-            'name.max' => 'The name may not be greater than 255 characters.',
-            'name.unique' => 'The name is already taken.',
-            'school_id.required' => 'Your school ID number is required.',
-            'school_id.unique' => 'This school ID is already registered to an account.',
-            'school_id.max' => 'Your school ID number must not exceed 9 characters.',
-            'password.required' => 'The password is required.',
-            'password.confirmed' => 'Confirmation password does not match the password.',
-            'email.unique' => 'The email address is already registered.',
-            'email.required' => 'The email address is required.',
+            'name.required'         => 'The name is required.',
+            'name.min'              => 'The name must be at least 3 characters.',
+            'name.max'              => 'The name may not be greater than 255 characters.',
+            'name.unique'           => 'The name is already taken.',
+            'school_id.required'    => 'Your school ID number is required.',
+            'school_id.unique'      => 'This school ID is already registered to an account.',
+            'school_id.max'         => 'Your school ID number must not exceed 9 characters.',
+            'email.unique'          => 'The email address is already registered.',
+            'email.required'        => 'The email address is required.',
+            'selectedRole.required' => 'Please select a role.',
+            'selectedRole.exists'   => 'The selected role is invalid.',
         ];
     }
-
 
     public function create()
     {
         $validated = $this->validate();
 
-        $validated['name'] = $this->sanitizeData($validated['name']);
-        $validated['email'] = $this->sanitizeData($validated['email']);
+        $validated['name']      = $this->sanitizeData($validated['name']);
+        $validated['email']     = $this->sanitizeData($validated['email']);
         $validated['school_id'] = $this->sanitizeData($validated['school_id']);
 
+        $plainPassword = $this->generatedPassword;
+        $templateSlug  = $this->templateSlugForRole($validated['selectedRole']);
+
         $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
+            'name'      => $validated['name'],
+            'email'     => $validated['email'],
             'school_id' => $validated['school_id'],
-            'password' => Hash::make($validated['password']),
+            'password'  => Hash::make($plainPassword),
         ]);
 
         $user->syncRoles($validated['selectedRole']);
 
-        // The password is never emailed — this just confirms the account
-        // exists and points them to log in.
         EmailTemplateService::send(
-            'welcome-to-the-csav-alumni-network-name',
+            $templateSlug,
             $validated['email'],
             [
-                'name'         => $validated['name'],
-                'school_email' => $validated['email'],
-                'login_url'    => route('login'),
+                'name'          => $validated['name'],
+                'school_email'  => $validated['email'],
+                'login_url'     => route('login'),
+                'temp_password' => $plainPassword,
+                'role'          => Str::headline($validated['selectedRole']),
             ]
         );
 
-        session()->flash('success', 'User created successfully. A notification was sent to their email.');
+        session()->flash('success', "User created. Temporary password: {$plainPassword}");
         return redirect()->route('super-admin.user.view');
     }
 

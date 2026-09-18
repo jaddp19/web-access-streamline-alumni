@@ -28,6 +28,7 @@ new #[Layout('layouts.auth')] class extends Component
     public string $gender = '';
     public string $contact_number_1 = '';
     public string $contact_number_2 = '';
+    public bool $consentGiven = false;
 
     // Step 1 — Address
     public string $regionCode = '';
@@ -257,6 +258,7 @@ new #[Layout('layouts.auth')] class extends Component
                 'barangayCode'     => 'required|string',
                 'latitude'         => 'required|numeric',
                 'longitude'        => 'required|numeric',
+                'consentGiven'     => 'accepted',
             ],
             2 => [
                 'civil_status' => 'required|in:single,married,widowed,separated,single-parent',
@@ -295,6 +297,7 @@ new #[Layout('layouts.auth')] class extends Component
             'barangayCode.required'                  => 'Please select your barangay.',
             'latitude.required'                      => 'Please pin your location on the map.',
             'longitude.required'                     => 'Please pin your location on the map.',
+            'consentGiven.accepted'                  => 'You must agree to the Privacy Policy and Terms and Conditions before continuing.',
             'civil_status.required'                  => 'Please select your civil status.',
             'course_id.required'                     => 'Please select your program.',
             'batch_id.required'                      => 'Please select your year graduated.',
