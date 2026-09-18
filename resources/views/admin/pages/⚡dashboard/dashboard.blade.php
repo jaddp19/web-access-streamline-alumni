@@ -24,18 +24,6 @@
 
                 @unless ($this->hasNoDepartment)
                     <div class="shrink-0 flex items-center gap-2">
-                        <button type="button" wire:click="refreshAnalytics"
-                            wire:loading.attr="disabled" wire:target="refreshAnalytics,selectedBatchId"
-                            class="p-2 rounded-xl border border-black/10 bg-white text-[#0f2b1c] hover:bg-[#D4A537]/10 transition disabled:opacity-50"
-                            title="Refresh analytics">
-                            <svg wire:loading.remove wire:target="refreshAnalytics,selectedBatchId" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                            </svg>
-                            <svg wire:loading wire:target="refreshAnalytics,selectedBatchId" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                            </svg>
-                        </button>
 
                         <label for="batch-filter" class="text-[11px] font-bold text-black/50 uppercase tracking-wide whitespace-nowrap">Batch</label>
 
