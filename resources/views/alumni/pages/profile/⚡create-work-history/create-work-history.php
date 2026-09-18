@@ -2,6 +2,8 @@
 
 use App\Models\Company;
 use App\Models\WorkHistory;
+use App\Models\CivilStatusEmployment;
+use App\Models\TracerStudy;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
@@ -131,7 +133,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
             unset($this->companies);
 
             session()->flash('company_created', 'Company "' . $company->company_name . '" created and selected.');
-
         } catch (\Throwable $e) {
             logger()->error('Company creation failed: ' . $e->getMessage(), [
                 'user_id' => Auth::id(),
@@ -163,11 +164,26 @@ new #[Layout('layouts.app-alumni')] class extends Component
                     'is_current_job'      => $this->is_current_job,
                     'is_current_employed' => $this->is_current_job,
                 ]);
+
+                // ===== Sync tracer study when this is the current job =====
+                if ($this->is_current_job) {
+                    $tracerStudy = TracerStudy::where('user_id', Auth::id())->first();
+
+                    if ($tracerStudy) {
+                        $employment = CivilStatusEmployment::where('tracer_study_id', $tracerStudy->id)->first();
+
+                        if ($employment) {
+                            $employment->update([
+                                'employment_status'    => 'employed',
+                                'current_job_position' => trim($this->work_name),
+                            ]);
+                        }
+                    }
+                }
             });
 
             session()->flash('success', 'Work experience added successfully.');
             return redirect()->route('alumni.profile');
-
         } catch (\Throwable $e) {
             logger()->error('Work history creation failed: ' . $e->getMessage(), [
                 'user_id' => Auth::id(),

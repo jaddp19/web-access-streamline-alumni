@@ -1,6 +1,8 @@
 <?php
 
+use App\Models\CivilStatusEmployment;
 use App\Models\Company;
+use App\Models\TracerStudy;
 use App\Models\WorkHistory;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -31,7 +33,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
     public function mount(WorkHistory $history): void
     {
-        // Ownership guard — alumni can only edit their own records
         abort_unless($history->user_id === Auth::id(), 403);
 
         $this->history = $history->load('company');
@@ -67,15 +68,15 @@ new #[Layout('layouts.app-alumni')] class extends Component
     protected function messages(): array
     {
         return [
-            'work_name.required'          => 'Please enter your job title or position.',
-            'company_id.required'         => 'Please select a company.',
-            'company_id.exists'           => 'The selected company no longer exists.',
-            'date_hired.required'         => 'Please enter the date you were hired.',
-            'date_hired.before_or_equal'  => 'The hire date cannot be in the future.',
-            'new_company_name.required'   => 'Please enter the company name.',
-            'new_company_name.unique'     => 'A company with this name already exists.',
-            'new_company_logo.image'      => 'The logo must be an image file.',
-            'new_company_logo.max'        => 'The logo cannot exceed 2MB.',
+            'work_name.required'         => 'Please enter your job title or position.',
+            'company_id.required'        => 'Please select a company.',
+            'company_id.exists'          => 'The selected company no longer exists.',
+            'date_hired.required'        => 'Please enter the date you were hired.',
+            'date_hired.before_or_equal' => 'The hire date cannot be in the future.',
+            'new_company_name.required'  => 'Please enter the company name.',
+            'new_company_name.unique'    => 'A company with this name already exists.',
+            'new_company_logo.image'     => 'The logo must be an image file.',
+            'new_company_logo.max'       => 'The logo cannot exceed 2MB.',
         ];
     }
 
@@ -88,6 +89,53 @@ new #[Layout('layouts.app-alumni')] class extends Component
             ->get(['id', 'company_name', 'company_logo', 'company_address']);
     }
 
+    // ---- Tracer sync helper ----
+
+    /**
+     * Sync CivilStatusEmployment with the user's current job state.
+     * If a current job exists → employment_status = employed.
+     * Otherwise → leave the tracer as-is (don't force unemployment).
+     */
+    /**
+     * Sync CivilStatusEmployment with the user's current job state.
+     *
+     *   Current job exists  → employment_status = employed + position
+     *   No current job      → employment_status = unemployed + clear employment fields
+     *
+     * Matches the same save pattern used by the tracer study form.
+     */
+    protected function syncTracerEmployment(): void
+    {
+        $tracerStudy = TracerStudy::where('user_id', Auth::id())->first();
+        if (! $tracerStudy) return;
+
+        $employment = CivilStatusEmployment::where('tracer_study_id', $tracerStudy->id)->first();
+        if (! $employment) return;
+
+        $current = WorkHistory::where('user_id', Auth::id())
+            ->where('is_current_job', true)
+            ->latest('date_hired')
+            ->first();
+
+        if ($current) {
+            // Has a current job → mark as employed
+            $employment->update([
+                'employment_status'    => 'employed',
+                'current_job_position' => $current->work_name ?: 'Position not specified',
+            ]);
+        } else {
+            // No current job → mark as unemployed + clear employment-only fields
+            $employment->update([
+                'employment_status'          => 'unemployed',
+                'current_job_position'       => null,
+                'employed_related_to_degree' => null,
+                'employment_type'            => null,
+                'organization_type'          => null,
+                'employment_area'            => null,
+                'abroad_country'             => null,
+            ]);
+        }
+    }
     // ---- Actions ----
 
     public function toggleNewCompanyForm(): void
@@ -140,7 +188,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
             unset($this->companies);
 
             session()->flash('company_created', 'Company "' . $company->company_name . '" created and selected.');
-
         } catch (\Throwable $e) {
             logger()->error('Company creation failed: ' . $e->getMessage(), [
                 'user_id' => Auth::id(),
@@ -172,11 +219,13 @@ new #[Layout('layouts.app-alumni')] class extends Component
                     'is_current_job'      => $this->is_current_job,
                     'is_current_employed' => $this->is_current_job,
                 ]);
+
+                // Sync tracer study after the history record changes
+                $this->syncTracerEmployment();
             });
 
             session()->flash('success', 'Work experience updated successfully.');
             $this->redirect(route('alumni.profile'), navigate: true);
-
         } catch (\Throwable $e) {
             logger()->error('Work history update failed: ' . $e->getMessage(), [
                 'user_id'    => Auth::id(),
@@ -193,11 +242,13 @@ new #[Layout('layouts.app-alumni')] class extends Component
         try {
             DB::transaction(function () {
                 $this->history->delete();
+
+                // If we just deleted the current job, re-sync the tracer
+                $this->syncTracerEmployment();
             });
 
             session()->flash('success', 'Work experience deleted.');
             $this->redirect(route('alumni.profile'), navigate: true);
-
         } catch (\Throwable $e) {
             logger()->error('Work history delete failed: ' . $e->getMessage(), [
                 'user_id'    => Auth::id(),
