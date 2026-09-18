@@ -19,10 +19,6 @@
                 </div>
 
                 <div class="flex items-center gap-x-2">
-                    <a href="{{ route('super-admin.department.view') }}"
-                        class="py-2 px-3.5 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-[#123524]/15 text-[#123524] hover:bg-[#123524]/5 transition">
-                        View all
-                    </a>
                     <a href="{{ route('super-admin.department.create') }}"
                         class="py-2 px-3.5 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg bg-[#123524] text-white hover:bg-[#0d2819] transition">
                         <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -89,13 +85,14 @@
                                 </td>
                                 <td class="px-2 sm:px-6 py-3">
                                     <div class="flex items-center gap-3">
-                                        @if($department->dept_logo)
-                                        <img src="{{ Storage::url($department->dept_logo) }}" alt="{{ $department->dept_name }}"
-                                            class="w-8 h-8 rounded-full object-cover shrink-0">
+                                        @if ($department->dept_logo === 'CSAV-LOGO')
+                                            <img src="https://tse2.mm.bing.net/th/id/OIP.D0DJ0ePPxNcvYOeq6q9esQAAAA?pid=Api&P=0&h=180"
+                                                alt="{{ $department->dept_name }}"
+                                                class="w-8 h-8 rounded-full object-cover shrink-0">
                                         @else
-                                        <div class="w-8 h-8 rounded-full bg-[#123524]/10 flex items-center justify-center text-[#123524] text-xs font-bold shrink-0">
-                                            {{ strtoupper(substr($department->dept_name, 0, 1)) }}
-                                        </div>
+                                            <img src="{{ Storage::url($department->dept_logo) }}"
+                                                alt="{{ $department->dept_name }}"
+                                                class="w-8 h-8 rounded-full object-cover shrink-0">
                                         @endif
                                         <span class="font-semibold text-[#123524]">{{ $department->dept_name }}</span>
                                         @if($department->dept_desc)

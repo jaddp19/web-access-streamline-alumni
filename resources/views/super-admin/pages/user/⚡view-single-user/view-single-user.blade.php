@@ -95,7 +95,32 @@
                 <h2 class="text-sm font-bold text-[#123524] uppercase tracking-wide mb-4">Profile</h2>
                 @if ($user->userProfile)
                     @php
-                        $location = $user->userProfile->location ?? [];
+                        $profile = $user->userProfile;
+                        $location = $profile->location ?? [];
+
+                        // Gender — column first, JSON fallback
+                        $rawGender = $profile->gender ?? ($location['gender'] ?? null);
+                        $gender = $rawGender ? \Illuminate\Support\Str::headline(strtolower($rawGender)) : '—';
+
+                        // Primary phone — column first, JSON fallback
+                        $rawPhone = $profile->contact_number_1 ?? ($location['phone_number_1'] ?? null);
+                        $displayPhone = $rawPhone;
+                        if ($rawPhone && str_starts_with($rawPhone, '+')) {
+                            $displayPhone =
+                                preg_replace('/^\+(\d{1,3})(\d{3})(\d{3})(\d+)$/', '+$1 $2 $3 $4', $rawPhone) ??
+                                $rawPhone;
+                        }
+
+                        // Alternate phone (optional)
+                        $rawPhone2 = $profile->contact_number_2 ?? ($location['phone_number_2'] ?? null);
+                        $displayPhone2 = $rawPhone2;
+                        if ($rawPhone2 && str_starts_with($rawPhone2, '+')) {
+                            $displayPhone2 =
+                                preg_replace('/^\+(\d{1,3})(\d{3})(\d{3})(\d+)$/', '+$1 $2 $3 $4', $rawPhone2) ??
+                                $rawPhone2;
+                        }
+
+                        // Full address: stored string first, else build from parts
                         $fullAddress =
                             $location['address'] ??
                             collect([
@@ -107,21 +132,12 @@
                             ])
                                 ->filter()
                                 ->implode(', ');
-
-                        // Format phone for nicer display (e.g. +63 917 123 4567)
-                        $rawPhone = $location['phone_number_1'] ?? null;
-                        $displayPhone = $rawPhone;
-                        if ($rawPhone && str_starts_with($rawPhone, '+')) {
-                            $displayPhone =
-                                preg_replace('/^\+(\d{1,3})(\d{3})(\d{3})(\d+)$/', '+$1 $2 $3 $4', $rawPhone) ??
-                                $rawPhone;
-                        }
                     @endphp
 
                     <dl class="grid sm:grid-cols-2 gap-x-6 gap-y-4">
                         <div>
                             <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Gender</dt>
-                            <dd class="text-black mt-1">{{ $location['gender'] ?? '—' }}</dd>
+                            <dd class="text-black mt-1">{{ $gender }}</dd>
                         </div>
                         <div>
                             <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Mobile Number</dt>

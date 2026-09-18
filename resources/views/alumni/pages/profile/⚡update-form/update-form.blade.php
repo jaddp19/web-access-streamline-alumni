@@ -202,6 +202,31 @@
                             @enderror
                         </div>
                     @endif
+
+                    {{-- Consent checkbox (DPA compliance) --}}
+                    <div class="pt-4 mt-2 border-t border-[#123524]/10">
+                        <label class="flex items-start gap-3 cursor-pointer p-4 rounded-xl bg-[#F7F5EF] border border-[#123524]/10 hover:border-[#D4A537] transition">
+                            <input type="checkbox" wire:model="consentGiven"
+                                class="mt-0.5 rounded border-[#123524]/20 text-[#123524] focus:ring-[#D4A537] h-4 w-4 shrink-0">
+                            <span class="text-sm text-[#123524]/80 leading-relaxed">
+                                I have read and agree to the
+                                <a href="{{ route('privacy-policy') }}" target="_blank"
+                                   class="text-[#1877F2] font-semibold hover:underline">
+                                    Privacy Policy
+                                </a>
+                                and
+                                <a href="{{ route('terms-and-conditions') }}" target="_blank"
+                                   class="text-[#1877F2] font-semibold hover:underline">
+                                    Terms and Conditions
+                                </a>
+                                . I consent to the processing of my personal data in accordance with the
+                                <strong>Data Privacy Act of 2012 (RA 10173)</strong>.
+                            </span>
+                        </label>
+                        @error('consentGiven')
+                            <span class="text-red-500 text-sm mt-2 block">{{ $message }}</span>
+                        @enderror
+                    </div>
                 </div>
             @endif
 
@@ -462,7 +487,7 @@
                         <div>
                             <label class="block text-sm font-semibold text-[#123524] mb-2">How long after graduation did you obtain your first job?</label>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                @foreach (['1-3-months' => '1-3 Months', '4-6-months' => '4-6 Months', 'more-than-6-months' => 'More than 6 Months', 'more-than-1-year' => 'More than 1 year', 'not-yet-employed' => 'I have not yet been employed'] as $value => $label)
+                                @foreach (['1-3-months' => '1-3 Months', '4-6-months' => '4-6 Months', 'more-than-6-months' => 'More than 6 Months', 'more-than-1-year' => 'More than 1 year'] as $value => $label)
                                     <label class="flex items-center gap-2 cursor-pointer min-h-[40px]">
                                         <input type="radio" wire:model="months_to_first_job" value="{{ $value }}"
                                             class="text-[#123524] focus:ring-[#D4A537] h-4 w-4">
@@ -560,6 +585,32 @@
                 background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 8"><rect width="12" height="4" fill="%23003" /><rect y="4" width="12" height="4" fill="%23CE1126" /><polygon points="0,0 4,4 0,8" fill="%23FFF" /><circle cx="1.5" cy="4" r="0.8" fill="%23FCD116" /></svg>');
                 background-position: 0 0;
                 background-size: 100% 100%;
+            }
+
+            /* Dark mode: dial code + dropdown */
+            .dark .iti__selected-dial-code {
+                color: #fff;
+            }
+            .dark .iti__country-list {
+                background-color: #242526;
+                color: #fff;
+                border-color: rgba(255, 255, 255, 0.1);
+            }
+            .dark .iti__country-list .iti__country:hover,
+            .dark .iti__country-list .iti__country.iti__highlight {
+                background-color: #3A3B3C;
+            }
+            .dark .iti__dial-code {
+                color: rgba(255, 255, 255, 0.6);
+            }
+            .dark .iti__divider {
+                border-bottom-color: rgba(255, 255, 255, 0.1);
+            }
+            .dark .iti__arrow {
+                border-top-color: #fff;
+            }
+            .dark .iti__arrow--up {
+                border-bottom-color: #fff;
             }
         </style>
     @endassets

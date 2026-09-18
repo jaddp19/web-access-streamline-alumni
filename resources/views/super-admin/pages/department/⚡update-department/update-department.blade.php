@@ -61,7 +61,9 @@
                         <label for="dept_logo" class="block text-xs text-black/60 uppercase tracking-wide font-semibold mb-2">Department Logo</label>
 
                         <div class="flex items-center gap-4 mb-3">
-                            @if ($dept_logo)
+                            @if ($department->dept_logo === 'CSAV-LOGO')
+                                <img src="https://tse2.mm.bing.net/th/id/OIP.D0DJ0ePPxNcvYOeq6q9esQAAAA?pid=Api&P=0&h=180" alt="{{ $department->dept_name }}" class="w-16 h-16 rounded-xl object-cover border border-black/10">
+                            @elseif ($dept_logo)
                                 <img src="{{ $dept_logo->temporaryUrl() }}" alt="New logo preview" class="w-16 h-16 rounded-xl object-cover border border-black/10">
                             @elseif ($department->dept_logo)
                                 <img src="{{ Storage::url($department->dept_logo) }}" alt="Current logo" class="w-16 h-16 rounded-xl object-cover border border-black/10">

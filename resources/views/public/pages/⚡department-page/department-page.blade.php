@@ -43,7 +43,11 @@
                         {{-- Icon / Logo --}}
                         <div
                             class="w-14 h-14 mb-4 rounded-full bg-[#123524]/5 flex items-center justify-center group-hover:bg-[#D4A537]/15 transition-colors overflow-hidden shrink-0">
-                            @if ($department->dept_logo)
+                            @if ($department->dept_logo === 'CSAV-LOGO')
+                                <img src="https://tse2.mm.bing.net/th/id/OIP.D0DJ0ePPxNcvYOeq6q9esQAAAA?pid=Api&P=0&h=180"
+                                    alt="{{ $department->dept_name }}" class="w-full h-full object-cover"
+                                    loading="lazy">
+                            @elseif ($department->dept_logo)
                                 <img src="{{ Storage::url($department->dept_logo) }}" alt="{{ $department->dept_name }}"
                                     class="w-full h-full object-cover" loading="lazy">
                             @else

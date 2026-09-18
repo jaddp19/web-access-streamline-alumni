@@ -23,7 +23,7 @@ return new class extends Migration
             $table->enum('organization_type', ['private-company', 'government-agency', 'non-government-organization', 'educational-institution', 'self-employed-business', 'other'])->nullable();
             $table->enum('employment_area', ['philippines', 'abroad'])->nullable();
             $table->string('abroad_country')->nullable();
-            $table->enum('months_to_first_job', ['1-3-months', '4-6-months', 'more-than-6-months', 'more-than-1-year', 'not-yet-employed'])->nullable();
+            $table->enum('months_to_first_job', ['1-3-months', '4-6-months', 'more-than-6-months', 'more-than-1-year'])->nullable();
             $table->timestamps();
         });
     }

@@ -45,6 +45,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         session()->flash('success', 'Company created successfully.');
 
-        return $this->redirectRoute('super-admin.company.view', navigate: true);
+        return $this->redirectRoute('super-admin.company.view');
     }
 };

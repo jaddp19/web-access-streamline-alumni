@@ -28,6 +28,8 @@ new #[Layout('layouts.app-alumni')] class extends Component
     public string $gender = '';
     public string $contact_number_1 = '';
     public string $contact_number_2 = '';
+    public bool $consentGiven = false;
+
 
     // Step 1 — Address (stays in location JSON)
     public string $regionCode = '';
@@ -86,6 +88,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
             $this->gender           = $profile->gender ? ucfirst($profile->gender) : '';
             $this->contact_number_1 = $profile->contact_number_1 ?? '';
             $this->contact_number_2 = $profile->contact_number_2 ?? '';
+            $this->consentGiven     = (bool) $profile->consent_given_at;
             $this->batch_id         = $profile->batch_id ?? '';
 
             // --- course_id from pivot ---
@@ -209,6 +212,42 @@ new #[Layout('layouts.app-alumni')] class extends Component
         }
     }
 
+    public function updatedEmploymentStatus(): void
+    {
+        // When switching away from "employed", clear all employment-only fields
+        if ($this->employment_status !== 'employed') {
+            $this->reset([
+                'current_job_position',
+                'company_id',
+                'date_hired',
+                'employed_related_to_degree',
+                'employment_type',
+                'organization_type',
+                'employment_area',
+                'abroad_country',
+                'months_to_first_job',
+            ]);
+
+            $this->resetErrorBag([
+                'current_job_position',
+                'company_id',
+                'date_hired',
+                'employed_related_to_degree',
+                'employment_type',
+                'organization_type',
+                'employment_area',
+                'abroad_country',
+                'months_to_first_job',
+            ]);
+
+            // Also close the inline new-company form if it was open
+            if ($this->showNewCompanyForm) {
+                $this->showNewCompanyForm = false;
+                $this->reset(['new_company_logo', 'new_company_name', 'new_company_address', 'new_company_desc']);
+            }
+        }
+    }
+
     public function createCompany(): void
     {
         $this->validate([
@@ -260,6 +299,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
                 'barangayCode'     => 'required|string',
                 'latitude'         => 'required|numeric',
                 'longitude'        => 'required|numeric',
+                'consentGiven'     => 'accepted',
             ],
             2 => [
                 'civil_status' => 'required|in:single,married,widowed,separated,single-parent',
@@ -297,6 +337,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
             'provinceCode.required'                  => 'Please select your province.',
             'cityCode.required'                      => 'Please select your city/municipality.',
             'barangayCode.required'                  => 'Please select your barangay.',
+            'consentGiven.accepted'                  => 'You must agree to the Privacy Policy and Terms and Conditions before continuing.',
             'latitude.required'                      => 'Please pin your location on the map.',
             'longitude.required'                     => 'Please pin your location on the map.',
             'civil_status.required'                  => 'Please select your civil status.',
@@ -367,6 +408,8 @@ new #[Layout('layouts.app-alumni')] class extends Component
             $region->name ?? null,
         ])->filter()->implode(', ');
 
+
+
         DB::transaction(function () use ($user, $region, $province, $city, $barangay, $fullAddress) {
             $existingProfile = UserProfile::where('user_id', $user->id)->first();
 
@@ -406,6 +449,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
             $isEmployed = $this->employment_status === 'employed';
 
+
             CivilStatusEmployment::updateOrCreate(
                 ['tracer_study_id' => $tracerStudy->id],
                 [
@@ -434,9 +478,10 @@ new #[Layout('layouts.app-alumni')] class extends Component
                     'level_of_study'             => $this->is_pursued_further_studies ? $this->level_of_study : null,
                 ]
             );
-
             // ===== Work history =====
             if ($this->employment_status === 'employed' && $this->company_id && $this->date_hired) {
+
+                // Update or create the current job record
                 $existingCurrent = WorkHistory::where('user_id', $user->id)
                     ->where('is_current_job', true)
                     ->first();
@@ -456,6 +501,13 @@ new #[Layout('layouts.app-alumni')] class extends Component
                         'is_current_job' => true,
                     ]);
                 }
+            } else {
+                // Not employed (unemployed / self-employed / other)
+                // → unset the current-job flag on any existing record,
+                //   but keep the record itself so past jobs are preserved.
+                WorkHistory::where('user_id', $user->id)
+                    ->where('is_current_job', true)
+                    ->update(['is_current_job' => false]);
             }
         });
 

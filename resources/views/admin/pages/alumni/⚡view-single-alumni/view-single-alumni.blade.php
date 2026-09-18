@@ -5,7 +5,8 @@
         <div class="mb-5">
             <a href="{{ route('admin.alumni.view') }}"
                 class="inline-flex items-center gap-x-2 px-3.5 py-2 text-sm font-semibold rounded-lg bg-white border border-black/10 text-[#123524] hover:bg-black/5 transition">
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" viewBox="0 0 24 24">
                     <path d="M15 15l-6-6 6-6" />
                 </svg>
                 <span>Back</span>
@@ -26,29 +27,36 @@
                     <img src="{{ $avatarUrl }}" alt="{{ $user->name }}"
                         class="w-16 h-16 rounded-2xl object-cover shrink-0 border-2 border-[#D4A537]">
                 @else
-                    <div class="w-16 h-16 rounded-2xl bg-[#D4A537] flex items-center justify-center text-[#123524] font-bold text-xl shrink-0">
+                    <div
+                        class="w-16 h-16 rounded-2xl bg-[#D4A537] flex items-center justify-center text-[#123524] font-bold text-xl shrink-0">
                         {{ Str::of($user->name)->substr(0, 1)->upper() }}
                     </div>
                 @endif
                 <div>
                     <p class="text-white/50 text-sm">Alumni Profile</p>
-                    <h1 class="text-2xl font-bold text-white" style="font-family: 'Fraunces', serif;">{{ $user->name }}</h1>
+                    <h1 class="text-2xl font-bold text-white" style="font-family: 'Fraunces', serif;">
+                        {{ $user->name }}</h1>
                     <div class="flex flex-wrap items-center gap-2 mt-2">
                         @foreach ($user->roles as $role)
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-[#D4A537] text-[#123524]">
+                            <span
+                                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-[#D4A537] text-[#123524]">
                                 {{ Str::ucfirst($role->name) }}
                             </span>
                         @endforeach
                         @if ($user->userProfile?->is_verified)
-                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/10 text-white">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            <span
+                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/10 text-white">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                                 Verified
                             </span>
                         @endif
                         @if ($user->userProfile?->is_private)
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-white/10 text-white/70">
+                            <span
+                                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-white/10 text-white/70">
                                 Private profile
                             </span>
                         @endif
@@ -87,29 +95,48 @@
                 <h2 class="text-sm font-bold text-[#123524] uppercase tracking-wide mb-4">Profile</h2>
                 @if ($user->userProfile)
                     @php
-                        $location = $user->userProfile->location ?? [];
-                        $fullAddress = $location['address']
-                            ?? collect([
+                        $profile = $user->userProfile;
+                        $location = $profile->location ?? [];
+
+                        // Gender: column first, JSON fallback (case-insensitive format fix)
+                        $rawGender = $profile->gender ?? ($location['gender'] ?? null);
+                        $gender = $rawGender ? \Illuminate\Support\Str::headline(strtolower($rawGender)) : '—';
+
+                        // Phone: column first, JSON fallback
+                        $rawPhone = $profile->contact_number_1 ?? ($location['phone_number_1'] ?? null);
+                        $displayPhone = $rawPhone;
+                        if ($rawPhone && str_starts_with($rawPhone, '+')) {
+                            $displayPhone =
+                                preg_replace('/^\+(\d{1,3})(\d{3})(\d{3})(\d+)$/', '+$1 $2 $3 $4', $rawPhone) ??
+                                $rawPhone;
+                        }
+                        // Alternate phone (optional)
+                        $rawPhone2 = $profile->contact_number_2 ?? ($location['phone_number_2'] ?? null);
+                        $displayPhone2 = $rawPhone2;
+                        if ($rawPhone2 && str_starts_with($rawPhone2, '+')) {
+                            $displayPhone2 =
+                                preg_replace('/^\+(\d{1,3})(\d{3})(\d{3})(\d+)$/', '+$1 $2 $3 $4', $rawPhone2) ??
+                                $rawPhone2;
+                        }
+
+                        // Full address: stored string first, else build from parts
+                        $fullAddress =
+                            $location['address'] ??
+                            collect([
                                 $location['street_address'] ?? null,
                                 $location['barangay_name'] ?? null,
                                 $location['city_name'] ?? null,
                                 $location['province_name'] ?? null,
                                 $location['region_name'] ?? null,
-                            ])->filter()->implode(', ');
-
-                        // Format phone for nicer display (e.g. +63 917 123 4567)
-                        $rawPhone = $location['phone_number_1'] ?? null;
-                        $displayPhone = $rawPhone;
-                        if ($rawPhone && str_starts_with($rawPhone, '+')) {
-                            $displayPhone = preg_replace('/^\+(\d{1,3})(\d{3})(\d{3})(\d+)$/', '+$1 $2 $3 $4', $rawPhone)
-                                         ?? $rawPhone;
-                        }
+                            ])
+                                ->filter()
+                                ->implode(', ');
                     @endphp
 
                     <dl class="grid sm:grid-cols-2 gap-x-6 gap-y-4">
                         <div>
                             <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Gender</dt>
-                            <dd class="text-black mt-1">{{ $location['gender'] ?? '—' }}</dd>
+                            <dd class="text-black mt-1">{{ $gender }}</dd>
                         </div>
                         <div>
                             <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Mobile Number</dt>
@@ -122,13 +149,25 @@
                                     —
                                 @endif
                             </dd>
+                            @if ($displayPhone2)
+                                <div>
+                                    <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Alternate
+                                        Number</dt>
+                                    <dd class="text-black mt-1 font-medium">
+                                        <a href="tel:{{ $rawPhone2 }}" class="hover:text-[#123524] transition">
+                                            {{ $displayPhone2 }}
+                                        </a>
+                                    </dd>
+                                </div>
+                            @endif
                         </div>
                         <div class="sm:col-span-2">
                             <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Address</dt>
                             <dd class="text-black mt-1">{{ $fullAddress ?: '—' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Board Exam Taken</dt>
+                            <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Board Exam Taken
+                            </dt>
                             <dd class="text-black mt-1">{{ $user->userProfile->board_taken ?? '—' }}</dd>
                         </div>
                         <div>
@@ -148,7 +187,8 @@
                     <div class="flex items-center justify-between p-3 rounded-xl bg-[#F1EFE7] mb-2 last:mb-0">
                         <div>
                             <p class="text-black font-medium">{{ $course->course_title }}</p>
-                            <p class="text-black/50 text-xs">{{ $course->department?->dept_name }} &middot; {{ $course->course_code }}</p>
+                            <p class="text-black/50 text-xs">{{ $course->department?->dept_name }} &middot;
+                                {{ $course->course_code }}</p>
                         </div>
                         <span class="text-xs font-semibold text-[#123524] bg-[#D4A537]/20 px-2.5 py-1 rounded-full">
                             {{ Str::headline($course->course_type) }}
@@ -171,10 +211,14 @@
                         </div>
                         <div class="flex flex-col gap-1 items-end">
                             @if ($work->is_current_job)
-                                <span class="text-xs font-semibold text-[#123524] bg-[#D4A537]/20 px-2.5 py-1 rounded-full">Current Role</span>
+                                <span
+                                    class="text-xs font-semibold text-[#123524] bg-[#D4A537]/20 px-2.5 py-1 rounded-full">Current
+                                    Role</span>
                             @endif
                             @if ($work->is_current_employed)
-                                <span class="text-xs font-semibold text-green-700 bg-green-100 px-2.5 py-1 rounded-full">Currently Employed</span>
+                                <span
+                                    class="text-xs font-semibold text-green-700 bg-green-100 px-2.5 py-1 rounded-full">Currently
+                                    Employed</span>
                             @endif
                         </div>
                     </div>
@@ -194,24 +238,32 @@
                             <dd class="text-black mt-1">{{ Str::headline($cse->civil_status) }}</dd>
                         </div>
                         <div>
-                            <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Employment Status</dt>
+                            <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Employment Status
+                            </dt>
                             <dd class="text-black mt-1">{{ Str::headline($cse->employment_status) }}</dd>
                         </div>
                         <div>
-                            <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Current Job Position</dt>
+                            <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Current Job Position
+                            </dt>
                             <dd class="text-black mt-1">{{ $cse->current_job_position ?? '—' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Related to Degree</dt>
-                            <dd class="text-black mt-1">{{ $cse->employed_related_to_degree ? Str::headline($cse->employed_related_to_degree) : '—' }}</dd>
+                            <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Related to Degree
+                            </dt>
+                            <dd class="text-black mt-1">
+                                {{ $cse->employed_related_to_degree ? Str::headline($cse->employed_related_to_degree) : '—' }}
+                            </dd>
                         </div>
                         <div>
                             <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Employment Type</dt>
-                            <dd class="text-black mt-1">{{ $cse->employment_type ? Str::headline($cse->employment_type) : '—' }}</dd>
+                            <dd class="text-black mt-1">
+                                {{ $cse->employment_type ? Str::headline($cse->employment_type) : '—' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Organization Type</dt>
-                            <dd class="text-black mt-1">{{ $cse->organization_type ? Str::headline($cse->organization_type) : '—' }}</dd>
+                            <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Organization Type
+                            </dt>
+                            <dd class="text-black mt-1">
+                                {{ $cse->organization_type ? Str::headline($cse->organization_type) : '—' }}</dd>
                         </div>
                         <div>
                             <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Employment Area</dt>
@@ -224,7 +276,7 @@
                         </div>
                         <div>
                             <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Time to First Job</dt>
-                            <dd class="text-black mt-1">{{ $cse->months_to_first_job ? Str::headline($cse->months_to_first_job) : '—' }}</dd>
+                            <dd class="text-black mt-1">{{ $this->monthsToFirstJobLabel() }}</dd>
                         </div>
                     </dl>
                 @else
@@ -234,7 +286,8 @@
                 @if ($user->tracerStudy?->furtherStudy)
                     @php($fs = $user->tracerStudy->furtherStudy)
                     <div class="mt-6 pt-6 border-t border-black/5">
-                        <h3 class="text-xs text-black/50 uppercase tracking-wide font-semibold mb-2">Further Studies</h3>
+                        <h3 class="text-xs text-black/50 uppercase tracking-wide font-semibold mb-2">Further Studies
+                        </h3>
                         @if ($fs->is_pursued_further_studies)
                             <p class="text-black">Pursuing further studies &mdash; {{ $fs->level_of_study }}</p>
                         @else

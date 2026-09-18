@@ -1,7 +1,10 @@
 <?php
 
 use App\Models\Batch;
+use App\Models\CivilStatusEmployment;
+use App\Models\Course;
 use App\Models\User;
+use App\Models\UserProfile;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -23,7 +26,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     {
         return Batch::orderBy('batch_name', 'desc')
             ->get(['id', 'batch_name'])
-            ->map(fn ($b) => ['id' => $b->id, 'batch_name' => $b->batch_name])
+            ->map(fn($b) => ['id' => $b->id, 'batch_name' => $b->batch_name])
             ->toArray();
     }
 
@@ -38,7 +41,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             ->join('user_profiles', 'student_course.user_profile_id', '=', 'user_profiles.id')
             ->where('departments.is_active', true)
             ->where('courses.is_active', true)
-            ->when($this->selectedBatchId, fn ($q) => $q->where('user_profiles.batch_id', $this->selectedBatchId))
+            ->when($this->selectedBatchId, fn($q) => $q->where('user_profiles.batch_id', $this->selectedBatchId))
             ->select(
                 'departments.dept_name',
                 'departments.dept_code',
@@ -47,7 +50,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             ->groupBy('departments.id', 'departments.dept_name', 'departments.dept_code')
             ->orderBy('departments.dept_name')
             ->get()
-            ->mapWithKeys(fn ($row) => [
+            ->mapWithKeys(fn($row) => [
                 $row->dept_code => [
                     'name'  => $row->dept_name,
                     'total' => (int) $row->total,
@@ -69,7 +72,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             ->groupBy('batches.id', 'batches.batch_name')
             ->orderBy('batches.batch_name', 'asc')
             ->get()
-            ->mapWithKeys(fn ($row) => [
+            ->mapWithKeys(fn($row) => [
                 $row->batch_id => [
                     'batch_name' => $row->batch_name,
                     'total'      => (int) $row->total,
@@ -79,41 +82,43 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     }
 
     #[Computed]
-    public function courseAnalytics()
+    public function courseAnalytics(): array
     {
-        return DB::table('courses')
-            ->join('student_course', 'courses.id', '=', 'student_course.course_id')
-            ->join('user_profiles', 'student_course.user_profile_id', '=', 'user_profiles.id')
-            ->leftJoin('tracer_studies', 'user_profiles.user_id', '=', 'tracer_studies.user_id')
-            ->leftJoin('civil_status_employments', 'tracer_studies.id', '=', 'civil_status_employments.tracer_study_id')
-            ->leftJoin('further_studies', 'tracer_studies.id', '=', 'further_studies.tracer_study_id')
-            ->where('courses.is_active', true)
-            ->when($this->selectedBatchId, fn ($q) => $q->where('user_profiles.batch_id', $this->selectedBatchId))
-            ->select(
-                'courses.course_title',
-                'courses.course_code',
-                DB::raw('COUNT(DISTINCT user_profiles.user_id) as total_alumni'),
-                DB::raw("SUM(CASE WHEN civil_status_employments.employment_status IN ('employed', 'self-employed') THEN 1 ELSE 0 END) as employed_count"),
-                DB::raw("SUM(CASE WHEN civil_status_employments.employed_related_to_degree = 'yes' THEN 1 ELSE 0 END) as related_count"),
-                DB::raw("SUM(CASE WHEN further_studies.is_pursued_further_studies = 1 THEN 1 ELSE 0 END) as further_study_count")
-            )
-            ->groupBy('courses.id', 'courses.course_code', 'courses.course_title')
-            ->orderBy('courses.course_title')
-            ->get()
-            ->map(function ($item) {
-                $total = max((int) $item->total_alumni, 1);
+        $courses = Course::query()
+            ->where('is_active', true)
+            ->get(['id', 'course_code']);
 
-                return [
-                    'course_title'       => $item->course_title,
-                    'course_code'        => $item->course_code,
-                    'total'              => (int) $item->total_alumni,
-                    'employed_rate'      => round(($item->employed_count / $total) * 100),
-                    'related_rate'       => round(($item->related_count / $total) * 100),
-                    'further_study_rate' => round(($item->further_study_count / $total) * 100),
-                ];
-            })
-            ->values()
-            ->toArray();
+        $out = [];
+        foreach ($courses as $course) {
+            // Alumni IDs for this course (and batch if filtered)
+            $alumniIds = UserProfile::whereHas('courses', fn($q) => $q->where('course_id', $course->id))
+                ->when($this->selectedBatchId, fn($q) => $q->where('batch_id', $this->selectedBatchId))
+                ->pluck('user_id');
+
+            if ($alumniIds->isEmpty()) continue;
+
+            // Only alumni who are EMPLOYED count toward alignment
+            $employedBase = fn() => CivilStatusEmployment::whereHas(
+                'tracerStudy',
+                fn($q) => $q->whereIn('user_id', $alumniIds)
+            )
+                ->where('employment_status', 'employed');
+
+            $employedTotal = $employedBase()->count();
+
+            if ($employedTotal === 0) continue;
+
+            $related = $employedBase()
+                ->whereIn('employed_related_to_degree', ['yes', 'partially-related'])
+                ->count();
+
+            $out[] = [
+                'course_code'  => $course->course_code,
+                'related_rate' => round(($related / $employedTotal) * 100),
+            ];
+        }
+
+        return $out;
     }
 
     #[Computed]
@@ -128,7 +133,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $query = User::role('alumni');
 
         if ($this->selectedBatchId) {
-            $query->whereHas('userProfile', fn ($q) => $q->where('batch_id', $this->selectedBatchId));
+            $query->whereHas('userProfile', fn($q) => $q->where('batch_id', $this->selectedBatchId));
         }
 
         return $query->count();
@@ -141,16 +146,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     }
 
     #[Computed]
-    public function active()
+    public function courses()
     {
-        return User::role('alumni')
-            ->whereHas('userProfile', function ($q) {
-                $q->where('is_verified', true);
-                if ($this->selectedBatchId) {
-                    $q->where('batch_id', $this->selectedBatchId);
-                }
-            })
-            ->count();
+        return Course::where('is_active', true)->count();
     }
 
     // ===== Tracer breakdowns (single query, split in PHP) =====
@@ -194,7 +192,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             }
         }
 
-        $order        = ['1-3-months', '4-6-months', 'more-than-6-months', 'more-than-1-year', 'not-yet-employed'];
+        $order        = ['1-3-months', '4-6-months', 'more-than-6-months', 'more-than-1-year'];
         $sortedMonths = [];
         foreach ($order as $key) {
             $sortedMonths[$key] = (int) ($out['months_to_first_job'][$key] ?? 0);

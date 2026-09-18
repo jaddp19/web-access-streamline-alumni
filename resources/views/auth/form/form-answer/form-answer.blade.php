@@ -533,7 +533,7 @@
                             <label class="block text-sm font-semibold text-[#123524] mb-2">How long after graduation
                                 did you obtain your first job?</label>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                @foreach (['1-3-months' => '1-3 Months', '4-6-months' => '4-6 Months', 'more-than-6-months' => 'More than 6 Months', 'more-than-1-year' => 'More than 1 year', 'not-yet-employed' => 'I have not yet been employed'] as $value => $label)
+                                @foreach (['1-3-months' => '1-3 Months', '4-6-months' => '4-6 Months', 'more-than-6-months' => 'More than 6 Months', 'more-than-1-year' => 'More than 1 year'] as $value => $label)
                                     <label class="flex items-center gap-2 cursor-pointer min-h-[40px]">
                                         <input type="radio" wire:model="months_to_first_job"
                                             value="{{ $value }}"
