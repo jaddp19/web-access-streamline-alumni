@@ -225,7 +225,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
                 'organization_type',
                 'employment_area',
                 'abroad_country',
-                'months_to_first_job',
             ]);
 
             $this->resetErrorBag([
@@ -237,7 +236,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
                 'organization_type',
                 'employment_area',
                 'abroad_country',
-                'months_to_first_job',
             ]);
 
             // Also close the inline new-company form if it was open
@@ -316,7 +314,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
                 'organization_type'          => 'required_if:employment_status,employed|nullable|in:private-company,government-agency,non-government-organization,educational-institution,self-employed-business,other',
                 'employment_area'            => 'required_if:employment_status,employed|nullable|in:philippines,abroad',
                 'abroad_country'             => 'required_if:employment_area,abroad|nullable|string|max:255',
-                'months_to_first_job'        => 'required_if:employment_status,employed|nullable|in:1-3-months,4-6-months,more-than-6-months,more-than-1-year,not-yet-employed',
+                'months_to_first_job'        => 'required_if:employment_status,employed|nullable|in:1-3-months,4-6-months,more-than-6-months,more-than-1-year',
             ],
             4 => [
                 'is_pursued_further_studies' => 'required|boolean',
@@ -467,7 +465,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
                     'abroad_country'             => $isEmployed && $this->employment_area === 'abroad'
                         ? ($this->abroad_country ?: null)
                         : null,
-                    'months_to_first_job'        => $isEmployed ? ($this->months_to_first_job ?: null) : null,
+                    'months_to_first_job' => $this->months_to_first_job ?: null,
                 ]
             );
 

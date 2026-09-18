@@ -218,9 +218,7 @@
                                 <a href="{{ route('terms-and-conditions') }}" target="_blank"
                                    class="text-[#1877F2] font-semibold hover:underline">
                                     Terms and Conditions
-                                </a>
-                                . I consent to the processing of my personal data in accordance with the
-                                <strong>Data Privacy Act of 2012 (RA 10173)</strong>.
+                                </a>.
                             </span>
                         </label>
                         @error('consentGiven')
