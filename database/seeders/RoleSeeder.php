@@ -14,7 +14,6 @@ class RoleSeeder extends Seeder
     public function run(): void
     {
         $roles = [
-            'pending-verification',
             'alumni',
             'program head',
             'registrar',

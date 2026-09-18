@@ -47,6 +47,11 @@
                        class="text-white/60 hover:text-[#D4A537] transition-colors">
                         Privacy Policy
                     </a>
+                    <span class="text-white/20">·</span>
+                    <a href="{{ route('terms-and-conditions') }}"
+                    class="text-white/60 hover:text-[#D4A537] transition-colors">
+                        Terms and Conditions
+                    </a>
                 </div>
                 {{-- End Legal Links --}}
 

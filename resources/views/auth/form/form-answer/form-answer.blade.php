@@ -223,7 +223,7 @@
                                     Privacy Policy
                                 </a>
                                 and
-                                <a href="#" target="_blank"
+                                <a href="{{ route('terms-and-conditions') }}" target="_blank"
                                    class="text-[#1877F2] font-semibold hover:underline">
                                     Terms and Conditions
                                 </a>
