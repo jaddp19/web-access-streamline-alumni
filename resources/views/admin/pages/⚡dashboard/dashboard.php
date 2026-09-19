@@ -44,17 +44,76 @@ new #[Layout('layouts.app-admin')] class extends Component
 
         return User::role('alumni')
             ->when(is_int($scope), function ($q) use ($scope) {
-                $q->whereHas('userProfile.courses', fn ($c) => $c->where('department_id', $scope));
+                $q->whereHas('userProfile.courses', fn($c) => $c->where('department_id', $scope));
             })
             ->when($this->selectedBatchId, function ($q) {
-                $q->whereHas('userProfile', fn ($p) => $p->where('batch_id', $this->selectedBatchId));
+                $q->whereHas('userProfile', fn($p) => $p->where('batch_id', $this->selectedBatchId));
             });
+    }
+
+    #[Computed]
+    public function courses(): int
+    {
+        $scope = $this->scopeDepartmentId();
+        if ($scope === false) return 0;
+
+        return Course::query()
+            ->when(is_int($scope), fn($q) => $q->where('department_id', $scope))
+            ->count();
     }
 
     #[Computed]
     public function isRegistrar(): bool
     {
         return Auth::user()?->hasRole('registrar') ?? false;
+    }
+
+    #[Computed]
+    public function boardPassers(): int
+    {
+        $scope = $this->scopeDepartmentId();
+        if ($scope === false) return 0;
+
+        return UserProfile::query()
+            ->where('is_verified', true)
+            // Only board-program alumni can be board passers
+            ->whereHas('courses', fn($c) => $c->where('course_type', 'board'))
+            // Scoped to the program head's department
+            ->when(
+                is_int($scope),
+                fn($q) =>
+                $q->whereHas('courses', fn($c) => $c->where('department_id', $scope))
+            )
+            ->when(
+                $this->selectedBatchId,
+                fn($q) =>
+                $q->where('batch_id', $this->selectedBatchId)
+            )
+            ->count();
+    }
+
+    #[Computed]
+    public function pendingVerification(): int
+    {
+        $scope = $this->scopeDepartmentId();
+        if ($scope === false) return 0;
+
+        return UserProfile::query()
+            ->where('is_verified', false)
+            // Must have a board course in student_course
+            ->whereHas('courses', fn($c) => $c->where('course_type', 'board'))
+            // Scoped to the program head's department
+            ->when(
+                is_int($scope),
+                fn($q) =>
+                $q->whereHas('courses', fn($c) => $c->where('department_id', $scope))
+            )
+            ->when(
+                $this->selectedBatchId,
+                fn($q) =>
+                $q->where('batch_id', $this->selectedBatchId)
+            )
+            ->count();
     }
 
     #[Computed]
@@ -79,13 +138,13 @@ new #[Layout('layouts.app-admin')] class extends Component
         return Batch::query()
             ->when(is_int($scope), function ($q) use ($scope) {
                 $q->whereHas('userProfiles', function ($p) use ($scope) {
-                    $p->whereHas('user', fn ($u) => $u->role('alumni'))
-                      ->whereHas('courses', fn ($c) => $c->where('department_id', $scope));
+                    $p->whereHas('user', fn($u) => $u->role('alumni'))
+                        ->whereHas('courses', fn($c) => $c->where('department_id', $scope));
                 });
             })
             ->orderByDesc('batch_name')
             ->get(['id', 'batch_name'])
-            ->map(fn ($b) => ['id' => $b->id, 'batch_name' => $b->batch_name])
+            ->map(fn($b) => ['id' => $b->id, 'batch_name' => $b->batch_name])
             ->toArray();
     }
 
@@ -97,7 +156,7 @@ new #[Layout('layouts.app-admin')] class extends Component
         $scope = $this->scopeDepartmentId();
         if ($scope === false) return 0;
         if (is_int($scope)) {
-            return User::whereHas('userProfile.courses', fn ($q) => $q->where('department_id', $scope))
+            return User::whereHas('userProfile.courses', fn($q) => $q->where('department_id', $scope))
                 ->count();
         }
         return User::count();
@@ -108,7 +167,7 @@ new #[Layout('layouts.app-admin')] class extends Component
     {
         $q = $this->alumniQuery();
         if (! $q) return 0;
-        return $q->whereHas('userProfile', fn ($p) => $p->where('is_verified', true))->count();
+        return $q->whereHas('userProfile', fn($p) => $p->where('is_verified', true))->count();
     }
 
     #[Computed]
@@ -126,7 +185,7 @@ new #[Layout('layouts.app-admin')] class extends Component
         if ($scope === false) return 0;
         if (is_int($scope)) {
             return User::role('program head')
-                ->whereHas('department', fn ($q) => $q->where('id', $scope))
+                ->whereHas('department', fn($q) => $q->where('id', $scope))
                 ->count();
         }
         return User::role('program head')->count();
@@ -141,14 +200,14 @@ new #[Layout('layouts.app-admin')] class extends Component
         if ($scope === false) return [];
 
         $departments = Department::query()
-            ->when(is_int($scope), fn ($q) => $q->where('id', $scope))
+            ->when(is_int($scope), fn($q) => $q->where('id', $scope))
             ->get();
 
         $out = [];
         foreach ($departments as $dept) {
             $count = User::role('alumni')
-                ->when($this->selectedBatchId, fn ($q) => $q->whereHas('userProfile', fn ($p) => $p->where('batch_id', $this->selectedBatchId)))
-                ->whereHas('userProfile.courses', fn ($c) => $c->where('department_id', $dept->id))
+                ->when($this->selectedBatchId, fn($q) => $q->whereHas('userProfile', fn($p) => $p->where('batch_id', $this->selectedBatchId)))
+                ->whereHas('userProfile.courses', fn($c) => $c->where('department_id', $dept->id))
                 ->count();
 
             $out[$dept->dept_code ?: ('DEPT-' . $dept->id)] = [
@@ -168,8 +227,8 @@ new #[Layout('layouts.app-admin')] class extends Component
         $out = [];
         foreach ($this->batches as $batch) {
             $count = User::role('alumni')
-                ->whereHas('userProfile', fn ($p) => $p->where('batch_id', $batch['id']))
-                ->when(is_int($scope), fn ($q) => $q->whereHas('userProfile.courses', fn ($c) => $c->where('department_id', $scope)))
+                ->whereHas('userProfile', fn($p) => $p->where('batch_id', $batch['id']))
+                ->when(is_int($scope), fn($q) => $q->whereHas('userProfile.courses', fn($c) => $c->where('department_id', $scope)))
                 ->count();
 
             $out[(string) $batch['id']] = [
@@ -187,19 +246,19 @@ new #[Layout('layouts.app-admin')] class extends Component
         if ($scope === false) return [];
 
         $courses = Course::query()
-            ->when(is_int($scope), fn ($q) => $q->where('department_id', $scope))
+            ->when(is_int($scope), fn($q) => $q->where('department_id', $scope))
             ->get(['id', 'course_code']);
 
         $out = [];
         foreach ($courses as $course) {
-            $alumniIds = UserProfile::whereHas('courses', fn ($q) => $q->where('course_id', $course->id))
-                ->when($this->selectedBatchId, fn ($q) => $q->where('batch_id', $this->selectedBatchId))
+            $alumniIds = UserProfile::whereHas('courses', fn($q) => $q->where('course_id', $course->id))
+                ->when($this->selectedBatchId, fn($q) => $q->where('batch_id', $this->selectedBatchId))
                 ->pluck('user_id');
 
             $total = $alumniIds->count();
             if ($total === 0) continue;
 
-            $related = CivilStatusEmployment::whereHas('tracerStudy', fn ($q) => $q->whereIn('user_id', $alumniIds))
+            $related = CivilStatusEmployment::whereHas('tracerStudy', fn($q) => $q->whereIn('user_id', $alumniIds))
                 ->whereIn('employed_related_to_degree', ['yes', 'partially-related'])
                 ->count();
 
@@ -221,7 +280,7 @@ new #[Layout('layouts.app-admin')] class extends Component
         $total = $ids->count();
         if ($total === 0) return 0;
 
-        $pursued = FurtherStudy::whereHas('tracerStudy', fn ($q) => $q->whereIn('user_id', $ids))
+        $pursued = FurtherStudy::whereHas('tracerStudy', fn($q) => $q->whereIn('user_id', $ids))
             ->where('is_pursued_further_studies', true)
             ->count();
 
@@ -235,7 +294,7 @@ new #[Layout('layouts.app-admin')] class extends Component
         if (! $q) return [];
         $ids = $q->pluck('id');
 
-        return CivilStatusEmployment::whereHas('tracerStudy', fn ($q) => $q->whereIn('user_id', $ids))
+        return CivilStatusEmployment::whereHas('tracerStudy', fn($q) => $q->whereIn('user_id', $ids))
             ->whereNotNull('employment_status')
             ->select('employment_status', DB::raw('count(*) as total'))
             ->groupBy('employment_status')
@@ -250,7 +309,7 @@ new #[Layout('layouts.app-admin')] class extends Component
         if (! $q) return [];
         $ids = $q->pluck('id');
 
-        return CivilStatusEmployment::whereHas('tracerStudy', fn ($q) => $q->whereIn('user_id', $ids))
+        return CivilStatusEmployment::whereHas('tracerStudy', fn($q) => $q->whereIn('user_id', $ids))
             ->whereNotNull('employment_type')
             ->select('employment_type', DB::raw('count(*) as total'))
             ->groupBy('employment_type')
@@ -265,7 +324,7 @@ new #[Layout('layouts.app-admin')] class extends Component
         if (! $q) return [];
         $ids = $q->pluck('id');
 
-        return CivilStatusEmployment::whereHas('tracerStudy', fn ($q) => $q->whereIn('user_id', $ids))
+        return CivilStatusEmployment::whereHas('tracerStudy', fn($q) => $q->whereIn('user_id', $ids))
             ->whereNotNull('organization_type')
             ->select('organization_type', DB::raw('count(*) as total'))
             ->groupBy('organization_type')
@@ -280,7 +339,7 @@ new #[Layout('layouts.app-admin')] class extends Component
         if (! $q) return [];
         $ids = $q->pluck('id');
 
-        return CivilStatusEmployment::whereHas('tracerStudy', fn ($q) => $q->whereIn('user_id', $ids))
+        return CivilStatusEmployment::whereHas('tracerStudy', fn($q) => $q->whereIn('user_id', $ids))
             ->whereNotNull('employment_area')
             ->select('employment_area', DB::raw('count(*) as total'))
             ->groupBy('employment_area')
@@ -295,7 +354,7 @@ new #[Layout('layouts.app-admin')] class extends Component
         if (! $q) return [];
         $ids = $q->pluck('id');
 
-        return CivilStatusEmployment::whereHas('tracerStudy', fn ($q) => $q->whereIn('user_id', $ids))
+        return CivilStatusEmployment::whereHas('tracerStudy', fn($q) => $q->whereIn('user_id', $ids))
             ->whereNotNull('months_to_first_job')
             ->select('months_to_first_job', DB::raw('count(*) as total'))
             ->groupBy('months_to_first_job')
@@ -313,9 +372,9 @@ new #[Layout('layouts.app-admin')] class extends Component
 
         return $q->with('userProfile:id,user_id,location')
             ->get()
-            ->map(fn ($u) => $u->userProfile?->location['gender'] ?? null)
+            ->map(fn($u) => $u->userProfile?->location['gender'] ?? null)
             ->filter()
-            ->map(fn ($g) => ucfirst($g))
+            ->map(fn($g) => ucfirst($g))
             ->countBy()
             ->toArray();
     }
@@ -327,7 +386,7 @@ new #[Layout('layouts.app-admin')] class extends Component
         if (! $q) return [];
         $ids = $q->pluck('id');
 
-        return CivilStatusEmployment::whereHas('tracerStudy', fn ($q) => $q->whereIn('user_id', $ids))
+        return CivilStatusEmployment::whereHas('tracerStudy', fn($q) => $q->whereIn('user_id', $ids))
             ->whereNotNull('civil_status')
             ->select('civil_status', DB::raw('count(*) as total'))
             ->groupBy('civil_status')
@@ -342,7 +401,7 @@ new #[Layout('layouts.app-admin')] class extends Component
         if (! $q) return [];
         $ids = $q->pluck('id');
 
-        return FurtherStudy::whereHas('tracerStudy', fn ($q) => $q->whereIn('user_id', $ids))
+        return FurtherStudy::whereHas('tracerStudy', fn($q) => $q->whereIn('user_id', $ids))
             ->where('is_pursued_further_studies', true)
             ->whereNotNull('level_of_study')
             ->select('level_of_study', DB::raw('count(*) as total'))
@@ -362,7 +421,7 @@ new #[Layout('layouts.app-admin')] class extends Component
             ->whereNotNull('company_id')
             ->with('company:id,company_name')
             ->get()
-            ->groupBy(fn ($w) => $w->company?->company_name ?? 'Unknown')
+            ->groupBy(fn($w) => $w->company?->company_name ?? 'Unknown')
             ->map->count()
             ->sortDesc()
             ->take(8)
@@ -376,7 +435,7 @@ new #[Layout('layouts.app-admin')] class extends Component
         if (! $q) return [];
         $ids = $q->pluck('id');
 
-        return CivilStatusEmployment::whereHas('tracerStudy', fn ($q) => $q->whereIn('user_id', $ids))
+        return CivilStatusEmployment::whereHas('tracerStudy', fn($q) => $q->whereIn('user_id', $ids))
             ->whereNotNull('employed_related_to_degree')
             ->select('employed_related_to_degree', DB::raw('count(*) as total'))
             ->groupBy('employed_related_to_degree')
@@ -393,10 +452,10 @@ new #[Layout('layouts.app-admin')] class extends Component
         $profiles = $q->with('userProfile:id,user_id,board_taken,board_rate')
             ->get()
             ->pluck('userProfile')
-            ->filter(fn ($p) => $p && filled($p->board_taken));
+            ->filter(fn($p) => $p && filled($p->board_taken));
 
         $taken = $profiles->count();
-        $passed = $profiles->filter(fn ($p) => is_numeric($p->board_rate) && (float) $p->board_rate >= 75)->count();
+        $passed = $profiles->filter(fn($p) => is_numeric($p->board_rate) && (float) $p->board_rate >= 75)->count();
 
         return [
             'Passed' => $passed,
@@ -412,7 +471,7 @@ new #[Layout('layouts.app-admin')] class extends Component
 
         return $q->with('userProfile:id,user_id,location')
             ->get()
-            ->map(fn ($u) => $u->userProfile?->location['region_name'] ?? null)
+            ->map(fn($u) => $u->userProfile?->location['region_name'] ?? null)
             ->filter()
             ->countBy()
             ->sortDesc()
@@ -426,14 +485,26 @@ new #[Layout('layouts.app-admin')] class extends Component
     {
         // Bust computed caches by unsetting them
         $props = [
-            'users', 'active', 'alumni', 'programHeads',
-            'alumniByDept', 'alumniByBatch', 'courseAnalytics',
-            'furtherStudiesRate', 'employmentStatusBreakdown',
-            'employmentTypeBreakdown', 'organizationTypeBreakdown',
-            'employmentAreaBreakdown', 'monthsToFirstJobBreakdown',
-            'genderBreakdown', 'civilStatusBreakdown',
-            'furtherStudiesLevelBreakdown', 'topEmployers',
-            'jobAlignmentBreakdown', 'boardExamBreakdown', 'alumniByRegion',
+            'users',
+            'active',
+            'alumni',
+            'programHeads',
+            'alumniByDept',
+            'alumniByBatch',
+            'courseAnalytics',
+            'furtherStudiesRate',
+            'employmentStatusBreakdown',
+            'employmentTypeBreakdown',
+            'organizationTypeBreakdown',
+            'employmentAreaBreakdown',
+            'monthsToFirstJobBreakdown',
+            'genderBreakdown',
+            'civilStatusBreakdown',
+            'furtherStudiesLevelBreakdown',
+            'topEmployers',
+            'jobAlignmentBreakdown',
+            'boardExamBreakdown',
+            'alumniByRegion',
         ];
         foreach ($props as $p) unset($this->{$p});
 

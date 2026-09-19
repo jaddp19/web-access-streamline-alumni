@@ -23,6 +23,7 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['auth', 'role:registrar'])->prefix('super-admin')->group(function () {
     Route::livewire('/dashboard', 'super-admin::pages.dashboard')->name('super-admin.dashboard');
+    Route::livewire('/settings', 'super-admin::pages.settings')->name('super-admin.settings');
 
     Route::livewire('/roles/view', 'super-admin::pages.role.view-role')->name('view-role');
     Route::livewire('/roles/create', 'super-admin::pages.role.create-role')->name('create-role');
@@ -52,8 +53,6 @@ Route::middleware(['auth', 'role:registrar'])->prefix('super-admin')->group(func
     Route::livewire('/batch/create', 'super-admin::pages.batch.create-batch')->name('super-admin.batch.create');
     Route::livewire('/batch/update/{batch}', 'super-admin::pages.batch.update-batch')->name('super-admin.batch.update');
 
-    Route::livewire('/request/view', 'super-admin::pages.request.view-request')->name('super-admin.request.view');
-
     Route::livewire('/email/view', 'super-admin::pages.email.view-email')->name('super-admin.email.view');
     Route::livewire('/email/create', 'super-admin::pages.email.create-email')->name('super-admin.email.create');
     Route::livewire('/email/update/{email}', 'super-admin::pages.email.update-email')->name('super-admin.email.update');
@@ -67,11 +66,13 @@ Route::middleware(['auth', 'role:registrar'])->prefix('super-admin')->group(func
 
 Route::middleware(['auth', 'role:program head|registrar'])->prefix('admin')->group(function () {
     Route::livewire('/dashboard', 'admin::pages.dashboard')->name('admin.dashboard');
+    Route::livewire('/settings', 'admin::pages.settings')->name('admin.settings');
 
     Route::livewire('/alumni/view', 'admin::pages.alumni.view-alumni')->name('admin.alumni.view');
     Route::livewire('/alumni/view/{user}', 'admin::pages.alumni.view-single-alumni')->name('admin.alumni.view-single');
     Route::livewire('/alumni/create', 'admin::pages.alumni.create-alumni')->name('admin.alumni.create');
     Route::livewire('/alumni/update/{user}', 'admin::pages.alumni.update-alumni')->name('admin.alumni.update');
+
 });
 
 Route::middleware(['auth', 'role:alumni|registrar'])->prefix('alumni')->group(function () {

@@ -93,9 +93,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $this->selectAll = count($this->selectedUsers) === $this->totalUsersCount;
     }
 
-    /**
-     * Shared base query respecting the active role filter + search term.
-     */
     protected function filteredQuery()
     {
         return User::role(['alumni', 'registrar', 'program head'])
@@ -106,10 +103,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                 $query->where(function ($q) {
                     $q->where('name', 'like', '%' . $this->search . '%')
                     ->orWhere('email', 'like', '%' . $this->search . '%')
+                    ->orWhere('school_id', 'like', '%' . $this->search . '%')   // ← new
                     ->orWhereHas('roles', fn ($r) => $r->where('name', 'like', '%' . $this->search . '%'));
                 });
             });
-
     }
 
     #[Computed]
@@ -122,16 +119,12 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public function users()
     {
         return $this->filteredQuery()
-            ->with(['roles:id,name', 'tracerStudy:id,user_id'])
+            ->with(['roles:id,name', 'tracerStudy:id,user_id', 'userProfile:id,user_id,avatar'])
             ->select('id', 'name', 'email', 'created_at')
             ->latest()
             ->paginate(5);
     }
 
-    /**
-     * Human-readable tracer study status for a user.
-     * Only meaningful for alumni — other roles return null.
-     */
     protected function tracerStatusFor(User $user): ?string
     {
         if (! $user->hasRole('alumni')) {
@@ -141,15 +134,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         return $user->tracerStudy ? 'Completed' : 'Pending';
     }
 
-    /**
-     * Export the currently filtered/searched result set (respects
-     * role tab + search box, ignores pagination — exports everything
-     * matching, not just the current page).
-     */
     public function exportFilteredCsv(): StreamedResponse
     {
         $users = $this->filteredQuery()
-            ->with(['roles:id,name', 'tracerStudy:id,user_id'])
+            ->with(['roles:id,name', 'tracerStudy:id,user_id', 'userProfile:id,user_id,avatar'])
             ->select('id', 'name', 'email', 'school_id', 'created_at')
             ->latest()
             ->get();
@@ -157,14 +145,11 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         return $this->streamUsersAsCsv($users, 'users-filtered');
     }
 
-    /**
-     * Export only the checked rows.
-     */
     public function exportSelectedCsv(): StreamedResponse
     {
         $users = User::role(['alumni', 'registrar', 'program head'])
             ->whereIn('id', $this->selectedUsers)
-            ->with(['roles:id,name', 'tracerStudy:id,user_id'])
+            ->with(['roles:id,name', 'tracerStudy:id,user_id', 'userProfile:id,user_id,avatar'])
             ->select('id', 'name', 'email', 'school_id', 'created_at')
             ->latest()
             ->get();
@@ -179,7 +164,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         return response()->streamDownload(function () use ($users) {
             $handle = fopen('php://output', 'w');
 
-            // UTF-8 BOM so Excel doesn't mangle special characters
             fwrite($handle, "\xEF\xBB\xBF");
 
             fputcsv($handle, ['Name', 'Email', 'School ID', 'Roles', 'Tracer Study', 'Created At']);

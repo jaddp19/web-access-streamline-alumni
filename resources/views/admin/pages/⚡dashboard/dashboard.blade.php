@@ -5,10 +5,10 @@
             {{-- Header --}}
             <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                 <div>
-                    <h1 class="text-xl sm:text-2xl font-bold text-[#0f2b1c]" style="font-family: 'Fraunces', serif;">
+                    <h1 class="text-xl sm:text-2xl font-bold text-[#0f2b1c] dark:text-white" style="font-family: 'Fraunces', serif;">
                         Overview
                     </h1>
-                    <p class="text-sm text-black/50 mt-0.5">
+                    <p class="text-sm text-black/50 dark:text-white/50 mt-0.5">
                         @if ($this->hasNoDepartment)
                             Waiting for department assignment.
                         @elseif ($selectedBatchId)
@@ -25,12 +25,12 @@
                 @unless ($this->hasNoDepartment)
                     <div class="shrink-0 flex items-center gap-2">
 
-                        <label for="batch-filter" class="text-[11px] font-bold text-black/50 uppercase tracking-wide whitespace-nowrap">Batch</label>
+                        <label for="batch-filter" class="text-[11px] font-bold text-black/50 dark:text-white/50 uppercase tracking-wide whitespace-nowrap">Batch</label>
 
                         <div class="relative">
                             <select id="batch-filter" wire:model.live.debounce.500ms="selectedBatchId"
                                 wire:loading.attr="disabled" wire:target="selectedBatchId"
-                                class="px-3 py-2 pr-9 text-sm rounded-xl border border-black/10 bg-white text-[#0f2b1c] font-semibold focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition min-w-[150px] cursor-pointer disabled:opacity-60 disabled:cursor-wait">
+                                class="px-3 py-2 pr-9 text-sm rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#3A3B3C] text-[#0f2b1c] dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition min-w-[150px] cursor-pointer disabled:opacity-60 disabled:cursor-wait">
                                 <option value="">Overall</option>
                                 @foreach ($this->batches as $batch)
                                     <option value="{{ $batch['id'] }}">{{ $batch['batch_name'] }}</option>
@@ -48,14 +48,14 @@
             </div>
 
             @if ($this->hasNoDepartment)
-                <div class="rounded-2xl bg-amber-50 border border-amber-200 p-6 sm:p-8 text-center">
-                    <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-amber-100 flex items-center justify-center text-amber-700">
+                <div class="rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 p-6 sm:p-8 text-center">
+                    <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-amber-100 dark:bg-amber-500/15 flex items-center justify-center text-amber-700 dark:text-amber-400">
                         <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
                         </svg>
                     </div>
-                    <h2 class="text-lg font-bold text-amber-900" style="font-family: 'Fraunces', serif;">No department assigned yet</h2>
-                    <p class="text-sm text-amber-800/80 mt-2 max-w-md mx-auto">
+                    <h2 class="text-lg font-bold text-amber-900 dark:text-amber-300" style="font-family: 'Fraunces', serif;">No department assigned yet</h2>
+                    <p class="text-sm text-amber-800/80 dark:text-amber-200/70 mt-2 max-w-md mx-auto">
                         You don't have access to any alumni data until the registrar assigns you to a department.
                     </p>
                 </div>
@@ -65,50 +65,53 @@
 
                     {{-- Stat cards --}}
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5">
-                        <div class="relative overflow-hidden bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
+                        <div class="relative overflow-hidden bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                             <div class="relative flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl bg-green-700/10 flex items-center justify-center text-green-700 shrink-0">
+                                <div class="w-10 h-10 rounded-xl bg-green-700/10 dark:bg-emerald-500/15 flex items-center justify-center text-green-700 dark:text-emerald-400 shrink-0">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" /></svg>
                                 </div>
                                 <div class="min-w-0">
-                                    <p class="text-[10px] sm:text-xs uppercase tracking-wide text-black/50 font-semibold truncate">Total Users</p>
-                                    <h3 class="text-xl sm:text-2xl font-bold text-[#0f2b1c] mt-0.5">{{ $this->users }}</h3>
+                                    <p class="text-[10px] sm:text-xs uppercase tracking-wide text-black/50 dark:text-white/50 font-semibold truncate">Board Passers</p>
+                                    <h3 class="text-xl sm:text-2xl font-bold text-[#0f2b1c] dark:text-white mt-0.5">{{ $this->boardPassers }}</h3>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="relative overflow-hidden bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
+                        <div class="relative overflow-hidden bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                             <div class="relative flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 shrink-0">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                <div class="w-10 h-10 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                                    </svg>
                                 </div>
                                 <div class="min-w-0">
-                                    <p class="text-[10px] sm:text-xs uppercase tracking-wide text-black/50 font-semibold truncate">Active Alumni</p>
-                                    <h3 class="text-xl sm:text-2xl font-bold text-[#0f2b1c] mt-0.5">{{ $this->active }}</h3>
+                                    <p class="text-[10px] sm:text-xs uppercase tracking-wide text-black/50 dark:text-white/50 font-semibold truncate">Courses</p>
+                                    <h3 class="text-xl sm:text-2xl font-bold text-[#0f2b1c] dark:text-white mt-0.5">{{ $this->courses }}</h3>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="relative overflow-hidden bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
+                        <div class="relative overflow-hidden bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                             <div class="relative flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl bg-[#D4A537]/15 flex items-center justify-center text-[#a97f1f] shrink-0">
+                                <div class="w-10 h-10 rounded-xl bg-[#D4A537]/15 dark:bg-[#D4A537]/20 flex items-center justify-center text-[#a97f1f] dark:text-[#E5B94A] shrink-0">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.62 48.62 0 0112 20.904a48.62 48.62 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342" /></svg>
                                 </div>
                                 <div class="min-w-0">
-                                    <p class="text-[10px] sm:text-xs uppercase tracking-wide text-black/50 font-semibold truncate">Total Alumni</p>
-                                    <h3 class="text-xl sm:text-2xl font-bold text-[#0f2b1c] mt-0.5">{{ $this->alumni }}</h3>
+                                    <p class="text-[10px] sm:text-xs uppercase tracking-wide text-black/50 dark:text-white/50 font-semibold truncate">Total Alumni</p>
+                                    <h3 class="text-xl sm:text-2xl font-bold text-[#0f2b1c] dark:text-white mt-0.5">{{ $this->alumni }}</h3>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="relative overflow-hidden bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
+                        <div class="relative overflow-hidden bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                             <div class="relative flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600 shrink-0">
+                                <div class="w-10 h-10 rounded-xl bg-blue-500/10 dark:bg-blue-500/15 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
                                 </div>
                                 <div class="min-w-0">
-                                    <p class="text-[10px] sm:text-xs uppercase tracking-wide text-black/50 font-semibold truncate">Program Heads</p>
-                                    <h3 class="text-xl sm:text-2xl font-bold text-[#0f2b1c] mt-0.5">{{ $this->programHeads }}</h3>
+                                    <p class="text-[10px] sm:text-xs uppercase tracking-wide text-black/50 dark:text-white/50 font-semibold truncate">Pending Verifications</p>
+                                    <h3 class="text-xl sm:text-2xl font-bold text-[#0f2b1c] dark:text-white mt-0.5">{{ $this->pendingVerification }}</h3>
                                 </div>
                             </div>
                         </div>
@@ -116,22 +119,22 @@
 
                     {{-- Main charts --}}
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                        <div class="bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
-                            <h2 class="text-sm font-bold text-[#0f2b1c]">Alumni Graduates</h2>
-                            <p class="text-xs text-black/40 mt-0.5 mb-3">Breakdown by department</p>
+                        <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                            <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white">Alumni Graduates</h2>
+                            <p class="text-xs text-black/40 dark:text-white/40 mt-0.5 mb-3">Breakdown by department</p>
                             @if (empty($this->alumniByDept))
-                                <p class="text-sm text-black/40 py-16 text-center">No alumni-to-department records yet.</p>
+                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No alumni-to-department records yet.</p>
                             @else
                                 <div class="w-full h-64 sm:h-72 md:h-80"><canvas id="alumniDynamicChart"></canvas></div>
                             @endif
                         </div>
 
-                        <div class="bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
-                            <h2 class="text-sm font-bold text-[#0f2b1c]">Comparative Analysis</h2>
-                            <p class="text-xs text-black/40 mt-0.5 mb-1">Course alignment with current work</p>
-                            <p class="text-xs text-black/50 mb-3">{{ $this->furtherStudiesRate }}% pursued further studies</p>
+                        <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                            <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white">Comparative Analysis</h2>
+                            <p class="text-xs text-black/40 dark:text-white/40 mt-0.5 mb-1">Course alignment with current work</p>
+                            <p class="text-xs text-black/50 dark:text-white/50 mb-3">{{ $this->furtherStudiesRate }}% pursued further studies</p>
                             @if (empty($this->courseAnalytics))
-                                <p class="text-sm text-black/40 py-16 text-center">No course analytics yet.</p>
+                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No course analytics yet.</p>
                             @else
                                 <div class="w-full h-64 sm:h-72 md:h-80"><canvas id="comparativeChart"></canvas></div>
                             @endif
@@ -139,11 +142,11 @@
                     </div>
 
                     {{-- Alumni by Year --}}
-                    <div class="bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
-                        <h2 class="text-sm font-bold text-[#0f2b1c]">Alumni Graduates by Year</h2>
-                        <p class="text-xs text-black/40 mt-0.5 mb-3">Total graduates per batch</p>
+                    <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                        <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white">Alumni Graduates by Year</h2>
+                        <p class="text-xs text-black/40 dark:text-white/40 mt-0.5 mb-3">Total graduates per batch</p>
                         @if (empty($this->alumniByBatch))
-                            <p class="text-sm text-black/40 py-16 text-center">No batch records yet.</p>
+                            <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No batch records yet.</p>
                         @else
                             <div class="w-full h-72"><canvas id="alumniByBatchChart"></canvas></div>
                         @endif
@@ -151,27 +154,27 @@
 
                     {{-- Analytics section header --}}
                     <div>
-                        <h2 class="text-lg sm:text-xl font-bold text-[#0f2b1c]" style="font-family: 'Fraunces', serif;">Analytics</h2>
-                        <p class="text-sm text-black/50 mt-0.5">Deeper breakdown from the tracer study.</p>
+                        <h2 class="text-lg sm:text-xl font-bold text-[#0f2b1c] dark:text-white" style="font-family: 'Fraunces', serif;">Analytics</h2>
+                        <p class="text-sm text-black/50 dark:text-white/50 mt-0.5">Deeper breakdown from the tracer study.</p>
                     </div>
 
                     {{-- Row: Employment status + Employment type --}}
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                        <div class="bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
-                            <h2 class="text-sm font-bold text-[#0f2b1c] mb-1">Employment Status</h2>
-                            <p class="text-xs text-black/40 mb-3">Employed, unemployed, self-employed</p>
+                        <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                            <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Employment Status</h2>
+                            <p class="text-xs text-black/40 dark:text-white/40 mb-3">Employed, unemployed, self-employed</p>
                             @if (empty($this->employmentStatusBreakdown))
-                                <p class="text-sm text-black/40 py-16 text-center">No tracer employment data yet.</p>
+                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No tracer employment data yet.</p>
                             @else
                                 <div class="w-full h-64"><canvas id="employmentStatusChart"></canvas></div>
                             @endif
                         </div>
 
-                        <div class="bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
-                            <h2 class="text-sm font-bold text-[#0f2b1c] mb-1">Employment Type</h2>
-                            <p class="text-xs text-black/40 mb-3">Full-time, part-time, freelance, etc.</p>
+                        <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                            <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Employment Type</h2>
+                            <p class="text-xs text-black/40 dark:text-white/40 mb-3">Full-time, part-time, freelance, etc.</p>
                             @if (empty($this->employmentTypeBreakdown))
-                                <p class="text-sm text-black/40 py-16 text-center">No employment type yet.</p>
+                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No employment type yet.</p>
                             @else
                                 <div class="w-full h-64"><canvas id="employmentTypeChart"></canvas></div>
                             @endif
@@ -180,21 +183,21 @@
 
                     {{-- Row: Org type + Employment area --}}
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                        <div class="bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
-                            <h2 class="text-sm font-bold text-[#0f2b1c] mb-1">Organization Type</h2>
-                            <p class="text-xs text-black/40 mb-3">Where alumni currently work</p>
+                        <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                            <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Organization Type</h2>
+                            <p class="text-xs text-black/40 dark:text-white/40 mb-3">Where alumni currently work</p>
                             @if (empty($this->organizationTypeBreakdown))
-                                <p class="text-sm text-black/40 py-16 text-center">No organization type yet.</p>
+                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No organization type yet.</p>
                             @else
                                 <div class="w-full h-64"><canvas id="organizationTypeChart"></canvas></div>
                             @endif
                         </div>
 
-                        <div class="bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
-                            <h2 class="text-sm font-bold text-[#0f2b1c] mb-1">Employment Area</h2>
-                            <p class="text-xs text-black/40 mb-3">Philippines vs. abroad</p>
+                        <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                            <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Employment Area</h2>
+                            <p class="text-xs text-black/40 dark:text-white/40 mb-3">Philippines vs. abroad</p>
                             @if (empty($this->employmentAreaBreakdown))
-                                <p class="text-sm text-black/40 py-16 text-center">No employment area yet.</p>
+                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No employment area yet.</p>
                             @else
                                 <div class="w-full h-64"><canvas id="employmentAreaChart"></canvas></div>
                             @endif
@@ -202,11 +205,11 @@
                     </div>
 
                     {{-- Time to First Job --}}
-                    <div class="bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
-                        <h2 class="text-sm font-bold text-[#0f2b1c] mb-1">Time to First Job</h2>
-                        <p class="text-xs text-black/40 mb-3">How long after graduation alumni got employed</p>
+                    <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                        <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Time to First Job</h2>
+                        <p class="text-xs text-black/40 dark:text-white/40 mb-3">How long after graduation alumni got employed</p>
                         @if (collect($this->monthsToFirstJobBreakdown)->sum() === 0)
-                            <p class="text-sm text-black/40 py-16 text-center">No time-to-first-job data yet.</p>
+                            <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No time-to-first-job data yet.</p>
                         @else
                             <div class="w-full h-64"><canvas id="monthsToFirstJobChart"></canvas></div>
                         @endif
@@ -214,27 +217,27 @@
 
                     {{-- NEW SECTION HEADER --}}
                     <div class="pt-2">
-                        <h2 class="text-lg sm:text-xl font-bold text-[#0f2b1c]" style="font-family: 'Fraunces', serif;">Demographics & Outcomes</h2>
-                        <p class="text-sm text-black/50 mt-0.5">Additional insights from profiles and work history.</p>
+                        <h2 class="text-lg sm:text-xl font-bold text-[#0f2b1c] dark:text-white" style="font-family: 'Fraunces', serif;">Demographics & Outcomes</h2>
+                        <p class="text-sm text-black/50 dark:text-white/50 mt-0.5">Additional insights from profiles and work history.</p>
                     </div>
 
                     {{-- Row: Gender + Civil status --}}
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                        <div class="bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
-                            <h2 class="text-sm font-bold text-[#0f2b1c] mb-1">Gender Distribution</h2>
-                            <p class="text-xs text-black/40 mb-3">Male vs. female alumni</p>
+                        <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                            <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Gender Distribution</h2>
+                            <p class="text-xs text-black/40 dark:text-white/40 mb-3">Male vs. female alumni</p>
                             @if (empty($this->genderBreakdown))
-                                <p class="text-sm text-black/40 py-16 text-center">No gender data yet.</p>
+                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No gender data yet.</p>
                             @else
                                 <div class="w-full h-64"><canvas id="genderChart"></canvas></div>
                             @endif
                         </div>
 
-                        <div class="bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
-                            <h2 class="text-sm font-bold text-[#0f2b1c] mb-1">Civil Status</h2>
-                            <p class="text-xs text-black/40 mb-3">Single, married, widowed, etc.</p>
+                        <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                            <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Civil Status</h2>
+                            <p class="text-xs text-black/40 dark:text-white/40 mb-3">Single, married, widowed, etc.</p>
                             @if (empty($this->civilStatusBreakdown))
-                                <p class="text-sm text-black/40 py-16 text-center">No civil status data yet.</p>
+                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No civil status data yet.</p>
                             @else
                                 <div class="w-full h-64"><canvas id="civilStatusChart"></canvas></div>
                             @endif
@@ -243,21 +246,21 @@
 
                     {{-- Row: Further studies + Job alignment --}}
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                        <div class="bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
-                            <h2 class="text-sm font-bold text-[#0f2b1c] mb-1">Further Studies Level</h2>
-                            <p class="text-xs text-black/40 mb-3">Certificate, Bachelor, Master, Doctorate</p>
+                        <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                            <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Further Studies Level</h2>
+                            <p class="text-xs text-black/40 dark:text-white/40 mb-3">Certificate, Bachelor, Master, Doctorate</p>
                             @if (empty($this->furtherStudiesLevelBreakdown))
-                                <p class="text-sm text-black/40 py-16 text-center">No further studies data yet.</p>
+                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No further studies data yet.</p>
                             @else
                                 <div class="w-full h-64"><canvas id="furtherStudiesChart"></canvas></div>
                             @endif
                         </div>
 
-                        <div class="bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
-                            <h2 class="text-sm font-bold text-[#0f2b1c] mb-1">Job Alignment to Degree</h2>
-                            <p class="text-xs text-black/40 mb-3">Related, partially related, not related</p>
+                        <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                            <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Job Alignment to Degree</h2>
+                            <p class="text-xs text-black/40 dark:text-white/40 mb-3">Related, partially related, not related</p>
                             @if (empty($this->jobAlignmentBreakdown))
-                                <p class="text-sm text-black/40 py-16 text-center">No job alignment data yet.</p>
+                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No job alignment data yet.</p>
                             @else
                                 <div class="w-full h-64"><canvas id="jobAlignmentChart"></canvas></div>
                             @endif
@@ -266,21 +269,21 @@
 
                     {{-- Row: Top employers + Board exam --}}
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                        <div class="bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
-                            <h2 class="text-sm font-bold text-[#0f2b1c] mb-1">Top Employers</h2>
-                            <p class="text-xs text-black/40 mb-3">Most common companies among alumni</p>
+                        <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                            <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Top Employers</h2>
+                            <p class="text-xs text-black/40 dark:text-white/40 mb-3">Most common companies among alumni</p>
                             @if (empty($this->topEmployers))
-                                <p class="text-sm text-black/40 py-16 text-center">No employer data yet.</p>
+                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No employer data yet.</p>
                             @else
                                 <div class="w-full h-72"><canvas id="topEmployersChart"></canvas></div>
                             @endif
                         </div>
 
-                        <div class="bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
-                            <h2 class="text-sm font-bold text-[#0f2b1c] mb-1">Board Exam Performance</h2>
-                            <p class="text-xs text-black/40 mb-3">Passed vs. failed (75%+ = passed)</p>
+                        <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                            <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Board Exam Performance</h2>
+                            <p class="text-xs text-black/40 dark:text-white/40 mb-3">Passed vs. failed (75%+ = passed)</p>
                             @if (collect($this->boardExamBreakdown)->sum() === 0)
-                                <p class="text-sm text-black/40 py-16 text-center">No board exam data yet.</p>
+                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No board exam data yet.</p>
                             @else
                                 <div class="w-full h-64"><canvas id="boardExamChart"></canvas></div>
                             @endif
@@ -288,11 +291,11 @@
                     </div>
 
                     {{-- Alumni by Region --}}
-                    <div class="bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
-                        <h2 class="text-sm font-bold text-[#0f2b1c] mb-1">Alumni by Region</h2>
-                        <p class="text-xs text-black/40 mb-3">Geographic distribution (top regions)</p>
+                    <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                        <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Alumni by Region</h2>
+                        <p class="text-xs text-black/40 dark:text-white/40 mb-3">Geographic distribution (top regions)</p>
                         @if (empty($this->alumniByRegion))
-                            <p class="text-sm text-black/40 py-16 text-center">No region data yet.</p>
+                            <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No region data yet.</p>
                         @else
                             <div class="w-full h-72"><canvas id="alumniByRegionChart"></canvas></div>
                         @endif
@@ -334,6 +337,9 @@
 
     @script
     <script>
+        // ==== Theme detection (re-evaluated on every chart rebuild) ====
+        const isDark = () => document.documentElement.classList.contains('dark');
+
         // ==== Helpers ====
         const pretty = (label) => {
             const str = String(label).toLowerCase();
@@ -376,20 +382,21 @@
             new ChartLib(el, config);
         };
 
-        // ==== THE FIX: integer-only ticks ====
-        const integerTicks = {
+        // ==== THE FIX: integer-only ticks (theme-aware grid color) ====
+        const integerTicks = () => ({
             beginAtZero: true,
             ticks: {
                 stepSize: 1,
                 precision: 0,
                 autoSkip: false,
+                color: isDark() ? 'rgba(255,255,255,0.5)' : '#6b7280',
                 callback: (v) => Number.isInteger(v) ? v : ''
             },
             afterBuildTicks: (axis) => {
                 axis.ticks = axis.ticks.filter(t => Number.isInteger(t.value));
             },
-            grid: { color: '#f1f1f1' }
-        };
+            grid: { color: isDark() ? 'rgba(255,255,255,0.08)' : '#f1f1f1' }
+        });
 
         const pieTooltip = {
             callbacks: {
@@ -414,7 +421,7 @@
                     const pct = ((value / total) * 100).toFixed(1) + '%';
                     const pos = arc.tooltipPosition();
                     ctx.save();
-                    ctx.fillStyle = '#000';
+                    ctx.fillStyle = isDark() ? '#ffffff' : '#000';
                     ctx.font = 'bold 12px sans-serif';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
@@ -458,7 +465,7 @@
                                 }
                             }
                         },
-                        scales: { y: integerTicks, x: { grid: { display: false } } }
+                        scales: { y: integerTicks(), x: { grid: { display: false } } }
                     }
                 });
             }
@@ -478,11 +485,11 @@
                     options: {
                         responsive: true, maintainAspectRatio: false,
                         scales: {
-                            y: { beginAtZero: true, max: 110, grid: { color: '#f1f1f1' }, ticks: { stepSize: 25, callback: v => v > 100 ? '' : v + '%' } },
-                            x: { grid: { display: false } }
+                            y: { beginAtZero: true, max: 110, grid: { color: isDark() ? 'rgba(255,255,255,0.08)' : '#f1f1f1' }, ticks: { color: isDark() ? 'rgba(255,255,255,0.5)' : '#6b7280', stepSize: 25, callback: v => v > 100 ? '' : v + '%' } },
+                            x: { grid: { display: false }, ticks: { color: isDark() ? 'rgba(255,255,255,0.5)' : '#6b7280' } }
                         },
                         plugins: {
-                            legend: { position: 'top', align: 'end' },
+                            legend: { position: 'top', align: 'end', labels: { color: isDark() ? '#ffffff' : '#0f2b1c' } },
                             tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.formattedValue}%` } }
                         }
                     },
@@ -492,7 +499,7 @@
                             const { ctx } = chart;
                             ctx.save();
                             ctx.font = 'bold 11px sans-serif';
-                            ctx.fillStyle = '#0f2b1c';
+                            ctx.fillStyle = isDark() ? '#ffffff' : '#0f2b1c';
                             ctx.textAlign = 'center';
                             ctx.textBaseline = 'bottom';
                             chart.data.datasets.forEach((dataset, di) => {
@@ -524,7 +531,7 @@
                             legend: { display: false },
                             tooltip: { callbacks: { label: ctx => `${ctx.raw} graduate${ctx.raw === 1 ? '' : 's'}` } }
                         },
-                        scales: { y: integerTicks, x: { grid: { display: false } } }
+                        scales: { y: integerTicks(), x: { grid: { display: false } } }
                     }
                 });
             }
@@ -537,11 +544,11 @@
                     type: 'pie',
                     data: {
                         labels: keys.map(pretty),
-                        datasets: [{ data: keys.map(k => dataMap[k]), backgroundColor: colors || piePalette, borderWidth: 2, borderColor: '#fff' }]
+                        datasets: [{ data: keys.map(k => dataMap[k]), backgroundColor: colors || piePalette, borderWidth: 2, borderColor: isDark() ? '#242526' : '#fff' }]
                     },
                     options: {
                         responsive: true, maintainAspectRatio: false,
-                        plugins: { legend: { position: 'bottom' }, tooltip: pieTooltip }
+                        plugins: { legend: { position: 'bottom', labels: { color: isDark() ? '#ffffff' : '#0f2b1c' } }, tooltip: pieTooltip }
                     },
                     plugins: [pieLabelPlugin]
                 });
@@ -569,8 +576,8 @@
                         indexAxis: horizontal ? 'y' : 'x',
                         plugins: { legend: { display: false } },
                         scales: horizontal
-                            ? { x: integerTicks, y: { grid: { display: false } } }
-                            : { y: integerTicks, x: { grid: { display: false } } }
+                            ? { x: integerTicks(), y: { grid: { display: false }, ticks: { color: isDark() ? 'rgba(255,255,255,0.5)' : '#6b7280' } } }
+                            : { y: integerTicks(), x: { grid: { display: false }, ticks: { color: isDark() ? 'rgba(255,255,255,0.5)' : '#6b7280' } } }
                     }
                 });
             };
@@ -579,7 +586,7 @@
             barConfig('organizationTypeChart', p.organizationType, '#D4A537', true);
             barConfig('monthsToFirstJobChart', p.monthsToFirstJob, '#3b82f6');
             barConfig('furtherStudiesChart', p.furtherStudies, '#8b5cf6');
-            barConfig('topEmployersChart', p.topEmployers, '#0f2b1c', true);
+            barConfig('topEmployersChart', p.topEmployers, isDark() ? '#D4A537' : '#0f2b1c', true);
             barConfig('alumniByRegionChart', p.alumniByRegion, '#16a34a', true);
         };
 
@@ -587,6 +594,16 @@
 
         $wire.on('batch-changed', () => requestAnimationFrame(() => initCharts()));
         $wire.on('analytics-refreshed', () => requestAnimationFrame(() => initCharts()));
+
+        // Re-render charts when theme toggles
+        const themeObserver = new MutationObserver((mutations) => {
+            mutations.forEach((m) => {
+                if (m.attributeName === 'class') {
+                    requestAnimationFrame(() => initCharts());
+                }
+            });
+        });
+        themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
     </script>
     @endscript
 @endunless

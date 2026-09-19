@@ -1,7 +1,7 @@
 <div class="max-w-[85rem] mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
     <!-- ========== HEADER ========== -->
-    <div class="relative overflow-hidden bg-[#123524] rounded-3xl p-8 mb-5">
+    <div class="relative overflow-hidden bg-[#123524] dark:bg-[#1a1b1c] rounded-3xl p-8 mb-5">
         <div class="absolute -right-10 -top-10 w-48 h-48 rounded-full bg-[#D4A537]/10"></div>
         <div class="absolute -right-4 top-16 w-24 h-24 rounded-full bg-[#D4A537]/10"></div>
 
@@ -21,13 +21,13 @@
     </div>
 
     @if (session('error'))
-        <div class="mb-5 bg-red-50 border border-red-200 text-red-700 font-semibold rounded-xl p-4 text-sm">
+        <div class="mb-5 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-400 font-semibold rounded-xl p-4 text-sm">
             {{ session('error') }}
         </div>
     @endif
 
     <div
-        class="mb-5 bg-[#D4A537]/10 border border-[#D4A537]/30 text-[#123524] rounded-xl p-4 text-sm flex items-start gap-2">
+        class="mb-5 bg-[#D4A537]/10 dark:bg-[#D4A537]/15 border border-[#D4A537]/30 dark:border-[#D4A537]/30 text-[#123524] dark:text-[#E5B94A] rounded-xl p-4 text-sm flex items-start gap-2">
         <svg class="w-5 h-5 mt-0.5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5"
             viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round"
@@ -39,68 +39,68 @@
     </div>
 
     <!-- ========== FORM CARD ========== -->
-    <div class="bg-white border border-black/10 rounded-3xl p-8">
+    <div class="bg-white dark:bg-[#242526] border border-black/10 dark:border-white/5 rounded-3xl p-8">
         <form wire:submit.prevent="updateAlumni" class="space-y-5">
 
             <!-- Name (first / middle / last) -->
             <div class="grid sm:grid-cols-2 gap-5">
                 <!-- First Name -->
                 <div>
-                    <label class="block text-xs text-black/60 uppercase tracking-wide font-semibold mb-2">First
+                    <label class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">First
                         Name</label>
                     <input type="text" wire:model.defer="first_name"
-                        class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition">
+                        class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition">
                     @error('first_name')
-                        <span class="text-red-500 text-sm">{{ $message }}</span>
+                        <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
                     @enderror
                 </div>
 
                 <!-- Last Name -->
                 <div>
-                    <label class="block text-xs text-black/60 uppercase tracking-wide font-semibold mb-2">Last
+                    <label class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">Last
                         Name</label>
                     <input type="text" wire:model.defer="last_name"
-                        class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition">
+                        class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition">
                     @error('last_name')
-                        <span class="text-red-500 text-sm">{{ $message }}</span>
+                        <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
                     @enderror
                 </div>
             </div>
 
             <!-- Middle Name (optional) -->
             <div>
-                <label class="block text-xs text-black/60 uppercase tracking-wide font-semibold mb-2">
-                    Middle Name <span class="text-black/40 text-[10px] font-normal normal-case">(optional)</span>
+                <label class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
+                    Middle Name <span class="text-black/40 dark:text-white/40 text-[10px] font-normal normal-case">(optional)</span>
                 </label>
                 <input type="text" wire:model.defer="middle_name"
-                    class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition">
+                    class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition">
                 @error('middle_name')
-                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                    <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
                 @enderror
             </div>
 
             <!-- Email -->
             <div>
-                <label class="block text-xs text-black/60 uppercase tracking-wide font-semibold mb-2">Email</label>
+                <label class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">Email</label>
                 <input type="email" wire:model.defer="email"
-                    class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition">
+                    class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition">
                 @error('email')
-                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                    <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
                 @enderror
             </div>
 
             <!-- School ID -->
             <div>
-                <label class="block text-xs text-black/60 uppercase tracking-wide font-semibold mb-2">School ID</label>
+                <label class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">School ID</label>
                 <input type="text" wire:model.defer="school_id"
-                    class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition">
+                    class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition">
                 @error('school_id')
-                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                    <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
                 @enderror
             </div>
 
             <!-- Actions -->
-            <div class="flex flex-wrap gap-3 pt-4 border-t border-black/5">
+            <div class="flex flex-wrap gap-3 pt-4 border-t border-black/5 dark:border-white/10">
                 <button type="submit"
                     class="inline-flex items-center gap-x-2 text-sm font-semibold rounded-xl bg-[#D4A537] text-[#123524] hover:bg-[#E5B94A] transition py-2.5 px-5">
                     Update Alumni
@@ -109,7 +109,7 @@
                     </svg>
                 </button>
                 <a href="{{ route('admin.alumni.view') }}"
-                    class="inline-flex items-center gap-x-2 text-sm font-semibold rounded-xl bg-white border border-black/10 text-black hover:bg-black/5 transition py-2.5 px-5">
+                    class="inline-flex items-center gap-x-2 text-sm font-semibold rounded-xl bg-white dark:bg-[#3A3B3C] border border-black/10 dark:border-white/10 text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition py-2.5 px-5">
                     Cancel
                 </a>
             </div>

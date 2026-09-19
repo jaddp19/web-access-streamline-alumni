@@ -39,7 +39,7 @@ class DepartmentSeeder extends Seeder
                 'dept_desc' => 'Law enforcement, criminal justice, and forensic science.',
             ],
             [
-                'dept_name' => 'Arts & Sciences Department',
+                'dept_name' => 'Arts and Sciences Department',
                 'dept_code' => 'ARTS',
                 'dept_desc' => 'Liberal arts, natural sciences, and general education programs.',
             ],

@@ -98,14 +98,14 @@ class CourseSeeder extends Seeder
                 'course_title'   => 'Bachelor of Science in Social Work',
                 'course_code'    => 'BSSW',
                 'course_type'    => 'board',
-                'department'     => 'Arts & Sciences Department',
+                'department'     => 'Arts and Sciences Department',
                 'course_desc'    => 'Social services, community development, and human welfare.',
             ],
             [
                 'course_title'   => 'Bachelor of Science in Psychology',
                 'course_code'    => 'BSPsych',
                 'course_type'    => 'board',
-                'department'     => 'Arts & Sciences Department',
+                'department'     => 'Arts and Sciences Department',
                 'course_desc'    => 'Human behavior, mental processes, and applied psychology.',
             ],
 

@@ -4,7 +4,7 @@
         <!-- Back Button -->
         <div class="mb-5">
             <a href="{{ route('super-admin.user.view') }}"
-                class="inline-flex items-center gap-x-2 px-3.5 py-2 text-sm font-semibold rounded-lg bg-white border border-black/10 text-[#123524] hover:bg-black/5 transition">
+                class="inline-flex items-center gap-x-2 px-3.5 py-2 text-sm font-semibold rounded-lg bg-white dark:bg-[#3A3B3C] border border-black/10 dark:border-white/10 text-[#123524] dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                     stroke-linejoin="round" viewBox="0 0 24 24">
                     <path d="M15 15l-6-6 6-6" />
@@ -14,7 +14,7 @@
         </div>
 
         <!-- Header -->
-        <div class="relative overflow-hidden bg-[#123524] rounded-3xl p-8 mb-5">
+        <div class="relative overflow-hidden bg-[#123524] dark:bg-[#1a1b1c] rounded-3xl p-8 mb-5">
             <div class="absolute -right-10 -top-10 w-48 h-48 rounded-full bg-[#D4A537]/10"></div>
             <div class="absolute -right-4 top-16 w-24 h-24 rounded-full bg-[#D4A537]/10"></div>
 
@@ -34,13 +34,13 @@
         </div>
 
         @if (session('success'))
-            <div class="mb-5 bg-green-50 border border-green-200 text-green-700 font-semibold rounded-xl p-4 text-sm">
+            <div class="mb-5 bg-green-50 dark:bg-emerald-500/10 border border-green-200 dark:border-emerald-500/20 text-green-700 dark:text-emerald-400 font-semibold rounded-xl p-4 text-sm">
                 {{ session('success') }}
             </div>
         @endif
 
         <div
-            class="mb-5 bg-[#D4A537]/10 border border-[#D4A537]/30 text-[#123524] rounded-xl p-4 text-sm flex items-start gap-2">
+            class="mb-5 bg-[#D4A537]/10 dark:bg-[#D4A537]/15 border border-[#D4A537]/30 dark:border-[#D4A537]/30 text-[#123524] dark:text-[#E5B94A] rounded-xl p-4 text-sm flex items-start gap-2">
             <svg class="w-5 h-5 mt-0.5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5"
                 viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -50,7 +50,7 @@
         </div>
 
         <!-- Form Card -->
-        <div class="bg-white border border-black/10 rounded-3xl p-8">
+        <div class="bg-white dark:bg-[#242526] border border-black/10 dark:border-white/5 rounded-3xl p-8">
             <form wire:submit='update' class="space-y-5">
 
                 <!-- Name (first / middle / last) -->
@@ -58,24 +58,24 @@
                     <!-- First Name -->
                     <div>
                         <label for="hs-first-name"
-                            class="block mb-2 text-xs text-black/60 uppercase tracking-wide font-semibold">First
+                            class="block mb-2 text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold">First
                             Name</label>
                         <input wire:model.defer="first_name" type="text" id="hs-first-name"
-                            class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition">
+                            class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition">
                         @error('first_name')
-                            <span class="text-red-500 text-xs">{{ $message }}</span>
+                            <span class="text-red-500 dark:text-red-400 text-xs">{{ $message }}</span>
                         @enderror
                     </div>
 
                     <!-- Last Name -->
                     <div>
                         <label for="hs-last-name"
-                            class="block mb-2 text-xs text-black/60 uppercase tracking-wide font-semibold">Last
+                            class="block mb-2 text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold">Last
                             Name</label>
                         <input wire:model.defer="last_name" type="text" id="hs-last-name"
-                            class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition">
+                            class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition">
                         @error('last_name')
-                            <span class="text-red-500 text-xs">{{ $message }}</span>
+                            <span class="text-red-500 dark:text-red-400 text-xs">{{ $message }}</span>
                         @enderror
                     </div>
                 </div>
@@ -83,101 +83,101 @@
                 <!-- Middle Name (full width, optional) -->
                 <div>
                     <label for="hs-middle-name"
-                        class="block mb-2 text-xs text-black/60 uppercase tracking-wide font-semibold">
-                        Middle Name <span class="text-black/40 text-[10px] font-normal normal-case">(optional)</span>
+                        class="block mb-2 text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold">
+                        Middle Name <span class="text-black/40 dark:text-white/40 text-[10px] font-normal normal-case">(optional)</span>
                     </label>
                     <input wire:model.defer="middle_name" type="text" id="hs-middle-name"
-                        class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition">
+                        class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition">
                     @error('middle_name')
-                        <span class="text-red-500 text-xs">{{ $message }}</span>
+                        <span class="text-red-500 dark:text-red-400 text-xs">{{ $message }}</span>
                     @enderror
                 </div>
 
                 <!-- Email -->
                 <div>
                     <label for="hs-email"
-                        class="block mb-2 text-xs text-black/60 uppercase tracking-wide font-semibold">Email</label>
+                        class="block mb-2 text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold">Email</label>
                     <input wire:model='email' type="email" name="hs-email" id="hs-email"
-                        class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition">
+                        class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition">
                     @error('email')
-                        <span class="text-red-500 text-xs">{{ $message }}</span>
+                        <span class="text-red-500 dark:text-red-400 text-xs">{{ $message }}</span>
                     @enderror
                 </div>
 
                 <!-- School ID -->
                 <div>
                     <label for="hs-school_id"
-                        class="block mb-2 text-xs text-black/60 uppercase tracking-wide font-semibold">
+                        class="block mb-2 text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold">
                         School ID
                     </label>
                     <input wire:model="school_id" type="text" name="hs-school_id" id="hs-school_id"
-                        class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition"
+                        class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition"
                         required pattern="[0-9\-]+" inputmode="numeric"
                         oninput="this.value = this.value.replace(/[^0-9\-]/g, '')">
                     @error('school_id')
-                        <span class="text-red-500 text-xs">{{ $message }}</span>
+                        <span class="text-red-500 dark:text-red-400 text-xs">{{ $message }}</span>
                     @enderror
                 </div>
 
                 <!-- Password -->
                 <div>
                     <label for="hs-password"
-                        class="block mb-2 text-xs text-black/60 uppercase tracking-wide font-semibold">
-                        New Password <span class="normal-case font-normal text-black/40">(optional)</span>
+                        class="block mb-2 text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold">
+                        New Password <span class="normal-case font-normal text-black/40 dark:text-white/40">(optional)</span>
                     </label>
                     <input wire:model='password' type="password" name="hs-password" id="hs-password"
-                        class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition">
+                        class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition">
                     @error('password')
-                        <span class="text-red-500 text-xs">{{ $message }}</span>
+                        <span class="text-red-500 dark:text-red-400 text-xs">{{ $message }}</span>
                     @enderror
                 </div>
 
                 <!-- Password Confirmation -->
                 <div>
                     <label for="hs-password_confirmation"
-                        class="block mb-2 text-xs text-black/60 uppercase tracking-wide font-semibold">Confirm New
+                        class="block mb-2 text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold">Confirm New
                         Password</label>
                     <input wire:model='password_confirmation' type="password" name="hs-password_confirmation"
                         id="hs-password_confirmation"
-                        class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F1EFE7] text-black focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition">
+                        class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition">
                     @error('password_confirmation')
-                        <span class="text-red-500 text-xs">{{ $message }}</span>
+                        <span class="text-red-500 dark:text-red-400 text-xs">{{ $message }}</span>
                     @enderror
                 </div>
 
                 <!-- Role -->
                 <div class="pt-2">
-                    <h2 class="mb-1 text-sm font-bold text-[#123524]">
+                    <h2 class="mb-1 text-sm font-bold text-[#123524] dark:text-white">
                         Assign Role
                     </h2>
                     @error('selectedRole')
                         <div>
-                            <span class="mt-2 text-sm text-red-600">{{ $message }}</span>
+                            <span class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</span>
                         </div>
                     @enderror
 
                     <div class="mt-3 grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
                         @forelse ($this->roles as $role)
                             <label
-                                class="flex items-center p-3 w-full bg-[#F1EFE7] border border-black/5 rounded-xl text-sm hover:border-[#D4A537] transition cursor-pointer">
+                                class="flex items-center p-3 w-full bg-[#F1EFE7] dark:bg-[#3A3B3C] border border-black/5 dark:border-white/5 rounded-xl text-sm hover:border-[#D4A537] transition cursor-pointer">
                                 <input type="checkbox" value="{{ $role->name }}" x-data x-init="$watch('$wire.selectedRole', value => {
                                     $el.checked = value === '{{ $role->name }}';
                                 })"
                                     @checked($selectedRole === $role->name)
                                     @click="$wire.set('selectedRole', '{{ $role->name }}')"
-                                    class="shrink-0 size-4 rounded-sm text-[#123524] focus:ring-[#123524]">
-                                <span class="ms-3 text-black font-medium">
+                                    class="shrink-0 size-4 rounded-sm text-[#123524] dark:text-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] dark:bg-[#242526] border-black/20 dark:border-white/20">
+                                <span class="ms-3 text-black dark:text-white font-medium">
                                     {{ Str::ucfirst($role->name) }}
                                 </span>
                             </label>
                         @empty
-                            <p class="text-black/50 text-sm">No Roles Found</p>
+                            <p class="text-black/50 dark:text-white/50 text-sm">No Roles Found</p>
                         @endforelse
                     </div>
                 </div>
 
                 <!-- Actions -->
-                <div class="flex flex-wrap gap-3 pt-4 border-t border-black/5">
+                <div class="flex flex-wrap gap-3 pt-4 border-t border-black/5 dark:border-white/10">
                     <button type="submit"
                         class="inline-flex items-center gap-x-2 text-sm font-semibold rounded-xl bg-[#D4A537] text-[#123524] hover:bg-[#E5B94A] transition py-2.5 px-5">
                         Update
@@ -187,7 +187,7 @@
                         </svg>
                     </button>
                     <a href="{{ route('super-admin.user.view') }}"
-                        class="inline-flex items-center gap-x-2 text-sm font-semibold rounded-xl bg-white border border-black/10 text-black hover:bg-black/5 transition py-2.5 px-5">
+                        class="inline-flex items-center gap-x-2 text-sm font-semibold rounded-xl bg-white dark:bg-[#3A3B3C] border border-black/10 dark:border-white/10 text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition py-2.5 px-5">
                         Cancel
                     </a>
                 </div>

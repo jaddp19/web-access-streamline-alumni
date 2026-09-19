@@ -1,14 +1,14 @@
 <div>
-    <div class="w-full shrink-0 p-4 sm:p-6 lg:p-8">
+    <div class="w-full shrink-0 p-4 sm:p-6 lg:p-8 bg-[#F8FAFC] dark:bg-[#18191A]">
         <div class="space-y-6">
 
             {{-- Header with batch selector --}}
             <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                 <div>
-                    <h1 class="text-xl sm:text-2xl font-bold text-[#0f2b1c]" style="font-family: 'Fraunces', serif;">
+                    <h1 class="text-xl sm:text-2xl font-bold text-[#0f2b1c] dark:text-white" style="font-family: 'Fraunces', serif;">
                         Overview
                     </h1>
-                    <p class="text-sm text-black/50 mt-0.5">
+                    <p class="text-sm text-black/50 dark:text-white/50 mt-0.5">
                         @if ($selectedBatchId)
                             Showing analytics for Batch
                             {{ collect($this->batches)->firstWhere('id', (int) $selectedBatchId)['batch_name'] ?? '—' }}.
@@ -21,14 +21,14 @@
                 {{-- Batch filter --}}
                 <div class="shrink-0 flex items-center gap-2">
                     <label for="batch-filter"
-                        class="text-[11px] font-bold text-black/50 uppercase tracking-wide whitespace-nowrap">
+                        class="text-[11px] font-bold text-black/50 dark:text-white/50 uppercase tracking-wide whitespace-nowrap">
                         Batch
                     </label>
 
                     <div class="relative">
                         <select id="batch-filter" wire:model.live.debounce.500ms="selectedBatchId"
                             wire:loading.attr="disabled" wire:target="selectedBatchId"
-                            class="px-3 py-2 pr-9 text-sm rounded-xl border border-black/10 bg-white text-[#0f2b1c] font-semibold
+                            class="px-3 py-2 pr-9 text-sm rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#3A3B3C] text-[#0f2b1c] dark:text-white font-semibold
                                    focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition
                                    min-w-[150px] cursor-pointer disabled:opacity-60 disabled:cursor-wait">
                             <option value="">Overall</option>
@@ -58,10 +58,10 @@
                 {{-- Top stat cards --}}
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5">
                     <div
-                        class="relative overflow-hidden bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
+                        class="relative overflow-hidden bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                         <div class="relative flex items-center gap-3">
                             <div
-                                class="w-10 h-10 rounded-xl bg-green-700/10 flex items-center justify-center text-green-700 shrink-0">
+                                class="w-10 h-10 rounded-xl bg-green-700/10 dark:bg-emerald-500/15 flex items-center justify-center text-green-700 dark:text-emerald-400 shrink-0">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -70,18 +70,18 @@
                             </div>
                             <div class="min-w-0">
                                 <p
-                                    class="text-[10px] sm:text-xs uppercase tracking-wide text-black/50 font-semibold truncate">
+                                    class="text-[10px] sm:text-xs uppercase tracking-wide text-black/50 dark:text-white/50 font-semibold truncate">
                                     Total Users</p>
-                                <h3 class="text-xl sm:text-2xl font-bold text-[#0f2b1c] mt-0.5">{{ $this->users }}</h3>
+                                <h3 class="text-xl sm:text-2xl font-bold text-[#0f2b1c] dark:text-white mt-0.5">{{ $this->users }}</h3>
                             </div>
                         </div>
                     </div>
 
                     <div
-                        class="relative overflow-hidden bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
+                        class="relative overflow-hidden bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                         <div class="relative flex items-center gap-3">
                             <div
-                                class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 shrink-0">
+                                class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -90,18 +90,18 @@
                             </div>
                             <div class="min-w-0">
                                 <p
-                                    class="text-[10px] sm:text-xs uppercase tracking-wide text-black/50 font-semibold truncate">
+                                    class="text-[10px] sm:text-xs uppercase tracking-wide text-black/50 dark:text-white/50 font-semibold truncate">
                                     Total Courses</p>
-                                <h3 class="text-xl sm:text-2xl font-bold text-[#0f2b1c] mt-0.5">{{ $this->courses }}</h3>
+                                <h3 class="text-xl sm:text-2xl font-bold text-[#0f2b1c] dark:text-white mt-0.5">{{ $this->courses }}</h3>
                             </div>
                         </div>
                     </div>
 
                     <div
-                        class="relative overflow-hidden bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
+                        class="relative overflow-hidden bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                         <div class="relative flex items-center gap-3">
                             <div
-                                class="w-10 h-10 rounded-xl bg-[#D4A537]/15 flex items-center justify-center text-[#a97f1f] shrink-0">
+                                class="w-10 h-10 rounded-xl bg-[#D4A537]/15 flex items-center justify-center text-[#a97f1f] dark:text-[#D4A537] shrink-0">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -110,18 +110,18 @@
                             </div>
                             <div class="min-w-0">
                                 <p
-                                    class="text-[10px] sm:text-xs uppercase tracking-wide text-black/50 font-semibold truncate">
+                                    class="text-[10px] sm:text-xs uppercase tracking-wide text-black/50 dark:text-white/50 font-semibold truncate">
                                     Total Alumni</p>
-                                <h3 class="text-xl sm:text-2xl font-bold text-[#0f2b1c] mt-0.5">{{ $this->alumni }}</h3>
+                                <h3 class="text-xl sm:text-2xl font-bold text-[#0f2b1c] dark:text-white mt-0.5">{{ $this->alumni }}</h3>
                             </div>
                         </div>
                     </div>
 
                     <div
-                        class="relative overflow-hidden bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
+                        class="relative overflow-hidden bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                         <div class="relative flex items-center gap-3">
                             <div
-                                class="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600 shrink-0">
+                                class="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -130,9 +130,9 @@
                             </div>
                             <div class="min-w-0">
                                 <p
-                                    class="text-[10px] sm:text-xs uppercase tracking-wide text-black/50 font-semibold truncate">
+                                    class="text-[10px] sm:text-xs uppercase tracking-wide text-black/50 dark:text-white/50 font-semibold truncate">
                                     Program Heads</p>
-                                <h3 class="text-xl sm:text-2xl font-bold text-[#0f2b1c] mt-0.5">
+                                <h3 class="text-xl sm:text-2xl font-bold text-[#0f2b1c] dark:text-white mt-0.5">
                                     {{ $this->programHeads }}</h3>
                             </div>
                         </div>
@@ -141,23 +141,23 @@
 
                 {{-- Main charts --}}
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                    <div class="bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
-                        <h2 class="text-sm font-bold text-[#0f2b1c]">Alumni Graduates</h2>
-                        <p class="text-xs text-black/40 mt-0.5 mb-3">Breakdown by department</p>
+                    <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                        <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white">Alumni Graduates</h2>
+                        <p class="text-xs text-black/40 dark:text-white/40 mt-0.5 mb-3">Breakdown by department</p>
                         @if (empty($this->alumniByDept))
-                            <p class="text-sm text-black/40 py-16 text-center">No alumni-to-department records yet.</p>
+                            <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No alumni-to-department records yet.</p>
                         @else
                             <div class="w-full h-64 sm:h-72 md:h-80"><canvas id="alumniDynamicChart"></canvas></div>
                         @endif
                     </div>
 
-                    <div class="bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
-                        <h2 class="text-sm font-bold text-[#0f2b1c]">Comparative Analysis</h2>
-                        <p class="text-xs text-black/40 mt-0.5 mb-1">Course alignment with current work</p>
-                        <p class="text-xs text-black/50 mb-3">{{ $this->furtherStudiesRate }}% pursued further studies
+                    <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                        <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white">Comparative Analysis</h2>
+                        <p class="text-xs text-black/40 dark:text-white/40 mt-0.5 mb-1">Course alignment with current work</p>
+                        <p class="text-xs text-black/50 dark:text-white/50 mb-3">{{ $this->furtherStudiesRate }}% pursued further studies
                         </p>
                         @if (empty($this->courseAnalytics))
-                            <p class="text-sm text-black/40 py-16 text-center">No course analytics yet.</p>
+                            <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No course analytics yet.</p>
                         @else
                             <div class="w-full h-64 sm:h-72 md:h-80"><canvas id="comparativeChart"></canvas></div>
                         @endif
@@ -165,38 +165,38 @@
                 </div>
 
                 {{-- Alumni by Year --}}
-                <div class="bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
-                    <h2 class="text-sm font-bold text-[#0f2b1c]">Alumni Graduates by Year</h2>
-                    <p class="text-xs text-black/40 mt-0.5 mb-3">Total graduates per batch</p>
+                <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                    <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white">Alumni Graduates by Year</h2>
+                    <p class="text-xs text-black/40 dark:text-white/40 mt-0.5 mb-3">Total graduates per batch</p>
                     @if (empty($this->alumniByBatch))
-                        <p class="text-sm text-black/40 py-16 text-center">No batch records yet.</p>
+                        <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No batch records yet.</p>
                     @else
                         <div class="w-full h-72"><canvas id="alumniByBatchChart"></canvas></div>
                     @endif
                 </div>
 
                 <div>
-                    <h2 class="text-lg sm:text-xl font-bold text-[#0f2b1c]" style="font-family: 'Fraunces', serif;">
+                    <h2 class="text-lg sm:text-xl font-bold text-[#0f2b1c] dark:text-white" style="font-family: 'Fraunces', serif;">
                         Analytics</h2>
-                    <p class="text-sm text-black/50 mt-0.5">Deeper breakdown from the tracer study.</p>
+                    <p class="text-sm text-black/50 dark:text-white/50 mt-0.5">Deeper breakdown from the tracer study.</p>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                    <div class="bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
-                        <h2 class="text-sm font-bold text-[#0f2b1c] mb-1">Employment Status</h2>
-                        <p class="text-xs text-black/40 mb-3">Employed, unemployed, self-employed</p>
+                    <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                        <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Employment Status</h2>
+                        <p class="text-xs text-black/40 dark:text-white/40 mb-3">Employed, unemployed, self-employed</p>
                         @if (empty($this->employmentStatusBreakdown))
-                            <p class="text-sm text-black/40 py-16 text-center">No tracer employment data yet.</p>
+                            <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No tracer employment data yet.</p>
                         @else
                             <div class="w-full h-64"><canvas id="employmentStatusChart"></canvas></div>
                         @endif
                     </div>
 
-                    <div class="bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
-                        <h2 class="text-sm font-bold text-[#0f2b1c] mb-1">Employment Type</h2>
-                        <p class="text-xs text-black/40 mb-3">Full-time, part-time, freelance, etc.</p>
+                    <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                        <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Employment Type</h2>
+                        <p class="text-xs text-black/40 dark:text-white/40 mb-3">Full-time, part-time, freelance, etc.</p>
                         @if (empty($this->employmentTypeBreakdown))
-                            <p class="text-sm text-black/40 py-16 text-center">No employment type yet.</p>
+                            <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No employment type yet.</p>
                         @else
                             <div class="w-full h-64"><canvas id="employmentTypeChart"></canvas></div>
                         @endif
@@ -204,21 +204,21 @@
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                    <div class="bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
-                        <h2 class="text-sm font-bold text-[#0f2b1c] mb-1">Organization Type</h2>
-                        <p class="text-xs text-black/40 mb-3">Where alumni currently work</p>
+                    <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                        <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Organization Type</h2>
+                        <p class="text-xs text-black/40 dark:text-white/40 mb-3">Where alumni currently work</p>
                         @if (empty($this->organizationTypeBreakdown))
-                            <p class="text-sm text-black/40 py-16 text-center">No organization type yet.</p>
+                            <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No organization type yet.</p>
                         @else
                             <div class="w-full h-64"><canvas id="organizationTypeChart"></canvas></div>
                         @endif
                     </div>
 
-                    <div class="bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5">
-                        <h2 class="text-sm font-bold text-[#0f2b1c] mb-1">Employment Area</h2>
-                        <p class="text-xs text-black/40 mb-3">Philippines vs. abroad</p>
+                    <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                        <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Employment Area</h2>
+                        <p class="text-xs text-black/40 dark:text-white/40 mb-3">Philippines vs. abroad</p>
                         @if (empty($this->employmentAreaBreakdown))
-                            <p class="text-sm text-black/40 py-16 text-center">No employment area yet.</p>
+                            <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No employment area yet.</p>
                         @else
                             <div class="w-full h-64"><canvas id="employmentAreaChart"></canvas></div>
                         @endif
@@ -226,11 +226,11 @@
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                    <div class="bg-white border border-black/5 shadow-sm rounded-2xl p-4 md:p-5 lg:col-span-2">
-                        <h2 class="text-sm font-bold text-[#0f2b1c] mb-1">Time to First Job</h2>
-                        <p class="text-xs text-black/40 mb-3">How long after graduation alumni got employed</p>
+                    <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5 lg:col-span-2">
+                        <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Time to First Job</h2>
+                        <p class="text-xs text-black/40 dark:text-white/40 mb-3">How long after graduation alumni got employed</p>
                         @if (collect($this->monthsToFirstJobBreakdown)->sum() === 0)
-                            <p class="text-sm text-black/40 py-16 text-center">No time-to-first-job data yet.</p>
+                            <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No time-to-first-job data yet.</p>
                         @else
                             <div class="w-full h-64"><canvas id="monthsToFirstJobChart"></canvas></div>
                         @endif
@@ -261,6 +261,17 @@
 
 @script
     <script>
+        // ===== Dark mode aware chart theme =====
+        const isDark = () => document.documentElement.classList.contains('dark');
+
+        const chartTheme = () => ({
+            textColor:   isDark() ? '#e5e7eb' : '#374151',
+            gridColor:   isDark() ? 'rgba(255,255,255,0.08)' : '#f1f1f1',
+            borderColor: isDark() ? '#242526' : '#fff',
+            tooltipBg:   isDark() ? '#0f2b1c' : '#0f2b1c',
+            pieLabel:    isDark() ? '#fff' : '#000',
+        });
+
         const pretty = (label) => {
             const str = String(label).toLowerCase();
             if (str === 'not-yet-employed') return 'Not yet Employed';
@@ -314,6 +325,7 @@
             if (!ChartLib) return;
 
             const payload = getPayload();
+            const theme = chartTheme();
 
             const alumniByDept = payload.alumniByDept || {};
             const alumniByBatch = payload.alumniByBatch || {};
@@ -346,9 +358,13 @@
                         maintainAspectRatio: false,
                         plugins: {
                             legend: {
-                                display: false
+                                display: false,
+                                labels: { color: theme.textColor }
                             },
                             tooltip: {
+                                backgroundColor: theme.tooltipBg,
+                                padding: 10,
+                                cornerRadius: 8,
                                 callbacks: {
                                     title: (items) => {
                                         const code = deptCodes[items[0]?.dataIndex];
@@ -364,16 +380,14 @@
                                 ticks: {
                                     stepSize: 1,
                                     precision: 0,
+                                    color: theme.textColor,
                                     callback: (v) => Number.isInteger(v) ? v : null
                                 },
-                                grid: {
-                                    color: '#f1f1f1'
-                                }
+                                grid: { color: theme.gridColor }
                             },
                             x: {
-                                grid: {
-                                    display: false
-                                }
+                                ticks: { color: theme.textColor },
+                                grid: { display: false }
                             }
                         }
                     }
@@ -411,26 +425,28 @@
                             y: {
                                 beginAtZero: true,
                                 max: 110,
-                                grid: {
-                                    color: '#f1f1f1'
-                                },
+                                grid: { color: theme.gridColor },
                                 ticks: {
                                     stepSize: 25,
+                                    color: theme.textColor,
                                     callback: (v) => v > 100 ? '' : v + '%'
                                 }
                             },
                             x: {
-                                grid: {
-                                    display: false
-                                }
+                                ticks: { color: theme.textColor },
+                                grid: { display: false }
                             }
                         },
                         plugins: {
                             legend: {
                                 position: 'top',
-                                align: 'end'
+                                align: 'end',
+                                labels: { color: theme.textColor }
                             },
                             tooltip: {
+                                backgroundColor: theme.tooltipBg,
+                                padding: 10,
+                                cornerRadius: 8,
                                 callbacks: {
                                     label: (ctx) => `${ctx.dataset.label}: ${ctx.formattedValue}%`
                                 }
@@ -440,19 +456,16 @@
                     plugins: [{
                         id: 'barPercentLabels',
                         afterDatasetsDraw(chart) {
-                            const {
-                                ctx
-                            } = chart;
+                            const { ctx } = chart;
                             ctx.save();
                             ctx.font = 'bold 11px sans-serif';
-                            ctx.fillStyle = '#0f2b1c';
+                            ctx.fillStyle = theme.textColor;
                             ctx.textAlign = 'center';
                             ctx.textBaseline = 'bottom';
                             chart.data.datasets.forEach((dataset, di) => {
                                 chart.getDatasetMeta(di).data.forEach((bar, i) => {
                                     const value = dataset.data[i];
-                                    if (value === null || value === undefined)
-                                        return;
+                                    if (value === null || value === undefined) return;
                                     ctx.fillText(value + '%', bar.x, bar.y - 4);
                                 });
                             });
@@ -466,9 +479,7 @@
             const pieLabelPlugin = {
                 id: 'piePercentLabels',
                 afterDatasetsDraw(chart) {
-                    const {
-                        ctx
-                    } = chart;
+                    const { ctx } = chart;
                     const dataset = chart.data.datasets[0];
                     const total = dataset.data.reduce((a, b) => a + b, 0);
                     if (!total) return;
@@ -479,7 +490,7 @@
                         const pct = ((value / total) * 100).toFixed(1) + '%';
                         const pos = arc.tooltipPosition();
                         ctx.save();
-                        ctx.fillStyle = '#000';
+                        ctx.fillStyle = theme.pieLabel;
                         ctx.font = 'bold 12px sans-serif';
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'middle';
@@ -490,6 +501,9 @@
             };
 
             const pieTooltip = {
+                backgroundColor: theme.tooltipBg,
+                padding: 10,
+                cornerRadius: 8,
                 callbacks: {
                     label: (ctx) => {
                         const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
@@ -521,10 +535,11 @@
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
-                            legend: {
-                                display: false
-                            },
+                            legend: { display: false },
                             tooltip: {
+                                backgroundColor: theme.tooltipBg,
+                                padding: 10,
+                                cornerRadius: 8,
                                 callbacks: {
                                     label: (ctx) => `${ctx.raw} graduate${ctx.raw === 1 ? '' : 's'}`
                                 }
@@ -536,16 +551,14 @@
                                 ticks: {
                                     stepSize: 1,
                                     precision: 0,
+                                    color: theme.textColor,
                                     callback: (v) => Number.isInteger(v) ? v : null
                                 },
-                                grid: {
-                                    color: '#f1f1f1'
-                                }
+                                grid: { color: theme.gridColor }
                             },
                             x: {
-                                grid: {
-                                    display: false
-                                }
+                                ticks: { color: theme.textColor },
+                                grid: { display: false }
                             }
                         }
                     }
@@ -560,11 +573,9 @@
                         labels: Object.keys(statusData).map(pretty),
                         datasets: [{
                             data: Object.values(statusData),
-                            backgroundColor: ['#16a34a', '#D4A537', '#3b82f6', '#94a3b8', '#ef4444',
-                                '#8b5cf6'
-                            ],
+                            backgroundColor: ['#16a34a', '#D4A537', '#3b82f6', '#94a3b8', '#ef4444', '#8b5cf6'],
                             borderWidth: 2,
-                            borderColor: '#fff'
+                            borderColor: theme.borderColor
                         }]
                     },
                     options: {
@@ -572,7 +583,8 @@
                         maintainAspectRatio: false,
                         plugins: {
                             legend: {
-                                position: 'bottom'
+                                position: 'bottom',
+                                labels: { color: theme.textColor }
                             },
                             tooltip: pieTooltip
                         }
@@ -598,25 +610,22 @@
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
-                            legend: {
-                                display: false
-                            }
+                            legend: { display: false },
+                            tooltip: { backgroundColor: theme.tooltipBg, padding: 10, cornerRadius: 8 }
                         },
                         scales: {
                             y: {
                                 beginAtZero: true,
-                                grid: {
-                                    color: '#f1f1f1'
-                                },
+                                grid: { color: theme.gridColor },
                                 ticks: {
                                     stepSize: 1,
+                                    color: theme.textColor,
                                     callback: (v) => Number.isInteger(v) ? v : null
                                 }
                             },
                             x: {
-                                grid: {
-                                    display: false
-                                }
+                                ticks: { color: theme.textColor },
+                                grid: { display: false }
                             }
                         }
                     }
@@ -641,25 +650,22 @@
                         maintainAspectRatio: false,
                         indexAxis: 'y',
                         plugins: {
-                            legend: {
-                                display: false
-                            }
+                            legend: { display: false },
+                            tooltip: { backgroundColor: theme.tooltipBg, padding: 10, cornerRadius: 8 }
                         },
                         scales: {
                             x: {
                                 beginAtZero: true,
-                                grid: {
-                                    color: '#f1f1f1'
-                                },
+                                grid: { color: theme.gridColor },
                                 ticks: {
                                     stepSize: 1,
+                                    color: theme.textColor,
                                     callback: (v) => Number.isInteger(v) ? v : null
                                 }
                             },
                             y: {
-                                grid: {
-                                    display: false
-                                }
+                                ticks: { color: theme.textColor },
+                                grid: { display: false }
                             }
                         }
                     }
@@ -676,7 +682,7 @@
                             data: Object.values(areaData),
                             backgroundColor: ['#16a34a', '#3b82f6'],
                             borderWidth: 2,
-                            borderColor: '#fff'
+                            borderColor: theme.borderColor
                         }]
                     },
                     options: {
@@ -684,7 +690,8 @@
                         maintainAspectRatio: false,
                         plugins: {
                             legend: {
-                                position: 'bottom'
+                                position: 'bottom',
+                                labels: { color: theme.textColor }
                             },
                             tooltip: pieTooltip
                         }
@@ -710,25 +717,22 @@
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
-                            legend: {
-                                display: false
-                            }
+                            legend: { display: false },
+                            tooltip: { backgroundColor: theme.tooltipBg, padding: 10, cornerRadius: 8 }
                         },
                         scales: {
                             y: {
                                 beginAtZero: true,
-                                grid: {
-                                    color: '#f1f1f1'
-                                },
+                                grid: { color: theme.gridColor },
                                 ticks: {
                                     stepSize: 1,
+                                    color: theme.textColor,
                                     callback: (v) => Number.isInteger(v) ? v : null
                                 }
                             },
                             x: {
-                                grid: {
-                                    display: false
-                                }
+                                ticks: { color: theme.textColor },
+                                grid: { display: false }
                             }
                         }
                     }
@@ -743,5 +747,11 @@
         $wire.on('batch-changed', () => {
             requestAnimationFrame(() => initCharts());
         });
+
+        // Re-init on theme change (optional)
+        const observer = new MutationObserver(() => {
+            requestAnimationFrame(() => initCharts());
+        });
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
     </script>
 @endscript

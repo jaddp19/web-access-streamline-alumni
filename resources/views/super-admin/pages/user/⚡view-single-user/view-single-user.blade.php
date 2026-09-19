@@ -4,7 +4,7 @@
         <!-- Back Button -->
         <div class="mb-5">
             <a href="{{ route('super-admin.user.view') }}"
-                class="inline-flex items-center gap-x-2 px-3.5 py-2 text-sm font-semibold rounded-lg bg-white border border-black/10 text-[#123524] hover:bg-black/5 transition">
+                class="inline-flex items-center gap-x-2 px-3.5 py-2 text-sm font-semibold rounded-lg bg-white dark:bg-[#3A3B3C] border border-black/10 dark:border-white/10 text-[#123524] dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                     stroke-linejoin="round" viewBox="0 0 24 24">
                     <path d="M15 15l-6-6 6-6" />
@@ -14,7 +14,7 @@
         </div>
 
         <!-- Header -->
-        <div class="relative overflow-hidden bg-[#123524] rounded-3xl p-8 mb-5">
+        <div class="relative overflow-hidden bg-[#123524] dark:bg-[#1a1b1c] rounded-3xl p-8 mb-5">
             <div class="absolute -right-10 -top-10 w-48 h-48 rounded-full bg-[#D4A537]/10"></div>
             <div class="absolute -right-4 top-16 w-24 h-24 rounded-full bg-[#D4A537]/10"></div>
 
@@ -68,31 +68,31 @@
         <div class="grid gap-5">
 
             <!-- Account Info -->
-            <div class="bg-white border border-black/10 rounded-3xl p-8">
-                <h2 class="text-sm font-bold text-[#123524] uppercase tracking-wide mb-4">Account</h2>
+            <div class="bg-white dark:bg-[#242526] border border-black/10 dark:border-white/5 rounded-3xl p-8">
+                <h2 class="text-sm font-bold text-[#123524] dark:text-white uppercase tracking-wide mb-4">Account</h2>
                 <dl class="grid sm:grid-cols-2 gap-x-6 gap-y-4">
                     <div>
-                        <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Email</dt>
-                        <dd class="text-black mt-1">{{ $user->email }}</dd>
+                        <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Email</dt>
+                        <dd class="text-black dark:text-white mt-1">{{ $user->email }}</dd>
                     </div>
                     <div>
-                        <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">School ID</dt>
-                        <dd class="text-black mt-1">{{ $user->school_id ?? '—' }}</dd>
+                        <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">School ID</dt>
+                        <dd class="text-black dark:text-white mt-1">{{ $user->school_id ?? '—' }}</dd>
                     </div>
                     <div>
-                        <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Batch</dt>
-                        <dd class="text-black mt-1">{{ $user->userProfile?->batch?->batch_name ?? '—' }}</dd>
+                        <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Batch</dt>
+                        <dd class="text-black dark:text-white mt-1">{{ $user->userProfile?->batch?->batch_name ?? '—' }}</dd>
                     </div>
                     <div>
-                        <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Joined</dt>
-                        <dd class="text-black mt-1">{{ $user->created_at?->format('M d, Y') ?? '—' }}</dd>
+                        <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Joined</dt>
+                        <dd class="text-black dark:text-white mt-1">{{ $user->created_at?->format('M d, Y') ?? '—' }}</dd>
                     </div>
                 </dl>
             </div>
 
             <!-- Profile Info -->
-            <div class="bg-white border border-black/10 rounded-3xl p-8">
-                <h2 class="text-sm font-bold text-[#123524] uppercase tracking-wide mb-4">Profile</h2>
+            <div class="bg-white dark:bg-[#242526] border border-black/10 dark:border-white/5 rounded-3xl p-8">
+                <h2 class="text-sm font-bold text-[#123524] dark:text-white uppercase tracking-wide mb-4">Profile</h2>
                 @if ($user->userProfile)
                     @php
                         $profile = $user->userProfile;
@@ -136,14 +136,14 @@
 
                     <dl class="grid sm:grid-cols-2 gap-x-6 gap-y-4">
                         <div>
-                            <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Gender</dt>
-                            <dd class="text-black mt-1">{{ $gender }}</dd>
+                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Gender</dt>
+                            <dd class="text-black dark:text-white mt-1">{{ $gender }}</dd>
                         </div>
                         <div>
-                            <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Mobile Number</dt>
-                            <dd class="text-black mt-1 font-medium">
+                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Mobile Number</dt>
+                            <dd class="text-black dark:text-white mt-1 font-medium">
                                 @if ($displayPhone)
-                                    <a href="tel:{{ $rawPhone }}" class="hover:text-[#123524] transition">
+                                    <a href="tel:{{ $rawPhone }}" class="hover:text-[#123524] dark:hover:text-[#D4A537] transition">
                                         {{ $displayPhone }}
                                     </a>
                                 @else
@@ -152,55 +152,55 @@
                             </dd>
                         </div>
                         <div class="sm:col-span-2">
-                            <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Address</dt>
-                            <dd class="text-black mt-1">{{ $fullAddress ?: '—' }}</dd>
+                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Address</dt>
+                            <dd class="text-black dark:text-white mt-1">{{ $fullAddress ?: '—' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Board Exam Taken
+                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Board Exam Taken
                             </dt>
-                            <dd class="text-black mt-1">{{ $user->userProfile->board_taken ?? '—' }}</dd>
+                            <dd class="text-black dark:text-white mt-1">{{ $user->userProfile->board_taken ?? '—' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Board Rating</dt>
-                            <dd class="text-black mt-1">{{ $user->userProfile->board_rate ?? '—' }}</dd>
+                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Board Rating</dt>
+                            <dd class="text-black dark:text-white mt-1">{{ $user->userProfile->board_rate ?? '—' }}</dd>
                         </div>
                     </dl>
                 @else
-                    <p class="text-black/50 text-sm">This alumni hasn't completed their profile yet.</p>
+                    <p class="text-black/50 dark:text-white/50 text-sm">This alumni hasn't completed their profile yet.</p>
                 @endif
             </div>
 
             <!-- Education -->
-            <div class="bg-white border border-black/10 rounded-3xl p-8">
-                <h2 class="text-sm font-bold text-[#123524] uppercase tracking-wide mb-4">Education</h2>
+            <div class="bg-white dark:bg-[#242526] border border-black/10 dark:border-white/5 rounded-3xl p-8">
+                <h2 class="text-sm font-bold text-[#123524] dark:text-white uppercase tracking-wide mb-4">Education</h2>
                 @forelse ($user->userProfile?->courses ?? [] as $course)
-                    <div class="flex items-center justify-between p-3 rounded-xl bg-[#F1EFE7] mb-2 last:mb-0">
+                    <div class="flex items-center justify-between p-3 rounded-xl bg-[#F1EFE7] dark:bg-[#3A3B3C] mb-2 last:mb-0">
                         <div>
-                            <p class="text-black font-medium">{{ $course->course_title }}</p>
-                            <p class="text-black/50 text-xs">{{ $course->department?->dept_name }} &middot;
+                            <p class="text-black dark:text-white font-medium">{{ $course->course_title }}</p>
+                            <p class="text-black/50 dark:text-white/50 text-xs">{{ $course->department?->dept_name }} &middot;
                                 {{ $course->course_code }}</p>
                         </div>
-                        <span class="text-xs font-semibold text-[#123524] bg-[#D4A537]/20 px-2.5 py-1 rounded-full">
+                        <span class="text-xs font-semibold text-[#123524] dark:text-[#D4A537] bg-[#D4A537]/20 dark:bg-[#D4A537]/20 px-2.5 py-1 rounded-full">
                             {{ Str::headline($course->course_type) }}
                         </span>
                     </div>
                 @empty
-                    <p class="text-black/50 text-sm">No course records found.</p>
+                    <p class="text-black/50 dark:text-white/50 text-sm">No course records found.</p>
                 @endforelse
             </div>
 
             <!-- Work History -->
-            <div class="bg-white border border-black/10 rounded-3xl p-8">
-                <h2 class="text-sm font-bold text-[#123524] uppercase tracking-wide mb-4">Work History</h2>
+            <div class="bg-white dark:bg-[#242526] border border-black/10 dark:border-white/5 rounded-3xl p-8">
+                <h2 class="text-sm font-bold text-[#123524] dark:text-white uppercase tracking-wide mb-4">Work History</h2>
                 @forelse ($user->workHistories as $work)
-                    <div class="flex items-start justify-between gap-3 p-3 rounded-xl bg-[#F1EFE7] mb-2 last:mb-0">
+                    <div class="flex items-start justify-between gap-3 p-3 rounded-xl bg-[#F1EFE7] dark:bg-[#3A3B3C] mb-2 last:mb-0">
 
                         {{-- Left: logo + info --}}
                         <div class="flex items-start gap-3 min-w-0">
 
                             {{-- Company logo / fallback --}}
                             <div
-                                class="w-10 h-10 rounded-lg bg-white border border-black/5 flex items-center justify-center shrink-0 overflow-hidden">
+                                class="w-10 h-10 rounded-lg bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 flex items-center justify-center shrink-0 overflow-hidden">
                                 @if ($work->company?->company_logo)
                                     <img src="{{ filter_var($work->company->company_logo, FILTER_VALIDATE_URL)
                                         ? $work->company->company_logo
@@ -208,7 +208,7 @@
                                         alt="{{ $work->company->company_name }}" class="w-full h-full object-cover"
                                         loading="lazy">
                                 @else
-                                    <svg class="w-5 h-5 text-black/30" fill="none" stroke="currentColor"
+                                    <svg class="w-5 h-5 text-black/30 dark:text-white/30" fill="none" stroke="currentColor"
                                         stroke-width="1.5" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round"
                                             d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
@@ -218,10 +218,10 @@
 
                             {{-- Job info --}}
                             <div class="min-w-0">
-                                <p class="text-black font-medium truncate">{{ $work->work_name }}</p>
-                                <p class="text-black/50 text-xs truncate">{{ $work->company?->company_name ?? '—' }}
+                                <p class="text-black dark:text-white font-medium truncate">{{ $work->work_name }}</p>
+                                <p class="text-black/50 dark:text-white/50 text-xs truncate">{{ $work->company?->company_name ?? '—' }}
                                 </p>
-                                <p class="text-black/40 text-xs mt-1">Hired
+                                <p class="text-black/40 dark:text-white/40 text-xs mt-1">Hired
                                     {{ $work->date_hired?->format('M d, Y') ?? '—' }}</p>
                             </div>
                         </div>
@@ -229,59 +229,59 @@
                         {{-- Right: badge --}}
                         @if ($work->is_current_job)
                             <span
-                                class="text-xs font-semibold text-green-700 bg-green-100 px-2.5 py-1 rounded-full shrink-0">
+                                class="text-xs font-semibold text-green-700 dark:text-emerald-400 bg-green-100 dark:bg-emerald-500/15 px-2.5 py-1 rounded-full shrink-0">
                                 Currently Employed
                             </span>
                         @endif
                     </div>
                 @empty
-                    <p class="text-black/50 text-sm">No work history records found.</p>
+                    <p class="text-black/50 dark:text-white/50 text-sm">No work history records found.</p>
                 @endforelse
             </div>
 
             <!-- Tracer Study -->
-            <div class="bg-white border border-black/10 rounded-3xl p-8">
-                <h2 class="text-sm font-bold text-[#123524] uppercase tracking-wide mb-4">Tracer Study</h2>
+            <div class="bg-white dark:bg-[#242526] border border-black/10 dark:border-white/5 rounded-3xl p-8">
+                <h2 class="text-sm font-bold text-[#123524] dark:text-white uppercase tracking-wide mb-4">Tracer Study</h2>
                 @if ($user->tracerStudy?->civilStatusEmployment)
                     @php($cse = $user->tracerStudy->civilStatusEmployment)
                     <dl class="grid sm:grid-cols-2 gap-x-6 gap-y-4">
                         <div>
-                            <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Civil Status</dt>
-                            <dd class="text-black mt-1">{{ Str::headline($cse->civil_status) }}</dd>
+                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Civil Status</dt>
+                            <dd class="text-black dark:text-white mt-1">{{ Str::headline($cse->civil_status) }}</dd>
                         </div>
                         <div>
-                            <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Employment Status
+                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Employment Status
                             </dt>
-                            <dd class="text-black mt-1">{{ Str::headline($cse->employment_status) }}</dd>
+                            <dd class="text-black dark:text-white mt-1">{{ Str::headline($cse->employment_status) }}</dd>
                         </div>
                         <div>
-                            <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Current Job Position
+                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Current Job Position
                             </dt>
-                            <dd class="text-black mt-1">{{ $cse->current_job_position ?? '—' }}</dd>
+                            <dd class="text-black dark:text-white mt-1">{{ $cse->current_job_position ?? '—' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Related to Degree
+                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Related to Degree
                             </dt>
-                            <dd class="text-black mt-1">
+                            <dd class="text-black dark:text-white mt-1">
                                 {{ $cse->employed_related_to_degree ? Str::headline($cse->employed_related_to_degree) : '—' }}
                             </dd>
                         </div>
                         <div>
-                            <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Employment Type
+                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Employment Type
                             </dt>
-                            <dd class="text-black mt-1">
+                            <dd class="text-black dark:text-white mt-1">
                                 {{ $cse->employment_type ? Str::headline($cse->employment_type) : '—' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Organization Type
+                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Organization Type
                             </dt>
-                            <dd class="text-black mt-1">
+                            <dd class="text-black dark:text-white mt-1">
                                 {{ $cse->organization_type ? Str::headline($cse->organization_type) : '—' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Employment Area
+                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Employment Area
                             </dt>
-                            <dd class="text-black mt-1">
+                            <dd class="text-black dark:text-white mt-1">
                                 {{ $cse->employment_area ? Str::headline($cse->employment_area) : '—' }}
                                 @if ($cse->employment_area === 'abroad' && $cse->abroad_country)
                                     ({{ $cse->abroad_country }})
@@ -289,25 +289,26 @@
                             </dd>
                         </div>
                         <div>
-                            <dt class="text-xs text-black/50 uppercase tracking-wide font-semibold">Time to First Job
+                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Time to First Job
                             </dt>
-                            <dd class="text-black mt-1">
-                                {{ $cse->months_to_first_job ? Str::headline($cse->months_to_first_job) : '—' }}</dd>
+                            <dd class="text-black dark:text-white mt-1">
+                                {{ $this->monthsToFirstJobLabel() }}
+                            </dd>
                         </div>
                     </dl>
                 @else
-                    <p class="text-black/50 text-sm">No tracer study submission found.</p>
+                    <p class="text-black/50 dark:text-white/50 text-sm">No tracer study submission found.</p>
                 @endif
 
                 @if ($user->tracerStudy?->furtherStudy)
                     @php($fs = $user->tracerStudy->furtherStudy)
-                    <div class="mt-6 pt-6 border-t border-black/5">
-                        <h3 class="text-xs text-black/50 uppercase tracking-wide font-semibold mb-2">Further Studies
+                    <div class="mt-6 pt-6 border-t border-black/5 dark:border-white/10">
+                        <h3 class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold mb-2">Further Studies
                         </h3>
                         @if ($fs->is_pursued_further_studies)
-                            <p class="text-black">Pursuing further studies &mdash; {{ $fs->level_of_study }}</p>
+                            <p class="text-black dark:text-white">Pursuing further studies &mdash; {{ $fs->level_of_study }}</p>
                         @else
-                            <p class="text-black/50 text-sm">Not currently pursuing further studies.</p>
+                            <p class="text-black/50 dark:text-white/50 text-sm">Not currently pursuing further studies.</p>
                         @endif
                     </div>
                 @endif

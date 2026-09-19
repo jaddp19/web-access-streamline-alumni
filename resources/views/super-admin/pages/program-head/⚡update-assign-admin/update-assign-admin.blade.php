@@ -5,27 +5,27 @@
             <!-- Back Button -->
             <div class="mb-4">
                 <a href="{{ route('super-admin.assign.view') }}"
-                    class="inline-flex items-center gap-x-2 text-sm font-semibold text-[#123524] hover:underline">
+                    class="inline-flex items-center gap-x-2 text-sm font-semibold text-[#123524] dark:text-[#D4A537] hover:underline">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
                         <path d="M15 18l-6-6 6-6" />
                     </svg>
-                    Back to program heads
+                    Back to Program Heads
                 </a>
             </div>
 
             <!-- Card -->
-            <div class="rounded-2xl border border-black/5 bg-white shadow-sm">
+            <div class="rounded-2xl border border-black/5 dark:border-white/5 bg-white dark:bg-[#242526] shadow-sm">
 
                 <!-- Header -->
-                <div class="px-6 py-5 flex items-center gap-4 border-b border-black/5">
-                    <div class="w-11 h-11 rounded-xl bg-green-700/10 flex items-center justify-center text-green-700 shrink-0">
+                <div class="px-6 py-5 flex items-center gap-4 border-b border-black/5 dark:border-white/5">
+                    <div class="w-11 h-11 rounded-xl bg-green-700/10 dark:bg-emerald-500/15 flex items-center justify-center text-green-700 dark:text-emerald-400 shrink-0">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                         </svg>
                     </div>
                     <div>
-                        <h2 class="text-xl font-bold text-[#123524]" style="font-family: 'Fraunces', serif;">Assign Program Head</h2>
-                        <p class="text-sm text-black/50">Give an admin oversight of a department</p>
+                        <h2 class="text-xl font-bold text-[#123524] dark:text-white" style="font-family: 'Fraunces', serif;">Assign Program Head</h2>
+                        <p class="text-sm text-black/50 dark:text-white/50">Give an admin oversight of a department</p>
                     </div>
                 </div>
 
@@ -34,9 +34,9 @@
 
                     <!-- User -->
                     <div>
-                        <label for="user_id" class="block text-xs text-black/60 uppercase tracking-wide font-semibold mb-2">Select User</label>
+                        <label for="user_id" class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">Select User</label>
                         <select wire:model.defer="user_id" id="user_id"
-                            class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F7F5EF] text-black focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition">
+                            class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F7F5EF] dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition">
                             <option value="">Choose User</option>
                             @forelse ($this->users as $user)
                                 <option value="{{ $user->id }}">{{ $user->name }}</option>
@@ -44,24 +44,24 @@
                                 <option value="" disabled>No admin users found</option>
                             @endforelse
                         </select>
-                        @error('user_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        @error('user_id') <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span> @enderror
                     </div>
 
                     <!-- Department -->
                     <div>
-                        <label for="department_id" class="block text-xs text-black/60 uppercase tracking-wide font-semibold mb-2">Select Department</label>
+                        <label for="department_id" class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">Select Department</label>
                         <select wire:model.defer="department_id" id="department_id"
-                            class="w-full px-4 py-2.5 rounded-xl border border-black/10 bg-[#F7F5EF] text-black focus:outline-none focus:border-[#123524] focus:ring-1 focus:ring-[#123524] transition">
+                            class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F7F5EF] dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition">
                             <option value="">Choose Department</option>
                             @foreach ($this->departments as $department)
                                 <option value="{{ $department->id }}">{{ $department->dept_name }}</option>
                             @endforeach
                         </select>
-                        @error('department_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        @error('department_id') <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span> @enderror
                     </div>
 
                     <!-- Actions -->
-                    <div class="flex flex-wrap gap-3 pt-2 border-t border-black/5">
+                    <div class="flex flex-wrap gap-3 pt-2 border-t border-black/5 dark:border-white/10">
                         <button type="submit"
                             class="inline-flex items-center gap-x-2 text-sm font-semibold rounded-xl bg-[#D4A537] text-[#123524] hover:bg-[#E5B94A] transition py-2.5 px-5">
                             Assign
@@ -70,7 +70,7 @@
                             </svg>
                         </button>
                         <a href="{{ route('super-admin.assign.view') }}"
-                            class="inline-flex items-center gap-x-2 text-sm font-semibold rounded-xl bg-white border border-black/10 text-black hover:bg-black/5 transition py-2.5 px-5">
+                            class="inline-flex items-center gap-x-2 text-sm font-semibold rounded-xl bg-white dark:bg-[#3A3B3C] border border-black/10 dark:border-white/10 text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition py-2.5 px-5">
                             Cancel
                         </a>
                     </div>

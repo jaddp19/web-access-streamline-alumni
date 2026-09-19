@@ -19,4 +19,14 @@ new #[Layout('layouts::app-super-admin')] class extends Component
             'tracerStudy.civilStatusEmployment',
         ]);
     }
+
+    public function monthsToFirstJobLabel(): string
+    {
+        $value = $this->user?->tracerStudy?->civilStatusEmployment?->months_to_first_job;
+
+        if (! $value) return '—';
+
+        // Preserve numeric ranges like "4-6", only split on word hyphens
+        return ucwords(preg_replace('/-(?=[a-zA-Z])/', ' ', $value));
+    }
 };
