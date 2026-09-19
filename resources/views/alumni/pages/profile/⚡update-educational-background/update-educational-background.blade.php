@@ -143,7 +143,7 @@
                         <div>
                             <label
                                 class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
-                                Date Board Exam Taken <span class="text-red-500">*</span>
+                                Date Board Exam Taken <span class="text-black/40 dark:text-white/40 text-[10px] font-normal normal-case">(optional)</span>
                             </label>
                             <input type="date" wire:model.defer="board_taken" max="{{ now()->format('Y-m-d') }}"
                                 class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition">
@@ -156,7 +156,7 @@
                         <div>
                             <label
                                 class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
-                                Board Rating (%) <span class="text-red-500">*</span>
+                                Board Rating (%) <span class="text-black/40 dark:text-white/40 text-[10px] font-normal normal-case">(optional)</span>
                             </label>
                             <input type="number" wire:model.defer="board_rate" min="0" max="100"
                                 step="0.01" placeholder="e.g. 85.50"

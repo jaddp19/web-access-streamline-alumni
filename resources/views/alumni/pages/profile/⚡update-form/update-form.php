@@ -24,21 +24,20 @@ new #[Layout('layouts.app-alumni')] class extends Component
     public int $step = 1;
     public int $totalSteps = 4;
 
-    // Step 1 — Personal (now real columns)
+    // Step 1 — Personal
     public string $gender = '';
     public string $contact_number_1 = '';
     public string $contact_number_2 = '';
     public bool $consentGiven = false;
 
-
-    // Step 1 — Address (stays in location JSON)
+    // Step 1 — Address
     public string $regionCode = '';
     public string $provinceCode = '';
     public string $cityCode = '';
     public string $barangayCode = '';
     public string $street_address = '';
 
-    // Step 1 — Coordinates (location JSON)
+    // Step 1 — Coordinates
     public float $latitude = 10.45;
     public float $longitude = 123.88;
 
@@ -46,6 +45,10 @@ new #[Layout('layouts.app-alumni')] class extends Component
     public string $civil_status = '';
     public $course_id = '';
     public $batch_id = '';
+
+    // Step 2 — Board exam (only for board programs)
+    public ?string $board_taken = null;
+    public string $board_rate = '';
 
     // Step 3 — Employment
     public string $employment_status = '';
@@ -84,19 +87,23 @@ new #[Layout('layouts.app-alumni')] class extends Component
         $profile = UserProfile::where('user_id', $user->id)->first();
 
         if ($profile) {
-            // --- Columns ---
             $this->gender           = $profile->gender ? ucfirst($profile->gender) : '';
             $this->contact_number_1 = $profile->contact_number_1 ?? '';
             $this->contact_number_2 = $profile->contact_number_2 ?? '';
             $this->consentGiven     = (bool) $profile->consent_given_at;
             $this->batch_id         = $profile->batch_id ?? '';
 
-            // --- course_id from pivot ---
             $this->course_id = $profile->courses()->value('courses.id') ?? '';
 
-            // --- location JSON ---
-            $location = $profile->location ?? [];
+            // Hydrate board fields (date → Y-m-d, decimal → string)
+            $this->board_taken = $profile->board_taken
+                ? \Carbon\Carbon::parse($profile->board_taken)->format('Y-m-d')
+                : null;
+            $this->board_rate = $profile->board_rate !== null
+                ? (string) $profile->board_rate
+                : '';
 
+            $location = $profile->location ?? [];
             $this->street_address = $location['street_address'] ?? '';
             $this->regionCode     = $location['region_code'] ?? '';
             $this->provinceCode   = $location['province_code'] ?? '';
@@ -159,6 +166,17 @@ new #[Layout('layouts.app-alumni')] class extends Component
         $this->barangayCode = '';
     }
 
+    // ===== Course change → clear board fields if non-board =====
+
+    public function updatedCourseId()
+    {
+        if ($this->selectedCourse?->course_type !== 'board') {
+            $this->board_taken = null;
+            $this->board_rate  = '';
+            $this->resetErrorBag(['board_taken', 'board_rate']);
+        }
+    }
+
     // ===== Computed =====
 
     #[Computed]
@@ -198,6 +216,14 @@ new #[Layout('layouts.app-alumni')] class extends Component
             ->get(['id', 'company_name', 'company_logo', 'company_address']);
     }
 
+    #[Computed]
+    public function selectedCourse()
+    {
+        return $this->course_id
+            ? Course::find($this->course_id)
+            : null;
+    }
+
     // ===== Inline company creation =====
 
     public function toggleNewCompanyForm(): void
@@ -214,7 +240,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
     public function updatedEmploymentStatus(): void
     {
-        // When switching away from "employed", clear all employment-only fields
         if ($this->employment_status !== 'employed') {
             $this->reset([
                 'current_job_position',
@@ -238,7 +263,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
                 'abroad_country',
             ]);
 
-            // Also close the inline new-company form if it was open
             if ($this->showNewCompanyForm) {
                 $this->showNewCompanyForm = false;
                 $this->reset(['new_company_logo', 'new_company_name', 'new_company_address', 'new_company_desc']);
@@ -303,6 +327,12 @@ new #[Layout('layouts.app-alumni')] class extends Component
                 'civil_status' => 'required|in:single,married,widowed,separated,single-parent',
                 'course_id'    => 'required|exists:courses,id',
                 'batch_id'     => 'required|exists:batches,id',
+                'board_taken'  => $this->selectedCourse?->course_type === 'board'
+                    ? 'required|date|before_or_equal:today'
+                    : 'nullable|date|before_or_equal:today',
+                'board_rate'   => $this->selectedCourse?->course_type === 'board'
+                    ? 'required|numeric|min:0|max:100'
+                    : 'nullable|numeric|min:0|max:100',
             ],
             3 => [
                 'employment_status'          => 'required|in:employed,unemployed,self-employed,other',
@@ -341,6 +371,13 @@ new #[Layout('layouts.app-alumni')] class extends Component
             'civil_status.required'                  => 'Please select your civil status.',
             'course_id.required'                     => 'Please select your program.',
             'batch_id.required'                      => 'Please select your year graduated.',
+            'board_taken.required'                   => 'Please enter the date you took the board exam.',
+            'board_taken.date'                       => 'Board exam date must be a valid date.',
+            'board_taken.before_or_equal'            => 'Board exam date cannot be in the future.',
+            'board_rate.required'                    => 'Please enter your board exam rating.',
+            'board_rate.numeric'                     => 'Board rating must be a number.',
+            'board_rate.min'                         => 'Board rating cannot be less than 0.',
+            'board_rate.max'                         => 'Board rating cannot be more than 100.',
             'employment_status.required'             => 'Please select your employment status.',
             'current_job_position.required_if'       => 'Job position is required.',
             'company_id.required_if'                 => 'Please select a company.',
@@ -406,16 +443,16 @@ new #[Layout('layouts.app-alumni')] class extends Component
             $region->name ?? null,
         ])->filter()->implode(', ');
 
-
-
         DB::transaction(function () use ($user, $region, $province, $city, $barangay, $fullAddress) {
             $existingProfile = UserProfile::where('user_id', $user->id)->first();
+
+            $isBoardCourse = $this->selectedCourse?->course_type === 'board';
 
             $profile = UserProfile::updateOrCreate(
                 ['user_id' => $user->id],
                 [
                     'avatar'           => $existingProfile->avatar ?? null,
-                    'gender'           => strtolower($this->gender), // enum: male|female|other
+                    'gender'           => strtolower($this->gender),
                     'contact_number_1' => $this->contact_number_1,
                     'contact_number_2' => $this->contact_number_2 ?: null,
                     'location' => array_merge(
@@ -438,6 +475,11 @@ new #[Layout('layouts.app-alumni')] class extends Component
                     'batch_id'    => $this->batch_id,
                     'is_private'  => $existingProfile->is_private ?? false,
                     'is_verified' => $existingProfile->is_verified ?? false,
+                    // Board fields — save only for board programs
+                    'board_taken' => $isBoardCourse ? ($this->board_taken ?: null) : null,
+                    'board_rate'  => $isBoardCourse
+                        ? ($this->board_rate !== '' ? round((float) $this->board_rate, 2) : null)
+                        : null,
                 ]
             );
 
@@ -447,16 +489,12 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
             $isEmployed = $this->employment_status === 'employed';
 
-
             CivilStatusEmployment::updateOrCreate(
                 ['tracer_study_id' => $tracerStudy->id],
                 [
                     'civil_status'      => $this->civil_status,
                     'employment_status' => $this->employment_status,
 
-                    // Only persist employment details when the alumnus is employed.
-                    // Everything else gets wiped so a switch from employed → unemployed
-                    // doesn't leave stale data in the record.
                     'current_job_position'       => $isEmployed ? ($this->current_job_position ?: null) : null,
                     'employed_related_to_degree' => $isEmployed ? ($this->employed_related_to_degree ?: null) : null,
                     'employment_type'            => $isEmployed ? ($this->employment_type ?: null) : null,
@@ -465,7 +503,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
                     'abroad_country'             => $isEmployed && $this->employment_area === 'abroad'
                         ? ($this->abroad_country ?: null)
                         : null,
-                    'months_to_first_job' => $this->months_to_first_job ?: null,
+                    'months_to_first_job'        => $this->months_to_first_job ?: null,
                 ]
             );
 
@@ -476,10 +514,9 @@ new #[Layout('layouts.app-alumni')] class extends Component
                     'level_of_study'             => $this->is_pursued_further_studies ? $this->level_of_study : null,
                 ]
             );
+
             // ===== Work history =====
             if ($this->employment_status === 'employed' && $this->company_id && $this->date_hired) {
-
-                // Update or create the current job record
                 $existingCurrent = WorkHistory::where('user_id', $user->id)
                     ->where('is_current_job', true)
                     ->first();
@@ -500,9 +537,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
                     ]);
                 }
             } else {
-                // Not employed (unemployed / self-employed / other)
-                // → unset the current-job flag on any existing record,
-                //   but keep the record itself so past jobs are preserved.
                 WorkHistory::where('user_id', $user->id)
                     ->where('is_current_job', true)
                     ->update(['is_current_job' => false]);

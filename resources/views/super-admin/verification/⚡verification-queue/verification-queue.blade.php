@@ -189,8 +189,61 @@
         @endforelse
     </div>
 
-    <div class="mt-6">
-        {{ $pendingUsers->links() }}
+    {{-- Custom Pagination Footer --}}
+    <div class="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        {{-- Results count --}}
+        <p class="text-sm text-[#123524]/60 text-center sm:text-left">
+            Showing
+            <span class="font-semibold text-[#123524]">{{ $pendingUsers->count() ?? 0 }}</span>
+            of
+            <span class="font-semibold text-[#123524]">{{ $pendingUsers->total() }}</span>
+            {{ Str::plural('result', $pendingUsers->total()) }}
+        </p>
+
+        {{-- Prev / Next buttons --}}
+        <div class="grid grid-cols-2 sm:inline-flex gap-x-2">
+            {{-- Prev --}}
+            @if ($pendingUsers->onFirstPage())
+                <button disabled
+                    class="px-4 py-2 inline-flex items-center justify-center gap-x-1 text-sm font-semibold rounded-lg border border-black/10 text-black/30 cursor-not-allowed">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                        <path d="M12 15l-6-6 6-6" />
+                    </svg>
+                    Prev
+                </button>
+            @else
+                <button wire:click="previousPage" wire:loading.attr="disabled" wire:target="previousPage,search"
+                    class="px-4 py-2 inline-flex items-center justify-center gap-x-1 text-sm font-semibold rounded-lg bg-[#123524] text-white hover:bg-[#0d2819] transition disabled:opacity-50">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                        <path d="M12 15l-6-6 6-6" />
+                    </svg>
+                    Prev
+                </button>
+            @endif
+
+            {{-- Next --}}
+            @if ($pendingUsers->hasMorePages())
+                <button wire:click="nextPage" wire:loading.attr="disabled" wire:target="nextPage,search"
+                    class="px-4 py-2 inline-flex items-center justify-center gap-x-1 text-sm font-semibold rounded-lg bg-[#123524] text-white hover:bg-[#0d2819] transition disabled:opacity-50">
+                    Next
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                        <path d="M9 3l6 6-6 6" />
+                    </svg>
+                </button>
+            @else
+                <button disabled
+                    class="px-4 py-2 inline-flex items-center justify-center gap-x-1 text-sm font-semibold rounded-lg border border-black/10 text-black/30 cursor-not-allowed">
+                    Next
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                        <path d="M9 3l6 6-6 6" />
+                    </svg>
+                </button>
+            @endif
+        </div>
     </div>
 
     {{-- Reject reason modal --}}

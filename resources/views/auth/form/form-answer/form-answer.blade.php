@@ -213,18 +213,19 @@
 
                     {{-- Consent checkbox (DPA compliance) — Step 1 --}}
                     <div class="pt-4 mt-2 border-t border-[#123524]/10">
-                        <label class="flex items-start gap-3 cursor-pointer p-4 rounded-xl bg-[#F7F5EF] border border-[#123524]/10 hover:border-[#D4A537] transition">
+                        <label
+                            class="flex items-start gap-3 cursor-pointer p-4 rounded-xl bg-[#F7F5EF] border border-[#123524]/10 hover:border-[#D4A537] transition">
                             <input type="checkbox" wire:model="consentGiven"
                                 class="mt-0.5 rounded border-[#123524]/20 text-[#123524] focus:ring-[#D4A537] h-4 w-4 shrink-0">
                             <span class="text-sm text-[#123524]/80 leading-relaxed">
                                 I have read and agree to the
                                 <a href="{{ route('privacy-policy') }}" target="_blank"
-                                   class="text-[#1877F2] font-semibold hover:underline">
+                                    class="text-[#1877F2] font-semibold hover:underline">
                                     Privacy Policy
                                 </a>
                                 and
                                 <a href="{{ route('terms-and-conditions') }}" target="_blank"
-                                   class="text-[#1877F2] font-semibold hover:underline">
+                                    class="text-[#1877F2] font-semibold hover:underline">
                                     Terms and Conditions<span class="text-sm text-[#123524]/80 leading-relaxed">.</span>
                                 </a>
                             </span>
@@ -266,7 +267,7 @@
                     <div>
                         <label class="block text-sm font-semibold text-[#123524] mb-2">College Program/Degree Completed
                             <span class="text-red-500">*</span></label>
-                        <select wire:model="course_id"
+                        <select wire:model.live="course_id"
                             class="w-full px-4 py-3 rounded-xl border border-[#123524]/15 text-[#123524] text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
                             <option value="">Select program</option>
                             @foreach ($courses as $id => $title)
@@ -292,6 +293,59 @@
                             <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
                         @enderror
                     </div>
+
+                    {{-- ===== BOARD EXAMINATION (only for board programs) ===== --}}
+                    @if ($this->selectedCourse?->course_type === 'board')
+                        <div class="pt-5 border-t border-[#123524]/10">
+                            <div class="flex items-center gap-2 mb-3">
+                                <div
+                                    class="w-8 h-8 rounded-lg bg-[#D4A537]/20 flex items-center justify-center text-[#a97f1f] shrink-0">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-bold text-[#123524] uppercase tracking-wide">
+                                        Board Examination
+                                    </h3>
+                                    <p class="text-xs text-[#123524]/60">
+                                        {{ $this->selectedCourse->course_title }} is a board program. Please provide
+                                        your PRC board exam details.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="grid sm:grid-cols-2 gap-4">
+                                {{-- Board Exam Date --}}
+                                <div>
+                                    <label class="block text-sm font-semibold text-[#123524] mb-2">
+                                        Date Taken <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="date" wire:model="board_taken"
+                                        max="{{ now()->format('Y-m-d') }}"
+                                        class="w-full px-4 py-3 rounded-xl border border-[#123524]/15 text-[#123524] text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
+                                    @error('board_taken')
+                                        <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                {{-- Board Rating --}}
+                                <div>
+                                    <label class="block text-sm font-semibold text-[#123524] mb-2">
+                                        Rating (%) <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="number" wire:model="board_rate" min="0" max="100"
+                                        step="0.01" placeholder="e.g. 85.50"
+                                        class="w-full px-4 py-3 rounded-xl border border-[#123524]/15 text-[#123524] text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
+                                    @error('board_rate')
+                                        <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             @endif
 

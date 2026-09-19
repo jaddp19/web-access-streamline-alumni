@@ -46,6 +46,10 @@ new #[Layout('layouts.auth')] class extends Component
     public $course_id = '';
     public $batch_id = '';
 
+    // Step 2 — Board exam (only for board programs)
+    public ?string $board_taken = null;
+    public string $board_rate = '';
+
     // Step 3
     public string $employment_status = '';
     public string $current_job_position = '';
@@ -89,6 +93,14 @@ new #[Layout('layouts.auth')] class extends Component
             $this->batch_id         = $profile->batch_id ?? '';
 
             $this->course_id = $profile->courses()->value('courses.id') ?? '';
+
+            // Hydrate board fields (date → Y-m-d, decimal → string)
+            $this->board_taken = $profile->board_taken
+                ? \Carbon\Carbon::parse($profile->board_taken)->format('Y-m-d')
+                : null;
+            $this->board_rate = $profile->board_rate !== null
+                ? (string) $profile->board_rate
+                : '';
 
             $location = $profile->location ?? [];
             $this->street_address = $location['street_address'] ?? '';
@@ -153,6 +165,17 @@ new #[Layout('layouts.auth')] class extends Component
         $this->barangayCode = '';
     }
 
+    // ===== Course change → clear board fields if non-board =====
+
+    public function updatedCourseId()
+    {
+        if ($this->selectedCourse?->course_type !== 'board') {
+            $this->board_taken = null;
+            $this->board_rate  = '';
+            $this->resetErrorBag(['board_taken', 'board_rate']);
+        }
+    }
+
     // ===== Computed =====
 
     #[Computed]
@@ -190,6 +213,14 @@ new #[Layout('layouts.auth')] class extends Component
     {
         return Company::orderBy('company_name')
             ->get(['id', 'company_name', 'company_logo', 'company_address']);
+    }
+
+    #[Computed]
+    public function selectedCourse()
+    {
+        return $this->course_id
+            ? Course::find($this->course_id)
+            : null;
     }
 
     // ===== Inline company creation =====
@@ -264,6 +295,13 @@ new #[Layout('layouts.auth')] class extends Component
                 'civil_status' => 'required|in:single,married,widowed,separated,single-parent',
                 'course_id'    => 'required|exists:courses,id',
                 'batch_id'     => 'required|exists:batches,id',
+                // Board fields conditionally required when course is board
+                'board_taken'  => $this->selectedCourse?->course_type === 'board'
+                    ? 'required|date|before_or_equal:today'
+                    : 'nullable|date|before_or_equal:today',
+                'board_rate'   => $this->selectedCourse?->course_type === 'board'
+                    ? 'required|numeric|min:0|max:100'
+                    : 'nullable|numeric|min:0|max:100',
             ],
             3 => [
                 'employment_status'          => 'required|in:employed,unemployed,self-employed,other',
@@ -301,6 +339,13 @@ new #[Layout('layouts.auth')] class extends Component
             'civil_status.required'                  => 'Please select your civil status.',
             'course_id.required'                     => 'Please select your program.',
             'batch_id.required'                      => 'Please select your year graduated.',
+            'board_taken.required'                   => 'Please enter the date you took the board exam.',
+            'board_taken.date'                       => 'Board exam date must be a valid date.',
+            'board_taken.before_or_equal'            => 'Board exam date cannot be in the future.',
+            'board_rate.required'                    => 'Please enter your board exam rating.',
+            'board_rate.numeric'                     => 'Board rating must be a number.',
+            'board_rate.min'                         => 'Board rating cannot be less than 0.',
+            'board_rate.max'                         => 'Board rating cannot be more than 100.',
             'employment_status.required'             => 'Please select your employment status.',
             'current_job_position.required_if'       => 'Job position is required.',
             'company_id.required_if'                 => 'Please select a company.',
@@ -365,6 +410,8 @@ new #[Layout('layouts.auth')] class extends Component
         DB::transaction(function () use ($user, $region, $province, $city, $barangay, $fullAddress) {
             $existingProfile = UserProfile::where('user_id', $user->id)->first();
 
+            $isBoardCourse = $this->selectedCourse?->course_type === 'board';
+
             $profile = UserProfile::updateOrCreate(
                 ['user_id' => $user->id],
                 [
@@ -392,6 +439,11 @@ new #[Layout('layouts.auth')] class extends Component
                     'batch_id'    => $this->batch_id,
                     'is_private'  => $existingProfile->is_private ?? false,
                     'is_verified' => $existingProfile->is_verified ?? false,
+                    // Board fields — save only for board programs
+                    'board_taken' => $isBoardCourse ? ($this->board_taken ?: null) : null,
+                    'board_rate'  => $isBoardCourse
+                        ? ($this->board_rate !== '' ? round((float) $this->board_rate, 2) : null)
+                        : null,
                 ]
             );
 

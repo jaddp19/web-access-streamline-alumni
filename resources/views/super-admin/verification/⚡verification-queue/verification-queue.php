@@ -40,6 +40,13 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         // Ensure they hold the alumni role
         $user->syncRoles(['alumni']);
 
+        // Clear any prior rejection state + mark as approved
+        $user->update([
+            'verification_status' => 'approved',
+            'rejection_reason'    => null,
+            'rejected_at'         => null,
+        ]);
+
         // Mark profile as verified — removes them from this queue
         $profile->update([
             'is_verified' => true,
@@ -86,11 +93,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public function with(): array
     {
         return [
-            // Users who:
-            //   1. Hold the 'alumni' role
-            //   2. Have a user profile that is NOT yet verified
-            //   3. Have board_taken + board_rate filled
-            //   4. Are enrolled in a board program
             'pendingUsers' => User::role('alumni')
                 ->whereHas('userProfile', function ($q) {
                     $q->where('is_verified', false)
@@ -108,7 +110,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                     'userProfile.courses.department',
                 ])
                 ->latest()
-                ->paginate(5),
+                ->paginate(10),   // ← changed from 5 to 10
         ];
     }
 };
