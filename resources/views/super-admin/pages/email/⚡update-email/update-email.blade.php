@@ -46,15 +46,50 @@
                         @error('message') <span class="text-red-500 dark:text-red-400 text-sm mt-1 block">{{ $message }}</span> @enderror
                     </div>
 
-                    <!-- Update Button -->
-                    <button type="submit"
-                        class="w-full sm:w-auto inline-flex items-center justify-center gap-x-2 px-6 py-2.5 bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524] text-sm font-semibold rounded-xl hover:bg-[#0d2819] dark:hover:bg-[#E5B94A] transition">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                        </svg>
-                        Update Template
-                    </button>
+                    <!-- Actions -->
+                    <div class="flex flex-wrap items-center gap-3 pt-2">
+                        <button type="submit"
+                            class="inline-flex items-center justify-center gap-x-2 px-6 py-2.5 bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524] text-sm font-semibold rounded-xl hover:bg-[#0d2819] dark:hover:bg-[#E5B94A] transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                            </svg>
+                            Update Template
+                        </button>
+
+                        <button type="button" wire:click="togglePreview"
+                            class="inline-flex items-center justify-center gap-x-2 px-6 py-2.5 bg-white dark:bg-[#3A3B3C] border border-black/10 dark:border-white/10 text-[#123524] dark:text-white text-sm font-semibold rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            {{ $showPreview ? 'Hide Preview' : 'Show Preview' }}
+                        </button>
+                    </div>
                 </form>
+
+                <!-- Live Preview -->
+                @if ($showPreview)
+                    <div class="mt-6 pt-6 border-t border-black/5 dark:border-white/10">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-xs uppercase tracking-wide font-semibold text-black/60 dark:text-white/60">
+                                Live Preview
+                            </h3>
+                            <span class="text-[11px] text-black/40 dark:text-white/40">
+                                Updates when you re-render — click Show Preview again to refresh
+                            </span>
+                        </div>
+
+                        <div class="rounded-xl overflow-hidden border border-black/10 dark:border-white/10 bg-white">
+                            <iframe
+                                wire:key="email-preview-{{ md5($this->previewHtml) }}"
+                                srcdoc="{{ $this->previewHtml }}"
+                                class="w-full h-[600px]"
+                                sandbox="allow-same-origin"
+                                title="Email Template Preview"
+                            ></iframe>
+                        </div>
+                    </div>
+                @endif
 
                 @if (session('success'))
                     <div class="mt-5 flex items-start gap-2.5 px-4 py-3 bg-[#123524]/5 dark:bg-emerald-500/10 border border-[#123524]/10 dark:border-emerald-500/20 rounded-xl text-[#123524] dark:text-emerald-400 text-sm font-medium">

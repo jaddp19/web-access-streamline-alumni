@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\EmailTemplate;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Illuminate\Support\Str;
@@ -9,6 +10,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 {
     public string $subject = '';
     public string $message = '';
+    public bool $showPreview = false;
 
     protected function rules()
     {
@@ -30,19 +32,36 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         ];
     }
 
+    public function togglePreview(): void
+    {
+        $this->showPreview = ! $this->showPreview;
+    }
+
+    #[Computed]
+    public function previewHtml(): string
+    {
+        try {
+            return view('emails.template', [
+                'emailSubject' => $this->subject !== '' ? $this->subject : 'Your subject here',
+                'bodyHtml'     => $this->message !== '' ? $this->message : 'Your message will appear here.',
+            ])->render();
+        } catch (\Throwable $e) {
+            return '<div style="padding:24px;font-family:system-ui,sans-serif;color:#b91c1c;">'
+                . '<strong>Preview unavailable.</strong><br>'
+                . e($e->getMessage())
+                . '</div>';
+        }
+    }
+
     public function create()
     {
         $validated = $this->validate();
 
-        // sanitize subject and message
         $subject = $this->sanitizeData($validated['subject']);
         $message = $this->sanitizeData($validated['message']);
 
-        // auto-generate slug from subject
         $slug = Str::slug($subject);
 
-        // enforce uniqueness on the generated slug manually, since it lives
-        // inside the `template` JSON column and can't use a normal `unique` rule
         if (EmailTemplate::whereJsonContains('template->slug', $slug)->exists()) {
             $this->addError('subject', 'A template with this subject already exists.');
             return;

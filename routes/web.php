@@ -8,7 +8,6 @@ Route::livewire('/', 'public::pages.index')->name('home');
 Route::livewire('/about', 'public::pages.about-page')->name('about');
 Route::livewire('/contact', 'public::pages.contact-page')->name('contact');
 Route::livewire('/departments', 'public::pages.department-page')->name('departments');
-Route::livewire('/verification', 'public::verification.verification-pending')->name('verification.pending');
 
 Route::livewire('/login', 'auth::login')->name('login');
 Route::livewire('/pop-up', 'auth::pop-up')->name('pop-up');

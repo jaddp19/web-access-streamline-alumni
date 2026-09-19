@@ -37,12 +37,12 @@ class DatabaseSeeder extends Seeder
 
         // Registrar account
         $superAdmin = User::firstOrCreate(
-            ['email' => 'registrar@example.com'],
+            ['email' => 'registrar@csav.edu.ph'],
             [
                 'first_name'  => 'Registrar',
                 'middle_name' => null,
                 'last_name'   => 'User',
-                'school_id'   => '2021-2022',
+                'school_id'   => '0001-0001',
                 'password'    => Hash::make('password123'),
             ]
         );
@@ -50,12 +50,12 @@ class DatabaseSeeder extends Seeder
 
         // Program Head account
         $admin = User::firstOrCreate(
-            ['email' => 'program-head@example.com'],
+            ['email' => 'program-head@csav.edu.ph'],
             [
                 'first_name'  => 'Program',
                 'middle_name' => 'Head',
                 'last_name'   => 'User',
-                'school_id'   => '2022-2023',
+                'school_id'   => '0001-0002',
                 'password'    => Hash::make('password123'),
             ]
         );
@@ -63,12 +63,12 @@ class DatabaseSeeder extends Seeder
 
         // Alumni account
         $alumni = User::firstOrCreate(
-            ['email' => 'alumni@example.com'],
+            ['email' => 'alumni@csav.edu.ph'],
             [
                 'first_name'  => 'Alumni',
                 'middle_name' => null,
                 'last_name'   => 'User',
-                'school_id'   => '2023-2024',
+                'school_id'   => '0001-0003',
                 'password'    => Hash::make('password123'),
             ]
         );

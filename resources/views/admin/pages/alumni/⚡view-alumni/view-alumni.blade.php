@@ -51,7 +51,7 @@
                     <input
                         type="text"
                         wire:model.live.debounce.400ms="search"
-                        placeholder="Search name, email, school ID, course, batch…"
+                        placeholder="Search name, email, school ID"
                         class="w-full py-2 pl-9 pr-8 text-sm rounded-lg bg-[#F7F5EF] dark:bg-[#3A3B3C] border border-black/10 dark:border-white/10 text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/40 focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537]">
                     <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-3 top-2.5 h-4 w-4 text-gray-400 dark:text-white/40"
                         fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -87,8 +87,7 @@
                         <tr>
                             <th class="ps-6 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Name</th>
                             <th class="hidden sm:table-cell px-2 sm:px-6 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Email</th>
-                            <th class="hidden sm:table-cell px-2 sm:px-6 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Degree Program</th>
-                            <th class="hidden lg:table-cell px-2 sm:px-6 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Department</th>
+                            <th class="hidden sm:table-cell px-2 sm:px-6 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Course</th>
                             <th class="hidden md:table-cell px-2 sm:px-6 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Batch Year</th>
                             <th class="px-2 sm:px-6 py-3 text-end"></th>
                         </tr>
@@ -134,11 +133,6 @@
                                 <td class="hidden sm:table-cell px-2 sm:px-6 py-3">
                                     <span class="text-black/70 dark:text-white/70">
                                         {{ $profile->courses->pluck('course_title')->join(', ') ?: 'N/A' }}
-                                    </span>
-                                </td>
-                                <td class="hidden lg:table-cell px-2 sm:px-6 py-3">
-                                    <span class="text-black/70 dark:text-white/70">
-                                        {{ $profile->courses->pluck('department.dept_name')->filter()->unique()->join(', ') ?: 'N/A' }}
                                     </span>
                                 </td>
                                 <td class="hidden md:table-cell px-2 sm:px-6 py-3">
