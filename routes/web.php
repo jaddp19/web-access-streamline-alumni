@@ -73,6 +73,8 @@ Route::middleware(['auth', 'role:program head|registrar'])->prefix('admin')->gro
     Route::livewire('/alumni/create', 'admin::pages.alumni.create-alumni')->name('admin.alumni.create');
     Route::livewire('/alumni/update/{user}', 'admin::pages.alumni.update-alumni')->name('admin.alumni.update');
 
+    Route::livewire('/verification-queue', 'admin::pages.verification-queue')->name('admin.verification-queue');
+
 });
 
 Route::middleware(['auth', 'role:alumni|registrar'])->prefix('alumni')->group(function () {

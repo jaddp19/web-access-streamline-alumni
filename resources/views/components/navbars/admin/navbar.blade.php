@@ -31,6 +31,9 @@
                     'Alumni' => [
                         ['route' => 'admin.alumni.view', 'label' => 'View All Alumni'],
                     ],
+                    'Requests' => [
+                        ['route' => 'admin.verification-queue', 'label' => 'Verification Queue'],
+                    ]
                 ];
             @endphp
 
