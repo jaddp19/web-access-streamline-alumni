@@ -214,9 +214,6 @@
                             <h3 class="text-sm font-bold text-black dark:text-white uppercase tracking-wide">
                                 Employment Details
                             </h3>
-                            <p class="text-xs text-black/50 dark:text-white/50 mt-0.5">
-                                These power the alumni analytics dashboard.
-                            </p>
                         </div>
 
                         {{-- Civil Status --}}
