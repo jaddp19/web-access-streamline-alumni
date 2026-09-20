@@ -672,8 +672,15 @@
                         Next
                     </button>
                 @else
-                    <button type="button" wire:click="submit"
-                        class="w-full sm:w-auto px-6 py-3 sm:py-2.5 rounded-xl bg-[#D4A537] hover:bg-[#bf9330] active:bg-[#a97f28] text-[#123524] font-bold shadow-md transition">
+                    <button type="button"
+                        wire:click="submit"
+                        x-data
+                        x-on:click="
+                            $wire.submit().then(() => {
+                                setTimeout(() => window.close(), 300);
+                            })
+                        "
+                        class="w-full sm:w-auto px-6 py-3 sm:py-2.5 rounded-xl bg-[#123524] hover:bg-[#0d2819] active:bg-[#0a2013] text-white font-bold shadow-md transition">
                         Save Changes
                     </button>
                 @endif

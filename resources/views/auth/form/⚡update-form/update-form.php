@@ -532,7 +532,6 @@ new #[Layout('layouts.app-form')] class extends Component
         });
 
         session()->flash('status', 'Your tracer study has been updated successfully.');
-
-        return redirect()->route('alumni.dashboard');
+        $this->dispatch('close-tab');
     }
 };

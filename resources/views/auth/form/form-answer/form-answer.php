@@ -21,6 +21,8 @@ new #[Layout('layouts.app-form')] class extends Component
 {
     use WithFileUploads;
 
+    public bool $alreadyFilled = false;
+
     public int $step = 1;
     public int $totalSteps = 4;
 
@@ -76,10 +78,21 @@ new #[Layout('layouts.app-form')] class extends Component
 
     public function mount()
     {
+        $user = Auth::user();
+        
+        // If the user already has a profile, lock the form.
+        $existingProfile = UserProfile::where('user_id', $user->id)->first();
+
+        if ($existingProfile) {
+            $this->alreadyFilled = true;
+            // Don't hydrate or allow saving — they must use the settings update form instead.
+            return;
+        }
+
         $this->courses = Course::orderBy('course_title')->pluck('course_title', 'id');
         $this->batches = Batch::orderBy('batch_name', 'desc')->pluck('batch_name', 'id');
 
-        $user = Auth::user();
+        
         $profile = UserProfile::where('user_id', $user->id)->first();
 
         if ($profile) {
