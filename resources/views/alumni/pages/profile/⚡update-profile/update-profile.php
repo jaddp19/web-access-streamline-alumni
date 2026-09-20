@@ -22,18 +22,15 @@ new #[Layout('layouts.app-alumni')] class extends Component
     public string $contact_number_1 = '';
     public ?string $contact_number_2 = null;
 
-    // User fields
-    public string $name = '';
-    public string $email = '';
+    // User fields — three-part name (matches users table)
+    public string $first_name  = '';
+    public string $middle_name = '';
+    public string $last_name   = '';
+    public string $email       = '';
 
     // Avatar
     public $avatarFile = null;
     public ?string $currentAvatar = null;
-
-    // Coordinates
-    public ?float $latitude = null;
-    public ?float $longitude = null;
-    public ?string $address = null;
 
     // Philippine address cascade
     public string $region_code = '';
@@ -50,17 +47,30 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
     public bool $hasProfile = false;
 
+    /**
+     * Composed full name — for avatar fallback.
+     */
+    #[Computed]
+    public function fullName(): string
+    {
+        return trim(implode(' ', array_filter([
+            $this->first_name,
+            $this->middle_name,
+            $this->last_name,
+        ])));
+    }
+
     protected function rules(): array
     {
         return [
-            'name'              => 'required|string|max:255',
+            'first_name'        => 'required|string|min:2|max:255',
+            'middle_name'       => 'nullable|string|max:255',
+            'last_name'         => 'required|string|min:2|max:255',
             'email'             => 'required|email|max:255|unique:users,email,' . Auth::id(),
             'gender'            => 'required|in:male,female,other',
             'contact_number_1'  => ['required', 'string', 'max:20', new Phone('PH')],
             'contact_number_2'  => ['nullable', 'string', 'max:20', new Phone('PH')],
             'avatarFile'        => 'nullable|image|max:2048',
-            'latitude'          => 'required|numeric|between:-90,90',
-            'longitude'         => 'required|numeric|between:-180,180',
 
             'region_code'       => 'required|string',
             'province_code'     => 'required|string',
@@ -73,7 +83,12 @@ new #[Layout('layouts.app-alumni')] class extends Component
     public function messages(): array
     {
         return [
-            'name.required'             => 'The name field is required.',
+            'first_name.required'       => 'The first name is required.',
+            'first_name.min'            => 'The first name must be at least 2 characters.',
+            'first_name.max'            => 'The first name may not be greater than 255 characters.',
+            'last_name.required'        => 'The last name is required.',
+            'last_name.min'             => 'The last name must be at least 2 characters.',
+            'last_name.max'             => 'The last name may not be greater than 255 characters.',
             'email.required'            => 'The email field is required.',
             'email.email'               => 'The email must be a valid email address.',
             'email.unique'              => 'The email has already been taken.',
@@ -82,8 +97,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
             'contact_number_1.required' => 'The mobile number is required.',
             'avatarFile.image'          => 'The avatar must be an image file.',
             'avatarFile.max'            => 'The avatar may not be larger than 2MB.',
-            'latitude.required'         => 'Please pin your location on the map.',
-            'longitude.required'        => 'Please pin your location on the map.',
             'region_code.required'      => 'Please select a region.',
             'province_code.required'    => 'Please select a province.',
             'city_code.required'        => 'Please select a city or municipality.',
@@ -137,7 +150,24 @@ new #[Layout('layouts.app-alumni')] class extends Component
     {
         $user = Auth::user();
 
-        $this->name  = $user->name;
+        // Hydrate three-part name. If empty (legacy user), split from `name`.
+        $first  = $user->first_name;
+        $middle = $user->middle_name;
+        $last   = $user->last_name;
+
+        if (! $first && ! $last && $user->name) {
+            $split  = preg_split('/\s+/', trim($user->name));
+            $first  = $split[0] ?? '';
+            $last   = count($split) > 1 ? end($split) : '';
+            $middle = count($split) > 2
+                ? implode(' ', array_slice($split, 1, -1))
+                : '';
+        }
+
+        $this->first_name  = $first ?? '';
+        $this->middle_name = $middle ?? '';
+        $this->last_name   = $last ?? '';
+
         $this->email = $user->email;
 
         $profile = UserProfile::where('user_id', $user->id)->first();
@@ -145,28 +175,22 @@ new #[Layout('layouts.app-alumni')] class extends Component
         if ($profile) {
             $this->hasProfile = true;
 
-            // ----- Column-backed fields -----
             $this->gender           = $profile->gender ?? 'male';
             $this->contact_number_1 = $profile->contact_number_1 ?? '';
             $this->contact_number_2 = $profile->contact_number_2 ?? null;
             $this->currentAvatar    = $profile->avatar;
 
-            // ----- Location JSON fields -----
             $location = $this->decodeLocation($profile);
 
-            $this->latitude       = isset($location['latitude']) ? (float) $location['latitude'] : null;
-            $this->longitude      = isset($location['longitude']) ? (float) $location['longitude'] : null;
-            $this->address        = $location['address'] ?? null;
-
-            $this->region_code    = $location['region_code'] ?? '';
-            $this->province_code  = $location['province_code'] ?? '';
-            $this->city_code      = $location['city_code'] ?? '';
-            $this->barangay_code  = $location['barangay_code'] ?? '';
-            $this->region_name    = $location['region_name'] ?? '';
-            $this->province_name  = $location['province_name'] ?? '';
-            $this->city_name      = $location['city_name'] ?? '';
-            $this->barangay_name  = $location['barangay_name'] ?? '';
             $this->street_address = $location['street_address'] ?? '';
+            $this->region_code    = $location['region_code'] ?? '';
+            $this->region_name    = $location['region_name'] ?? '';
+            $this->province_code  = $location['province_code'] ?? '';
+            $this->province_name  = $location['province_name'] ?? '';
+            $this->city_code      = $location['city_code'] ?? '';
+            $this->city_name      = $location['city_name'] ?? '';
+            $this->barangay_code  = $location['barangay_code'] ?? '';
+            $this->barangay_name  = $location['barangay_name'] ?? '';
         }
     }
 
@@ -245,103 +269,85 @@ new #[Layout('layouts.app-alumni')] class extends Component
         $this->barangay_name = optional(app(PhAddressService::class)->findByCode($value))->name ?? '';
     }
 
-    public function setLocation($lat, $lng, $address = null)
-    {
-        $this->latitude  = round((float) $lat, 6);
-        $this->longitude = round((float) $lng, 6);
-        $this->address   = $address ?: $this->address;
-
-        $this->resetErrorBag(['latitude', 'longitude']);
-    }
-
     // ===== Save =====
 
     public function saveProfile()
     {
-        // Normalize empty strings to null so "nullable" rules apply.
         $this->contact_number_2 = $this->contact_number_2 === '' ? null : $this->contact_number_2;
 
         $validated = $this->validate();
 
-        $validated['name']           = $this->sanitizeData($validated['name']);
+        $validated['first_name']     = $this->sanitizeData($validated['first_name']);
+        $validated['middle_name']    = $validated['middle_name'] ? $this->sanitizeData($validated['middle_name']) : null;
+        $validated['last_name']      = $this->sanitizeData($validated['last_name']);
         $validated['email']          = $this->sanitizeData($validated['email']);
         $validated['street_address'] = $this->sanitizeData($validated['street_address']);
 
         $user = Auth::user();
+        $service = app(PhAddressService::class);
 
         try {
+            // The User model's `saving` hook auto-syncs `name` from the three parts.
             $user->update([
-                'name'  => $validated['name'],
-                'email' => $validated['email'],
+                'first_name'  => $validated['first_name'],
+                'middle_name' => $validated['middle_name'],
+                'last_name'   => $validated['last_name'],
+                'email'       => $validated['email'],
             ]);
 
-            $profile = UserProfile::where('user_id', $user->id)->first();
+            $existing = UserProfile::where('user_id', $user->id)->first();
 
-            $composedPhAddress = collect([
+            // Resolve names server-side (same as tracer study form)
+            $region   = $service->findByCode($validated['region_code']);
+            $province = $service->findByCode($validated['province_code']);
+            $city     = $service->findByCode($validated['city_code']);
+            $barangay = $service->findByCode($validated['barangay_code']);
+
+            $fullAddress = collect([
                 $validated['street_address'],
-                $this->barangay_name,
-                $this->city_name,
-                $this->province_name,
-                $this->region_name,
+                $barangay->name ?? null,
+                $city->name ?? null,
+                $province->name ?? null,
+                $region->name ?? null,
             ])->filter()->implode(', ');
 
-            // Location JSON — no longer contains gender/phone (they have columns now)
-            $location = $this->decodeLocation($profile);
-            $location = array_merge($location, [
-                'latitude'       => $validated['latitude'],
-                'longitude'      => $validated['longitude'],
-                'address'        => $this->address,
-
-                'region_code'    => $validated['region_code'],
-                'province_code'  => $validated['province_code'],
-                'city_code'      => $validated['city_code'],
-                'barangay_code'  => $validated['barangay_code'],
-                'region_name'    => $this->region_name,
-                'province_name'  => $this->province_name,
-                'city_name'      => $this->city_name,
-                'barangay_name'  => $this->barangay_name,
+            $location = [
                 'street_address' => $validated['street_address'],
-                'ph_address'     => $composedPhAddress,
-            ]);
+                'region_code'    => $validated['region_code'],
+                'region_name'    => $region->name ?? null,
+                'province_code'  => $validated['province_code'],
+                'province_name'  => $province->name ?? null,
+                'city_code'      => $validated['city_code'],
+                'city_name'      => $city->name ?? null,
+                'barangay_code'  => $validated['barangay_code'],
+                'barangay_name'  => $barangay->name ?? null,
+                'address'        => $fullAddress,
+            ];
 
-            // Strip legacy keys from location JSON if they exist
-            unset(
-                $location['gender'],
-                $location['phone_number_1'],
-                $location['phone_number_2']
-            );
-
-            $avatarPath = $profile->avatar ?? '';
+            $avatarPath = $existing?->avatar;
 
             if ($this->avatarFile) {
                 if ($avatarPath && Storage::disk('public')->exists($avatarPath)) {
                     Storage::disk('public')->delete($avatarPath);
                 }
-
                 $avatarPath = $this->avatarFile->store('avatars', 'public');
             }
 
-            if ($profile) {
-                $profile->update([
+            $profile = UserProfile::updateOrCreate(
+                ['user_id' => $user->id],
+                [
                     'avatar'           => $avatarPath,
                     'gender'           => $validated['gender'],
                     'contact_number_1' => $validated['contact_number_1'],
                     'contact_number_2' => $validated['contact_number_2'],
                     'location'         => $location,
-                ]);
-            } else {
-                $profile = UserProfile::create([
-                    'user_id'          => $user->id,
-                    'avatar'           => $avatarPath,
-                    'gender'           => $validated['gender'],
-                    'contact_number_1' => $validated['contact_number_1'],
-                    'contact_number_2' => $validated['contact_number_2'],
-                    'location'         => $location,
-                    'batch_id'         => $this->resolveBatchId(),
-                    'is_private'       => false,
-                    'is_verified'      => false,
-                ]);
-            }
+                    'batch_id'         => $existing?->batch_id ?? $this->resolveBatchId(),
+                    'is_private'       => $existing?->is_private ?? false,
+                    'is_verified'      => $existing?->is_verified ?? false,
+                ]
+            );
+
+            $profile->refresh();
 
             $this->avatarFile    = null;
             $this->currentAvatar = $avatarPath;

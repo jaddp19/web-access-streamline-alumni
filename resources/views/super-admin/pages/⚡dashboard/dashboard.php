@@ -62,8 +62,15 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     #[Computed]
     public function alumniByBatch()
     {
+        $alumniUserIds = DB::table('model_has_roles')
+            ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
+            ->where('roles.name', 'alumni')
+            ->where('model_has_roles.model_type', User::class)
+            ->pluck('model_has_roles.model_id');
+
         return DB::table('user_profiles')
             ->join('batches', 'user_profiles.batch_id', '=', 'batches.id')
+            ->whereIn('user_profiles.user_id', $alumniUserIds)
             ->select(
                 'batches.id as batch_id',
                 'batches.batch_name',

@@ -252,9 +252,4 @@
         </section>
 
     </div>
-
-    {{-- Back --}}
-    <div class="text-center mt-8">
-        <a href="{{ url()->previous() }}" class="text-[#1877F2] text-sm font-semibold hover:underline">&larr; Back</a>
-    </div>
 </div>

@@ -1,8 +1,8 @@
 <div class="bg-[#F8FAFC] dark:bg-[#18191A] min-h-full">
 
     {{-- ========== HEADER ========== --}}
-    <header class="bg-white dark:bg-[#242526] border-b border-black/5 dark:border-white/5 sticky top-1 z-30">
-        <div class="max-w-[1100px] mx-auto px-6 py-4 flex items-center justify-between">
+    <header class="bg-white dark:bg-[#242526] border-b border-black/5 dark:border-white/5 top-1 z-30">
+        <div class="max-w-[1100px] mx-auto px-6 py-4 flex items-center justify-between gap-4">
             <div>
                 <h1 class="text-xl font-bold text-black dark:text-white leading-none"
                     style="font-family: 'Fraunces', serif;">
@@ -10,6 +10,16 @@
                 </h1>
                 <p class="text-xs text-black/50 dark:text-white/50 mt-1">Manage your account and preferences</p>
             </div>
+
+            {{-- Back Button --}}
+            <a href="{{ route('super-admin.dashboard') }}"
+                class="inline-flex items-center gap-x-2 px-3.5 py-2 text-sm font-semibold rounded-lg bg-white dark:bg-[#3A3B3C] border border-black/10 dark:border-white/10 text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition shrink-0">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                    <path d="M15 18l-6-6 6-6" />
+                </svg>
+                <span>Back</span>
+            </a>
         </div>
     </header>
 
@@ -209,6 +219,64 @@
                                 </div>
                             </div>
 
+                            {{-- Name (first + last side-by-side) --}}
+                            <div class="grid sm:grid-cols-2 gap-5">
+                                <div>
+                                    <label
+                                        class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
+                                        First Name <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" wire:model.defer="first_name"
+                                        class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#1C6B45] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#1C6B45] dark:focus:ring-[#D4A537] transition">
+                                    @error('first_name')
+                                        <span
+                                            class="text-red-500 dark:text-red-400 text-sm mt-1 block">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div>
+                                    <label
+                                        class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
+                                        Last Name <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" wire:model.defer="last_name"
+                                        class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#1C6B45] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#1C6B45] dark:focus:ring-[#D4A537] transition">
+                                    @error('last_name')
+                                        <span
+                                            class="text-red-500 dark:text-red-400 text-sm mt-1 block">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            {{-- Middle Name --}}
+                            <div>
+                                <label
+                                    class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
+                                    Middle Name <span
+                                        class="text-black/40 dark:text-white/40 text-[10px] font-normal normal-case">(optional)</span>
+                                </label>
+                                <input type="text" wire:model.defer="middle_name"
+                                    class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#1C6B45] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#1C6B45] dark:focus:ring-[#D4A537] transition">
+                                @error('middle_name')
+                                    <span
+                                        class="text-red-500 dark:text-red-400 text-sm mt-1 block">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            {{-- Email --}}
+                            <div>
+                                <label
+                                    class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
+                                    Email <span class="text-red-500">*</span>
+                                </label>
+                                <input type="email" wire:model.defer="email"
+                                    class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#1C6B45] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#1C6B45] dark:focus:ring-[#D4A537] transition">
+                                @error('email')
+                                    <span
+                                        class="text-red-500 dark:text-red-400 text-sm mt-1 block">{{ $message }}</span>
+                                @enderror
+                            </div>
+
                             {{-- Gender + Batch --}}
                             <div class="grid sm:grid-cols-2 gap-5">
                                 <div>
@@ -248,31 +316,98 @@
                                 </div>
                             </div>
 
-                            {{-- Phone numbers --}}
+                            {{-- Phone numbers (intl-tel-input with flag + dial code) --}}
                             <div class="grid sm:grid-cols-2 gap-5">
+
+                                {{-- Contact Number 1 --}}
                                 <div>
                                     <label
                                         class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
                                         Contact Number 1 <span class="text-red-500">*</span>
                                     </label>
-                                    <input type="text" wire:model="contact_number_1"
-                                        placeholder="e.g. +639171234567"
-                                        class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#1C6B45] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#1C6B45] dark:focus:ring-[#D4A537] transition">
+
+                                    <div wire:ignore x-data="{
+                                        iti: null,
+                                        init() {
+                                            if (!window.intlTelInput) {
+                                                setTimeout(() => this.init(), 150);
+                                                return;
+                                            }
+                                            const el = this.$refs.input;
+                                            if (!el || el._iti) return;
+                                    
+                                            this.iti = window.intlTelInput(el, {
+                                                initialCountry: 'ph',
+                                                preferredCountries: ['ph', 'us'],
+                                                separateDialCode: true,
+                                                strictMode: true,
+                                                utilsScript: 'https://cdn.jsdelivr.net/npm/intl-tel-input@23.0.4/build/js/utils.js',
+                                            });
+                                            el._iti = this.iti;
+                                    
+                                            const initial = el.dataset.initial;
+                                            if (initial) this.iti.setNumber(initial);
+                                    
+                                            const sync = () => {
+                                                $wire.set('contact_number_1', this.iti.getNumber() || '');
+                                            };
+                                            el.addEventListener('blur', sync);
+                                            el.addEventListener('countrychange', sync);
+                                        }
+                                    }" x-init="init()">
+                                        <input x-ref="input" type="tel"
+                                            class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#1C6B45] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#1C6B45] dark:focus:ring-[#D4A537] transition"
+                                            autocomplete="tel" inputmode="tel"
+                                            data-initial="{{ $contact_number_1 }}">
+                                    </div>
                                     @error('contact_number_1')
                                         <span
                                             class="text-red-500 dark:text-red-400 text-sm mt-1 block">{{ $message }}</span>
                                     @enderror
                                 </div>
 
+                                {{-- Contact Number 2 --}}
                                 <div>
                                     <label
                                         class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
                                         Contact Number 2 <span
                                             class="text-black/40 dark:text-white/40 text-[10px] font-normal normal-case">(optional)</span>
                                     </label>
-                                    <input type="text" wire:model="contact_number_2"
-                                        placeholder="e.g. +639171234567"
-                                        class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#1C6B45] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#1C6B45] dark:focus:ring-[#D4A537] transition">
+
+                                    <div wire:ignore x-data="{
+                                        iti: null,
+                                        init() {
+                                            if (!window.intlTelInput) {
+                                                setTimeout(() => this.init(), 150);
+                                                return;
+                                            }
+                                            const el = this.$refs.input;
+                                            if (!el || el._iti) return;
+                                    
+                                            this.iti = window.intlTelInput(el, {
+                                                initialCountry: 'ph',
+                                                preferredCountries: ['ph', 'us'],
+                                                separateDialCode: true,
+                                                strictMode: true,
+                                                utilsScript: 'https://cdn.jsdelivr.net/npm/intl-tel-input@23.0.4/build/js/utils.js',
+                                            });
+                                            el._iti = this.iti;
+                                    
+                                            const initial = el.dataset.initial;
+                                            if (initial) this.iti.setNumber(initial);
+                                    
+                                            const sync = () => {
+                                                $wire.set('contact_number_2', this.iti.getNumber() || '');
+                                            };
+                                            el.addEventListener('blur', sync);
+                                            el.addEventListener('countrychange', sync);
+                                        }
+                                    }" x-init="init()">
+                                        <input x-ref="input" type="tel"
+                                            class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#1C6B45] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#1C6B45] dark:focus:ring-[#D4A537] transition"
+                                            autocomplete="tel" inputmode="tel"
+                                            data-initial="{{ $contact_number_2 }}">
+                                    </div>
                                     @error('contact_number_2')
                                         <span
                                             class="text-red-500 dark:text-red-400 text-sm mt-1 block">{{ $message }}</span>
@@ -396,4 +531,47 @@
 
         </main>
     </div>
+
+    @assets
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@23.0.4/build/css/intlTelInput.css" />
+        <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@23.0.4/build/js/intlTelInput.min.js"></script>
+        <style>
+            .iti__flag.iti__ph {
+                background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 8"><rect width="12" height="4" fill="%23003" /><rect y="4" width="12" height="4" fill="%23CE1126" /><polygon points="0,0 4,4 0,8" fill="%23FFF" /><circle cx="1.5" cy="4" r="0.8" fill="%23FCD116" /></svg>');
+                background-position: 0 0;
+                background-size: 100% 100%;
+            }
+
+            .dark .iti__selected-dial-code {
+                color: #fff;
+            }
+
+            .dark .iti__country-list {
+                background-color: #242526;
+                color: #fff;
+                border-color: rgba(255, 255, 255, 0.1);
+            }
+
+            .dark .iti__country-list .iti__country:hover,
+            .dark .iti__country-list .iti__country.iti__highlight {
+                background-color: #3A3B3C;
+            }
+
+            .dark .iti__dial-code {
+                color: rgba(255, 255, 255, 0.6);
+            }
+
+            .dark .iti__divider {
+                border-bottom-color: rgba(255, 255, 255, 0.1);
+            }
+
+            .dark .iti__arrow {
+                border-top-color: #fff;
+            }
+
+            .dark .iti__arrow--up {
+                border-bottom-color: #fff;
+            }
+        </style>
+    @endassets
 </div>

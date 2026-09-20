@@ -14,19 +14,22 @@
             </div>
             <div>
                 <p class="text-white/50 text-sm">Edit Profile</p>
-                <h1 class="text-2xl font-bold text-white" style="font-family: 'Fraunces', serif;">Personal Information</h1>
+                <h1 class="text-2xl font-bold text-white" style="font-family: 'Fraunces', serif;">Personal Information
+                </h1>
             </div>
         </div>
     </div>
 
     @if (session('error'))
-        <div class="mb-5 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-400 font-semibold rounded-xl p-4 text-sm">
+        <div
+            class="mb-5 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-400 font-semibold rounded-xl p-4 text-sm">
             {{ session('error') }}
         </div>
     @endif
 
     @if (!$hasProfile)
-        <div class="mb-5 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-800 dark:text-amber-400 font-semibold rounded-xl p-4 text-sm">
+        <div
+            class="mb-5 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-800 dark:text-amber-400 font-semibold rounded-xl p-4 text-sm">
             You don't have a profile yet. Fill out the form below to set it up.
         </div>
     @endif
@@ -37,44 +40,75 @@
 
             <!-- Avatar -->
             <div class="flex items-center gap-5">
-                <img src="{{ $avatarFile ? $avatarFile->temporaryUrl() : ($currentAvatar ? Storage::url($currentAvatar) : 'https://ui-avatars.com/api/?name=' . urlencode($name)) }}"
+                <img src="{{ $avatarFile ? $avatarFile->temporaryUrl() : ($currentAvatar ? Storage::url($currentAvatar) : 'https://ui-avatars.com/api/?name=' . urlencode($this->fullName)) }}"
                     class="w-20 h-20 rounded-2xl object-cover border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] shrink-0">
-
                 <div class="flex-1">
-                    <label class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">Avatar</label>
+                    <label
+                        class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">Avatar</label>
                     <input type="file" wire:model="avatarFile" accept="image/*"
                         class="block w-full text-sm text-black/70 dark:text-white/70 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-[#D4A537] file:text-[#123524] hover:file:bg-[#E5B94A] file:cursor-pointer cursor-pointer">
-                    <div wire:loading wire:target="avatarFile" class="text-xs text-black/40 dark:text-white/40 mt-1">Uploading...</div>
+                    <div wire:loading wire:target="avatarFile" class="text-xs text-black/40 dark:text-white/40 mt-1">
+                        Uploading...</div>
                     @error('avatarFile')
                         <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
                     @enderror
                 </div>
             </div>
 
-            <!-- Name + Email -->
+            <!-- Name (first + last side-by-side) -->
             <div class="grid sm:grid-cols-2 gap-5">
                 <div>
-                    <label class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">Name</label>
-                    <input type="text" wire:model.defer="name"
+                    <label
+                        class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">First
+                        Name</label>
+                    <input type="text" wire:model.defer="first_name"
                         class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition">
-                    @error('name')
+                    @error('first_name')
                         <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
                     @enderror
                 </div>
 
                 <div>
-                    <label class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">Email</label>
-                    <input type="email" wire:model.defer="email"
+                    <label
+                        class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">Last
+                        Name</label>
+                    <input type="text" wire:model.defer="last_name"
                         class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition">
-                    @error('email')
+                    @error('last_name')
                         <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
                     @enderror
                 </div>
             </div>
 
+            <!-- Middle Name -->
+            <div>
+                <label
+                    class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
+                    Middle Name <span
+                        class="text-black/40 dark:text-white/40 text-[10px] font-normal normal-case">(optional)</span>
+                </label>
+                <input type="text" wire:model.defer="middle_name"
+                    class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition">
+                @error('middle_name')
+                    <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <!-- Email -->
+            <div>
+                <label
+                    class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">Email</label>
+                <input type="email" wire:model.defer="email"
+                    class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition">
+                @error('email')
+                    <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
+                @enderror
+            </div>
+
             <!-- Gender -->
             <div>
-                <label class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">Gender</label>
+                <label
+                    class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">Gender</label>
                 <select wire:model.defer="gender"
                     class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition">
                     <option value="male">Male</option>
@@ -91,7 +125,8 @@
 
                 {{-- Primary contact --}}
                 <div>
-                    <label class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
+                    <label
+                        class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
                         Contact Number 1 <span class="text-red-500">*</span>
                     </label>
 
@@ -104,7 +139,7 @@
                             }
                             const el = this.$refs.input;
                             if (!el || el._iti) return;
-
+                    
                             this.iti = window.intlTelInput(el, {
                                 initialCountry: 'ph',
                                 preferredCountries: ['ph'],
@@ -113,10 +148,10 @@
                                 utilsScript: 'https://cdn.jsdelivr.net/npm/intl-tel-input@23.0.4/build/js/utils.js',
                             });
                             el._iti = this.iti;
-
+                    
                             const initial = el.dataset.initial;
                             if (initial) this.iti.setNumber(initial);
-
+                    
                             const sync = () => {
                                 $wire.set('contact_number_1', this.iti.getNumber() || '');
                             };
@@ -135,8 +170,10 @@
 
                 {{-- Alternate contact --}}
                 <div>
-                    <label class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
-                        Contact Number 2 <span class="text-black/40 dark:text-white/40 text-[10px] font-normal normal-case">(optional)</span>
+                    <label
+                        class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
+                        Contact Number 2 <span
+                            class="text-black/40 dark:text-white/40 text-[10px] font-normal normal-case">(optional)</span>
                     </label>
 
                     <div wire:ignore x-data="{
@@ -148,7 +185,7 @@
                             }
                             const el = this.$refs.input;
                             if (!el || el._iti) return;
-
+                    
                             this.iti = window.intlTelInput(el, {
                                 initialCountry: 'ph',
                                 preferredCountries: ['ph'],
@@ -157,10 +194,10 @@
                                 utilsScript: 'https://cdn.jsdelivr.net/npm/intl-tel-input@23.0.4/build/js/utils.js',
                             });
                             el._iti = this.iti;
-
+                    
                             const initial = el.dataset.initial;
                             if (initial) this.iti.setNumber(initial);
-
+                    
                             const sync = () => {
                                 $wire.set('contact_number_2', this.iti.getNumber() || '');
                             };
@@ -180,11 +217,14 @@
 
             <!-- Philippine Address (cascading dropdowns) -->
             <div>
-                <label class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">Home Address</label>
+                <label
+                    class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">Home
+                    Address</label>
 
                 <div class="grid sm:grid-cols-2 gap-5">
                     <div>
-                        <label class="block text-[11px] text-black/50 dark:text-white/50 font-semibold mb-1.5">Region</label>
+                        <label
+                            class="block text-[11px] text-black/50 dark:text-white/50 font-semibold mb-1.5">Region</label>
                         <select wire:model.live="region_code"
                             class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition">
                             <option value="">Select Region</option>
@@ -198,7 +238,8 @@
                     </div>
 
                     <div>
-                        <label class="block text-[11px] text-black/50 dark:text-white/50 font-semibold mb-1.5">Province</label>
+                        <label
+                            class="block text-[11px] text-black/50 dark:text-white/50 font-semibold mb-1.5">Province</label>
                         <select wire:model.live="province_code" @disabled(!$region_code)
                             class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition disabled:opacity-50 disabled:cursor-not-allowed">
                             <option value="">Select Province</option>
@@ -212,7 +253,8 @@
                     </div>
 
                     <div>
-                        <label class="block text-[11px] text-black/50 dark:text-white/50 font-semibold mb-1.5">City / Municipality</label>
+                        <label class="block text-[11px] text-black/50 dark:text-white/50 font-semibold mb-1.5">City /
+                            Municipality</label>
                         <select wire:model.live="city_code" @disabled(!$province_code)
                             class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition disabled:opacity-50 disabled:cursor-not-allowed">
                             <option value="">Select City / Municipality</option>
@@ -226,7 +268,8 @@
                     </div>
 
                     <div>
-                        <label class="block text-[11px] text-black/50 dark:text-white/50 font-semibold mb-1.5">Barangay</label>
+                        <label
+                            class="block text-[11px] text-black/50 dark:text-white/50 font-semibold mb-1.5">Barangay</label>
                         <select wire:model.live="barangay_code" @disabled(!$city_code)
                             class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition disabled:opacity-50 disabled:cursor-not-allowed">
                             <option value="">Select Barangay</option>
@@ -241,7 +284,8 @@
                 </div>
 
                 <div class="mt-5">
-                    <label class="block text-[11px] text-black/50 dark:text-white/50 font-semibold mb-1.5">Street Address</label>
+                    <label class="block text-[11px] text-black/50 dark:text-white/50 font-semibold mb-1.5">Street
+                        Address</label>
                     <input type="text" wire:model.defer="street_address"
                         placeholder="House no., street, subdivision, etc."
                         class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition">
@@ -249,21 +293,6 @@
                         <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
                     @enderror
                 </div>
-
-                @if ($address)
-                    <div class="mt-4">
-                        <label class="block text-[11px] text-black/50 dark:text-white/50 font-semibold mb-1.5">Saved Location</label>
-                        <p class="text-sm text-[#123524] dark:text-[#D4A537] bg-[#D4A537]/15 dark:bg-[#D4A537]/10 border border-[#D4A537]/30 dark:border-[#D4A537]/20 rounded-xl px-4 py-2.5 flex items-start gap-2">
-                            <svg class="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-                            </svg>
-                            <span>{{ $address }}</span>
-                        </p>
-                    </div>
-                @endif
             </div>
 
             <!-- Actions -->
@@ -283,7 +312,8 @@
         </form>
 
         @if (session('success'))
-            <div class="mt-6 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-semibold rounded-xl p-4 text-sm">
+            <div
+                class="mt-6 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-semibold rounded-xl p-4 text-sm">
                 {{ session('success') }}
             </div>
         @endif
@@ -294,37 +324,42 @@
         <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@23.0.4/build/js/intlTelInput.min.js"></script>
 
         <style>
-    .iti__flag.iti__ph {
-        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 8"><rect width="12" height="4" fill="%23003" /><rect y="4" width="12" height="4" fill="%23CE1126" /><polygon points="0,0 4,4 0,8" fill="%23FFF" /><circle cx="1.5" cy="4" r="0.8" fill="%23FCD116" /></svg>');
-        background-position: 0 0;
-        background-size: 100% 100%;
-    }
+            .iti__flag.iti__ph {
+                background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 8"><rect width="12" height="4" fill="%23003" /><rect y="4" width="12" height="4" fill="%23CE1126" /><polygon points="0,0 4,4 0,8" fill="%23FFF" /><circle cx="1.5" cy="4" r="0.8" fill="%23FCD116" /></svg>');
+                background-position: 0 0;
+                background-size: 100% 100%;
+            }
 
-    /* Dark mode: dial code + country dropdown */
-    .dark .iti__selected-dial-code {
-        color: #fff;
-    }
-    .dark .iti__country-list {
-        background-color: #242526;
-        color: #fff;
-        border-color: rgba(255, 255, 255, 0.1);
-    }
-    .dark .iti__country-list .iti__country:hover,
-    .dark .iti__country-list .iti__country.iti__highlight {
-        background-color: #3A3B3C;
-    }
-    .dark .iti__dial-code {
-        color: rgba(255, 255, 255, 0.6);
-    }
-    .dark .iti__divider {
-        border-bottom-color: rgba(255, 255, 255, 0.1);
-    }
-    .dark .iti__arrow {
-        border-top-color: #fff;
-    }
-    .dark .iti__arrow--up {
-        border-bottom-color: #fff;
-    }
-</style>
+            .dark .iti__selected-dial-code {
+                color: #fff;
+            }
+
+            .dark .iti__country-list {
+                background-color: #242526;
+                color: #fff;
+                border-color: rgba(255, 255, 255, 0.1);
+            }
+
+            .dark .iti__country-list .iti__country:hover,
+            .dark .iti__country-list .iti__country.iti__highlight {
+                background-color: #3A3B3C;
+            }
+
+            .dark .iti__dial-code {
+                color: rgba(255, 255, 255, 0.6);
+            }
+
+            .dark .iti__divider {
+                border-bottom-color: rgba(255, 255, 255, 0.1);
+            }
+
+            .dark .iti__arrow {
+                border-top-color: #fff;
+            }
+
+            .dark .iti__arrow--up {
+                border-bottom-color: #fff;
+            }
+        </style>
     @endassets
 </div>

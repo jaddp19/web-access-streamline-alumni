@@ -691,38 +691,6 @@
                 background-position: 0 0;
                 background-size: 100% 100%;
             }
-
-            /* Dark mode: dial code + dropdown */
-            .dark .iti__selected-dial-code {
-                color: #fff;
-            }
-
-            .dark .iti__country-list {
-                background-color: #242526;
-                color: #fff;
-                border-color: rgba(255, 255, 255, 0.1);
-            }
-
-            .dark .iti__country-list .iti__country:hover,
-            .dark .iti__country-list .iti__country.iti__highlight {
-                background-color: #3A3B3C;
-            }
-
-            .dark .iti__dial-code {
-                color: rgba(255, 255, 255, 0.6);
-            }
-
-            .dark .iti__divider {
-                border-bottom-color: rgba(255, 255, 255, 0.1);
-            }
-
-            .dark .iti__arrow {
-                border-top-color: #fff;
-            }
-
-            .dark .iti__arrow--up {
-                border-bottom-color: #fff;
-            }
         </style>
     @endassets
 </div>

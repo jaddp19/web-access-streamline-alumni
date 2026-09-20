@@ -17,7 +17,7 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use Propaganistas\LaravelPhone\Rules\Phone;
 
-new #[Layout('layouts.app-alumni')] class extends Component
+new #[Layout('layouts.app-form')] class extends Component
 {
     use WithFileUploads;
 
@@ -36,10 +36,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
     public string $cityCode = '';
     public string $barangayCode = '';
     public string $street_address = '';
-
-    // Step 1 — Coordinates
-    public float $latitude = 10.45;
-    public float $longitude = 123.88;
 
     // Step 2
     public string $civil_status = '';
@@ -109,8 +105,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
             $this->provinceCode   = $location['province_code'] ?? '';
             $this->cityCode       = $location['city_code'] ?? '';
             $this->barangayCode   = $location['barangay_code'] ?? '';
-            $this->latitude       = (float) ($location['latitude'] ?? 10.45);
-            $this->longitude      = (float) ($location['longitude'] ?? 123.88);
         }
 
         $tracerStudy = TracerStudy::where('user_id', $user->id)->first();
@@ -319,8 +313,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
                 'provinceCode'     => 'required|string',
                 'cityCode'         => 'required|string',
                 'barangayCode'     => 'required|string',
-                'latitude'         => 'required|numeric',
-                'longitude'        => 'required|numeric',
                 'consentGiven'     => 'accepted',
             ],
             2 => [
@@ -366,8 +358,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
             'cityCode.required'                      => 'Please select your city/municipality.',
             'barangayCode.required'                  => 'Please select your barangay.',
             'consentGiven.accepted'                  => 'You must agree to the Privacy Policy and Terms and Conditions before continuing.',
-            'latitude.required'                      => 'Please pin your location on the map.',
-            'longitude.required'                     => 'Please pin your location on the map.',
             'civil_status.required'                  => 'Please select your civil status.',
             'course_id.required'                     => 'Please select your program.',
             'batch_id.required'                      => 'Please select your year graduated.',
@@ -468,8 +458,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
                             'barangay_code'  => $this->barangayCode,
                             'barangay_name'  => $barangay->name ?? null,
                             'address'        => $fullAddress,
-                            'latitude'       => $this->latitude,
-                            'longitude'      => $this->longitude,
                         ]
                     ),
                     'batch_id'    => $this->batch_id,

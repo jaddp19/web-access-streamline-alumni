@@ -156,27 +156,6 @@
                     <p class="text-sm font-medium text-black dark:text-white">
                         {{ $this->contact['address'] }}
                     </p>
-                    @if ($this->contact['latitude'] && $this->contact['longitude'])
-                        <a href="https://www.google.com/maps?q={{ $this->contact['latitude'] }},{{ $this->contact['longitude'] }}"
-                            target="_blank" rel="noopener"
-                            class="inline-flex items-center gap-1 text-[#1877F2] text-xs font-semibold hover:underline mt-1">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-                            </svg>
-                            Open in Google Maps
-                        </a>
-                    @endif
-                @elseif ($this->contact['latitude'] && $this->contact['longitude'])
-                    <a href="https://www.google.com/maps?q={{ $this->contact['latitude'] }},{{ $this->contact['longitude'] }}"
-                        target="_blank" rel="noopener" class="text-[#1877F2] text-sm font-semibold hover:underline">
-                        View location on map
-                    </a>
-                @else
-                    <p class="text-sm text-black/40 dark:text-white/40 italic">Location not set yet.</p>
                 @endif
             </div>
         </div>

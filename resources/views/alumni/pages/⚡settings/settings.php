@@ -11,7 +11,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-new #[Layout('layouts.app-alumni')] class extends Component
+new #[Layout('layouts.app-settings')] class extends Component
 {
     public string $activeTab = 'profile';
 

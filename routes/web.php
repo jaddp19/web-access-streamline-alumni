@@ -10,7 +10,6 @@ Route::livewire('/contact', 'public::pages.contact-page')->name('contact');
 Route::livewire('/departments', 'public::pages.department-page')->name('departments');
 
 Route::livewire('/login', 'auth::login')->name('login');
-Route::livewire('/pop-up', 'auth::pop-up')->name('pop-up');
 Route::livewire('/form', 'auth::form.form-answer')->name('form');
 Route::livewire('/privacy-policy', 'auth::privacy-policy')->name('privacy-policy');
 Route::livewire('/terms-and-condition', 'auth::terms-and-condition')->name('terms-and-conditions');
@@ -18,6 +17,7 @@ Route::livewire('/terms-and-condition', 'auth::terms-and-condition')->name('term
 //forms
 Route::middleware('auth')->group(function () {
     Route::livewire('/form', 'auth::form.form-answer')->name('form');
+    Route::livewire('/update-form', 'auth::form.update-form')->name('update-form');
 });
 
 Route::middleware(['auth', 'role:registrar'])->prefix('super-admin')->group(function () {
@@ -84,11 +84,8 @@ Route::middleware(['auth', 'role:alumni|registrar'])->prefix('alumni')->group(fu
     Route::livewire('/profile/update-educational/{alumni}', 'alumni::pages.profile.update-educational-background')->name('alumni.profile.update-educational');
     Route::livewire('/profile/create-employment', 'alumni::pages.profile.create-work-history')->name('alumni.profile.create-employment');
     Route::livewire('/profile/update-employment/{history}', 'alumni::pages.profile.update-work-history')->name('alumni.profile.update-employment');
-
-    Route::livewire('/profile/update-form', 'alumni::pages.profile.update-form')->name('alumni.profile.update-form');
     
     Route::livewire('/settings', 'alumni::pages.settings')->name('alumni.settings');
-
     Route::livewire('/message', 'alumni::pages.message.alumni-message')->name('alumni.message');
 });
 

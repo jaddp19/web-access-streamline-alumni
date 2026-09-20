@@ -193,7 +193,7 @@
                 {{-- Current job toggle --}}
                 <label
                     class="flex items-start gap-3 cursor-pointer p-3 rounded-xl bg-[#F0F2F5] dark:bg-[#3A3B3C] border border-black/5 dark:border-white/10">
-                    <input type="checkbox" wire:model="is_current_job"
+                    <input type="checkbox" wire:model.live="is_current_job"
                         class="mt-0.5 rounded border-black/20 text-[#1877F2] focus:ring-[#1877F2] h-4 w-4">
                     <div class="flex-1">
                         <span class="block text-sm font-semibold text-black dark:text-white">
@@ -204,6 +204,138 @@
                         </span>
                     </div>
                 </label>
+
+                {{-- Employment Details (only when current job is checked) --}}
+                @if ($is_current_job)
+                    <div
+                        class="space-y-5 p-4 sm:p-5 rounded-xl bg-[#F0F2F5] dark:bg-[#3A3B3C]/60 border border-black/5 dark:border-white/10">
+
+                        <div>
+                            <h3 class="text-sm font-bold text-black dark:text-white uppercase tracking-wide">
+                                Employment Details
+                            </h3>
+                            <p class="text-xs text-black/50 dark:text-white/50 mt-0.5">
+                                These power the alumni analytics dashboard.
+                            </p>
+                        </div>
+
+                        {{-- Civil Status --}}
+                        <div>
+                            <label class="block text-sm font-semibold text-black dark:text-white mb-2">
+                                Civil Status <span class="text-red-500">*</span>
+                            </label>
+                            <select wire:model="civil_status"
+                                class="w-full px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#242526] text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#1877F2] focus:border-transparent transition">
+                                <option value="">Select civil status</option>
+                                <option value="single">Single</option>
+                                <option value="married">Married</option>
+                                <option value="widowed">Widowed</option>
+                                <option value="separated">Separated</option>
+                                <option value="single-parent">Single Parent</option>
+                            </select>
+                            @error('civil_status')
+                                <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        {{-- Related to degree --}}
+                        <div>
+                            <label class="block text-sm font-semibold text-black dark:text-white mb-2">
+                                Is your job related to your degree? <span class="text-red-500">*</span>
+                            </label>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                @foreach (['yes' => 'Yes', 'no' => 'No', 'partially-related' => 'Partially related'] as $value => $label)
+                                    <label
+                                        class="flex items-center gap-2 cursor-pointer p-2.5 rounded-lg bg-white dark:bg-[#242526] border border-black/10 dark:border-white/10 hover:border-[#1877F2] transition min-h-[42px]">
+                                        <input type="radio" wire:model="employed_related_to_degree"
+                                            value="{{ $value }}"
+                                            class="text-[#1877F2] focus:ring-[#1877F2] h-4 w-4">
+                                        <span class="text-sm text-black dark:text-white">{{ $label }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                            @error('employed_related_to_degree')
+                                <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        {{-- Employment type --}}
+                        <div>
+                            <label class="block text-sm font-semibold text-black dark:text-white mb-2">
+                                Type of Employment <span class="text-red-500">*</span>
+                            </label>
+                            <select wire:model="employment_type"
+                                class="w-full px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#242526] text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#1877F2] focus:border-transparent transition">
+                                <option value="">Select type</option>
+                                <option value="full-time">Full-time</option>
+                                <option value="part-time">Part-time</option>
+                                <option value="contractual-project-based">Contractual / Project-based</option>
+                                <option value="freelance">Freelance</option>
+                                <option value="other">Other</option>
+                            </select>
+                            @error('employment_type')
+                                <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        {{-- Organization type --}}
+                        <div>
+                            <label class="block text-sm font-semibold text-black dark:text-white mb-2">
+                                Type of Organization <span class="text-red-500">*</span>
+                            </label>
+                            <select wire:model="organization_type"
+                                class="w-full px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#242526] text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#1877F2] focus:border-transparent transition">
+                                <option value="">Select organization type</option>
+                                <option value="private-company">Private company</option>
+                                <option value="government-agency">Government agency</option>
+                                <option value="non-government-organization">Non-government organization</option>
+                                <option value="educational-institution">Educational institution</option>
+                                <option value="self-employed-business">Self-employed / Business</option>
+                                <option value="other">Other</option>
+                            </select>
+                            @error('organization_type')
+                                <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        {{-- Employment area --}}
+                        <div>
+                            <label class="block text-sm font-semibold text-black dark:text-white mb-2">
+                                Employment Area <span class="text-red-500">*</span>
+                            </label>
+                            <div class="flex flex-wrap gap-x-6 gap-y-2">
+                                <label class="flex items-center gap-2 cursor-pointer min-h-[42px]">
+                                    <input type="radio" wire:model.live="employment_area" value="philippines"
+                                        class="text-[#1877F2] focus:ring-[#1877F2] h-4 w-4">
+                                    <span class="text-sm text-black dark:text-white">Philippines</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer min-h-[42px]">
+                                    <input type="radio" wire:model.live="employment_area" value="abroad"
+                                        class="text-[#1877F2] focus:ring-[#1877F2] h-4 w-4">
+                                    <span class="text-sm text-black dark:text-white">Abroad</span>
+                                </label>
+                            </div>
+                            @error('employment_area')
+                                <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        {{-- Abroad country (conditional) --}}
+                        @if ($employment_area === 'abroad')
+                            <div>
+                                <label class="block text-sm font-semibold text-black dark:text-white mb-2">
+                                    Country <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" wire:model="abroad_country"
+                                    placeholder="e.g. United Arab Emirates"
+                                    class="w-full px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#242526] text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#1877F2] focus:border-transparent transition">
+                                @error('abroad_country')
+                                    <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        @endif  
+                    </div>
+                @endif
 
                 {{-- Actions --}}
                 <div class="flex items-center justify-end gap-2 pt-2 border-t border-black/5 dark:border-white/10">
