@@ -1,7 +1,7 @@
 <div class="bg-[#F8FAFC] dark:bg-[#18191A] min-h-full">
 
     {{-- ========== HEADER ========== --}}
-    <header class="bg-white dark:bg-[#242526] border-b border-black/5 dark:border-white/5 top-1 z-30">
+    <header class="bg-white dark:bg-[#242526] border-b border-black/5 dark:border-white/5 top-0 z-30">
         <div class="max-w-[1100px] mx-auto px-6 py-4 flex items-center justify-between gap-4">
             <div>
                 <h1 class="text-xl font-bold text-black dark:text-white leading-none"

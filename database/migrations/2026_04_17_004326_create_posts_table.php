@@ -15,11 +15,12 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->string('title');
+            $table->longText('description')->nullable();
             $table->string('slug');
-            $table->string('image');
+            $table->string('image')->nullable();
             $table->foreignId('category_id')->constrained('categories')->cascadeOnDelete();
             $table->enum('status', ['public','private','draft']);
-            $table->json('attachments');
+            $table->json('attachments')->nullable();
             $table->timestamps();
         });
     }

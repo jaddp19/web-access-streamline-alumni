@@ -33,6 +33,7 @@
                         ['route' => 'super-admin.department.view', 'label' => 'Departments'],
                         ['route' => 'super-admin.courses.view', 'label' => 'Courses'],
                         ['route' => 'super-admin.batch.view', 'label' => 'Batch Years'],
+                        ['route' => 'super-admin.post.view', 'label' => 'Posts'],
                     ],
                     'Workplace' => [['route' => 'super-admin.company.view', 'label' => 'Company']],
                     'Requests' => [

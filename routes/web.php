@@ -60,6 +60,10 @@ Route::middleware(['auth', 'role:registrar'])->prefix('super-admin')->group(func
     Route::livewire('/company/create', 'super-admin::pages.company.create-company')->name('super-admin.company.create');
     Route::livewire('/company/update/{company}', 'super-admin::pages.company.update-company')->name('super-admin.company.update');
 
+    Route::livewire('/post/view', 'super-admin::pages.post.view-post')->name('super-admin.post.view');
+    Route::livewire('/post/create', 'super-admin::pages.post.create-post')->name('super-admin.post.create');
+    Route::livewire('/post/update{post}', 'super-admin::pages.post.update-post')->name('super-admin.post.update');
+
     Route::livewire('/verification-queue', 'super-admin::verification.verification-queue')->name('super-admin.verification-queue');
 });
 
@@ -86,6 +90,8 @@ Route::middleware(['auth', 'role:alumni|registrar'])->prefix('alumni')->group(fu
     Route::livewire('/profile/update-employment/{history}', 'alumni::pages.profile.update-work-history')->name('alumni.profile.update-employment');
     
     Route::livewire('/settings', 'alumni::pages.settings')->name('alumni.settings');
+    Route::livewire('/notification', 'alumni::pages.notification.view-notification')->name('alumni.notification');
+    Route::livewire('/notification/{post}', 'alumni::pages.notification.view-single-notification')->name('alumni.view-notification');
     Route::livewire('/message', 'alumni::pages.message.alumni-message')->name('alumni.message');
 });
 

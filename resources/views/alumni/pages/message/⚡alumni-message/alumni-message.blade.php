@@ -2,247 +2,153 @@
 
     {{-- ========== HEADER BANNER ========== --}}
     <div class="bg-white dark:bg-[#242526] border-b border-black/10 dark:border-white/10 shadow-sm sticky top-0 z-40">
-        <div class="max-w-[1100px] mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+        <div class="max-w-[900px] mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <div>
                     <h1 class="text-xl font-bold text-black dark:text-white leading-tight"
-                        style="font-family: 'Fraunces', serif;">Notifications</h1>
-                    <p class="text-xs text-black/50 dark:text-white/50">Stay updated with your community</p>
-                </div>
-            </div>
-            <div class="hidden sm:flex items-center gap-2">
-                <div
-                    class="px-4 py-1.5 rounded-full bg-[#123524]/5 dark:bg-[#D4A537]/10 text-[#123524] dark:text-[#D4A537] text-xs font-semibold flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-                    3 unread
+                        style="font-family: 'Fraunces', serif;">Inbox</h1>
+                    <p class="text-xs text-black/50 dark:text-white/50">Messages from your department head or from the registrar</p>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- ========== TWO-COLUMN LAYOUT ========== --}}
-    <div class="max-w-[1100px] mx-auto px-4 sm:px-6 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+    @php
+        // ===== STATIC CONVERSATIONS =====
+        $conversations = [
+            [
+                'id' => 1,
+                'name' => 'Maria Santos',
+                'avatar' => 'https://i.pravatar.cc/150?img=47',
+                'last_message' => 'See you at the reunion! 🎉',
+                'time' => '2m',
+                'unread' => 2,
+                'online' => true,
+            ],
+            [
+                'id' => 2,
+                'name' => 'Juan Dela Cruz',
+                'avatar' => 'https://i.pravatar.cc/150?img=12',
+                'last_message' => 'Thanks for the career tips!',
+                'time' => '15m',
+                'unread' => 1,
+                'online' => true,
+            ],
+            [
+                'id' => 3,
+                'name' => 'Ana Reyes',
+                'avatar' => 'https://i.pravatar.cc/150?img=45',
+                'last_message' => 'You: I\'ll send the photos later',
+                'time' => '1h',
+                'unread' => 0,
+                'online' => false,
+            ],
+            [
+                'id' => 4,
+                'name' => 'Pedro Bautista',
+                'avatar' => 'https://i.pravatar.cc/150?img=33',
+                'last_message' => 'Congrats on the new job!',
+                'time' => '3h',
+                'unread' => 0,
+                'online' => false,
+            ],
+            [
+                'id' => 5,
+                'name' => 'CSAV Alumni Office',
+                'avatar' => 'https://tse2.mm.bing.net/th/id/OIP.D0DJ0ePPxNcvYOeq6q9esQAAAA?pid=Api&P=0&h=180',
+                'last_message' => 'Reminder: Homecoming 2026 registration is open',
+                'time' => '1d',
+                'unread' => 0,
+                'online' => false,
+            ],
+            [
+                'id' => 6,
+                'name' => 'Liza Mercado',
+                'avatar' => 'https://i.pravatar.cc/150?img=49',
+                'last_message' => 'Let\'s catch up soon!',
+                'time' => '2d',
+                'unread' => 0,
+                'online' => false,
+            ],
+            [
+                'id' => 7,
+                'name' => 'Mark Villanueva',
+                'avatar' => 'https://i.pravatar.cc/150?img=15',
+                'last_message' => 'You: Sure, sounds good 👍',
+                'time' => '3d',
+                'unread' => 0,
+                'online' => false,
+            ],
+            [
+                'id' => 8,
+                'name' => 'Rachel Lim',
+                'avatar' => 'https://i.pravatar.cc/150?img=44',
+                'last_message' => 'Sent you the file 📎',
+                'time' => '5d',
+                'unread' => 0,
+                'online' => false,
+            ],
+        ];
+    @endphp
 
-        {{-- ===== LEFT SIDEBAR ===== --}}
-        <aside class="lg:col-span-3 space-y-4">
-            {{-- Profile quick card --}}
-            <div
-                class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm overflow-hidden sticky top-24 border border-transparent dark:border-white/5">
-                <div class="h-16 bg-gradient-to-r from-[#123524] to-[#1C6B45]"></div>
-                <div class="px-4 pb-4 text-center -mt-10">
-                    @php
-                        $authUser = auth()->user();
-                        $profile = $authUser?->userProfile;
+    {{-- ========== INBOX LIST ========== --}}
+    <div class="max-w-[900px] mx-auto px-4 sm:px-6 py-6 space-y-4">
 
-                        $rawAvatar = $profile?->avatar;
-                        $avatarUrl = $rawAvatar
-                            ? (filter_var($rawAvatar, FILTER_VALIDATE_URL)
-                                ? $rawAvatar
-                                : \Illuminate\Support\Facades\Storage::url($rawAvatar))
-                            : null;
-                        $initial = strtoupper(substr($authUser->name ?? '?', 0, 1));
-                    @endphp
+        {{-- Search --}}
+        <div class="relative">
+            <input type="text" placeholder="Search messages..."
+                class="w-full pl-10 pr-4 py-3 text-sm rounded-2xl bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm focus:outline-none focus:border-[#1877F2] focus:ring-1 focus:ring-[#1877F2] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 transition">
+            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-black/40 dark:text-white/40"
+                fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="m21 21-4.34-4.34m0 0A8 8 0 1 0 5.34 5.34 8 8 0 0 0 16.66 16.66z" />
+            </svg>
+        </div>
 
-                    @if ($avatarUrl)
-                        <img src="{{ $avatarUrl }}" alt="{{ $this->alumni->name }}"
-                            class="w-20 h-20 mx-auto rounded-full object-cover ring-4 ring-white dark:ring-[#242526] shadow-md shrink-0 bg-[#D4A537]"
-                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <span style="display: none;"
-                            class="w-20 h-20 mx-auto items-center justify-center text-3xl font-bold text-[#0f2b1c] bg-yellow-500 rounded-full ring-4 ring-white dark:ring-[#242526] shadow-md shrink-0">
-                            {{ $initial }}
-                        </span>
-                    @else
-                        <span
-                            class="w-20 h-20 mx-auto flex items-center justify-center text-3xl font-bold text-[#0f2b1c] bg-yellow-500 rounded-full ring-4 ring-white dark:ring-[#242526] shadow-md shrink-0">
-                            {{ $initial }}
-                        </span>
-                    @endif
+        {{-- Inbox list --}}
+        <div class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm overflow-hidden border border-transparent dark:border-white/5">
+            @foreach ($conversations as $conv)
+                <a href="#"
+                    class="flex items-center gap-3 px-4 py-3.5 border-b border-black/5 dark:border-white/5 last:border-b-0 transition
+                        hover:bg-[#F0F2F5] dark:hover:bg-[#3A3B3C]">
 
-                    <p class="font-bold text-black dark:text-white mt-2" style="font-family: 'Fraunces', serif;">
-                        {{ $this->alumni->name }}</p>
-                    <p class="text-xs text-black/50 dark:text-white/50">Alumni Member</p>
-                </div>
-            </div>
-        </aside>
+                    {{-- Avatar with online dot --}}
+                    <div class="relative shrink-0">
+                        <img src="{{ $conv['avatar'] }}" alt="{{ $conv['name'] }}"
+                            class="w-13 h-13 rounded-full object-cover bg-[#F0F2F5] dark:bg-[#3A3B3C]"
+                            style="width: 52px; height: 52px;">
+                        @if ($conv['online'])
+                            <span class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white dark:border-[#242526]"></span>
+                        @endif
+                    </div>
 
-        {{-- ===== MAIN COLUMN — NOTIFICATIONS ===== --}}
-        <main class="lg:col-span-9 space-y-4">
-
-            {{-- Filter tabs --}}
-            <div class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm p-2 flex items-center gap-1 overflow-x-auto">
-                <button type="button"
-                    class="shrink-0 px-4 py-2 rounded-xl bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524] text-sm font-semibold transition">
-                    All
-                </button>
-                <button type="button"
-                    class="shrink-0 px-4 py-2 rounded-xl text-black/60 dark:text-white/60 hover:bg-[#F0F2F5] dark:hover:bg-[#3A3B3C] text-sm font-semibold transition">
-                    Unread
-                </button>
-                <button type="button"
-                    class="shrink-0 px-4 py-2 rounded-xl text-black/60 dark:text-white/60 hover:bg-[#F0F2F5] dark:hover:bg-[#3A3B3C] text-sm font-semibold transition">
-                    Mentions
-                </button>
-                <button type="button"
-                    class="shrink-0 px-4 py-2 rounded-xl text-black/60 dark:text-white/60 hover:bg-[#F0F2F5] dark:hover:bg-[#3A3B3C] text-sm font-semibold transition">
-                    System
-                </button>
-            </div>
-
-            @php
-                // ===== STATIC SAMPLE DATA =====
-                // Swap with a real DB query later
-                $notifications = [
-                    [
-                        'id' => 1,
-                        'type' => 'like',
-                        'actor' => 'Maria Santos',
-                        'message' => 'liked your post "Batch 2024 Reunion Photos"',
-                        'time' => '2 minutes ago',
-                        'read' => false,
-                        'link' => '#',
-                    ],
-                    [
-                        'id' => 2,
-                        'type' => 'comment',
-                        'actor' => 'Juan Dela Cruz',
-                        'message' => 'commented on your post: "Great memories! Miss everyone."',
-                        'time' => '15 minutes ago',
-                        'read' => false,
-                        'link' => '#',
-                    ],
-                    [
-                        'id' => 3,
-                        'type' => 'event',
-                        'actor' => 'CSAV Alumni Office',
-                        'message' => 'posted a new event: "Annual Alumni Homecoming 2026"',
-                        'time' => '1 hour ago',
-                        'read' => false,
-                        'link' => '#',
-                    ],
-                    [
-                        'id' => 4,
-                        'type' => 'follow',
-                        'actor' => 'Ana Reyes',
-                        'message' => 'started following you',
-                        'time' => '3 hours ago',
-                        'read' => true,
-                        'link' => '#',
-                    ],
-                    [
-                        'id' => 5,
-                        'type' => 'system',
-                        'actor' => 'System',
-                        'message' => 'Your profile has been verified by the registrar.',
-                        'time' => '1 day ago',
-                        'read' => true,
-                        'link' => '#',
-                    ],
-                    [
-                        'id' => 6,
-                        'type' => 'mention',
-                        'actor' => 'Pedro Bautista',
-                        'message' => 'mentioned you in a comment on "Career Opportunities Abroad"',
-                        'time' => '2 days ago',
-                        'read' => true,
-                        'link' => '#',
-                    ],
-                    [
-                        'id' => 7,
-                        'type' => 'event',
-                        'actor' => 'CSAV Alumni Office',
-                        'message' => 'reminder: "Career Talk with Batch 2015" starts tomorrow at 9:00 AM',
-                        'time' => '3 days ago',
-                        'read' => true,
-                        'link' => '#',
-                    ],
-                ];
-
-                // Icon + color mapping per notification type
-                $iconMap = [
-                    'like' => [
-                        'bg' => 'bg-[#1877F2]/10',
-                        'text' => 'text-[#1877F2]',
-                        'path' =>
-                            'M6.633 10.25c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V2.75a.75.75 0 01.75-.75 2.25 2.25 0 012.25 2.25c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 01-2.649 7.521c-.388.482-.987.729-1.605.729H14.23c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 00-1.423-.23H5.904M14.25 9h2.25M5.904 18.75c.083.205.173.405.27.602.197.4-.078.898-.523.898h-.908c-.889 0-1.713-.518-1.972-1.368a12 12 0 01-.521-3.507c0-1.553.295-3.036.831-4.398C3.387 9.953 4.167 9.5 5 9.5h1.053c.472 0 .745.556.5.96a8.958 8.958 0 00-1.302 4.665c0 1.194.232 2.333.654 3.375z',
-                    ],
-                    'comment' => [
-                        'bg' => 'bg-emerald-500/10',
-                        'text' => 'text-emerald-600 dark:text-emerald-400',
-                        'path' =>
-                            'M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 01-.923 1.785A5.969 5.969 0 006 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337z',
-                    ],
-                    'event' => [
-                        'bg' => 'bg-[#D4A537]/15',
-                        'text' => 'text-[#a97f1f] dark:text-[#D4A537]',
-                        'path' =>
-                            'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5',
-                    ],
-                    'follow' => [
-                        'bg' => 'bg-purple-500/10',
-                        'text' => 'text-purple-600 dark:text-purple-400',
-                        'path' =>
-                            'M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM3 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 019.374 21c-2.331 0-4.512-.645-6.374-1.766z',
-                    ],
-                    'mention' => [
-                        'bg' => 'bg-orange-500/10',
-                        'text' => 'text-orange-600 dark:text-orange-400',
-                        'path' =>
-                            'M16.5 12a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zm0 0c0 1.657 1.007 3 2.25 3S21 13.657 21 12a9 9 0 10-2.636 6.364M16.5 12V8.25',
-                    ],
-                    'system' => [
-                        'bg' => 'bg-[#123524]/10 dark:bg-[#D4A537]/15',
-                        'text' => 'text-[#123524] dark:text-[#D4A537]',
-                        'path' => 'M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
-                    ],
-                ];
-            @endphp
-
-            {{-- Notifications list --}}
-            <div class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm overflow-hidden">
-
-                @foreach ($notifications as $notification)
-                    @php $icon = $iconMap[$notification['type']]; @endphp
-
-                    <a href="{{ $notification['link'] }}"
-                        class="flex items-start gap-3 px-4 py-4 border-b border-black/5 dark:border-white/5 last:border-b-0 transition
-                              hover:bg-[#F0F2F5] dark:hover:bg-[#3A3B3C]
-                              {{ $notification['read'] ? '' : 'bg-[#1877F2]/[0.03] dark:bg-[#1877F2]/[0.06]' }}">
-
-                        {{-- Type icon --}}
-                        <div
-                            class="w-11 h-11 rounded-full {{ $icon['bg'] }} flex items-center justify-center shrink-0">
-                            <svg class="w-5 h-5 {{ $icon['text'] }}" fill="none" stroke="currentColor"
-                                stroke-width="1.8" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="{{ $icon['path'] }}" />
-                            </svg>
-                        </div>
-
-                        {{-- Content --}}
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm text-black dark:text-white leading-snug">
-                                <span class="font-semibold">{{ $notification['actor'] }}</span>
-                                <span class="text-black/70 dark:text-white/70"> {{ $notification['message'] }}</span>
+                    {{-- Info --}}
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between gap-2">
+                            <p class="text-sm font-semibold text-black dark:text-white truncate">
+                                {{ $conv['name'] }}
                             </p>
-                            <p class="text-xs text-black/50 dark:text-white/50 mt-1">{{ $notification['time'] }}</p>
+                            <span class="text-[11px] text-black/50 dark:text-white/50 shrink-0">
+                                {{ $conv['time'] }}
+                            </span>
                         </div>
+                        <div class="flex items-center justify-between gap-2 mt-1">
+                            <p class="text-xs truncate
+                                {{ $conv['unread'] > 0
+                                    ? 'font-semibold text-black dark:text-white'
+                                    : 'text-black/60 dark:text-white/60' }}">
+                                {{ $conv['last_message'] }}
+                            </p>
+                            @if ($conv['unread'] > 0)
+                                <span class="shrink-0 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-[#1877F2] text-white text-[10px] font-bold">
+                                    {{ $conv['unread'] }}
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+                </a>
+            @endforeach
+        </div>
 
-                        {{-- Unread dot --}}
-                        @unless ($notification['read'])
-                            <span class="w-2.5 h-2.5 rounded-full bg-[#1877F2] shrink-0 mt-2" title="Unread"></span>
-                        @endunless
-                    </a>
-                @endforeach
-
-            </div>
-
-            {{-- "Load more" (static placeholder) --}}
-            <div class="flex justify-center pt-2">
-                <button type="button"
-                    class="px-5 py-2.5 rounded-xl bg-white dark:bg-[#242526] shadow-sm text-sm font-semibold text-black/70 dark:text-white/70 hover:bg-[#F0F2F5] dark:hover:bg-[#3A3B3C] transition">
-                    Load older notifications
-                </button>
-            </div>
-
-        </main>
     </div>
 </div>

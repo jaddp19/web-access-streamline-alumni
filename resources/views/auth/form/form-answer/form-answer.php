@@ -305,12 +305,10 @@ new #[Layout('layouts.app-form')] class extends Component
                 'civil_status' => 'required|in:single,married,widowed,separated,single-parent',
                 'course_id'    => 'required|exists:courses,id',
                 'batch_id'     => 'required|exists:batches,id',
-                'board_taken'  => $this->selectedCourse?->course_type === 'board'
-                    ? 'required|date|before_or_equal:today'
-                    : 'nullable|date|before_or_equal:today',
-                'board_rate'   => $this->selectedCourse?->course_type === 'board'
-                    ? 'required|numeric|min:0|max:100'
-                    : 'nullable|numeric|min:0|max:100',
+
+                // Board fields are now OPTIONAL — only validated if filled in
+                'board_taken'  => 'nullable|date|before_or_equal:today',
+                'board_rate'   => 'nullable|numeric|min:0|max:100',
             ],
             3 => [
                 'employment_status'          => 'required|in:employed,unemployed,self-employed,other',
@@ -351,10 +349,8 @@ new #[Layout('layouts.app-form')] class extends Component
             'civil_status.required'                  => 'Please select your civil status.',
             'course_id.required'                     => 'Please select your program.',
             'batch_id.required'                      => 'Please select your year graduated.',
-            'board_taken.required'                   => 'Please enter the date you took the board exam.',
             'board_taken.date'                       => 'Board exam date must be a valid date.',
             'board_taken.before_or_equal'            => 'Board exam date cannot be in the future.',
-            'board_rate.required'                    => 'Please enter your board exam rating.',
             'board_rate.numeric'                     => 'Board rating must be a number.',
             'board_rate.min'                         => 'Board rating cannot be less than 0.',
             'board_rate.max'                         => 'Board rating cannot be more than 100.',

@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\Post;
 use App\Models\UserProfile;
 use App\Models\WorkHistory;
 use Illuminate\Support\Facades\Auth;
@@ -67,5 +68,22 @@ new #[Layout('layouts.app-alumni')] class extends Component
             'total'     => $total,
             'percent'   => $total > 0 ? (int) round(($completed / $total) * 100) : 0,
         ];
+    }
+
+
+    #[Computed]
+    public function recentPosts()
+    {
+        return Post::with(['user.userProfile', 'user.roles', 'category'])
+            ->where('status', 'public')
+            // Only posts authored by registrar or program head
+            ->whereHas('user', function ($q) {
+                $q->whereHas('roles', function ($r) {
+                    $r->whereIn('name', ['registrar', 'program head']);
+                });
+            })
+            ->latest()
+            ->take(3)
+            ->get();
     }
 };

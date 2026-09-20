@@ -370,11 +370,12 @@
                                 </div>
                                 <div>
                                     <h3 class="text-sm font-bold text-[#123524] uppercase tracking-wide">
-                                        Board Examination
+                                        Board Examination <span
+                                            class="text-[#123524]/40 text-[10px] font-normal normal-case">(optional)</span>
                                     </h3>
                                     <p class="text-xs text-[#123524]/60">
-                                        {{ $this->selectedCourse->course_title }} is a board program. Please provide
-                                        your PRC board exam details.
+                                        {{ $this->selectedCourse->course_title }} is a board program.
+                                        Skip this section if you haven't taken the board exam yet.
                                     </p>
                                 </div>
                             </div>
@@ -383,7 +384,8 @@
                                 {{-- Board Exam Date --}}
                                 <div>
                                     <label class="block text-sm font-semibold text-[#123524] mb-2">
-                                        Date Taken <span class="text-red-500">*</span>
+                                        Date Taken <span
+                                            class="text-[#123524]/40 text-xs font-normal">(optional)</span>
                                     </label>
                                     <input type="date" wire:model="board_taken"
                                         max="{{ now()->format('Y-m-d') }}"
@@ -396,7 +398,8 @@
                                 {{-- Board Rating --}}
                                 <div>
                                     <label class="block text-sm font-semibold text-[#123524] mb-2">
-                                        Rating (%) <span class="text-red-500">*</span>
+                                        Rating (%) <span
+                                            class="text-[#123524]/40 text-xs font-normal">(optional)</span>
                                     </label>
                                     <input type="number" wire:model="board_rate" min="0" max="100"
                                         step="0.01" placeholder="e.g. 85.50"

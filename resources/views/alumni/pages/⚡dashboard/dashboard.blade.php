@@ -46,46 +46,118 @@
 
             {{-- Filter row --}}
             <div class="flex items-center justify-between px-2">
-                <h2 class="text-sm font-semibold text-black/60 dark:text-white/60 uppercase tracking-wide">Recent posts
-                    from alumni</h2>
-                <a href="{{ route('alumni.message') }}" class="text-xs font-semibold text-[#1877F2] hover:underline">See
-                    all</a>
+                <h2 class="text-sm font-semibold text-black/60 dark:text-white/60 uppercase tracking-wide">
+                    Recent posts from CSAV
+                </h2>
+                <a href="{{ route('alumni.message') }}" class="text-xs font-semibold text-[#1877F2] hover:underline">
+                    See all
+                </a>
             </div>
 
-            {{-- Feed: load recent posts inline --}}
-            @php
-                $recentPosts = \App\Models\Post::with('user.userProfile')->latest()->take(3)->get();
-            @endphp
-
-            @forelse ($recentPosts as $post)
+            {{-- Feed: official posts from registrar / program head --}}
+            @forelse ($this->recentPosts as $post)
                 <article
                     class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm overflow-hidden border border-transparent dark:border-white/5">
+
+                    {{-- Author header --}}
                     <header class="flex items-center justify-between p-4 pb-2">
                         <div class="flex items-center gap-3">
-                            <span
-                                class="w-10 h-10 flex items-center justify-center text-base font-bold text-[#0f2b1c] bg-yellow-500 rounded-full shrink-0">
-                                {{ strtoupper(substr($post->user->name ?? '?', 0, 1)) }}
-                            </span>
+                            @php
+                                $authorAvatar = $post->user?->userProfile?->avatar;
+                                $authorAvatarUrl = $authorAvatar
+                                    ? (filter_var($authorAvatar, FILTER_VALIDATE_URL)
+                                        ? $authorAvatar
+                                        : \Illuminate\Support\Facades\Storage::url($authorAvatar))
+                                    : null;
+                                $authorInitial = strtoupper(substr($post->user->name ?? '?', 0, 1));
+                                $authorRole = $post->user?->roles->first()?->name;
+                            @endphp
+
+                            @if ($authorAvatarUrl)
+                                <img src="{{ $authorAvatarUrl }}" alt="{{ $post->user->name }}"
+                                    class="w-10 h-10 rounded-full object-cover shrink-0 bg-[#D4A537]"
+                                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <span style="display: none;"
+                                    class="w-10 h-10 flex items-center justify-center text-base font-bold text-[#0f2b1c] bg-yellow-500 rounded-full shrink-0">
+                                    {{ $authorInitial }}
+                                </span>
+                            @else
+                                <span
+                                    class="w-10 h-10 flex items-center justify-center text-base font-bold text-[#0f2b1c] bg-yellow-500 rounded-full shrink-0">
+                                    {{ $authorInitial }}
+                                </span>
+                            @endif
+
                             <div>
                                 <p class="font-semibold text-black dark:text-white text-sm leading-tight">
-                                    {{ $post->user->name ?? 'Unknown Alumni' }}</p>
+                                    {{ $post->user->name ?? 'CSAV Admin' }}
+                                </p>
                                 <p class="text-xs text-black/50 dark:text-white/50">
-                                    {{ $post->created_at->diffForHumans() }} &middot; {{ ucfirst($post->status) }}</p>
+                                    @if ($authorRole)
+                                        <span class="capitalize">{{ $authorRole }}</span>
+                                        &middot;
+                                    @endif
+                                    {{ $post->created_at->diffForHumans() }}
+                                </p>
                             </div>
                         </div>
+
+                        {{-- Official badge --}}
+                        <span
+                            class="text-[10px] px-2 py-0.5 rounded-full bg-[#123524]/10 dark:bg-[#D4A537]/15 text-[#123524] dark:text-[#D4A537] font-semibold uppercase tracking-wide shrink-0">
+                            Official
+                        </span>
                     </header>
+
+                    {{-- Title + Description --}}
                     <div class="px-4 pb-3">
                         <p class="font-bold text-black dark:text-white text-[15px]"
-                            style="font-family: 'Fraunces', serif;">{{ $post->title }}</p>
+                            style="font-family: 'Fraunces', serif;">
+                            {{ $post->title }}
+                        </p>
+
+                        @if ($post->description)
+                            <p
+                                class="text-sm text-black/60 dark:text-white/60 mt-1.5 leading-relaxed line-clamp-3 whitespace-pre-line">
+                                {{ $post->description }}
+                            </p>
+                        @endif
                     </div>
+
+                    {{-- Image --}}
                     @if ($post->image)
+                        @php
+                            $imgUrl = filter_var($post->image, FILTER_VALIDATE_URL)
+                                ? $post->image
+                                : \Illuminate\Support\Facades\Storage::url($post->image);
+                        @endphp
                         <div class="bg-black">
-                            <img src="{{ Storage::url($post->image) }}" alt="Post image"
-                                class="w-full max-h-[400px] object-contain">
+                            <img src="{{ $imgUrl }}" alt="{{ $post->title }}"
+                                class="w-full max-h-[400px] object-contain" loading="lazy">
                         </div>
                     @endif
+
+                    {{-- Attachments --}}
+                    @if (!empty($post->attachments) && is_array($post->attachments))
+                        <div class="px-4 py-3 border-t border-black/5 dark:border-white/5">
+                            <p class="text-xs text-black/50 dark:text-white/50 mb-2">
+                                {{ count($post->attachments) }}
+                                attachment{{ count($post->attachments) > 1 ? 's' : '' }}
+                            </p>
+                            <div class="flex flex-wrap gap-2">
+                                @foreach (array_slice($post->attachments, 0, 3) as $file)
+                                    <span
+                                        class="text-[11px] px-2 py-1 rounded-md bg-[#F0F2F5] dark:bg-[#3A3B3C] text-black/70 dark:text-white/70 truncate max-w-[150px]">
+                                        {{ basename($file) }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
                 </article>
             @empty
+                {{-- Empty state — no composer CTA for alumni --}}
                 <div
                     class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm p-12 text-center border border-transparent dark:border-white/5">
                     <div
@@ -93,17 +165,15 @@
                         <svg class="w-8 h-8 text-black/40 dark:text-white/40" fill="none" stroke="currentColor"
                             stroke-width="1.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                                d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z" />
                         </svg>
                     </div>
-                    <p class="font-bold text-black dark:text-white text-lg" style="font-family: 'Fraunces', serif;">No
-                        posts yet</p>
-                    <p class="text-black/50 dark:text-white/50 text-sm mt-1">Be the first to share something with your
-                        fellow alumni.</p>
-                    <a href="{{ route('alumni.message') }}"
-                        class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#1877F2] text-white text-sm font-semibold hover:bg-[#166FE5] transition">
-                        Create the first post
-                    </a>
+                    <p class="font-bold text-black dark:text-white text-lg" style="font-family: 'Fraunces', serif;">
+                        No posts yet
+                    </p>
+                    <p class="text-black/50 dark:text-white/50 text-sm mt-1 max-w-xs mx-auto">
+                        Official announcements from the registrar and program heads will appear here.
+                    </p>
                 </div>
             @endforelse
         </main>
