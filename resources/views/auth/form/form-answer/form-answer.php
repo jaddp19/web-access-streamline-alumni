@@ -33,11 +33,17 @@ new #[Layout('layouts.app-form')] class extends Component
     public bool $consentGiven = false;
 
     // Step 1 — Address
+    public string $address_type = 'philippines'; // 'philippines' | 'abroad'
     public string $regionCode = '';
     public string $provinceCode = '';
     public string $cityCode = '';
     public string $barangayCode = '';
     public string $street_address = '';
+
+    // Step 1 — International address (only used when address_type === 'abroad')
+    public string $intl_country = '';
+    public string $intl_state = '';
+    public string $intl_city = '';
 
     // Step 2
     public string $civil_status = '';
@@ -79,7 +85,7 @@ new #[Layout('layouts.app-form')] class extends Component
     public function mount()
     {
         $user = Auth::user();
-        
+
         // If the user already has a profile, lock the form.
         $existingProfile = UserProfile::where('user_id', $user->id)->first();
 
@@ -91,65 +97,6 @@ new #[Layout('layouts.app-form')] class extends Component
 
         $this->courses = Course::orderBy('course_title')->pluck('course_title', 'id');
         $this->batches = Batch::orderBy('batch_name', 'desc')->pluck('batch_name', 'id');
-
-        
-        $profile = UserProfile::where('user_id', $user->id)->first();
-
-        if ($profile) {
-            $this->gender           = $profile->gender ? ucfirst($profile->gender) : '';
-            $this->contact_number_1 = $profile->contact_number_1 ?? '';
-            $this->contact_number_2 = $profile->contact_number_2 ?? '';
-            $this->batch_id         = $profile->batch_id ?? '';
-
-            $this->course_id = $profile->courses()->value('courses.id') ?? '';
-
-            // Hydrate board fields (date → Y-m-d, decimal → string)
-            $this->board_taken = $profile->board_taken
-                ? \Carbon\Carbon::parse($profile->board_taken)->format('Y-m-d')
-                : null;
-            $this->board_rate = $profile->board_rate !== null
-                ? (string) $profile->board_rate
-                : '';
-
-            $location = $profile->location ?? [];
-            $this->street_address = $location['street_address'] ?? '';
-            $this->regionCode     = $location['region_code'] ?? '';
-            $this->provinceCode   = $location['province_code'] ?? '';
-            $this->cityCode       = $location['city_code'] ?? '';
-            $this->barangayCode   = $location['barangay_code'] ?? '';
-        }
-
-        $tracerStudy = TracerStudy::where('user_id', $user->id)->first();
-
-        if ($tracerStudy) {
-            $employment = CivilStatusEmployment::where('tracer_study_id', $tracerStudy->id)->first();
-            if ($employment) {
-                $this->civil_status               = $employment->civil_status ?? '';
-                $this->employment_status          = $employment->employment_status ?? '';
-                $this->current_job_position       = $employment->current_job_position ?? '';
-                $this->employed_related_to_degree = $employment->employed_related_to_degree ?? '';
-                $this->employment_type            = $employment->employment_type ?? '';
-                $this->organization_type          = $employment->organization_type ?? '';
-                $this->employment_area            = $employment->employment_area ?? '';
-                $this->abroad_country             = $employment->abroad_country ?? '';
-                $this->months_to_first_job        = $employment->months_to_first_job ?? '';
-            }
-
-            $further = FurtherStudy::where('tracer_study_id', $tracerStudy->id)->first();
-            if ($further) {
-                $this->is_pursued_further_studies = (bool) $further->is_pursued_further_studies;
-                $this->level_of_study             = $further->level_of_study ?? '';
-            }
-        }
-
-        $currentWork = WorkHistory::where('user_id', $user->id)
-            ->where('is_current_job', true)
-            ->first();
-
-        if ($currentWork) {
-            $this->company_id = $currentWork->company_id;
-            $this->date_hired = $currentWork->date_hired?->format('Y-m-d') ?? '';
-        }
     }
 
     // ===== Cascading address =====
@@ -170,6 +117,19 @@ new #[Layout('layouts.app-form')] class extends Component
     public function updatedCityCode()
     {
         $this->barangayCode = '';
+    }
+
+    public function updatedAddressType($value)
+    {
+        $this->resetErrorBag([
+            'regionCode',
+            'provinceCode',
+            'cityCode',
+            'barangayCode',
+            'intl_country',
+            'intl_state',
+            'intl_city',
+        ]);
     }
 
     // ===== Course change → clear board fields if non-board =====
@@ -273,7 +233,6 @@ new #[Layout('layouts.app-form')] class extends Component
             unset($this->companies);
 
             session()->flash('company_created', 'Company "' . $company->company_name . '" created and selected.');
-
         } catch (\Throwable $e) {
             logger()->error('Company creation failed: ' . $e->getMessage());
             session()->flash('error', 'Failed to create company: ' . $e->getMessage());
@@ -287,20 +246,65 @@ new #[Layout('layouts.app-form')] class extends Component
         return match ($step) {
             1 => [
                 'gender'           => 'required|in:Male,Female,Other',
-                'contact_number_1' => ['required', 'string', 'max:20', new Phone('PH')],
-                'contact_number_2' => ['nullable', 'string', 'max:20', new Phone('PH')],
+                'contact_number_1' => [
+                    'required',
+                    'string',
+                    'max:20',
+                    new Phone(),
+                    function ($attribute, $value, $fail) {
+                        $exists = UserProfile::where(function ($q) use ($value) {
+                            $q->where('contact_number_1', $value)
+                                ->orWhere('contact_number_2', $value);
+                        })
+                            ->where('user_id', '!=', $this->userProfileId())
+                            ->exists();
+
+                        if ($exists) {
+                            $fail('This mobile number is already registered to another account.');
+                        }
+                    },
+                ],
+
+                'contact_number_2' => [
+                    'nullable',
+                    'string',
+                    'max:20',
+                    new Phone(),
+                    function ($attribute, $value, $fail) {
+                        if (! $value) return; // skip if empty
+
+                        $exists = UserProfile::where(function ($q) use ($value) {
+                            $q->where('contact_number_1', $value)
+                                ->orWhere('contact_number_2', $value);
+                        })
+                            ->where('user_id', '!=', $this->userProfileId())
+                            ->exists();
+
+                        if ($exists) {
+                            $fail('This alternate number is already registered to another account.');
+                        }
+                    },
+                ],
                 'street_address'   => 'required|string|max:500',
-                'regionCode'       => 'required|string',
-                'provinceCode'     => 'required|string',
-                'cityCode'         => 'required|string',
-                'barangayCode'     => 'required|string',
-                'consentGiven'     => 'accepted',
+                'address_type'     => 'required|in:philippines,abroad',
+
+                // PH-only (required when address_type = philippines)
+                'regionCode'   => 'required_if:address_type,philippines|nullable|string',
+                'provinceCode' => 'required_if:address_type,philippines|nullable|string',
+                'cityCode'     => 'required_if:address_type,philippines|nullable|string',
+                'barangayCode' => 'required_if:address_type,philippines|nullable|string',
+
+                // Abroad-only (required when address_type = abroad)
+                'intl_country' => 'required_if:address_type,abroad|nullable|string|max:255',
+                'intl_state'   => 'nullable|string|max:255',
+                'intl_city'    => 'required_if:address_type,abroad|nullable|string|max:255',
+
+                'consentGiven' => 'accepted',
             ],
             2 => [
                 'civil_status' => 'required|in:single,married,widowed,separated,single-parent',
                 'course_id'    => 'required|exists:courses,id',
                 'batch_id'     => 'required|exists:batches,id',
-                // Board fields conditionally required when course is board
                 'board_taken'  => $this->selectedCourse?->course_type === 'board'
                     ? 'required|date|before_or_equal:today'
                     : 'nullable|date|before_or_equal:today',
@@ -332,12 +336,17 @@ new #[Layout('layouts.app-form')] class extends Component
     {
         return [
             'gender.required'                        => 'Please select your sex.',
+            'contact_number_1.phone'                 => 'Please enter a valid mobile number.',
+            'contact_number_2.phone'                 => 'Please enter a valid alternate number.',
             'contact_number_1.required'              => 'Mobile number is required.',
             'street_address.required'                => 'Street address is required.',
+            'address_type.required'                  => 'Please select whether you reside in the Philippines or abroad.',
             'regionCode.required'                    => 'Please select your region.',
             'provinceCode.required'                  => 'Please select your province.',
             'cityCode.required'                      => 'Please select your city/municipality.',
             'barangayCode.required'                  => 'Please select your barangay.',
+            'intl_country.required_if'               => 'Please enter your country.',
+            'intl_city.required_if'                  => 'Please enter your city.',
             'consentGiven.accepted'                  => 'You must agree to the Privacy Policy and Terms and Conditions before continuing.',
             'civil_status.required'                  => 'Please select your civil status.',
             'course_id.required'                     => 'Please select your program.',
@@ -362,6 +371,11 @@ new #[Layout('layouts.app-form')] class extends Component
             'is_pursued_further_studies.required'    => 'Please answer the further studies question.',
             'level_of_study.required_if'             => 'Please select the level of study.',
         ];
+    }
+
+    protected function userProfileId(): ?int
+    {
+        return UserProfile::where('user_id', Auth::id())->value('id');
     }
 
     public function nextStep()
@@ -397,23 +411,70 @@ new #[Layout('layouts.app-form')] class extends Component
         $user = Auth::user();
         $service = app(PhAddressService::class);
 
-        $region   = $service->findByCode($this->regionCode);
-        $province = $service->findByCode($this->provinceCode);
-        $city     = $service->findByCode($this->cityCode);
-        $barangay = $service->findByCode($this->barangayCode);
+        $region   = $this->address_type === 'philippines' ? $service->findByCode($this->regionCode) : null;
+        $province = $this->address_type === 'philippines' ? $service->findByCode($this->provinceCode) : null;
+        $city     = $this->address_type === 'philippines' ? $service->findByCode($this->cityCode) : null;
+        $barangay = $this->address_type === 'philippines' ? $service->findByCode($this->barangayCode) : null;
 
-        $fullAddress = collect([
-            $this->street_address,
-            $barangay->name ?? null,
-            $city->name ?? null,
-            $province->name ?? null,
-            $region->name ?? null,
-        ])->filter()->implode(', ');
+        if ($this->address_type === 'philippines') {
+            $fullAddress = collect([
+                $this->street_address,
+                $barangay->name ?? null,
+                $city->name ?? null,
+                $province->name ?? null,
+                $region->name ?? null,
+            ])->filter()->implode(', ');
+        } else {
+            $fullAddress = collect([
+                $this->street_address,
+                $this->intl_city,
+                $this->intl_state,
+                $this->intl_country,
+            ])->filter()->implode(', ');
+        }
 
         DB::transaction(function () use ($user, $region, $province, $city, $barangay, $fullAddress) {
             $existingProfile = UserProfile::where('user_id', $user->id)->first();
 
             $isBoardCourse = $this->selectedCourse?->course_type === 'board';
+
+            $location = $this->address_type === 'philippines'
+                ? array_merge($existingProfile->location ?? [], [
+                    'address_type'   => 'philippines',
+                    'street_address' => $this->street_address,
+                    'region_code'    => $this->regionCode,
+                    'region_name'    => $region->name ?? null,
+                    'province_code'  => $this->provinceCode,
+                    'province_name'  => $province->name ?? null,
+                    'city_code'      => $this->cityCode,
+                    'city_name'      => $city->name ?? null,
+                    'barangay_code'  => $this->barangayCode,
+                    'barangay_name'  => $barangay->name ?? null,
+                    'address'        => $fullAddress,
+
+                    // Clear abroad keys
+                    'intl_country'   => null,
+                    'intl_state'     => null,
+                    'intl_city'      => null,
+                ])
+                : array_merge($existingProfile->location ?? [], [
+                    'address_type'   => 'abroad',
+                    'street_address' => $this->street_address,
+                    'intl_country'   => $this->intl_country,
+                    'intl_state'     => $this->intl_state,
+                    'intl_city'      => $this->intl_city,
+                    'address'        => $fullAddress,
+
+                    // Clear PH keys
+                    'region_code'    => null,
+                    'region_name'    => null,
+                    'province_code'  => null,
+                    'province_name'  => null,
+                    'city_code'      => null,
+                    'city_name'      => null,
+                    'barangay_code'  => null,
+                    'barangay_name'  => null,
+                ]);
 
             $profile = UserProfile::updateOrCreate(
                 ['user_id' => $user->id],
@@ -422,27 +483,12 @@ new #[Layout('layouts.app-form')] class extends Component
                     'gender'           => strtolower($this->gender),
                     'contact_number_1' => $this->contact_number_1,
                     'contact_number_2' => $this->contact_number_2 ?: null,
-                    'location' => array_merge(
-                        $existingProfile->location ?? [],
-                        [
-                            'street_address' => $this->street_address,
-                            'region_code'    => $this->regionCode,
-                            'region_name'    => $region->name ?? null,
-                            'province_code'  => $this->provinceCode,
-                            'province_name'  => $province->name ?? null,
-                            'city_code'      => $this->cityCode,
-                            'city_name'      => $city->name ?? null,
-                            'barangay_code'  => $this->barangayCode,
-                            'barangay_name'  => $barangay->name ?? null,
-                            'address'        => $fullAddress,
-                        ]
-                    ),
-                    'batch_id'    => $this->batch_id,
-                    'is_private'  => $existingProfile->is_private ?? false,
-                    'is_verified' => $existingProfile->is_verified ?? false,
-                    // Board fields — save only for board programs
-                    'board_taken' => $isBoardCourse ? ($this->board_taken ?: null) : null,
-                    'board_rate'  => $isBoardCourse
+                    'location'         => $location,
+                    'batch_id'         => $this->batch_id,
+                    'is_private'       => $existingProfile->is_private ?? false,
+                    'is_verified'      => $existingProfile->is_verified ?? false,
+                    'board_taken'      => $isBoardCourse ? ($this->board_taken ?: null) : null,
+                    'board_rate'       => $isBoardCourse
                         ? ($this->board_rate !== '' ? round((float) $this->board_rate, 2) : null)
                         : null,
                 ]

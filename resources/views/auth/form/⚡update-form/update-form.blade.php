@@ -135,77 +135,138 @@
                         @enderror
                     </div>
 
+                    {{-- ===== Address Type Toggle ===== --}}
+                    <div>
+                        <label class="block text-sm font-semibold text-[#123524] mb-2">
+                            Where do you currently reside? <span class="text-red-500">*</span>
+                        </label>
+                        <div class="flex flex-wrap gap-x-6 gap-y-2">
+                            <label class="flex items-center gap-2 cursor-pointer min-h-[40px]">
+                                <input type="radio" wire:model.live="address_type" value="philippines"
+                                    class="text-[#123524] focus:ring-[#D4A537] h-4 w-4">
+                                <span class="text-sm text-[#123524]">Philippines</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer min-h-[40px]">
+                                <input type="radio" wire:model.live="address_type" value="abroad"
+                                    class="text-[#123524] focus:ring-[#D4A537] h-4 w-4">
+                                <span class="text-sm text-[#123524]">Abroad / Other Country</span>
+                            </label>
+                        </div>
+                        @error('address_type')
+                            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    {{-- Street Address (always) --}}
                     <div>
                         <label class="block text-sm font-semibold text-[#123524] mb-2">Street Address <span
                                 class="text-red-500">*</span></label>
-                        <input type="text" wire:model="street_address" placeholder="House No., Street, Purok"
+                        <input type="text" wire:model="street_address"
+                            placeholder="{{ $address_type === 'philippines' ? 'House No., Street, Purok' : 'House No., Street, Apartment' }}"
                             class="w-full px-4 py-3 rounded-xl border border-[#123524]/15 text-[#123524] text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
                         @error('street_address')
                             <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
                         @enderror
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-semibold text-[#123524] mb-2">Region <span
-                                class="text-red-500">*</span></label>
-                        <select wire:model.live="regionCode"
-                            class="w-full px-4 py-3 rounded-xl border border-[#123524]/15 text-[#123524] text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
-                            <option value="">Select Region</option>
-                            @foreach ($this->regions as $region)
-                                <option value="{{ $region->code }}">{{ $region->name }}</option>
-                            @endforeach
-                        </select>
-                        @error('regionCode')
-                            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
-                        @enderror
-                    </div>
-
-                    @if ($regionCode)
+                    {{-- ===== PHILIPPINES CASCADE ===== --}}
+                    @if ($address_type === 'philippines')
                         <div>
-                            <label class="block text-sm font-semibold text-[#123524] mb-2">Province <span
+                            <label class="block text-sm font-semibold text-[#123524] mb-2">Region <span
                                     class="text-red-500">*</span></label>
-                            <select wire:model.live="provinceCode"
+                            <select wire:model.live="regionCode"
                                 class="w-full px-4 py-3 rounded-xl border border-[#123524]/15 text-[#123524] text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
-                                <option value="">Select Province</option>
-                                @foreach ($this->provinces as $province)
-                                    <option value="{{ $province->code }}">{{ $province->name }}</option>
+                                <option value="">Select Region</option>
+                                @foreach ($this->regions as $region)
+                                    <option value="{{ $region->code }}">{{ $region->name }}</option>
                                 @endforeach
                             </select>
-                            @error('provinceCode')
+                            @error('regionCode')
                                 <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
                             @enderror
                         </div>
+
+                        @if ($regionCode)
+                            <div>
+                                <label class="block text-sm font-semibold text-[#123524] mb-2">Province <span
+                                        class="text-red-500">*</span></label>
+                                <select wire:model.live="provinceCode"
+                                    class="w-full px-4 py-3 rounded-xl border border-[#123524]/15 text-[#123524] text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
+                                    <option value="">Select Province</option>
+                                    @foreach ($this->provinces as $province)
+                                        <option value="{{ $province->code }}">{{ $province->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('provinceCode')
+                                    <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        @endif
+
+                        @if ($provinceCode)
+                            <div>
+                                <label class="block text-sm font-semibold text-[#123524] mb-2">City / Municipality <span
+                                        class="text-red-500">*</span></label>
+                                <select wire:model.live="cityCode"
+                                    class="w-full px-4 py-3 rounded-xl border border-[#123524]/15 text-[#123524] text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
+                                    <option value="">Select City / Municipality</option>
+                                    @foreach ($this->cities as $city)
+                                        <option value="{{ $city->code }}">{{ $city->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('cityCode')
+                                    <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        @endif
+
+                        @if ($cityCode)
+                            <div>
+                                <label class="block text-sm font-semibold text-[#123524] mb-2">Barangay <span
+                                        class="text-red-500">*</span></label>
+                                <select wire:model.live="barangayCode"
+                                    class="w-full px-4 py-3 rounded-xl border border-[#123524]/15 text-[#123524] text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
+                                    <option value="">Select Barangay</option>
+                                    @foreach ($this->barangays as $barangay)
+                                        <option value="{{ $barangay->code }}">{{ $barangay->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('barangayCode')
+                                    <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        @endif
                     @endif
 
-                    @if ($provinceCode)
+                    {{-- ===== ABROAD FIELDS ===== --}}
+                    @if ($address_type === 'abroad')
                         <div>
-                            <label class="block text-sm font-semibold text-[#123524] mb-2">City / Municipality <span
+                            <label class="block text-sm font-semibold text-[#123524] mb-2">Country <span
                                     class="text-red-500">*</span></label>
-                            <select wire:model.live="cityCode"
+                            <input type="text" wire:model="intl_country" placeholder="e.g. United Arab Emirates"
                                 class="w-full px-4 py-3 rounded-xl border border-[#123524]/15 text-[#123524] text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
-                                <option value="">Select City / Municipality</option>
-                                @foreach ($this->cities as $city)
-                                    <option value="{{ $city->code }}">{{ $city->name }}</option>
-                                @endforeach
-                            </select>
-                            @error('cityCode')
+                            @error('intl_country')
                                 <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
                             @enderror
                         </div>
-                    @endif
 
-                    @if ($cityCode)
                         <div>
-                            <label class="block text-sm font-semibold text-[#123524] mb-2">Barangay <span
-                                    class="text-red-500">*</span></label>
-                            <select wire:model.live="barangayCode"
+                            <label class="block text-sm font-semibold text-[#123524] mb-2">State / Province / Emirate
+                                <span class="text-[#123524]/40 text-xs font-normal">(optional)</span></label>
+                            <input type="text" wire:model="intl_state"
+                                placeholder="e.g. Dubai, California, Ontario"
                                 class="w-full px-4 py-3 rounded-xl border border-[#123524]/15 text-[#123524] text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
-                                <option value="">Select Barangay</option>
-                                @foreach ($this->barangays as $barangay)
-                                    <option value="{{ $barangay->code }}">{{ $barangay->name }}</option>
-                                @endforeach
-                            </select>
-                            @error('barangayCode')
+                            @error('intl_state')
+                                <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-[#123524] mb-2">City <span
+                                    class="text-red-500">*</span></label>
+                            <input type="text" wire:model="intl_city" placeholder="e.g. Dubai, Los Angeles"
+                                class="w-full px-4 py-3 rounded-xl border border-[#123524]/15 text-[#123524] text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
+                            @error('intl_city')
                                 <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
                             @enderror
                         </div>
@@ -226,7 +287,8 @@
                                 and
                                 <a href="{{ route('terms-and-conditions') }}" target="_blank"
                                     class="text-[#1877F2] font-semibold hover:underline">
-                                    Terms and Conditions<span class="text-sm text-[#123524]/80 leading-relaxed">.</span>
+                                    Terms and Conditions<span
+                                        class="text-sm text-[#123524]/80 leading-relaxed">.</span>
                                 </a>
                             </span>
                         </label>
@@ -672,9 +734,7 @@
                         Next
                     </button>
                 @else
-                    <button type="button"
-                        wire:click="submit"
-                        x-data
+                    <button type="button" wire:click="submit" x-data
                         x-on:click="
                             $wire.submit().then(() => {
                                 setTimeout(() => window.close(), 300);

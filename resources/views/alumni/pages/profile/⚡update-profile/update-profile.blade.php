@@ -215,79 +215,143 @@
                 </div>
             </div>
 
-            <!-- Philippine Address (cascading dropdowns) -->
+            <!-- Home Address -->
             <div>
                 <label
-                    class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">Home
-                    Address</label>
+                    class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
+                    Home Address
+                </label>
 
-                <div class="grid sm:grid-cols-2 gap-5">
-                    <div>
-                        <label
-                            class="block text-[11px] text-black/50 dark:text-white/50 font-semibold mb-1.5">Region</label>
-                        <select wire:model.live="region_code"
-                            class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition">
-                            <option value="">Select Region</option>
-                            @foreach ($this->regions as $region)
-                                <option value="{{ $region->code }}">{{ $region->name }}</option>
-                            @endforeach
-                        </select>
-                        @error('region_code')
-                            <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
-                        @enderror
+                {{-- Address Type Toggle --}}
+                <div class="mb-4">
+                    <div class="flex flex-wrap gap-x-6 gap-y-2">
+                        <label class="flex items-center gap-2 cursor-pointer min-h-[40px]">
+                            <input type="radio" wire:model.live="address_type" value="philippines"
+                                class="text-[#123524] focus:ring-[#D4A537] h-4 w-4">
+                            <span class="text-sm text-black dark:text-white">Philippines</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer min-h-[40px]">
+                            <input type="radio" wire:model.live="address_type" value="abroad"
+                                class="text-[#123524] focus:ring-[#D4A537] h-4 w-4">
+                            <span class="text-sm text-black dark:text-white">Abroad / Other Country</span>
+                        </label>
                     </div>
-
-                    <div>
-                        <label
-                            class="block text-[11px] text-black/50 dark:text-white/50 font-semibold mb-1.5">Province</label>
-                        <select wire:model.live="province_code" @disabled(!$region_code)
-                            class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition disabled:opacity-50 disabled:cursor-not-allowed">
-                            <option value="">Select Province</option>
-                            @foreach ($this->provinces as $province)
-                                <option value="{{ $province->code }}">{{ $province->name }}</option>
-                            @endforeach
-                        </select>
-                        @error('province_code')
-                            <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-[11px] text-black/50 dark:text-white/50 font-semibold mb-1.5">City /
-                            Municipality</label>
-                        <select wire:model.live="city_code" @disabled(!$province_code)
-                            class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition disabled:opacity-50 disabled:cursor-not-allowed">
-                            <option value="">Select City / Municipality</option>
-                            @foreach ($this->cities as $city)
-                                <option value="{{ $city->code }}">{{ $city->name }}</option>
-                            @endforeach
-                        </select>
-                        @error('city_code')
-                            <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label
-                            class="block text-[11px] text-black/50 dark:text-white/50 font-semibold mb-1.5">Barangay</label>
-                        <select wire:model.live="barangay_code" @disabled(!$city_code)
-                            class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition disabled:opacity-50 disabled:cursor-not-allowed">
-                            <option value="">Select Barangay</option>
-                            @foreach ($this->barangays as $barangay)
-                                <option value="{{ $barangay->code }}">{{ $barangay->name }}</option>
-                            @endforeach
-                        </select>
-                        @error('barangay_code')
-                            <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
-                        @enderror
-                    </div>
+                    @error('address_type')
+                        <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
+                    @enderror
                 </div>
 
+                {{-- ===== PHILIPPINES CASCADE ===== --}}
+                @if ($address_type === 'philippines')
+                    <div class="grid sm:grid-cols-2 gap-5">
+                        <div>
+                            <label
+                                class="block text-[11px] text-black/50 dark:text-white/50 font-semibold mb-1.5">Region</label>
+                            <select wire:model.live="region_code"
+                                class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition">
+                                <option value="">Select Region</option>
+                                @foreach ($this->regions as $region)
+                                    <option value="{{ $region->code }}">{{ $region->name }}</option>
+                                @endforeach
+                            </select>
+                            @error('region_code')
+                                <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label
+                                class="block text-[11px] text-black/50 dark:text-white/50 font-semibold mb-1.5">Province</label>
+                            <select wire:model.live="province_code" @disabled(!$region_code)
+                                class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                <option value="">Select Province</option>
+                                @foreach ($this->provinces as $province)
+                                    <option value="{{ $province->code }}">{{ $province->name }}</option>
+                                @endforeach
+                            </select>
+                            @error('province_code')
+                                <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] text-black/50 dark:text-white/50 font-semibold mb-1.5">City
+                                /
+                                Municipality</label>
+                            <select wire:model.live="city_code" @disabled(!$province_code)
+                                class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                <option value="">Select City / Municipality</option>
+                                @foreach ($this->cities as $city)
+                                    <option value="{{ $city->code }}">{{ $city->name }}</option>
+                                @endforeach
+                            </select>
+                            @error('city_code')
+                                <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label
+                                class="block text-[11px] text-black/50 dark:text-white/50 font-semibold mb-1.5">Barangay</label>
+                            <select wire:model.live="barangay_code" @disabled(!$city_code)
+                                class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                <option value="">Select Barangay</option>
+                                @foreach ($this->barangays as $barangay)
+                                    <option value="{{ $barangay->code }}">{{ $barangay->name }}</option>
+                                @endforeach
+                            </select>
+                            @error('barangay_code')
+                                <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+                @endif
+
+                {{-- ===== ABROAD FIELDS ===== --}}
+                @if ($address_type === 'abroad')
+                    <div class="grid sm:grid-cols-2 gap-5">
+                        <div>
+                            <label
+                                class="block text-[11px] text-black/50 dark:text-white/50 font-semibold mb-1.5">Country</label>
+                            <input type="text" wire:model.defer="intl_country"
+                                placeholder="e.g. United Arab Emirates"
+                                class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition">
+                            @error('intl_country')
+                                <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label
+                                class="block text-[11px] text-black/50 dark:text-white/50 font-semibold mb-1.5">State /
+                                Province / Emirate <span
+                                    class="text-black/40 dark:text-white/40 text-[10px] font-normal normal-case">(optional)</span></label>
+                            <input type="text" wire:model.defer="intl_state"
+                                placeholder="e.g. Dubai, California, Ontario"
+                                class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition">
+                            @error('intl_state')
+                                <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <label
+                                class="block text-[11px] text-black/50 dark:text-white/50 font-semibold mb-1.5">City</label>
+                            <input type="text" wire:model.defer="intl_city" placeholder="e.g. Dubai, Los Angeles"
+                                class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition">
+                            @error('intl_city')
+                                <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+                @endif
+
+                {{-- Street Address (always shown) --}}
                 <div class="mt-5">
                     <label class="block text-[11px] text-black/50 dark:text-white/50 font-semibold mb-1.5">Street
                         Address</label>
                     <input type="text" wire:model.defer="street_address"
-                        placeholder="House no., street, subdivision, etc."
+                        placeholder="{{ $address_type === 'philippines' ? 'House no., street, subdivision, etc.' : 'House no., street, apartment, etc.' }}"
                         class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition">
                     @error('street_address')
                         <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
