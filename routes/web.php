@@ -76,6 +76,11 @@ Route::middleware(['auth', 'role:program head|registrar'])->prefix('admin')->gro
     Route::livewire('/alumni/create', 'admin::pages.alumni.create-alumni')->name('admin.alumni.create');
     Route::livewire('/alumni/update/{user}', 'admin::pages.alumni.update-alumni')->name('admin.alumni.update');
 
+    Route::livewire('/post/view-post', 'admin::pages.post.view-post')->name('admin.post.view');
+    Route::livewire('/post/create-post', 'admin::pages.post.create-post')->name('admin.post.create');
+    Route::livewire('/post/update-post{post}', 'admin::pages.post.update-post')->name('admin.post.update');
+
+
     Route::livewire('/verification-queue', 'admin::pages.verification-queue')->name('admin.verification-queue');
 
 });

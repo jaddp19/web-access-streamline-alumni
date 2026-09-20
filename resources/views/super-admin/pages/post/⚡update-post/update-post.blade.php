@@ -13,7 +13,7 @@
                 </svg>
             </div>
             <div>
-                <p class="text-white/50 text-sm">Super Admin</p>
+                <p class="text-white/50 text-sm">Registrar</p>
                 <h1 class="text-2xl font-bold text-white" style="font-family: 'Fraunces', serif;">
                     Update Post
                 </h1>

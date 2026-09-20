@@ -13,9 +13,9 @@
                 </svg>
             </div>
             <div>
-                <p class="text-white/50 text-sm">Registrar</p>
+                <p class="text-white/50 text-sm">Program Head</p>
                 <h1 class="text-2xl font-bold text-white" style="font-family: 'Fraunces', serif;">
-                    Create Post
+                    Update Post
                 </h1>
             </div>
         </div>
@@ -35,8 +35,8 @@
             <path stroke-linecap="round" stroke-linejoin="round"
                 d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
         </svg>
-        <span>Only <strong>registrar</strong> and <strong>program head</strong> posts are visible to alumni.
-            Set status to <strong>Public</strong> when ready to publish.</span>
+        <span>Editing <strong>{{ $post->title }}</strong>. The slug will be regenerated only if you change the
+            title.</span>
     </div>
 
     {{-- ========== FORM CARD ========== --}}
@@ -77,6 +77,7 @@
                     {{ strlen($description) }} / 5000 characters
                 </p>
             </div>
+
             {{-- Category + Status --}}
             <div class="grid sm:grid-cols-2 gap-5">
                 <div>
@@ -108,15 +109,17 @@
                     </label>
                     <select wire:model="status"
                         class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition">
-                        <option value="draft">Draft — save without publishing</option>
-                        <option value="private">Private — admin view only</option>
-                        <option value="public">Public — visible to alumni</option>
+                        <option value="draft" class="bg-white dark:bg-[#3A3B3C] text-black dark:text-white">Draft —
+                            save without publishing</option>
+                        <option value="private" class="bg-white dark:bg-[#3A3B3C] text-black dark:text-white">Private —
+                            admin view only</option>
+                        <option value="public" class="bg-white dark:bg-[#3A3B3C] text-black dark:text-white">Public —
+                            visible to alumni</option>
                     </select>
                     @error('status')
                         <span class="text-red-500 dark:text-red-400 text-sm mt-1 block">{{ $message }}</span>
                     @enderror
                 </div>
-
             </div>
 
             {{-- Cover Image --}}
@@ -130,9 +133,20 @@
                     {{-- Preview --}}
                     <div
                         class="w-32 h-32 rounded-2xl overflow-hidden border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] flex items-center justify-center shrink-0 relative">
-                        @if ($image)
-                            <img src="{{ $image->temporaryUrl() }}" alt="Preview" class="w-full h-full object-cover">
-                            <button type="button" wire:click="removeImage"
+                        @php
+                            $previewSrc = null;
+                            if ($image) {
+                                $previewSrc = $image->temporaryUrl();
+                            } elseif ($currentImage) {
+                                $previewSrc = filter_var($currentImage, FILTER_VALIDATE_URL)
+                                    ? $currentImage
+                                    : \Illuminate\Support\Facades\Storage::url($currentImage);
+                            }
+                        @endphp
+
+                        @if ($previewSrc)
+                            <img src="{{ $previewSrc }}" alt="Preview" class="w-full h-full object-cover">
+                            <button type="button" wire:click="{{ $image ? 'removeImage' : 'removeExistingImage' }}"
                                 class="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition"
                                 title="Remove image">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -158,7 +172,7 @@
                                 file:bg-[#D4A537] file:text-[#123524]
                                 hover:file:bg-[#E5B94A] file:cursor-pointer cursor-pointer">
                         <p class="text-[11px] text-black/40 dark:text-white/40 mt-1">
-                            JPG, PNG, or WebP. Max 5MB.
+                            Uploading a new image will replace the current one. Max 5MB.
                         </p>
                         <div wire:loading wire:target="image" class="text-xs text-[#1877F2] font-semibold mt-1">
                             Uploading…
@@ -174,11 +188,42 @@
             <div>
                 <label
                     class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
-                    Attachments <span
-                        class="text-black/40 dark:text-white/40 text-[10px] font-normal normal-case">(optional, up to 5
-                        files)</span>
+                    Attachments
+                    <span class="text-black/40 dark:text-white/40 text-[10px] font-normal normal-case">
+                        ({{ $this->allAttachmentsCount }} / 5)
+                    </span>
                 </label>
 
+                {{-- Existing attachments --}}
+                @if (!empty($existingAttachments))
+                    <div class="mb-3 space-y-2">
+                        @foreach ($existingAttachments as $index => $path)
+                            <div
+                                class="flex items-center justify-between gap-3 px-3 py-2 rounded-lg bg-[#F1EFE7] dark:bg-[#3A3B3C] border border-black/5 dark:border-white/5">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <svg class="w-4 h-4 text-black/40 dark:text-white/40 shrink-0" fill="none"
+                                        stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" />
+                                    </svg>
+                                    <span class="text-xs text-black/70 dark:text-white/70 truncate">
+                                        {{ basename($path) }}
+                                    </span>
+                                    <span
+                                        class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 font-semibold shrink-0">
+                                        Uploaded
+                                    </span>
+                                </div>
+                                <button type="button" wire:click="removeExistingAttachment({{ $index }})"
+                                    class="text-xs font-semibold text-red-600 dark:text-red-400 hover:underline shrink-0">
+                                    Remove
+                                </button>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+
+                {{-- Upload new --}}
                 <input type="file" wire:model="attachments" multiple
                     class="block w-full text-sm text-black/70 dark:text-white/70
                         file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0
@@ -186,7 +231,7 @@
                         file:bg-[#123524] dark:file:bg-[#3A3B3C] file:text-white
                         hover:file:bg-[#0d2819] dark:hover:file:bg-white/10 file:cursor-pointer cursor-pointer">
                 <p class="text-[11px] text-black/40 dark:text-white/40 mt-1">
-                    PDF, DOCX, ZIP, images — max 10MB each.
+                    Adding files appends to the existing list. Total max 5. Each file max 10MB.
                 </p>
 
                 <div wire:loading wire:target="attachments" class="text-xs text-[#1877F2] font-semibold mt-1">
@@ -196,6 +241,7 @@
                     <span class="text-red-500 dark:text-red-400 text-sm mt-1 block">{{ $message }}</span>
                 @enderror
 
+                {{-- New uploads preview --}}
                 @if (!empty($attachments))
                     <div class="mt-3 space-y-2">
                         @foreach ($attachments as $index => $file)
@@ -210,6 +256,10 @@
                                         </svg>
                                         <span class="text-xs text-black/70 dark:text-white/70 truncate">
                                             {{ $file->getClientOriginalName() }}
+                                        </span>
+                                        <span
+                                            class="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400 font-semibold shrink-0">
+                                            New
                                         </span>
                                     </div>
                                     <button type="button" wire:click="removeAttachment({{ $index }})"
@@ -227,15 +277,15 @@
             <div class="flex flex-wrap gap-3 pt-4 border-t border-black/5 dark:border-white/10">
                 <button type="submit" wire:loading.attr="disabled" wire:target="save,image,attachments"
                     class="inline-flex items-center gap-x-2 text-sm font-semibold rounded-xl bg-[#D4A537] text-[#123524] hover:bg-[#E5B94A] transition py-2.5 px-5 disabled:opacity-50 disabled:cursor-not-allowed">
-                    <span wire:loading.remove wire:target="save">Create Post</span>
-                    <span wire:loading wire:target="save">Creating…</span>
+                    <span wire:loading.remove wire:target="save">Update Post</span>
+                    <span wire:loading wire:target="save">Updating…</span>
                     <svg wire:loading.remove wire:target="save" class="w-4 h-4" fill="none" stroke="currentColor"
                         stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                     </svg>
                 </button>
 
-                <a href="{{ route('super-admin.post.view') }}"
+                <a href="{{ route('admin.post.view') }}"
                     class="inline-flex items-center gap-x-2 text-sm font-semibold rounded-xl bg-white dark:bg-[#3A3B3C] border border-black/10 dark:border-white/10 text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition py-2.5 px-5">
                     Cancel
                 </a>
