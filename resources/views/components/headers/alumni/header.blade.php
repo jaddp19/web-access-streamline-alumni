@@ -348,12 +348,18 @@
             }
         }
 
-        // Paint from server-rendered data attributes on initial load
         document.addEventListener('DOMContentLoaded', readInitial);
-        // And after Livewire SPA navigation
         document.addEventListener('livewire:navigated', readInitial);
-        // Immediate refresh when a Livewire action says "badges changed"
         window.addEventListener('badges:refresh', refreshCounts);
+
+        // Catch browser bfcache restores (native Back/Forward button) —
+        // these skip DOMContentLoaded entirely, so without this the page
+        // reappears frozen with whatever counts it had before navigating away.
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) {
+                refreshCounts();
+            }
+        });
 
         // Poll every 30s, only while tab is visible
         let intervalId = null;

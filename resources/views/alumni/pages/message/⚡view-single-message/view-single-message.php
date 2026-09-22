@@ -6,6 +6,7 @@ use App\Models\Department;
 use App\Models\Event;
 use App\Models\EventRsvp;
 use App\Models\User;
+use App\Support\BadgeCounts;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
@@ -32,6 +33,11 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
     protected function isAuthorizedFor(Event $event): bool
     {
+        // Only published events are visible/RSVP-able to alumni
+        if ($event->status !== 'published') {
+            return false;
+        }
+
         $registrarIds = Cache::remember('registrar_user_ids', now()->addHour(), function () {
             return User::query()
                 ->whereHas('roles', fn ($q) => $q->where('name', 'registrar'))
@@ -96,26 +102,22 @@ new #[Layout('layouts.app-alumni')] class extends Component
             return;
         }
 
-        // Block "yes" if the event is already full
-        if ($response === 'yes' && $this->event->isFull() && $this->response !== 'yes') {
-            session()->flash('error', 'Sorry, this event is already full.');
-            return;
+        // Defense in depth — re-check status + authorization even though
+        // mount() already gated the page itself.
+        if ($this->event->status !== 'published' || ! $this->isAuthorizedFor($this->event)) {
+            abort(403);
         }
 
         EventRsvp::updateOrCreate(
-            [
-                'user_id'  => Auth::id(),
-                'event_id' => $this->event->id,
-            ],
-            [
-                'response' => $response,
-            ]
+            ['user_id' => Auth::id(), 'event_id' => $this->event->id],
+            ['response' => $response],
         );
 
         $this->response = $response;
 
+        BadgeCounts::forgetFor(Auth::id());
         unset($this->myRsvp, $this->attendeeCount);
 
-        session()->flash('success', 'Your RSVP has been recorded.');
+        $this->dispatch('badges:refresh');
     }
 };

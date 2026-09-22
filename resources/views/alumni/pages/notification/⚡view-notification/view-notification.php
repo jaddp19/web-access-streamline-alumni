@@ -3,6 +3,7 @@
 use App\Models\Department;
 use App\Models\Post;
 use App\Models\User;
+use App\Support\BadgeCounts;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -147,8 +148,10 @@ new #[Layout('layouts.app-alumni')] class extends Component
     public function markAllAsRead(): void
     {
         Auth::user()->update(['last_seen_posts_at' => now()]);
+        BadgeCounts::forgetFor(Auth::id());
 
-        // Force Livewire to re-evaluate these on next render
         unset($this->unreadCount, $this->lastSeenAt, $this->notifications);
+
+        $this->dispatch('badges:refresh'); // <-- the missing piece
     }
 };

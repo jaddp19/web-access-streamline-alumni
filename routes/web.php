@@ -123,7 +123,9 @@ Route::middleware(['auth', 'role:alumni|registrar'])->prefix('alumni')->group(fu
      * Returns { "messages": N, "notifications": M } — safe, cached 20s.
      */
     Route::get('/badges.json', function () {
-        return response()->json(BadgeCounts::forCurrentUser());
+        return response()
+            ->json(BadgeCounts::forCurrentUser())
+            ->header('Cache-Control', 'no-store');
     })->name('alumni.badges');
 });
 

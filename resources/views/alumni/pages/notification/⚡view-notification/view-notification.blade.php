@@ -164,6 +164,7 @@
                     @endphp
 
                     <a href="{{ route('alumni.view-notification', $post) }}"
+                        wire:navigate
                         class="flex items-start gap-3 px-4 py-4 border-b border-black/5 dark:border-white/5 last:border-b-0 transition
                             hover:bg-[#F0F2F5] dark:hover:bg-[#3A3B3C]
                             {{ $isUnread ? 'bg-[#1877F2]/[0.03] dark:bg-[#1877F2]/[0.06]' : '' }}">

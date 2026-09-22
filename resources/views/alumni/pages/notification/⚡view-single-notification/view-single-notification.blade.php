@@ -2,7 +2,12 @@
 
     {{-- ========== MAIN CONTENT ========== --}}
     <div class="max-w-[900px] mx-auto px-4 sm:px-6 py-6 space-y-5">
-
+        <div>
+            <a href="{{ route('alumni.notification') }}" wire:navigate
+                class="inline-flex items-center gap-2 text-sm font-semibold text-[#1877F2] hover:underline">
+                ← Back to notifications
+            </a>
+        </div>
         {{-- Post card --}}
         <article class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm overflow-hidden">
 
@@ -18,7 +23,8 @@
                             {{ $this->authorInitial }}
                         </span>
                     @else
-                        <span class="w-12 h-12 flex items-center justify-center text-lg font-bold text-[#0f2b1c] bg-yellow-500 rounded-full shrink-0">
+                        <span
+                            class="w-12 h-12 flex items-center justify-center text-lg font-bold text-[#0f2b1c] bg-yellow-500 rounded-full shrink-0">
                             {{ $this->authorInitial }}
                         </span>
                     @endif
@@ -29,7 +35,8 @@
                                 {{ $post->user->name ?? 'CSAV Admin' }}
                             </p>
                             @if ($this->authorRole)
-                                <span class="inline-flex items-center align-middle whitespace-nowrap leading-none text-[10px] px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 text-black/60 dark:text-white/60 font-semibold uppercase tracking-wide">
+                                <span
+                                    class="inline-flex items-center align-middle whitespace-nowrap leading-none text-[10px] px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 text-black/60 dark:text-white/60 font-semibold uppercase tracking-wide">
                                     {{ $this->authorRole }}
                                 </span>
                             @endif
@@ -40,7 +47,8 @@
                     </div>
                 </div>
 
-                <span class="shrink-0 text-[10px] px-2.5 py-1 rounded-full bg-[#123524]/10 dark:bg-[#D4A537]/15 text-[#123524] dark:text-[#D4A537] font-semibold uppercase tracking-wide">
+                <span
+                    class="shrink-0 text-[10px] px-2.5 py-1 rounded-full bg-[#123524]/10 dark:bg-[#D4A537]/15 text-[#123524] dark:text-[#D4A537] font-semibold uppercase tracking-wide">
                     Official
                 </span>
             </header>
@@ -48,7 +56,8 @@
             {{-- Category --}}
             @if ($post->category)
                 <div class="px-5 sm:px-6 pb-2">
-                    <span class="inline-block text-[11px] px-2.5 py-1 rounded-full bg-[#D4A537]/15 dark:bg-[#D4A537]/20 text-[#a97f1f] dark:text-[#E5B94A] font-semibold uppercase tracking-wide">
+                    <span
+                        class="inline-block text-[11px] px-2.5 py-1 rounded-full bg-[#D4A537]/15 dark:bg-[#D4A537]/20 text-[#a97f1f] dark:text-[#E5B94A] font-semibold uppercase tracking-wide">
                         {{ $post->category->cat_name }}
                     </span>
                 </div>
@@ -73,7 +82,8 @@
             {{-- Description body --}}
             @if ($post->description)
                 <div class="px-5 sm:px-6 py-5">
-                    <div class="text-sm sm:text-base text-black/80 dark:text-white/80 whitespace-pre-line leading-relaxed">
+                    <div
+                        class="text-sm sm:text-base text-black/80 dark:text-white/80 whitespace-pre-line leading-relaxed">
                         {{ $post->description }}
                     </div>
                 </div>
@@ -92,11 +102,13 @@
                                 class="flex items-center gap-3 px-3.5 py-3 rounded-xl bg-[#F0F2F5] dark:bg-[#3A3B3C] border border-black/5 dark:border-white/5 hover:border-[#123524]/30 dark:hover:border-[#D4A537]/30 transition group">
 
                                 {{-- Extension badge --}}
-                                <span class="w-10 h-10 rounded-lg bg-white dark:bg-[#242526] flex items-center justify-center text-[10px] font-bold uppercase text-[#123524] dark:text-[#D4A537] shrink-0 border border-black/5 dark:border-white/5">
+                                <span
+                                    class="w-10 h-10 rounded-lg bg-white dark:bg-[#242526] flex items-center justify-center text-[10px] font-bold uppercase text-[#123524] dark:text-[#D4A537] shrink-0 border border-black/5 dark:border-white/5">
                                     {{ $att['ext'] ?: 'FILE' }}
                                 </span>
 
-                                <span class="flex-1 min-w-0 text-sm font-medium text-black/80 dark:text-white/80 truncate">
+                                <span
+                                    class="flex-1 min-w-0 text-sm font-medium text-black/80 dark:text-white/80 truncate">
                                     {{ $att['name'] }}
                                 </span>
 
@@ -130,7 +142,7 @@
                             : null;
                     @endphp
 
-                    <a href="{{ route('alumni.view-notification', $related->id) }}"
+                    <a href="{{ route('alumni.view-notification', $related->id) }}" wire:navigate
                         class="flex items-start gap-3 bg-white dark:bg-[#242526] rounded-2xl shadow-sm p-4 hover:bg-[#F0F2F5] dark:hover:bg-[#3A3B3C] transition group">
 
                         @if ($relatedImage)
@@ -138,7 +150,8 @@
                                 class="w-16 h-16 rounded-xl object-cover shrink-0 bg-[#F0F2F5] dark:bg-[#3A3B3C]"
                                 loading="lazy">
                         @else
-                            <div class="w-16 h-16 rounded-xl bg-[#F0F2F5] dark:bg-[#3A3B3C] flex items-center justify-center shrink-0">
+                            <div
+                                class="w-16 h-16 rounded-xl bg-[#F0F2F5] dark:bg-[#3A3B3C] flex items-center justify-center shrink-0">
                                 <svg class="w-6 h-6 text-black/30 dark:text-white/30" fill="none"
                                     stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -148,7 +161,8 @@
                         @endif
 
                         <div class="flex-1 min-w-0">
-                            <p class="font-semibold text-black dark:text-white text-sm truncate group-hover:text-[#1877F2] dark:group-hover:text-[#D4A537] transition">
+                            <p
+                                class="font-semibold text-black dark:text-white text-sm truncate group-hover:text-[#1877F2] dark:group-hover:text-[#D4A537] transition">
                                 {{ $related->title }}
                             </p>
 
@@ -160,7 +174,8 @@
 
                             <div class="flex items-center gap-2 mt-1.5 flex-wrap">
                                 @if ($related->category)
-                                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-[#D4A537]/15 dark:bg-[#D4A537]/20 text-[#a97f1f] dark:text-[#E5B94A] font-semibold uppercase tracking-wide">
+                                    <span
+                                        class="text-[10px] px-1.5 py-0.5 rounded bg-[#D4A537]/15 dark:bg-[#D4A537]/20 text-[#a97f1f] dark:text-[#E5B94A] font-semibold uppercase tracking-wide">
                                         {{ $related->category->cat_name }}
                                     </span>
                                 @endif

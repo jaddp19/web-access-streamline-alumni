@@ -79,6 +79,13 @@ class BadgeCounts
         });
     }
 
+    public static function forgetFor(int $userId): void
+    {
+        Cache::forget("badge.pending_messages.$userId");
+        // unread_posts is keyed by last_seen_posts_at's timestamp, so it
+        // self-invalidates the moment that column changes — nothing to forget there.
+    }
+
     protected static function programHeadIdsForMyDepartments(): array
     {
         $profile = Auth::user()?->userProfile;

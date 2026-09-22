@@ -1,6 +1,12 @@
 <?php
 
+use App\Models\Department;
 use App\Models\Post;
+use App\Models\User;
+use App\Support\BadgeCounts;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -11,15 +17,72 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
     public function mount(Post $post): void
     {
-        // Only allow viewing public posts by registrar or program head
-        abort_unless($post->status === 'public', 404);
+        abort_unless($this->isAuthorizedFor($post), 403);
 
-        abort_unless(
-            $post->user->hasAnyRole(['registrar', 'program head']),
-            404
-        );
+        $this->post = $post;
 
-        $this->post = $post->load(['user.userProfile', 'user.roles', 'category']);
+        $user = Auth::user();
+        $watermark = $user->last_seen_posts_at ?? $user->created_at;
+
+        if ($post->created_at->gt($watermark)) {   // never move it backward
+            $user->update(['last_seen_posts_at' => $post->created_at]);
+            BadgeCounts::forgetFor($user->id);
+            $this->dispatch('badges:refresh');
+        }
+    }
+
+    protected function isAuthorizedFor(Post $post): bool
+    {
+        if ($post->status !== 'public') {
+            return false;
+        }
+
+        $registrarIds = Cache::remember('registrar_user_ids', now()->addHour(), function () {
+            return User::query()
+                ->whereHas('roles', fn ($q) => $q->where('name', 'registrar'))
+                ->pluck('id')
+                ->all();
+        });
+
+        if (in_array($post->user_id, $registrarIds)) {
+            return true;
+        }
+
+        $programHeadIds = $this->programHeadIdsForMyDepartments();
+
+        return in_array($post->user_id, $programHeadIds);
+    }
+
+    protected function programHeadIdsForMyDepartments(): array
+    {
+        $profile = Auth::user()?->userProfile;
+        if (! $profile) {
+            return [];
+        }
+
+        $deptIds = $profile->courses()
+            ->pluck('department_id')
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        if (empty($deptIds)) {
+            return [];
+        }
+
+        sort($deptIds);
+        $key = 'program_head_ids_by_dept_' . implode('_', $deptIds);
+
+        return Cache::remember($key, now()->addHour(), function () use ($deptIds) {
+            return Department::query()
+                ->whereIn('id', $deptIds)
+                ->whereNotNull('program_head_id')
+                ->pluck('program_head_id')
+                ->unique()
+                ->values()
+                ->all();
+        });
     }
 
     #[Computed]
@@ -39,7 +102,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
         return filter_var($raw, FILTER_VALIDATE_URL)
             ? $raw
-            : \Illuminate\Support\Facades\Storage::url($raw);
+            : Storage::url($raw);
     }
 
     #[Computed]
@@ -57,7 +120,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
         return filter_var($this->post->image, FILTER_VALIDATE_URL)
             ? $this->post->image
-            : \Illuminate\Support\Facades\Storage::url($this->post->image);
+            : Storage::url($this->post->image);
     }
 
     /**
@@ -77,7 +140,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
             ->map(function ($path) {
                 $url = filter_var($path, FILTER_VALIDATE_URL)
                     ? $path
-                    : \Illuminate\Support\Facades\Storage::url($path);
+                    : Storage::url($path);
 
                 $name = basename($path);
                 $ext  = strtolower(pathinfo($path, PATHINFO_EXTENSION));
@@ -93,17 +156,33 @@ new #[Layout('layouts.app-alumni')] class extends Component
     }
 
     /**
-     * Other recent posts for "More from CSAV" section.
+     * Other recent posts for "More from CSAV" section — scoped to the
+     * same allowed-author set as the current post, so alumni never see
+     * a preview of a post from a department they don't belong to.
      */
     #[Computed]
     public function relatedPosts()
     {
+        $registrarIds = Cache::remember('registrar_user_ids', now()->addHour(), function () {
+            return User::query()
+                ->whereHas('roles', fn ($q) => $q->where('name', 'registrar'))
+                ->pluck('id')
+                ->all();
+        });
+
+        $allowed = array_values(array_unique(array_merge(
+            $registrarIds,
+            $this->programHeadIdsForMyDepartments(),
+        )));
+
+        if (empty($allowed)) {
+            return collect();
+        }
+
         return Post::with(['user.roles', 'category'])
             ->where('id', '!=', $this->post->id)
             ->where('status', 'public')
-            ->whereHas('user', function ($q) {
-                $q->whereHas('roles', fn ($r) => $r->whereIn('name', ['registrar', 'program head']));
-            })
+            ->whereIn('user_id', $allowed)
             ->latest()
             ->take(3)
             ->get();
