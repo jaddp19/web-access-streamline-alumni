@@ -8,10 +8,16 @@
             ? $__rawAvatar
             : \Illuminate\Support\Facades\Storage::url($__rawAvatar))
         : null;
+
+    // Badge counts — cached 20s inside the helper
+    $__badges = \App\Support\BadgeCounts::forCurrentUser();
 @endphp
 
 <!-- ========== FACEBOOK-STYLE HEADER ========== -->
 <header
+    id="alumni-header"
+    data-badges-messages="{{ $__badges['messages'] }}"
+    data-badges-notifications="{{ $__badges['notifications'] }}"
     class="w-full bg-gradient-to-r from-[#0f2b1c] via-green-800 to-[#0f2b1c] border-b border-black/10 dark:border-white/10 shadow-sm sticky top-0 z-50 select-none">
     <nav class="max-w-[1100px] mx-auto flex items-center justify-between px-4 py-2 gap-4">
 
@@ -38,7 +44,7 @@
                 </a>
             </li>
 
-            {{-- Message (NEW) --}}
+            {{-- Message --}}
             <li>
                 <a href="{{ route('alumni.message') }}"
                     class="flex items-center justify-center w-28 h-12 rounded-lg hover:bg-black/5 transition relative group
@@ -47,6 +53,12 @@
                         <path stroke-linecap="round" stroke-linejoin="round"
                             d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
                     </svg>
+                    <span data-badge="messages"
+                          class="absolute top-1.5 right-5 hidden items-center justify-center
+                                 min-w-[18px] h-[18px] px-1 rounded-full
+                                 bg-[#E41E3F] text-white text-[10px] font-bold leading-none
+                                 ring-2 ring-[#0f2b1c] pointer-events-none">
+                    </span>
                 </a>
             </li>
 
@@ -59,6 +71,12 @@
                         <path stroke-linecap="round" stroke-linejoin="round"
                             d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
                     </svg>
+                    <span data-badge="notifications"
+                          class="absolute top-1.5 right-5 hidden items-center justify-center
+                                 min-w-[18px] h-[18px] px-1 rounded-full
+                                 bg-[#E41E3F] text-white text-[10px] font-bold leading-none
+                                 ring-2 ring-[#0f2b1c] pointer-events-none">
+                    </span>
                 </a>
             </li>
         </ul>
@@ -217,25 +235,39 @@
             <span class="font-medium">Settings</span>
         </a>
 
-        {{-- Message (NEW) --}}
+        {{-- Message --}}
         <a href="{{ route('alumni.message') }}"
             class="w-full flex items-center gap-x-3 px-3 py-3 rounded-lg text-black/80 dark:text-white/80 hover:bg-[#F0F2F5] dark:hover:bg-[#3a3b3c] transition-colors"
             title="Messages">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
-            </svg>
+            <div class="relative shrink-0">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+                </svg>
+                <span data-badge="messages"
+                      class="absolute -top-1.5 -right-2 hidden items-center justify-center
+                             min-w-[16px] h-4 px-1 rounded-full
+                             bg-[#E41E3F] text-white text-[9px] font-bold leading-none">
+                </span>
+            </div>
             <span class="font-medium">Messages</span>
         </a>
 
         {{-- Notifications --}}
-        <a type="button" href="{{ route('alumni.notification') }}"
+        <a href="{{ route('alumni.notification') }}"
             class="w-full flex items-center gap-x-3 px-3 py-3 rounded-lg text-black/80 dark:text-white/80 hover:bg-[#F0F2F5] dark:hover:bg-[#3a3b3c] transition-colors"
             title="Notifications">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
-            </svg>
+            <div class="relative shrink-0">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                </svg>
+                <span data-badge="notifications"
+                      class="absolute -top-1.5 -right-2 hidden items-center justify-center
+                             min-w-[16px] h-4 px-1 rounded-full
+                             bg-[#E41E3F] text-white text-[9px] font-bold leading-none">
+                </span>
+            </div>
             <span class="font-medium">Notifications</span>
         </a>
 
@@ -260,13 +292,14 @@
 <!-- ========== END HEADER ========== -->
 
 <script>
+    // ============= MOBILE MENU TOGGLE =============
     document.getElementById('menu-toggle')?.addEventListener('click', function() {
         const menu = document.getElementById('mobile-menu');
         menu.classList.toggle('hidden');
         menu.classList.toggle('flex');
     });
 
-    // Restore theme on page load (before Alpine kicks in)
+    // ============= THEME RESTORE =============
     (function() {
         const saved = localStorage.getItem('theme');
         if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -274,5 +307,77 @@
         } else {
             document.documentElement.classList.remove('dark');
         }
+    })();
+
+    // ============= BADGE COUNTS =============
+    (function () {
+        function paintCounts(counts) {
+            document.querySelectorAll('[data-badge]').forEach(el => {
+                const n = counts[el.dataset.badge] ?? 0;
+
+                if (n > 0) {
+                    el.textContent = n > 99 ? '99+' : String(n);
+                    el.style.display = 'inline-flex';
+                } else {
+                    el.style.display = 'none';
+                    el.textContent = '';
+                }
+            });
+        }
+
+        function readInitial() {
+            const header = document.getElementById('alumni-header');
+            if (!header) return;
+
+            paintCounts({
+                messages:      parseInt(header.dataset.badgesMessages || '0', 10),
+                notifications: parseInt(header.dataset.badgesNotifications || '0', 10),
+            });
+        }
+
+        async function refreshCounts() {
+            try {
+                const res = await fetch('/alumni/badges.json', {
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin',
+                });
+                if (!res.ok) return;
+                paintCounts(await res.json());
+            } catch (e) {
+                // Silent — badges are cosmetic
+            }
+        }
+
+        // Paint from server-rendered data attributes on initial load
+        document.addEventListener('DOMContentLoaded', readInitial);
+        // And after Livewire SPA navigation
+        document.addEventListener('livewire:navigated', readInitial);
+        // Immediate refresh when a Livewire action says "badges changed"
+        window.addEventListener('badges:refresh', refreshCounts);
+
+        // Poll every 30s, only while tab is visible
+        let intervalId = null;
+
+        function startPolling() {
+            if (intervalId) return;
+            intervalId = setInterval(refreshCounts, 30000);
+        }
+        function stopPolling() {
+            if (intervalId) {
+                clearInterval(intervalId);
+                intervalId = null;
+            }
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                refreshCounts();
+                startPolling();
+            } else {
+                stopPolling();
+            }
+        });
+
+        startPolling();
     })();
 </script>

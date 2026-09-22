@@ -2,6 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\AuditLog;
+use App\Models\Department;
+use App\Models\EventRsvp;
+use App\Models\Post;
+use App\Models\TracerStudy;
+use App\Models\UserProfile;
+use App\Models\WorkHistory;
+use App\Traits\LogsActivity;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -17,7 +25,10 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, HasRoles;
+    use HasFactory, Notifiable, HasRoles, LogsActivity;
+
+    /** Fields to exclude from audit logs. */
+    protected array $auditExclude = ['password', 'remember_token'];
 
     protected function casts(): array
     {
@@ -43,7 +54,7 @@ class User extends Authenticatable
             }
         });
     }
-    
+
     /**
      * Composed full name — falls back to the `name` column if parts are empty.
      */
@@ -85,31 +96,37 @@ class User extends Authenticatable
         return $this->hasOne(Department::class, 'program_head_id');
     }
 
+    public function auditLogs(): HasMany
+    {
+        return $this->hasMany(AuditLog::class)->latest();
+    }
+
     // ===== Employment helpers =====
 
-    /**
-     * The current job record — single source of truth.
-     */
     public function currentWork(): ?WorkHistory
     {
         return $this->workHistories()->where('is_current_job', true)->first();
     }
 
-    /**
-     * Prefers live WorkHistory; falls back to tracer snapshot.
-     */
     public function currentJobTitle(): ?string
     {
         return $this->currentWork()?->work_name
             ?? $this->tracerStudy?->civilStatusEmployment?->current_job_position;
     }
 
-    /**
-     * True if the user has a current job OR the tracer snapshot says employed.
-     */
     public function isCurrentlyEmployed(): bool
     {
         return $this->currentWork() !== null
             || $this->tracerStudy?->civilStatusEmployment?->employment_status === 'employed';
+    }
+
+    public function eventRsvps(): HasMany
+    {
+        return $this->hasMany(EventRsvp::class);
+    }
+
+    public function eventsAttending(): HasMany
+    {
+        return $this->hasMany(EventRsvp::class)->where('response', 'yes');
     }
 }

@@ -1,6 +1,6 @@
 <div class="max-w-[85rem] mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
-    <!-- ========== HEADER (BENTO STYLE) ========== -->
+    {{-- ========== HEADER ========== --}}
     <div class="relative overflow-hidden bg-[#123524] dark:bg-[#0a1a10] rounded-3xl p-8 mb-5">
         <div class="absolute -right-10 -top-10 w-48 h-48 rounded-full bg-[#D4A537]/10"></div>
         <div class="absolute -right-4 top-16 w-24 h-24 rounded-full bg-[#D4A537]/10"></div>
@@ -9,22 +9,22 @@
             <div class="w-14 h-14 rounded-2xl bg-[#D4A537] flex items-center justify-center text-[#123524] shrink-0">
                 <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.62 48.62 0 0112 20.904a48.62 48.62 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5" />
+                        d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.62 48.62 0 0112 20.904a48.62 48.62 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443" />
                 </svg>
             </div>
             <div>
                 <p class="text-white/50 text-sm">Edit Profile</p>
-                <h1 class="text-2xl font-bold text-white" style="font-family: 'Fraunces', serif;">Educational Background
+                <h1 class="text-2xl font-bold text-white" style="font-family: 'Fraunces', serif;">
+                    Educational Background
                 </h1>
             </div>
         </div>
     </div>
 
+    {{-- ========== FLASHES ========== --}}
     @if (session('error'))
-        <div
-            class="mb-5 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-400 font-semibold rounded-xl p-4 text-sm flex items-start gap-2">
-            <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2"
-                viewBox="0 0 24 24">
+        <div class="mb-5 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-400 font-semibold rounded-xl p-4 text-sm flex items-start gap-2">
+            <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round"
                     d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
             </svg>
@@ -32,100 +32,123 @@
         </div>
     @endif
 
-    <!-- ========== FORM CARD ========== -->
+    {{-- ========== FORM CARD ========== --}}
     <div class="bg-white dark:bg-[#242526] border border-black/10 dark:border-white/10 rounded-3xl p-8">
-        <form wire:submit.prevent="update" class="space-y-6">
 
-            <!-- Batch -->
+        {{-- Success flash — top of card --}}
+        @if (session('success'))
+            <div class="mb-5 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-semibold rounded-xl p-4 text-sm flex items-start gap-2">
+                <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{{ session('success') }}</span>
+            </div>
+        @endif
+
+        <form wire:submit="update" class="space-y-6">
+
+            {{-- ========== BATCH ========== --}}
             <div>
-                <label
-                    class="flex items-center gap-2 text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
+                <label class="flex items-center gap-2 text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round"
                             d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
                     </svg>
-                    Batch
+                    Batch <span class="text-red-500">*</span>
                 </label>
 
-                <select wire:model.defer="batch_id"
-                    class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition">
+                <select wire:model.live="batch_id"
+                    class="w-full px-4 py-2.5 rounded-xl border bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:ring-1 transition
+                    @error('batch_id') border-red-400 dark:border-red-500/50 @else border-black/10 dark:border-white/10 focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] @enderror">
                     <option value="">-- Select Batch --</option>
                     @foreach ($this->batches as $batch)
                         <option value="{{ $batch->id }}">{{ $batch->batch_name }}</option>
                     @endforeach
                 </select>
                 @error('batch_id')
-                    <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
+                    <span class="block mt-1 text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
                 @enderror
 
-                <!-- Quick-pick year chips -->
-                <div class="flex flex-wrap gap-2 mt-3">
-                    @foreach ($this->recentYears as $year)
-                        @php
-                            $existingBatch = $this->batches->firstWhere('batch_name', 'Batch ' . $year);
-                        @endphp
-                        @if ($existingBatch)
-                            <button type="button" wire:click="$set('batch_id', {{ $existingBatch->id }})"
-                                class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition
-                                        {{ $batch_id === $existingBatch->id
-                                            ? 'bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524] border-[#123524] dark:border-[#D4A537]'
-                                            : 'bg-white dark:bg-[#3A3B3C] text-black/60 dark:text-white/60 border-black/10 dark:border-white/10 hover:border-[#123524]/40 dark:hover:border-[#D4A537]/40 hover:text-black dark:hover:text-white' }}">
-                                {{ $year }}
-                            </button>
-                        @endif
-                    @endforeach
-                </div>
+                {{-- Quick-pick year chips — match against the numeric year in batch_name --}}
+                @php
+                    $currentYear = (int) date('Y');
+                    $recentYears = range($currentYear, $currentYear - 4);
+
+                    // Precompute a map of year => batch id once.
+                    $yearToBatch = [];
+                    foreach ($this->batches as $batch) {
+                        if (preg_match('/(\d{4})/', (string) $batch->batch_name, $m)) {
+                            $yearToBatch[(int) $m[1]] = $batch->id;
+                        }
+                    }
+                @endphp
+
+                @if (! empty($yearToBatch))
+                    <div class="flex flex-wrap gap-2 mt-3">
+                        @foreach ($recentYears as $year)
+                            @if (isset($yearToBatch[$year]))
+                                @php $batchId = $yearToBatch[$year]; @endphp
+                                <button type="button" wire:click="$set('batch_id', {{ $batchId }})"
+                                    class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition
+                                            {{ $batch_id === $batchId
+                                                ? 'bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524] border-[#123524] dark:border-[#D4A537]'
+                                                : 'bg-white dark:bg-[#3A3B3C] text-black/60 dark:text-white/60 border-black/10 dark:border-white/10 hover:border-[#123524]/40 dark:hover:border-[#D4A537]/40 hover:text-black dark:hover:text-white' }}">
+                                    {{ $year }}
+                                </button>
+                            @endif
+                        @endforeach
+                    </div>
+                @endif
             </div>
 
-            <!-- Degree Program -->
+            {{-- ========== DEGREE PROGRAM ========== --}}
             <div>
-                <label
-                    class="flex items-center gap-2 text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
+                <label class="flex items-center gap-2 text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round"
                             d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.62 48.62 0 0112 20.904a48.62 48.62 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342" />
                     </svg>
-                    Degree Program
+                    Degree Program <span class="text-red-500">*</span>
                 </label>
+
                 <select wire:model.live="course_id"
-                    class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition">
+                    class="w-full px-4 py-2.5 rounded-xl border bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:ring-1 transition
+                    @error('course_id') border-red-400 dark:border-red-500/50 @else border-black/10 dark:border-white/10 focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] @enderror">
                     <option value="">Select Degree Program</option>
                     @foreach ($this->courses as $course)
                         <option value="{{ $course->id }}">{{ $course->course_title }}</option>
                     @endforeach
                 </select>
                 @error('course_id')
-                    <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
+                    <span class="block mt-1 text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
                 @enderror
 
-                <!-- Live preview of selected course -->
+                {{-- Live preview --}}
                 @if ($this->selectedCourse)
-                    <div
-                        class="mt-3 flex items-center gap-3 bg-[#123524]/5 dark:bg-[#D4A537]/5 border border-[#123524]/10 dark:border-[#D4A537]/20 rounded-xl p-4">
-                        <div
-                            class="w-10 h-10 rounded-lg bg-[#D4A537]/20 flex items-center justify-center text-[#123524] dark:text-[#D4A537] shrink-0">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5"
-                                viewBox="0 0 24 24">
+                    <div class="mt-3 flex items-center gap-3 bg-[#123524]/5 dark:bg-[#D4A537]/5 border border-[#123524]/10 dark:border-[#D4A537]/20 rounded-xl p-4">
+                        <div class="w-10 h-10 rounded-lg bg-[#D4A537]/20 flex items-center justify-center text-[#123524] dark:text-[#D4A537] shrink-0">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                             </svg>
                         </div>
                         <div class="min-w-0">
                             <p class="font-semibold text-sm text-black dark:text-white truncate">
-                                {{ $this->selectedCourse->department->dept_name ?? 'No department set' }}</p>
-                            <p class="text-xs text-black/60 dark:text-white/60 flex items-center gap-1.5 mt-0.5">
-                                <span
-                                    class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide
-                                    {{ $this->selectedCourse->course_type === 'board' ? 'bg-[#1C6B45]/10 dark:bg-emerald-500/15 text-[#1C6B45] dark:text-emerald-400' : 'bg-black/5 dark:bg-white/10 text-black/50 dark:text-white/50' }}">
-                                    {{ $this->selectedCourse->course_type === 'board' ? 'Board Program' : 'Non-Board Program' }}
-                                </span>
+                                {{ $this->selectedCourse->department?->dept_name ?? 'No department set' }}
                             </p>
+                            <span class="inline-flex items-center mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide
+                                {{ $this->selectedCourse->course_type === 'board'
+                                    ? 'bg-[#1C6B45]/10 dark:bg-emerald-500/15 text-[#1C6B45] dark:text-emerald-400'
+                                    : 'bg-black/5 dark:bg-white/10 text-black/50 dark:text-white/50' }}">
+                                {{ $this->selectedCourse->course_type === 'board' ? 'Board Program' : 'Non-Board Program' }}
+                            </span>
                         </div>
                     </div>
                 @endif
             </div>
 
-            <!-- ========== BOARD EXAM FIELDS (only for board programs) ========== -->
+            {{-- ========== BOARD EXAM FIELDS ========== --}}
             @if ($this->selectedCourse?->course_type === 'board')
                 <div class="border-t border-black/5 dark:border-white/10 pt-6">
                     <div class="mb-4">
@@ -133,99 +156,87 @@
                             Board Examination
                         </h2>
                         <p class="text-xs text-black/50 dark:text-white/50 mt-1">
-                            {{ $this->selectedCourse->course_title }} is a board program. Please provide your board
-                            exam details.
+                            {{ $this->selectedCourse->course_title }} is a board program. Please provide your board exam details.
                         </p>
                     </div>
 
-                    <div class="grid sm:grid-cols-2 gap-5">
-                        <!-- Date Board Exam Taken -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                         <div>
-                            <label
-                                class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
-                                Date Board Exam Taken <span class="text-black/40 dark:text-white/40 text-[10px] font-normal normal-case">(optional)</span>
+                            <label for="board_taken" class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
+                                Date Board Exam Taken
+                                <span class="text-black/40 dark:text-white/40 text-[10px] font-normal normal-case">(optional)</span>
                             </label>
-                            <input type="date" wire:model.defer="board_taken" max="{{ now()->format('Y-m-d') }}"
-                                class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition">
+                            <input type="date" id="board_taken" wire:model="board_taken"
+                                max="{{ now()->format('Y-m-d') }}"
+                                class="w-full px-4 py-2.5 rounded-xl border bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:ring-1 transition
+                                @error('board_taken') border-red-400 dark:border-red-500/50 @else border-black/10 dark:border-white/10 focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] @enderror">
                             @error('board_taken')
-                                <span class="text-red-500 dark:text-red-400 text-sm mt-1 block">{{ $message }}</span>
+                                <span class="block mt-1 text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
                             @enderror
                         </div>
 
-                        <!-- Board Rating -->
                         <div>
-                            <label
-                                class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
-                                Board Rating (%) <span class="text-black/40 dark:text-white/40 text-[10px] font-normal normal-case">(optional)</span>
+                            <label for="board_rate" class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
+                                Board Rating (%)
+                                <span class="text-black/40 dark:text-white/40 text-[10px] font-normal normal-case">(optional)</span>
                             </label>
-                            <input type="number" wire:model.defer="board_rate" min="0" max="100"
-                                step="0.01" placeholder="e.g. 85.50"
-                                class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition">
+                            <input type="number" id="board_rate" wire:model="board_rate"
+                                min="0" max="100" step="0.01" placeholder="e.g. 85.50"
+                                class="w-full px-4 py-2.5 rounded-xl border bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:ring-1 transition
+                                @error('board_rate') border-red-400 dark:border-red-500/50 @else border-black/10 dark:border-white/10 focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] @enderror">
                             @error('board_rate')
-                                <span class="text-red-500 dark:text-red-400 text-sm mt-1 block">{{ $message }}</span>
+                                <span class="block mt-1 text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
                             @enderror
                         </div>
                     </div>
-                    
                 </div>
             @endif
 
-            <!-- Visibility Toggle -->
-            <div
-                class="flex items-center justify-between bg-[#F1EFE7] dark:bg-[#3A3B3C] border border-black/10 dark:border-white/10 rounded-xl px-5 py-4">
-                <div class="flex items-start gap-3 pr-4">
-                    <div
-                        class="w-9 h-9 rounded-lg bg-white dark:bg-[#242526] flex items-center justify-center text-[#123524] dark:text-[#D4A537] shrink-0 mt-0.5">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5"
-                            viewBox="0 0 24 24">
+            {{-- ========== VISIBILITY TOGGLE ========== --}}
+            <div class="flex items-center justify-between bg-[#F1EFE7] dark:bg-[#3A3B3C] border border-black/10 dark:border-white/10 rounded-xl px-5 py-4 gap-3">
+                <div class="flex items-start gap-3 pr-2 min-w-0">
+                    <div class="w-9 h-9 rounded-lg bg-white dark:bg-[#242526] flex items-center justify-center text-[#123524] dark:text-[#D4A537] shrink-0 mt-0.5">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
                     </div>
-                    <div>
-                        <p class="font-semibold text-sm text-black dark:text-white">Show my education background to
-                            other alumni</p>
-                        <p class="text-xs text-black/60 dark:text-white/60 mt-0.5">If turned off, your course,
-                            department, and batch year will be hidden from other alumni viewing your profile.</p>
+                    <div class="min-w-0">
+                        <p class="font-semibold text-sm text-black dark:text-white">
+                            Show my education background to other alumni
+                        </p>
+                        <p class="text-xs text-black/60 dark:text-white/60 mt-0.5">
+                            If turned off, your course, department, and batch year will be hidden from other alumni viewing your profile.
+                        </p>
                     </div>
                 </div>
                 <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                    <input type="checkbox" wire:model.defer="is_public" class="sr-only peer">
-                    <div
-                        class="w-11 h-6 bg-black/20 dark:bg-white/20 rounded-full peer peer-checked:bg-[#1C6B45] transition-colors">
-                    </div>
-                    <div
-                        class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5">
-                    </div>
+                    <input type="checkbox" wire:model="is_public" class="sr-only peer">
+                    <div class="w-11 h-6 bg-black/20 dark:bg-white/20 rounded-full peer peer-checked:bg-[#1C6B45] transition-colors"></div>
+                    <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
                 </label>
             </div>
             @error('is_public')
                 <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
             @enderror
 
-            <!-- Actions -->
-            <div class="flex flex-wrap gap-3 pt-4 border-t border-black/5 dark:border-white/10">
+            {{-- ========== ACTIONS ========== --}}
+            <div class="flex flex-col sm:flex-row sm:flex-wrap gap-3 pt-4 border-t border-black/5 dark:border-white/10">
                 <button type="submit"
-                    class="inline-flex items-center gap-x-2 text-sm font-semibold rounded-xl bg-[#D4A537] text-[#123524] hover:bg-[#E5B94A] transition py-2.5 px-5">
-                    Update Background
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    wire:loading.attr="disabled" wire:target="update"
+                    class="w-full sm:w-auto inline-flex items-center justify-center gap-x-2 text-sm font-semibold rounded-xl bg-[#D4A537] text-[#123524] hover:bg-[#E5B94A] transition py-2.5 px-5 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span wire:loading.remove wire:target="update">Update Background</span>
+                    <span wire:loading wire:target="update">Saving…</span>
+                    <svg wire:loading.remove wire:target="update" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                     </svg>
                 </button>
                 <a href="{{ route('alumni.profile') }}"
-                    class="inline-flex items-center gap-x-2 text-sm font-semibold rounded-xl bg-white dark:bg-[#3A3B3C] border border-black/10 dark:border-white/10 text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition py-2.5 px-5">
+                    class="w-full sm:w-auto inline-flex items-center justify-center gap-x-2 text-sm font-semibold rounded-xl bg-white dark:bg-[#3A3B3C] border border-black/10 dark:border-white/10 text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition py-2.5 px-5">
                     Back
                 </a>
             </div>
         </form>
-
-        @if (session('success'))
-            <div
-                class="mt-6 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-semibold rounded-xl p-4 text-sm">
-                {{ session('success') }}
-            </div>
-        @endif
     </div>
 </div>

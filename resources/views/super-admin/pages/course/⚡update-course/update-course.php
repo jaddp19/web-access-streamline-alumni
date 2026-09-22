@@ -2,7 +2,10 @@
 
 use App\Models\Course;
 use App\Models\Department;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -10,6 +13,7 @@ use Livewire\Component;
 new #[Layout('layouts.app-super-admin')] class extends Component
 {
     public Course $course;
+
     public string $course_title = '';
     public string $course_desc = '';
     public string $course_code = '';
@@ -17,73 +21,175 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public bool $is_active = true;
     public ?int $department_id = null;
 
-    protected function rules()
+    public function mount(Course $course): void
+    {
+        $this->course        = $course;
+        $this->course_title  = $course->course_title;
+        $this->course_code   = $course->course_code;
+        $this->course_desc   = $course->course_desc;
+        $this->course_type   = $course->course_type;
+        $this->is_active     = (bool) $course->is_active;
+        $this->department_id = $course->department_id;
+    }
+
+    // =========================================================
+    //  COMPUTED — plain arrays, safe across cache boundary
+    // =========================================================
+
+    #[Computed]
+    public function departments(): array
+    {
+        $cacheKey = 'courses:active-departments:v1';
+        $cached   = Cache::get($cacheKey);
+
+        if (! is_array($cached)) {
+            Cache::forget($cacheKey);
+            $cached = null;
+        }
+
+        if ($cached === null) {
+            $cached = Department::query()
+                ->where('is_active', true)
+                ->orderBy('dept_name')
+                ->get(['id', 'dept_name'])
+                ->map(fn ($d) => ['id' => (int) $d->id, 'name' => (string) $d->dept_name])
+                ->all();
+
+            Cache::put($cacheKey, $cached, now()->addMinutes(5));
+        }
+
+        return $cached;
+    }
+
+    // =========================================================
+    //  VALIDATION
+    // =========================================================
+
+    protected function rules(): array
     {
         return [
-            'course_title'  => 'required|string|max:255|unique:courses,course_title,' . $this->course->id,
-            'course_code'   => 'required|string|max:50|unique:courses,course_code,' . $this->course->id,
-            'course_desc'   => 'required|string|max:1000',
-            'course_type'   => 'required|in:board,non-board',
-            'is_active'     => 'boolean',
-            'department_id' => 'required|exists:departments,id',
+            'course_title' => [
+                'required', 'string', 'min:2', 'max:255',
+                Rule::unique('courses', 'course_title')->ignore($this->course->id),
+            ],
+            'course_code' => [
+                'required', 'string', 'min:2', 'max:50',
+                Rule::unique('courses', 'course_code')->ignore($this->course->id),
+            ],
+            'course_desc' => ['required', 'string', 'max:1000'],
+            'course_type' => ['required', Rule::in(['board', 'non-board'])],
+            'department_id' => [
+                'required', 'integer',
+                Rule::exists('departments', 'id'),
+            ],
+            'is_active' => ['boolean'],
         ];
     }
 
-    public function messages()
+    public function messages(): array
     {
         return [
             'course_title.required'  => 'Course name is required.',
+            'course_title.min'       => 'Course name must be at least 2 characters.',
             'course_title.max'       => 'Course name cannot exceed 255 characters.',
             'course_title.unique'    => 'Course name must be unique.',
             'course_code.required'   => 'Course code is required.',
+            'course_code.min'        => 'Course code must be at least 2 characters.',
             'course_code.max'        => 'Course code cannot exceed 50 characters.',
             'course_code.unique'     => 'Course code must be unique.',
             'course_desc.required'   => 'Please provide a short description.',
+            'course_desc.max'        => 'The description may not be greater than 1000 characters.',
             'course_type.required'   => 'Please select a course type.',
+            'course_type.in'         => 'The course type is invalid.',
             'department_id.required' => 'Department selection is required.',
             'department_id.exists'   => 'Selected department does not exist.',
         ];
     }
 
-    public function mount(Course $course)
-    {
-        $this->course         = $course;
-        $this->course_title   = $course->course_title;
-        $this->course_code    = $course->course_code;
-        $this->course_desc    = $course->course_desc;
-        $this->course_type    = $course->course_type;
-        $this->is_active      = $course->is_active;
-        $this->department_id  = $course->department_id;
-    }
+    // =========================================================
+    //  UPDATE
+    // =========================================================
 
     public function update()
     {
         $validated = $this->validate();
 
-        $this->course->update([
-            'course_title'  => $this->sanitizeData($validated['course_title']),
-            'course_slug'   => Str::slug($validated['course_title']),
-            'course_desc'   => $this->sanitizeData($validated['course_desc']),
-            'course_code'   => $this->sanitizeData($validated['course_code']),
+        $courseTitle = $this->sanitize($validated['course_title']);
+        $courseCode  = strtoupper($this->sanitize($validated['course_code']));
+        $courseDesc  = $this->sanitize($validated['course_desc']);
+
+        $data = [
+            'course_title'  => $courseTitle,
+            'course_slug'   => $this->uniqueSlug($courseTitle),
+            'course_desc'   => $courseDesc,
             'course_type'   => $validated['course_type'],
-            'is_active'     => $validated['is_active'],
+            'course_code'   => $courseCode,
+            'is_active'     => $validated['is_active'] ?? false,
             'department_id' => $validated['department_id'],
-        ]);
+        ];
+
+        try {
+            DB::transaction(fn () => $this->course->update($data));
+        } catch (\Illuminate\Database\QueryException $e) {
+            if ($e->getCode() === '23000') {
+                $field = str_contains($e->getMessage(), 'course_code')
+                    ? 'course_code'
+                    : 'course_title';
+
+                $this->addError(
+                    $field,
+                    'This value was just taken by another course. Please try again.'
+                );
+                return;
+            }
+
+            report($e);
+            session()->flash('error', 'Could not update course. Please try again.');
+            return;
+        } catch (\Throwable $e) {
+            report($e);
+            session()->flash('error', 'Could not update course. Please try again.');
+            return;
+        }
+
+        // Bust related caches.
+        Cache::forget('courses:count');
+        Cache::forget('dashboard:course-analytics');
 
         session()->flash('success', 'Course updated successfully.');
+
         return redirect()->route('super-admin.courses.view');
     }
 
-    protected function sanitizeData($data)
+    // =========================================================
+    //  HELPERS
+    // =========================================================
+
+    protected function uniqueSlug(string $title): string
     {
-        return is_string($data)
-            ? Str::of($data)->stripTags()->trim()->toString()
-            : $data;
+        // Name unchanged → keep current slug.
+        if ($title === $this->course->course_title) {
+            return $this->course->course_slug ?? Str::slug($title);
+        }
+
+        $base = Str::slug($title);
+        $slug = $base;
+        $i    = 2;
+
+        while (
+            Course::where('course_slug', $slug)
+                ->where('id', '!=', $this->course->id)
+                ->exists()
+        ) {
+            $slug = "{$base}-{$i}";
+            $i++;
+        }
+
+        return $slug;
     }
 
-    #[Computed]
-    public function departments()
+    protected function sanitize(mixed $data): mixed
     {
-        return Department::select('id', 'dept_name')->where('is_active', true)->orderBy('dept_name')->get();
+        return is_string($data) ? trim(strip_tags($data)) : $data;
     }
 };

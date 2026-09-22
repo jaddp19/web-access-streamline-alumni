@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\EmailTemplate;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -10,87 +12,155 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 {
     use WithPagination;
 
-    public $selectedEmails = [];
-    public $selectAll = false;
+    public array $selectedEmails = [];
+    public bool $selectAllFiltered = false;
+    public bool $selectAllOnPage = false;
 
-    /**
-     * Delete all selected emails.
-     * Resets selection after deletion.
-     */
-    public function deleteSelected()
+    protected int $perPage = 10;
+
+    public function updatingPage(): void
     {
-        EmailTemplate::whereIn('id', $this->selectedEmails)->delete();
-
-        $this->selectedEmails = [];
-        $this->selectAll = false;
-
-        session()->flash('success', 'Selected email templates deleted successfully.');
+        $this->clearSelection();
     }
 
-    public function updatedSelectAll($value)
+    protected function clearSelection(): void
     {
-        if ($value) {
-            $this->selectedEmails = $this->emails->getCollection()
-                ->pluck('id')
-                ->map(fn ($id) => (int) $id)
-                ->toArray();
-        } else {
-            $this->selectedEmails = [];
-        }
+        $this->selectedEmails     = [];
+        $this->selectAllFiltered  = false;
+        $this->selectAllOnPage    = false;
     }
 
-    public function updatedSelectedEmails()
-    {
-        $this->selectAll = count($this->selectedEmails) === $this->totalEmailsCount();
-    }
+    // =========================================================
+    //  COMPUTED
+    // =========================================================
 
-    /**
-     * Toggle selection of all emails across pages.
-     */
-    public function toggleSelectAll()
-    {
-        if (count($this->selectedEmails) === $this->totalEmailsCount()) {
-            $this->selectedEmails = [];
-            $this->selectAll = false;
-        } else {
-            $this->selectedEmails = EmailTemplate::pluck('id')->map(fn ($id) => (int) $id)->toArray();
-            $this->selectAll = true;
-        }
-    }
-
-    /**
-     * Toggle selection of a single email.
-     */
-    public function toggleRowSelection($emailId)
-    {
-        if (in_array($emailId, $this->selectedEmails)) {
-            $this->selectedEmails = array_values(array_diff($this->selectedEmails, [$emailId]));
-        } else {
-            $this->selectedEmails[] = $emailId;
-        }
-
-        $this->selectAll = count($this->selectedEmails) === $this->totalEmailsCount();
-    }
-
-    /**
-     * Computed property: total number of emails.
-     */
-    #[Computed]
-    public function totalEmailsCount()
-    {
-        return EmailTemplate::count();
-    }
-
-    /**
-     * Computed property: paginated email templates.
-     * Only the `template` JSON column is fetched — no assumptions
-     * are made about its internal structure.
-     */
     #[Computed]
     public function emails()
     {
-        return EmailTemplate::select('id', 'template', 'created_at')
+        return EmailTemplate::query()
+            ->select('id', 'template', 'created_at')
             ->latest()
-            ->paginate(5);
+            ->paginate($this->perPage);
+    }
+
+    #[Computed]
+    public function totalEmailsCount(): int
+    {
+        return Cache::remember('email-templates:count', now()->addSeconds(30), function () {
+            return EmailTemplate::count();
+        });
+    }
+
+    #[Computed]
+    public function pageRowIds(): array
+    {
+        return $this->emails->getCollection()->pluck('id')->map(fn ($id) => (int) $id)->all();
+    }
+
+    #[Computed]
+    public function selectedCount(): int
+    {
+        return $this->selectAllFiltered
+            ? $this->totalEmailsCount
+            : count($this->selectedEmails);
+    }
+
+    // =========================================================
+    //  SELECTION
+    // =========================================================
+
+    public function toggleSelectAllOnPage(): void
+    {
+        $pageIds = $this->pageRowIds;
+
+        if (empty($pageIds)) {
+            return;
+        }
+
+        $allOnPageSelected = ! empty($pageIds)
+            && empty(array_diff($pageIds, $this->selectedEmails));
+
+        if ($allOnPageSelected && ! $this->selectAllFiltered) {
+            $this->selectedEmails = array_values(
+                array_diff($this->selectedEmails, $pageIds)
+            );
+        } else {
+            $this->selectedEmails = array_values(array_unique(
+                array_merge($this->selectedEmails, $pageIds)
+            ));
+        }
+
+        $this->recomputeSelectAllOnPage();
+    }
+
+    public function toggleRowSelection(int $id): void
+    {
+        if ($this->selectAllFiltered) {
+            $this->selectAllFiltered = false;
+            $this->selectedEmails = $this->pageRowIds;
+        }
+
+        if (in_array($id, $this->selectedEmails, true)) {
+            $this->selectedEmails = array_values(
+                array_diff($this->selectedEmails, [$id])
+            );
+        } else {
+            $this->selectedEmails[] = $id;
+        }
+
+        $this->recomputeSelectAllOnPage();
+    }
+
+    public function isRowSelected(int $id): bool
+    {
+        if ($this->selectAllFiltered) {
+            return true;
+        }
+        return in_array($id, $this->selectedEmails, true);
+    }
+
+    protected function recomputeSelectAllOnPage(): void
+    {
+        $pageIds = $this->pageRowIds;
+
+        $this->selectAllOnPage = ! empty($pageIds)
+            && empty(array_diff($pageIds, $this->selectedEmails));
+    }
+
+    // =========================================================
+    //  ACTIONS
+    // =========================================================
+
+    public function deleteSelected(): void
+    {
+        abort_unless(auth()->user()?->can('manage-emails'), 403);
+
+        if ($this->selectedCount <= 0) {
+            session()->flash('error', 'Nothing is selected.');
+            return;
+        }
+
+        try {
+            $count = DB::transaction(function () {
+                $query = EmailTemplate::query();
+
+                if (! $this->selectAllFiltered) {
+                    $query->whereIn('id', $this->selectedEmails);
+                }
+
+                return $query->delete();
+            });
+        } catch (\Throwable $e) {
+            report($e);
+            session()->flash('error', 'Delete failed: ' . $e->getMessage());
+            return;
+        }
+
+        Cache::forget('email-templates:count');
+
+        $this->clearSelection();
+        $this->resetPage();
+
+        session()->flash('success', "{$count} email template(s) deleted successfully.");
     }
 };

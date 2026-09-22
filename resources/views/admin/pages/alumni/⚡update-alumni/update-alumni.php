@@ -4,8 +4,12 @@ use App\Models\Batch;
 use App\Models\Course;
 use App\Models\User;
 use App\Models\UserProfile;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -22,22 +26,12 @@ new #[Layout('layouts.app-admin')] class extends Component
     public ?int $batch_id = null;
     public ?int $course_id = null;
 
-    /**
-     * Composed full name — matches the auto-synced `users.name`.
-     */
-    #[Computed]
-    public function fullName(): string
-    {
-        return trim(implode(' ', array_filter([
-            $this->first_name,
-            $this->middle_name,
-            $this->last_name,
-        ])));
-    }
-
     public function mount(User $user): void
     {
-        $this->user = $user;
+        $this->user = $user->load([
+            'userProfile:id,user_id,batch_id',
+            'userProfile.courses:id,course_title',
+        ]);
 
         // Hydrate name parts. If empty (legacy user), split from `name`.
         $first  = $user->first_name;
@@ -57,29 +51,102 @@ new #[Layout('layouts.app-admin')] class extends Component
         $this->middle_name = $middle ?? '';
         $this->last_name   = $last ?? '';
 
-        $this->email     = $user->email;
+        $this->email     = $user->email ?? '';
         $this->school_id = $user->school_id ?? '';
 
-        $profile = UserProfile::where('user_id', $user->id)->with('courses')->first();
+        $profile = $user->userProfile;
 
         $this->batch_id  = $profile?->batch_id;
         $this->course_id = $profile?->courses->first()?->id;
     }
 
-    protected function rules()
+    // =========================================================
+    //  COMPUTED
+    // =========================================================
+
+    #[Computed]
+    public function fullName(): string
+    {
+        return trim(implode(' ', array_filter([
+            $this->first_name,
+            $this->middle_name,
+            $this->last_name,
+        ])));
+    }
+
+    /** Cached array of ['id', 'batch_name'] — safe across cache boundary. */
+    #[Computed]
+    public function batches(): array
+    {
+        return Cache::remember('admin:batch-list', now()->addMinutes(10), function () {
+            return Batch::query()
+                ->orderByDesc('batch_name')
+                ->get(['id', 'batch_name'])
+                ->map(fn ($b) => ['id' => (int) $b->id, 'name' => (string) $b->batch_name])
+                ->all();
+        });
+    }
+
+    /** Cached array of ['id', 'course_title', 'department_id']. */
+    #[Computed]
+    public function courses(): array
+    {
+        return Cache::remember('admin:course-list', now()->addMinutes(10), function () {
+            return Course::query()
+                ->where('is_active', true)
+                ->orderBy('course_title')
+                ->get(['id', 'course_title', 'department_id'])
+                ->map(fn ($c) => [
+                    'id'            => (int) $c->id,
+                    'title'         => (string) $c->course_title,
+                    'department_id' => (int) $c->department_id,
+                ])
+                ->all();
+        });
+    }
+
+    /** Department name for the selected course — no extra DB hit. */
+    #[Computed]
+    public function selectedDepartmentName(): ?string
+    {
+        if (! $this->course_id) {
+            return null;
+        }
+
+        $deptId = collect($this->courses)
+            ->firstWhere('id', $this->course_id)['department_id'] ?? null;
+
+        if (! $deptId) {
+            return null;
+        }
+
+        return \App\Models\Department::query()->whereKey($deptId)->value('dept_name');
+    }
+
+    // =========================================================
+    //  VALIDATION
+    // =========================================================
+
+    protected function rules(): array
     {
         return [
-            'first_name'  => 'required|string|min:2|max:255',
-            'middle_name' => 'nullable|string|max:255',
-            'last_name'   => 'required|string|min:2|max:255',
-            'email'       => 'required|email|max:255|unique:users,email,' . $this->user->id,
-            'school_id'   => 'required|string|max:255|unique:users,school_id,' . $this->user->id,
-            'batch_id'    => 'required|exists:batches,id',
-            'course_id'   => 'required|exists:courses,id',
+            'first_name'  => ['required', 'string', 'min:2', 'max:255'],
+            'middle_name' => ['nullable', 'string', 'max:255'],
+            'last_name'   => ['required', 'string', 'min:2', 'max:255'],
+            'email'       => [
+                'required', 'email:rfc,dns', 'max:255',
+                Rule::unique('users', 'email')->ignore($this->user->id),
+            ],
+            'school_id'   => [
+                'required', 'string', 'max:20',
+                Rule::unique('users', 'school_id')->ignore($this->user->id),
+            ],
+            'batch_id'    => ['required', 'integer', Rule::exists('batches', 'id')],
+            'course_id'   => ['required', 'integer', Rule::exists('courses', 'id')],
         ];
     }
 
-    public function messages()
+    public function messages(): array
     {
         return [
             'first_name.required' => 'The first name is required.',
@@ -93,6 +160,7 @@ new #[Layout('layouts.app-admin')] class extends Component
             'email.unique'        => 'This email is already registered.',
             'school_id.required'  => 'The school ID field is required.',
             'school_id.unique'    => 'This school ID is already registered.',
+            'school_id.max'       => 'The school ID may not be greater than 20 characters.',
             'batch_id.required'   => 'Please select a batch.',
             'batch_id.exists'     => 'The selected batch is invalid.',
             'course_id.required'  => 'Please select a course.',
@@ -100,77 +168,81 @@ new #[Layout('layouts.app-admin')] class extends Component
         ];
     }
 
-
-    // Auto-derived — the admin never selects this directly.
-    #[Computed]
-    public function selectedDepartment()
-    {
-        if (! $this->course_id) {
-            return null;
-        }
-
-        return Course::with('department')->find($this->course_id)?->department;
-    }
+    // =========================================================
+    //  UPDATE
+    // =========================================================
 
     public function updateAlumni()
     {
+        abort_unless(Auth::user()?->hasAnyRole(['registrar', 'program head']), 403);
+
         $validated = $this->validate();
 
-        $validated['first_name']  = $this->sanitizeData($validated['first_name']);
-        $validated['middle_name'] = $validated['middle_name'] ? $this->sanitizeData($validated['middle_name']) : null;
-        $validated['last_name']   = $this->sanitizeData($validated['last_name']);
-        $validated['email']       = $this->sanitizeData($validated['email']);
-        $validated['school_id']   = $this->sanitizeData($validated['school_id']);
+        $firstName  = $this->sanitize($validated['first_name']);
+        $middleName = $validated['middle_name'] ? $this->sanitize($validated['middle_name']) : null;
+        $lastName   = $this->sanitize($validated['last_name']);
+        $email      = $this->sanitize($validated['email']);
+        $schoolId   = $this->sanitize($validated['school_id']);
 
         try {
-            DB::transaction(function () use ($validated) {
-                // 1. Update the user record
+            DB::transaction(function () use (
+                $firstName, $middleName, $lastName, $email, $schoolId, $validated
+            ) {
+                // 1. Update the user record.
                 $this->user->update([
-                    'first_name'  => $validated['first_name'],
-                    'middle_name' => $validated['middle_name'],
-                    'last_name'   => $validated['last_name'],
-                    // 'name' auto-fills via the User model's saving hook
-                    'email'       => $validated['email'],
-                    'school_id'   => $validated['school_id'],
+                    'first_name'  => $firstName,
+                    'middle_name' => $middleName,
+                    'last_name'   => $lastName,
+                    'email'       => $email,
+                    'school_id'   => $schoolId,
                 ]);
 
-                // 2. Update the profile (create it if it somehow doesn't exist)
+                // 2. Get or create the profile.
                 $profile = UserProfile::firstOrCreate(
                     ['user_id' => $this->user->id],
                     [
-                        'avatar'      => '',
+                        'avatar'      => null,
                         'location'    => [],
                         'is_private'  => false,
                         'is_verified' => false,
+                        'batch_id'    => $validated['batch_id'],
                     ]
                 );
 
-                $profile->update([
-                    'batch_id' => $validated['batch_id'],
-                ]);
+                if (! $profile->wasRecentlyCreated) {
+                    $profile->update(['batch_id' => $validated['batch_id']]);
+                }
 
-                // 3. Sync the course pivot — one course per alumni in this system
+                // 3. Sync the course pivot — one course per alumni.
                 $profile->courses()->sync([$validated['course_id']]);
             });
+        } catch (\Illuminate\Database\QueryException $e) {
+            if ($e->getCode() === '23000') {
+                $field = str_contains($e->getMessage(), 'school_id') ? 'school_id' : 'email';
+                $this->addError($field, 'This value was just taken by another account. Please refresh and try again.');
+                return;
+            }
 
-            session()->flash('success', 'Alumni details updated successfully.');
-            return redirect()->route('admin.alumni.view');
-
+            report($e);
+            session()->flash('error', 'Could not update the alumni account. Please try again.');
+            return;
         } catch (\Throwable $e) {
-            logger()->error('Alumni update failed: ' . $e->getMessage(), [
-                'user_id' => $this->user->id,
-                'trace'   => $e->getTraceAsString(),
-            ]);
-
-            session()->flash('error', 'Something went wrong while updating this alumni: ' . $e->getMessage());
+            report($e);
+            session()->flash('error', 'Could not update the alumni account. Please try again.');
             return;
         }
+
+        session()->flash('success', 'Alumni details updated successfully.');
+
+        return redirect()->route('admin.alumni.view');
     }
 
-    protected function sanitizeData($data)
+    // =========================================================
+    //  HELPERS
+    // =========================================================
+
+    protected function sanitize(mixed $data): mixed
     {
-        return is_string($data)
-            ? Str::of($data)->stripTags()->trim()->toString()
-            : $data;
+        return is_string($data) ? trim(strip_tags($data)) : $data;
     }
 };

@@ -1,14 +1,21 @@
 <?php
 
+namespace App\Livewire\Alumni;
+
 use App\Models\UserProfile;
 use App\Models\WorkHistory;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 new #[Layout('layouts.app-alumni')] class extends Component
 {
+    // =========================================================
+    //  USER + PROFILE
+    // =========================================================
+
     #[Computed]
     public function alumni()
     {
@@ -16,9 +23,20 @@ new #[Layout('layouts.app-alumni')] class extends Component
     }
 
     #[Computed]
-    public function userProfile()
+    public function userProfile(): ?UserProfile
     {
-        return UserProfile::with(['batch', 'courses.department'])
+        return UserProfile::query()
+            ->select(
+                'id', 'user_id', 'avatar', 'gender',
+                'contact_number_1', 'contact_number_2',
+                'location', 'batch_id',
+                'board_taken', 'board_rate', 'is_verified'
+            )
+            ->with([
+                'batch:id,batch_name',
+                'courses:id,course_title,course_type,department_id',
+                'courses.department:id,dept_name',
+            ])
             ->where('user_id', $this->alumni->id)
             ->first();
     }
@@ -29,22 +47,22 @@ new #[Layout('layouts.app-alumni')] class extends Component
         return $this->userProfile?->courses->first();
     }
 
-    /**
-     * Safely decode the profile's `location` column into an array,
-     * whether it comes back as a cast array or a raw JSON string.
-     */
-    protected function decodeLocation(): array
+    // =========================================================
+    //  CONTACT / LOCATION
+    // =========================================================
+
+    /** Decoded location array — safe against both array & JSON string. */
+    #[Computed]
+    public function location(): array
     {
-        if (! $this->userProfile) {
-            return [];
+        $raw = $this->userProfile?->location;
+
+        if (is_array($raw)) {
+            return $raw;
         }
 
-        if (is_array($this->userProfile->location)) {
-            return $this->userProfile->location;
-        }
-
-        if (is_string($this->userProfile->location)) {
-            $decoded = json_decode($this->userProfile->location, true);
+        if (is_string($raw) && $raw !== '') {
+            $decoded = json_decode($raw, true);
             return is_array($decoded) ? $decoded : [];
         }
 
@@ -52,43 +70,51 @@ new #[Layout('layouts.app-alumni')] class extends Component
     }
 
     #[Computed]
-    public function contact()
+    public function contact(): array
     {
-        $location = $this->decodeLocation();
+        $loc = $this->location;
+        $p   = $this->userProfile;
 
         return [
-            'gender'         => $this->userProfile?->gender ?? $location['gender'] ?? null,
-            'phone_number_1' => $this->userProfile?->contact_number_1 ?? null,
-            'phone_number_2' => $this->userProfile?->contact_number_2 ?? null,
-            'latitude'       => $location['latitude'] ?? null,
-            'longitude'      => $location['longitude'] ?? null,
-            'address'        => $location['address'] ?? null,
+            'gender'         => $p?->gender ?? ($loc['gender'] ?? null),
+            'phone_number_1' => $p?->contact_number_1,
+            'phone_number_2' => $p?->contact_number_2,
+            'latitude'       => $loc['latitude'] ?? null,
+            'longitude'      => $loc['longitude'] ?? null,
+            'address'        => $loc['address'] ?? null,
         ];
     }
+
+    // =========================================================
+    //  AVATAR
+    // =========================================================
 
     #[Computed]
     public function avatarUrl(): ?string
     {
         $avatar = $this->userProfile?->avatar;
 
-        // No avatar → return null so the blade can show the initial fallback
         if (blank($avatar)) {
             return null;
         }
 
-        // Full external URL (e.g. from ui-avatars.com) → use as-is
-        if (filter_var($avatar, FILTER_VALIDATE_URL)) {
-            return $avatar;
-        }
-
-        // Local storage path → resolve via Storage::url()
-        return \Illuminate\Support\Facades\Storage::url($avatar);
+        return filter_var($avatar, FILTER_VALIDATE_URL)
+            ? $avatar
+            : Storage::url($avatar);
     }
+
+    // =========================================================
+    //  WORK HISTORY
+    // =========================================================
 
     #[Computed]
     public function workHistories()
     {
         return WorkHistory::query()
+            ->select(
+                'id', 'user_id', 'work_name', 'company_id',
+                'date_hired', 'is_current_job'
+            )
             ->where('user_id', $this->alumni->id)
             ->with(['company:id,company_name,company_logo,company_address'])
             ->orderByDesc('is_current_job')
@@ -97,10 +123,9 @@ new #[Layout('layouts.app-alumni')] class extends Component
     }
 
     /**
-     * Compute how long the alumnus has been in a role.
-     * NOTE: WorkHistory has no end_date column yet — every record is
-     * treated as ongoing from date_hired. Add `date_ended` to the
-     * migration if you want accurate tenure for past jobs.
+     * Tenure label for a work history entry.
+     * NOTE: WorkHistory has no `date_ended` column yet — every record is
+     * treated as ongoing from `date_hired`. Add `date_ended` later for accuracy.
      */
     public function durationLabel(WorkHistory $history): string
     {
@@ -108,7 +133,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
             return '—';
         }
 
-        $months = $history->date_hired->diffInMonths(now());
+        $months = (int) $history->date_hired->diffInMonths(now());
 
         if ($months < 1) {
             return 'Less than a month';
@@ -119,7 +144,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
         $parts = [];
         if ($years > 0) $parts[] = $years . ' yr' . ($years > 1 ? 's' : '');
-        if ($rem > 0)   $parts[] = $rem . ' mo' . ($rem > 1 ? 's' : '');
+        if ($rem > 0)   $parts[] = $rem   . ' mo' . ($rem   > 1 ? 's' : '');
 
         return implode(' ', $parts);
     }

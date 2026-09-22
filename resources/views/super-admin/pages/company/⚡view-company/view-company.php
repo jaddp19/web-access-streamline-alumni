@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\Company;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -12,24 +14,93 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     use WithPagination;
 
     public array $selectedCompanies = [];
-    public bool $selectAll = false;
+    public bool $selectAllFiltered = false;
+    public bool $selectAllOnPage = false;
 
-    #[Computed]
-    public function totalCompaniesCount()
+    protected int $perPage = 10;
+
+    public function updatingPage(): void
     {
-        return Company::count();
+        $this->clearSelection();
     }
+
+    protected function clearSelection(): void
+    {
+        $this->selectedCompanies   = [];
+        $this->selectAllFiltered   = false;
+        $this->selectAllOnPage     = false;
+    }
+
+    // =========================================================
+    //  COMPUTED
+    // =========================================================
 
     #[Computed]
     public function companies()
     {
-        return Company::select('id', 'company_name', 'company_logo', 'company_address', 'company_desc', 'created_at')
+        return Company::query()
+            ->select('id', 'company_name', 'company_logo', 'company_address', 'company_desc', 'created_at')
             ->orderBy('company_name', 'asc')
-            ->paginate(5);
+            ->paginate($this->perPage);
+    }
+
+    #[Computed]
+    public function totalCompaniesCount(): int
+    {
+        return Cache::remember('companies:count', now()->addSeconds(30), function () {
+            return Company::count();
+        });
+    }
+
+    #[Computed]
+    public function pageRowIds(): array
+    {
+        return $this->companies->getCollection()->pluck('id')->map(fn ($id) => (int) $id)->all();
+    }
+
+    #[Computed]
+    public function selectedCount(): int
+    {
+        return $this->selectAllFiltered
+            ? $this->totalCompaniesCount
+            : count($this->selectedCompanies);
+    }
+
+    // =========================================================
+    //  SELECTION
+    // =========================================================
+
+    public function toggleSelectAllOnPage(): void
+    {
+        $pageIds = $this->pageRowIds;
+
+        if (empty($pageIds)) {
+            return;
+        }
+
+        $allOnPageSelected = ! empty($pageIds)
+            && empty(array_diff($pageIds, $this->selectedCompanies));
+
+        if ($allOnPageSelected && ! $this->selectAllFiltered) {
+            $this->selectedCompanies = array_values(
+                array_diff($this->selectedCompanies, $pageIds)
+            );
+        } else {
+            $this->selectedCompanies = array_values(array_unique(
+                array_merge($this->selectedCompanies, $pageIds)
+            ));
+        }
+
+        $this->recomputeSelectAllOnPage();
     }
 
     public function toggleRowSelection(int $id): void
     {
+        if ($this->selectAllFiltered) {
+            $this->selectAllFiltered = false;
+            $this->selectedCompanies = $this->pageRowIds;
+        }
+
         if (in_array($id, $this->selectedCompanies, true)) {
             $this->selectedCompanies = array_values(
                 array_diff($this->selectedCompanies, [$id])
@@ -37,79 +108,120 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         } else {
             $this->selectedCompanies[] = $id;
         }
+
+        $this->recomputeSelectAllOnPage();
     }
 
-    public function toggleSelectAll(): void
+    public function isRowSelected(int $id): bool
     {
-        $this->selectAll = ! $this->selectAll;
-
-        $this->selectedCompanies = $this->selectAll
-            ? Company::pluck('id')->map(fn ($id) => (int) $id)->toArray()
-            : [];
+        if ($this->selectAllFiltered) {
+            return true;
+        }
+        return in_array($id, $this->selectedCompanies, true);
     }
 
-    /**
-     * Delete selected companies + their logo files from storage.
-     */
+    protected function recomputeSelectAllOnPage(): void
+    {
+        $pageIds = $this->pageRowIds;
+
+        $this->selectAllOnPage = ! empty($pageIds)
+            && empty(array_diff($pageIds, $this->selectedCompanies));
+    }
+
+    // =========================================================
+    //  ACTIONS
+    // =========================================================
+
     public function deleteSelected(): void
     {
-        $companies = Company::whereIn('id', $this->selectedCompanies)->get();
+        abort_unless(auth()->user()?->can('manage-companies'), 403);
 
-        // Delete logo files first (before DB rows vanish)
-        foreach ($companies as $company) {
-            $this->deleteLogoFile($company->company_logo, $company->id);
+        if ($this->selectedCount <= 0) {
+            session()->flash('error', 'Nothing is selected.');
+            return;
         }
 
-        Company::whereIn('id', $this->selectedCompanies)->delete();
+        try {
+            $result = DB::transaction(function () {
+                $query = Company::query();
 
-        $this->selectedCompanies = [];
-        $this->selectAll = false;
+                if (! $this->selectAllFiltered) {
+                    $query->whereIn('id', $this->selectedCompanies);
+                }
 
-        session()->flash('success', 'Selected companies and their logos deleted successfully.');
+                // Capture logos + ids BEFORE delete for post-commit file cleanup.
+                $logos = (clone $query)->pluck('company_logo', 'id')->all();
+                $count = $query->delete();
+
+                return ['count' => $count, 'logos' => $logos];
+            });
+        } catch (\Throwable $e) {
+            report($e);
+            session()->flash('error', 'Delete failed: ' . $e->getMessage());
+            return;
+        }
+
+        // Delete logo files AFTER successful commit.
+        foreach ($result['logos'] as $companyId => $logo) {
+            $this->deleteLogoFile($logo, (int) $companyId);
+        }
+
+        Cache::forget('companies:count');
+
+        $this->clearSelection();
+        $this->resetPage();
+
+        session()->flash('success', "{$result['count']} company(ies) deleted successfully.");
     }
 
-    /**
-     * Delete a single company + its logo file.
-     * (Use from a row-level delete button.)
-     */
     public function deleteCompany(int $id): void
     {
+        abort_unless(auth()->user()?->can('manage-companies'), 403);
+
         $company = Company::find($id);
-        if (! $company) return;
 
-        $this->deleteLogoFile($company->company_logo, $company->id);
-        $company->delete();
+        if (! $company) {
+            session()->flash('error', 'Company not found.');
+            return;
+        }
 
-        // Sync selection
+        $name = $company->company_name;
+        $logo = $company->company_logo;
+
+        try {
+            DB::transaction(fn () => $company->delete());
+        } catch (\Throwable $e) {
+            report($e);
+            session()->flash('error', 'Delete failed. Please try again.');
+            return;
+        }
+
+        // File cleanup after commit.
+        $this->deleteLogoFile($logo, $id);
+
+        Cache::forget('companies:count');
+
         $this->selectedCompanies = array_values(
             array_diff($this->selectedCompanies, [$id])
         );
-        $this->selectAll = count($this->selectedCompanies) === $this->totalCompaniesCount;
+        $this->recomputeSelectAllOnPage();
 
-        session()->flash('success', "Company \"{$company->company_name}\" deleted.");
+        session()->flash('success', "Company \"{$name}\" deleted.");
     }
 
     /**
-     * Safely delete a company logo file from the public disk.
-     *
-     * Skips:
-     *  - null/empty values
-     *  - full external URLs (http/https)
-     *  - files still referenced by another company
+     * Safely delete a company logo from the public disk.
+     * Skips: null, external URLs, /imgs/, /storage/, and shared paths.
      */
     protected function deleteLogoFile(?string $path, ?int $exceptId = null): void
     {
         if (blank($path)) return;
 
-        // External URLs — never touch
         if (filter_var($path, FILTER_VALIDATE_URL)) return;
-
-        // Public-folder assets (e.g. /imgs/...) — not in storage, skip
         if (str_starts_with($path, '/imgs/') || str_starts_with($path, '/storage/')) return;
 
         $relative = ltrim($path, '/');
 
-        // Check if any OTHER company still uses this exact path
         $stillUsed = Company::query()
             ->when($exceptId, fn ($q) => $q->where('id', '!=', $exceptId))
             ->where('company_logo', $path)
@@ -117,9 +229,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         if ($stillUsed) return;
 
-        // Delete from storage/app/public/{relative}
-        if (Storage::disk('public')->exists($relative)) {
-            Storage::disk('public')->delete($relative);
-        }
+        // One filesystem call — delete() returns false if missing.
+        Storage::disk('public')->delete($relative);
     }
 };

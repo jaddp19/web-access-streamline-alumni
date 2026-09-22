@@ -2,14 +2,18 @@
 
 use App\Models\User;
 use App\Services\EmailTemplateService;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Spatie\Permission\Models\Role;
 
-new #[Layout('layouts::app-super-admin')] class extends Component
+new #[Layout('layouts.app-super-admin')] class extends Component
 {
     public string $first_name = '';
     public string $middle_name = '';
@@ -17,6 +21,10 @@ new #[Layout('layouts::app-super-admin')] class extends Component
     public string $email = '';
     public string $school_id = '';
     public string $selectedRole = '';
+
+    // =========================================================
+    //  COMPUTED
+    // =========================================================
 
     /**
      * Password is auto-derived from the selected role.
@@ -28,12 +36,10 @@ new #[Layout('layouts::app-super-admin')] class extends Component
             return null;
         }
 
-        $slug = Str::of($this->selectedRole)
+        return 'csav.' . Str::of($this->selectedRole)
             ->lower()
             ->replace(' ', '-')
             ->toString();
-
-        return 'csav.' . $slug;
     }
 
     /**
@@ -50,44 +56,53 @@ new #[Layout('layouts::app-super-admin')] class extends Component
     }
 
     /**
-     * Map role name → email template slug.
+     * Roles are static — cache for 10 minutes to skip the query
+     * on every Livewire render (keystroke, blur, etc.).
      */
-    protected function templateSlugForRole(string $role): string
+    #[Computed(persist: true)]
+    public function roles()
     {
-        return match (Str::lower($role)) {
-            'alumni'         => 'welcome-to-the-csav-alumni-network-name',
-            'program head'   => 'welcome-program-head',
-            'registrar'      => 'welcome-registrar',
-            default          => 'your-csav-alumni-network-staff-account-has-been-created',
-        };
+        return Cache::remember('roles:name-list', now()->addMinutes(10), function () {
+            return Role::query()
+                ->orderBy('name')
+                ->pluck('name')
+                ->all();
+        });
     }
 
-    protected function rules()
+    // =========================================================
+    //  VALIDATION
+    // =========================================================
+
+    protected function rules(): array
     {
         return [
             'first_name'  => 'required|string|min:2|max:255',
             'middle_name' => 'nullable|string|max:255',
             'last_name'   => 'required|string|min:2|max:255',
+
             'email' => [
                 'required',
-                'email',
-                'unique:users,email',
-                function ($attribute, $value, $fail) {
-                    if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
-                        $fail('The email address is invalid.');
-                    }
-                    $domain = substr(strrchr($value, "@"), 1);
-                    if (!checkdnsrr($domain, "MX")) {
-                        $fail('The email is not valid.');
-                    }
-                },
+                'email:rfc,dns',   // ✅ built-in DNS check — cached by Laravel validator
+                'max:255',
+                Rule::unique('users', 'email'),
             ],
-            'school_id'    => 'required|string|max:9|unique:users,school_id',
-            'selectedRole' => 'required|exists:roles,name',
+
+            'school_id' => [
+                'required',
+                'string',
+                'max:9',
+                Rule::unique('users', 'school_id'),
+            ],
+
+            'selectedRole' => [
+                'required',
+                Rule::in($this->roles),
+            ],
         ];
     }
 
-    public function messages()
+    public function messages(): array
     {
         return [
             'first_name.required'   => 'The first name is required.',
@@ -101,63 +116,129 @@ new #[Layout('layouts::app-super-admin')] class extends Component
             'school_id.max'         => 'Your school ID number must not exceed 9 characters.',
             'email.unique'          => 'The email address is already registered.',
             'email.required'        => 'The email address is required.',
+            'email.email'           => 'The email address is invalid.',
             'selectedRole.required' => 'Please select a role.',
-            'selectedRole.exists'   => 'The selected role is invalid.',
+            'selectedRole.in'       => 'The selected role is invalid.',
         ];
     }
+
+    // =========================================================
+    //  CREATE
+    // =========================================================
 
     public function create()
     {
         $validated = $this->validate();
 
-        $validated['first_name']  = $this->sanitizeData($validated['first_name']);
-        $validated['middle_name'] = $validated['middle_name'] ? $this->sanitizeData($validated['middle_name']) : null;
-        $validated['last_name']   = $this->sanitizeData($validated['last_name']);
-        $validated['email']       = $this->sanitizeData($validated['email']);
-        $validated['school_id']   = $this->sanitizeData($validated['school_id']);
+        // Sanitize once, into locals — no repeated Str::of allocations.
+        $firstName  = $this->sanitize($validated['first_name']);
+        $middleName = $validated['middle_name'] ? $this->sanitize($validated['middle_name']) : null;
+        $lastName   = $this->sanitize($validated['last_name']);
+        $email      = $this->sanitize($validated['email']);
+        $schoolId   = $this->sanitize($validated['school_id']);
 
         $plainPassword = $this->generatedPassword;
-        $templateSlug  = $this->templateSlugForRole($validated['selectedRole']);
-        $fullName      = $this->fullName;
+        $role          = $validated['selectedRole'];
+        $fullName      = trim(implode(' ', array_filter([$firstName, $middleName, $lastName])));
 
-        $user = User::create([
-            'first_name'  => $validated['first_name'],
-            'middle_name' => $validated['middle_name'],
-            'last_name'   => $validated['last_name'],
-            // 'name' auto-fills via the User model's saving hook
-            'email'       => $validated['email'],
-            'school_id'   => $validated['school_id'],
-            'password'    => Hash::make($plainPassword),
-        ]);
+        try {
+            $user = DB::transaction(function () use (
+                $firstName, $middleName, $lastName, $email, $schoolId, $plainPassword, $role
+            ) {
+                $user = User::create([
+                    'first_name'  => $firstName,
+                    'middle_name' => $middleName,
+                    'last_name'   => $lastName,
+                    // 'name' auto-fills via User model's saving hook
+                    'email'       => $email,
+                    'school_id'   => $schoolId,
+                    'password'    => Hash::make($plainPassword),
+                ]);
 
-        $user->syncRoles($validated['selectedRole']);
+                $user->syncRoles($role);
 
-        EmailTemplateService::send(
-            $templateSlug,
-            $validated['email'],
-            [
-                'name'          => $fullName,
-                'school_email'  => $validated['email'],
-                'login_url'     => route('login'),
-                'temp_password' => $plainPassword,
-                'role'          => Str::headline($validated['selectedRole']),
-            ]
-        );
+                return $user;
+            });
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Race condition — someone inserted the same email/school_id
+            // between validation and this insert. Show a friendly error.
+            if ($e->getCode() === '23000' || str_contains($e->getMessage(), 'Duplicate entry')) {
+                $this->addError(
+                    str_contains($e->getMessage(), 'school_id') ? 'school_id' : 'email',
+                    'This value was just registered by another account. Please refresh and try again.'
+                );
+                return;
+            }
 
-        session()->flash('success', "User created. Temporary password: {$plainPassword}");
+            throw $e;
+        }
+
+        // Fire the email AFTER the DB commit (transaction callback returns),
+        // and don't fail the request if SMTP is slow/down.
+        $this->sendWelcomeEmail($user, $role, $fullName, $email, $plainPassword);
+
+        session()->flash('success', "User created successfully. Temporary password: {$plainPassword}");
+        session()->flash('generated_password', $plainPassword);
+
         return redirect()->route('super-admin.user.view');
     }
 
-    protected function sanitizeData($data)
+    // =========================================================
+    //  HELPERS
+    // =========================================================
+
+    /**
+     * Map role name → email template slug.
+     */
+    protected function templateSlugForRole(string $role): string
     {
-        return is_string($data)
-            ? Str::of($data)->stripTags()->trim()->toString()
-            : $data;
+        return match (Str::lower($role)) {
+            'alumni'       => 'welcome-to-the-csav-alumni-network-name',
+            'program head' => 'welcome-program-head',
+            'registrar'    => 'welcome-registrar',
+            default        => 'your-csav-alumni-network-staff-account-has-been-created',
+        };
     }
 
-    #[Computed()]
-    public function roles()
+    protected function sendWelcomeEmail(
+        User $user,
+        string $role,
+        string $fullName,
+        string $email,
+        string $plainPassword
+    ): void {
+        try {
+            EmailTemplateService::send(
+                $this->templateSlugForRole($role),
+                $email,
+                [
+                    'name'          => $fullName,
+                    'school_email'  => $email,
+                    'login_url'     => route('login'),
+                    'temp_password' => $plainPassword,
+                    'role'          => Str::headline($role),
+                ]
+            );
+        } catch (\Throwable $e) {
+            // User is already created — don't 500 the page. Log and
+            // surface a non-blocking warning.
+            Log::error('Welcome email failed', [
+                'user_id' => $user->id,
+                'role'    => $role,
+                'error'   => $e->getMessage(),
+            ]);
+
+            session()->flash(
+                'warning',
+                "User was created, but the welcome email could not be sent. Please notify them manually."
+            );
+        }
+    }
+
+    protected function sanitize(mixed $data): mixed
     {
-        return Role::select('id', 'name')->get();
+        return is_string($data)
+            ? trim(strip_tags($data))
+            : $data;
     }
 };

@@ -2,8 +2,10 @@
 
 use App\Models\User;
 use App\Services\EmailTemplateService;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -11,15 +13,18 @@ use Livewire\Component;
 
 new #[Layout('layouts.app-admin')] class extends Component
 {
+    private const DEFAULT_PASSWORD = 'csav.alumni';
+
     public string $first_name = '';
     public string $middle_name = '';
     public string $last_name = '';
     public string $email = '';
     public string $school_id = '';
 
-    /**
-     * Composed full name — matches what will be saved in `users.name`.
-     */
+    // =========================================================
+    //  COMPUTED
+    // =========================================================
+
     #[Computed]
     public function fullName(): string
     {
@@ -30,18 +35,22 @@ new #[Layout('layouts.app-admin')] class extends Component
         ])));
     }
 
-    protected function rules()
+    // =========================================================
+    //  VALIDATION
+    // =========================================================
+
+    protected function rules(): array
     {
         return [
-            'first_name'  => 'required|string|min:2|max:255',
-            'middle_name' => 'nullable|string|max:255',
-            'last_name'   => 'required|string|min:2|max:255',
-            'email'       => 'required|email|max:255|unique:users,email',
-            'school_id'   => 'required|string|max:255|unique:users,school_id',
+            'first_name'  => ['required', 'string', 'min:2', 'max:255'],
+            'middle_name' => ['nullable', 'string', 'max:255'],
+            'last_name'   => ['required', 'string', 'min:2', 'max:255'],
+            'email'       => ['required', 'email:rfc,dns', 'max:255', 'unique:users,email'],
+            'school_id'   => ['required', 'string', 'max:20', 'unique:users,school_id'],
         ];
     }
 
-    public function messages()
+    public function messages(): array
     {
         return [
             'first_name.required' => 'The first name is required.',
@@ -55,75 +64,95 @@ new #[Layout('layouts.app-admin')] class extends Component
             'email.unique'        => 'This email is already registered.',
             'school_id.required'  => 'The school ID field is required.',
             'school_id.unique'    => 'This school ID is already registered.',
+            'school_id.max'       => 'The school ID may not be greater than 20 characters.',
         ];
     }
 
+    // =========================================================
+    //  SAVE
+    // =========================================================
+
     public function saveAlumni()
     {
+        abort_unless(Auth::user()?->hasAnyRole(['registrar', 'program head']), 403);
+
         $validated = $this->validate();
 
-        $validated['first_name']  = $this->sanitizeData($validated['first_name']);
-        $validated['middle_name'] = $validated['middle_name'] ? $this->sanitizeData($validated['middle_name']) : null;
-        $validated['last_name']   = $this->sanitizeData($validated['last_name']);
-        $validated['email']       = $this->sanitizeData($validated['email']);
-        $validated['school_id']   = $this->sanitizeData($validated['school_id']);
-
-        $fullName = $this->fullName;
+        $firstName  = $this->sanitize($validated['first_name']);
+        $middleName = $validated['middle_name'] ? $this->sanitize($validated['middle_name']) : null;
+        $lastName   = $this->sanitize($validated['last_name']);
+        $email      = $this->sanitize($validated['email']);
+        $schoolId   = $this->sanitize($validated['school_id']);
+        $fullName   = trim(implode(' ', array_filter([$firstName, $middleName, $lastName])));
 
         try {
-            DB::transaction(function () use ($validated) {
+            DB::transaction(function () use ($firstName, $middleName, $lastName, $email, $schoolId) {
                 $user = User::create([
-                    'first_name'  => $validated['first_name'],
-                    'middle_name' => $validated['middle_name'],
-                    'last_name'   => $validated['last_name'],
-                    // 'name' auto-fills via the User model's saving hook
-                    'email'       => $validated['email'],
-                    'school_id'   => $validated['school_id'],
-                    'password'    => Hash::make('csav.alumni'),
+                    'first_name'  => $firstName,
+                    'middle_name' => $middleName,
+                    'last_name'   => $lastName,
+                    'email'       => $email,
+                    'school_id'   => $schoolId,
+                    'password'    => Hash::make(self::DEFAULT_PASSWORD),
                 ]);
 
-                if (method_exists($user, 'assignRole')) {
-                    $user->assignRole('alumni');
-                }
+                $user->syncRoles(['alumni']);
             });
-
-            // Send welcome email — outside the transaction so a mail failure
-            // doesn't roll back the created account.
-            try {
-                EmailTemplateService::send(
-                    'welcome-to-the-csav-alumni-network-name',
-                    $validated['email'],
-                    [
-                        'name'          => $fullName,
-                        'school_email'  => $validated['email'],
-                        'school_id'     => $validated['school_id'],
-                        'temp_password' => 'csav.alumni',
-                        'login_url'     => route('login'),
-                    ]
-                );
-            } catch (\Throwable $e) {
-                logger()->warning('Alumni welcome email failed: ' . $e->getMessage(), [
-                    'email' => $validated['email'],
-                ]);
+        } catch (\Illuminate\Database\QueryException $e) {
+            if ($e->getCode() === '23000') {
+                $field = str_contains($e->getMessage(), 'school_id') ? 'school_id' : 'email';
+                $this->addError($field, 'This value was just registered. Please refresh and try again.');
+                return;
             }
 
-            session()->flash('success', 'Alumni account created. A welcome email was sent to ' . $validated['email'] . '.');
-            return redirect()->route('admin.alumni.view');
-
+            report($e);
+            session()->flash('error', 'Could not create the alumni account. Please try again.');
+            return;
         } catch (\Throwable $e) {
-            logger()->error('Alumni creation failed: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            session()->flash('error', 'Something went wrong while creating this alumni: ' . $e->getMessage());
+            report($e);
+            session()->flash('error', 'Could not create the alumni account. Please try again.');
             return;
         }
+
+        // Send welcome email — after DB commit so mail failure won't roll back.
+        try {
+            EmailTemplateService::send(
+                'welcome-to-the-csav-alumni-network-name',
+                $email,
+                [
+                    'name'          => $fullName,
+                    'school_email'  => $email,
+                    'school_id'     => $schoolId,
+                    'temp_password' => self::DEFAULT_PASSWORD,
+                    'login_url'     => route('login'),
+                ]
+            );
+
+            session()->flash(
+                'success',
+                "Alumni account created. A welcome email was sent to {$email}."
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Alumni welcome email failed', [
+                'email' => $email,
+                'error' => $e->getMessage(),
+            ]);
+
+            session()->flash(
+                'warning',
+                "Alumni account created, but the welcome email could not be sent. Notify {$email} manually with the temp password: " . self::DEFAULT_PASSWORD
+            );
+        }
+
+        return redirect()->route('admin.alumni.view');
     }
 
-    protected function sanitizeData($data)
+    // =========================================================
+    //  HELPERS
+    // =========================================================
+
+    protected function sanitize(mixed $data): mixed
     {
-        return is_string($data)
-            ? Str::of($data)->stripTags()->trim()->toString()
-            : $data;
+        return is_string($data) ? trim(strip_tags($data)) : $data;
     }
 };

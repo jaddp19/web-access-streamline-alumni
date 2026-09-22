@@ -9,26 +9,41 @@ use Livewire\Component;
 
 new class extends Component
 {
+    // =========================================================
+    //  STATS — all three cached in one place, 5 min TTL
+    // =========================================================
+
     #[Computed]
-    public function alumni()
+    public function stats(): array
     {
-        return User::role('alumni')->count();
+        return Cache::remember('landing:stats', now()->addMinutes(5), function () {
+            return [
+                'alumni'      => User::role('alumni')->count(),
+                'departments' => Department::where('is_active', true)->count(),
+                'programs'    => Course::where('is_active', true)->count(),
+            ];
+        });
+    }
+
+    // =========================================================
+    //  INDIVIDUAL ACCESSORS
+    // =========================================================
+
+    #[Computed]
+    public function alumni(): int
+    {
+        return $this->stats['alumni'];
     }
 
     #[Computed]
-    public function departments()
+    public function departments(): int
     {
-        return Cache::remember('stats.departments', 300, fn () =>
-            Department::where('is_active', true)->count()
-        );
+        return $this->stats['departments'];
     }
 
     #[Computed]
-    public function programs()
+    public function programs(): int
     {
-        return Cache::remember('stats.programs', 300, fn () =>
-            Course::where('is_active', true)->count()
-        );
+        return $this->stats['programs'];
     }
-
 };

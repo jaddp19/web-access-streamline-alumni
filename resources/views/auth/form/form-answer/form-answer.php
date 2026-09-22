@@ -9,13 +9,14 @@ use App\Models\FurtherStudy;
 use App\Models\UserProfile;
 use App\Models\WorkHistory;
 use App\Services\PhAddressService;
+use App\Support\TracerStudyRules;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Propaganistas\LaravelPhone\Rules\Phone;
 
 new #[Layout('layouts.app-form')] class extends Component
 {
@@ -24,6 +25,7 @@ new #[Layout('layouts.app-form')] class extends Component
     public bool $alreadyFilled = false;
 
     public int $step = 1;
+    #[Locked]
     public int $totalSteps = 4;
 
     // Step 1 — Personal
@@ -33,14 +35,14 @@ new #[Layout('layouts.app-form')] class extends Component
     public bool $consentGiven = false;
 
     // Step 1 — Address
-    public string $address_type = 'philippines'; // 'philippines' | 'abroad'
+    public string $address_type = 'philippines';
     public string $regionCode = '';
     public string $provinceCode = '';
     public string $cityCode = '';
     public string $barangayCode = '';
     public string $street_address = '';
 
-    // Step 1 — International address (only used when address_type === 'abroad')
+    // Step 1 — International address
     public string $intl_country = '';
     public string $intl_state = '';
     public string $intl_city = '';
@@ -49,8 +51,6 @@ new #[Layout('layouts.app-form')] class extends Component
     public string $civil_status = '';
     public $course_id = '';
     public $batch_id = '';
-
-    // Step 2 — Board exam (only for board programs)
     public ?string $board_taken = null;
     public string $board_rate = '';
 
@@ -63,8 +63,6 @@ new #[Layout('layouts.app-form')] class extends Component
     public string $employment_area = '';
     public string $abroad_country = '';
     public string $months_to_first_job = '';
-
-    // Step 3 — Company
     public ?int $company_id = null;
     public string $date_hired = '';
 
@@ -86,12 +84,8 @@ new #[Layout('layouts.app-form')] class extends Component
     {
         $user = Auth::user();
 
-        // If the user already has a profile, lock the form.
-        $existingProfile = UserProfile::where('user_id', $user->id)->first();
-
-        if ($existingProfile) {
+        if (UserProfile::where('user_id', $user->id)->exists()) {
             $this->alreadyFilled = true;
-            // Don't hydrate or allow saving — they must use the settings update form instead.
             return;
         }
 
@@ -101,40 +95,33 @@ new #[Layout('layouts.app-form')] class extends Component
 
     // ===== Cascading address =====
 
-    public function updatedRegionCode()
+    public function updatedRegionCode(): void
     {
         $this->provinceCode = '';
         $this->cityCode = '';
         $this->barangayCode = '';
     }
 
-    public function updatedProvinceCode()
+    public function updatedProvinceCode(): void
     {
         $this->cityCode = '';
         $this->barangayCode = '';
     }
 
-    public function updatedCityCode()
+    public function updatedCityCode(): void
     {
         $this->barangayCode = '';
     }
 
-    public function updatedAddressType($value)
+    public function updatedAddressType(): void
     {
         $this->resetErrorBag([
-            'regionCode',
-            'provinceCode',
-            'cityCode',
-            'barangayCode',
-            'intl_country',
-            'intl_state',
-            'intl_city',
+            'regionCode', 'provinceCode', 'cityCode', 'barangayCode',
+            'intl_country', 'intl_state', 'intl_city',
         ]);
     }
 
-    // ===== Course change → clear board fields if non-board =====
-
-    public function updatedCourseId()
+    public function updatedCourseId(): void
     {
         if ($this->selectedCourse?->course_type !== 'board') {
             $this->board_taken = null;
@@ -185,9 +172,7 @@ new #[Layout('layouts.app-form')] class extends Component
     #[Computed]
     public function selectedCourse()
     {
-        return $this->course_id
-            ? Course::find($this->course_id)
-            : null;
+        return $this->course_id ? Course::find($this->course_id) : null;
     }
 
     // ===== Inline company creation =====
@@ -214,10 +199,9 @@ new #[Layout('layouts.app-form')] class extends Component
         ]);
 
         try {
-            $logoPath = null;
-            if ($this->new_company_logo) {
-                $logoPath = $this->new_company_logo->store('companies', 'public');
-            }
+            $logoPath = $this->new_company_logo
+                ? $this->new_company_logo->store('companies', 'public')
+                : null;
 
             $company = Company::create([
                 'company_name'    => trim($this->new_company_name),
@@ -239,144 +223,14 @@ new #[Layout('layouts.app-form')] class extends Component
         }
     }
 
-    // ===== Rules =====
+    // ===== Navigation =====
 
-    protected function stepRules(int $step): array
+    public function nextStep(): void
     {
-        return match ($step) {
-            1 => [
-                'gender'           => 'required|in:Male,Female,Other',
-                'contact_number_1' => [
-                    'required',
-                    'string',
-                    'max:20',
-                    new Phone(),
-                    function ($attribute, $value, $fail) {
-                        $exists = UserProfile::where(function ($q) use ($value) {
-                            $q->where('contact_number_1', $value)
-                                ->orWhere('contact_number_2', $value);
-                        })
-                            ->where('user_id', '!=', $this->userProfileId())
-                            ->exists();
-
-                        if ($exists) {
-                            $fail('This mobile number is already registered to another account.');
-                        }
-                    },
-                ],
-
-                'contact_number_2' => [
-                    'nullable',
-                    'string',
-                    'max:20',
-                    new Phone(),
-                    function ($attribute, $value, $fail) {
-                        if (! $value) return; // skip if empty
-
-                        $exists = UserProfile::where(function ($q) use ($value) {
-                            $q->where('contact_number_1', $value)
-                                ->orWhere('contact_number_2', $value);
-                        })
-                            ->where('user_id', '!=', $this->userProfileId())
-                            ->exists();
-
-                        if ($exists) {
-                            $fail('This alternate number is already registered to another account.');
-                        }
-                    },
-                ],
-                'street_address'   => 'required|string|max:500',
-                'address_type'     => 'required|in:philippines,abroad',
-
-                // PH-only (required when address_type = philippines)
-                'regionCode'   => 'required_if:address_type,philippines|nullable|string',
-                'provinceCode' => 'required_if:address_type,philippines|nullable|string',
-                'cityCode'     => 'required_if:address_type,philippines|nullable|string',
-                'barangayCode' => 'required_if:address_type,philippines|nullable|string',
-
-                // Abroad-only (required when address_type = abroad)
-                'intl_country' => 'required_if:address_type,abroad|nullable|string|max:255',
-                'intl_state'   => 'nullable|string|max:255',
-                'intl_city'    => 'required_if:address_type,abroad|nullable|string|max:255',
-
-                'consentGiven' => 'accepted',
-            ],
-            2 => [
-                'civil_status' => 'required|in:single,married,widowed,separated,single-parent',
-                'course_id'    => 'required|exists:courses,id',
-                'batch_id'     => 'required|exists:batches,id',
-
-                // Board fields are now OPTIONAL — only validated if filled in
-                'board_taken'  => 'nullable|date|before_or_equal:today',
-                'board_rate'   => 'nullable|numeric|min:0|max:100',
-            ],
-            3 => [
-                'employment_status'          => 'required|in:employed,unemployed,self-employed,other',
-                'current_job_position'       => 'required_if:employment_status,employed|nullable|string|max:255',
-                'company_id'                 => 'required_if:employment_status,employed|nullable|exists:companies,id',
-                'date_hired'                 => 'required_if:employment_status,employed|nullable|date|before_or_equal:today',
-                'employed_related_to_degree' => 'required_if:employment_status,employed|nullable|in:yes,no,partially-related',
-                'employment_type'            => 'required_if:employment_status,employed|nullable|in:full-time,part-time,contractual-project-based,freelance,other',
-                'organization_type'          => 'required_if:employment_status,employed|nullable|in:private-company,government-agency,non-government-organization,educational-institution,self-employed-business,other',
-                'employment_area'            => 'required_if:employment_status,employed|nullable|in:philippines,abroad',
-                'abroad_country'             => 'required_if:employment_area,abroad|nullable|string|max:255',
-                'months_to_first_job'        => 'required_if:employment_status,employed|nullable|in:1-3-months,4-6-months,more-than-6-months,more-than-1-year,not-yet-employed',
-            ],
-            4 => [
-                'is_pursued_further_studies' => 'required|boolean',
-                'level_of_study'             => 'required_if:is_pursued_further_studies,true|nullable|in:Certificate,Bachelor,Master,Post Doctorate',
-            ],
-            default => [],
-        };
-    }
-
-    protected function stepMessages(): array
-    {
-        return [
-            'gender.required'                        => 'Please select your sex.',
-            'contact_number_1.phone'                 => 'Please enter a valid mobile number.',
-            'contact_number_2.phone'                 => 'Please enter a valid alternate number.',
-            'contact_number_1.required'              => 'Mobile number is required.',
-            'street_address.required'                => 'Street address is required.',
-            'address_type.required'                  => 'Please select whether you reside in the Philippines or abroad.',
-            'regionCode.required'                    => 'Please select your region.',
-            'provinceCode.required'                  => 'Please select your province.',
-            'cityCode.required'                      => 'Please select your city/municipality.',
-            'barangayCode.required'                  => 'Please select your barangay.',
-            'intl_country.required_if'               => 'Please enter your country.',
-            'intl_city.required_if'                  => 'Please enter your city.',
-            'consentGiven.accepted'                  => 'You must agree to the Privacy Policy and Terms and Conditions before continuing.',
-            'civil_status.required'                  => 'Please select your civil status.',
-            'course_id.required'                     => 'Please select your program.',
-            'batch_id.required'                      => 'Please select your year graduated.',
-            'board_taken.date'                       => 'Board exam date must be a valid date.',
-            'board_taken.before_or_equal'            => 'Board exam date cannot be in the future.',
-            'board_rate.numeric'                     => 'Board rating must be a number.',
-            'board_rate.min'                         => 'Board rating cannot be less than 0.',
-            'board_rate.max'                         => 'Board rating cannot be more than 100.',
-            'employment_status.required'             => 'Please select your employment status.',
-            'current_job_position.required_if'       => 'Job position is required.',
-            'company_id.required_if'                 => 'Please select a company.',
-            'date_hired.required_if'                 => 'Please enter the date you were hired.',
-            'employed_related_to_degree.required_if' => 'Please answer if your job is related to your degree.',
-            'employment_type.required_if'            => 'Please select type of employment.',
-            'organization_type.required_if'          => 'Please select type of organization.',
-            'employment_area.required_if'            => 'Please select employment area.',
-            'abroad_country.required_if'             => 'Please specify the country.',
-            'months_to_first_job.required_if'        => 'Please select how long it took to get your first job.',
-            'is_pursued_further_studies.required'    => 'Please answer the further studies question.',
-            'level_of_study.required_if'             => 'Please select the level of study.',
-        ];
-    }
-
-    protected function userProfileId(): ?int
-    {
-        return UserProfile::where('user_id', Auth::id())->value('id');
-    }
-
-    public function nextStep()
-    {
-        $this->validate($this->stepRules($this->step), $this->stepMessages());
+        $this->validate(
+            TracerStudyRules::step($this->step),
+            TracerStudyRules::messages()
+        );
 
         if ($this->step < $this->totalSteps) {
             $this->step++;
@@ -384,7 +238,7 @@ new #[Layout('layouts.app-form')] class extends Component
         }
     }
 
-    public function previousStep()
+    public function previousStep(): void
     {
         if ($this->step > 1) {
             $this->step--;
@@ -393,18 +247,16 @@ new #[Layout('layouts.app-form')] class extends Component
         }
     }
 
+    // ===== Submit =====
+
     public function submit()
     {
-        $rules = array_merge(
-            $this->stepRules(1),
-            $this->stepRules(2),
-            $this->stepRules(3),
-            $this->stepRules(4),
+        $this->validate(
+            TracerStudyRules::all(),
+            TracerStudyRules::messages()
         );
 
-        $this->validate($rules);
-
-        $user = Auth::user();
+        $user    = Auth::user();
         $service = app(PhAddressService::class);
 
         $region   = $this->address_type === 'philippines' ? $service->findByCode($this->regionCode) : null;
@@ -412,27 +264,24 @@ new #[Layout('layouts.app-form')] class extends Component
         $city     = $this->address_type === 'philippines' ? $service->findByCode($this->cityCode) : null;
         $barangay = $this->address_type === 'philippines' ? $service->findByCode($this->barangayCode) : null;
 
-        if ($this->address_type === 'philippines') {
-            $fullAddress = collect([
+        $fullAddress = $this->address_type === 'philippines'
+            ? collect([
                 $this->street_address,
                 $barangay->name ?? null,
                 $city->name ?? null,
                 $province->name ?? null,
                 $region->name ?? null,
-            ])->filter()->implode(', ');
-        } else {
-            $fullAddress = collect([
+            ])->filter()->implode(', ')
+            : collect([
                 $this->street_address,
                 $this->intl_city,
                 $this->intl_state,
                 $this->intl_country,
             ])->filter()->implode(', ');
-        }
 
         DB::transaction(function () use ($user, $region, $province, $city, $barangay, $fullAddress) {
             $existingProfile = UserProfile::where('user_id', $user->id)->first();
-
-            $isBoardCourse = $this->selectedCourse?->course_type === 'board';
+            $isBoardCourse   = $this->selectedCourse?->course_type === 'board';
 
             $location = $this->address_type === 'philippines'
                 ? array_merge($existingProfile->location ?? [], [
@@ -447,8 +296,6 @@ new #[Layout('layouts.app-form')] class extends Component
                     'barangay_code'  => $this->barangayCode,
                     'barangay_name'  => $barangay->name ?? null,
                     'address'        => $fullAddress,
-
-                    // Clear abroad keys
                     'intl_country'   => null,
                     'intl_state'     => null,
                     'intl_city'      => null,
@@ -460,8 +307,6 @@ new #[Layout('layouts.app-form')] class extends Component
                     'intl_state'     => $this->intl_state,
                     'intl_city'      => $this->intl_city,
                     'address'        => $fullAddress,
-
-                    // Clear PH keys
                     'region_code'    => null,
                     'region_name'    => null,
                     'province_code'  => null,
@@ -539,8 +384,6 @@ new #[Layout('layouts.app-form')] class extends Component
                 }
             }
         });
-
-        session()->flash('status', 'Thank you! Please wait for the admin to approve your form.');
 
         return redirect()->route('alumni.dashboard');
     }

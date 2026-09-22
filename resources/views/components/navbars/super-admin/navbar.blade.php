@@ -28,12 +28,14 @@
                         ['route' => 'super-admin.user.view', 'label' => 'All Users'],
                         ['route' => 'view-role', 'label' => 'Roles'],
                         ['route' => 'super-admin.assign.view', 'label' => 'Assign Department'],
+                        ['route' => 'super-admin.audit-logs', 'label' => 'Audit Logs'],
                     ],
                     'Academics' => [
                         ['route' => 'super-admin.department.view', 'label' => 'Departments'],
                         ['route' => 'super-admin.courses.view', 'label' => 'Courses'],
                         ['route' => 'super-admin.batch.view', 'label' => 'Batch Years'],
                         ['route' => 'super-admin.post.view', 'label' => 'Posts'],
+                        ['route' => 'super-admin.events.view', 'label' => 'Events'],
                     ],
                     'Workplace' => [['route' => 'super-admin.company.view', 'label' => 'Company']],
                     'Requests' => [

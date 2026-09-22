@@ -54,6 +54,83 @@
                 </a>
             </div>
 
+            {{-- ========== UPCOMING EVENTS ========== --}}
+            @if ($this->upcomingEvents->isNotEmpty())
+                <div
+                    class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm overflow-hidden border border-transparent dark:border-white/5 mb-4">
+                    <div
+                        class="px-4 py-3 border-b border-black/5 dark:border-white/5 flex items-center justify-between">
+                        <h3
+                            class="text-sm font-bold text-black/60 dark:text-white/60 uppercase tracking-wide inline-flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                            </svg>
+                            Upcoming Events
+                        </h3>
+                    </div>
+
+                    <div class="divide-y divide-black/5 dark:divide-white/5">
+                        @foreach ($this->upcomingEvents as $event)
+                            @php
+                                $myResponse = $this->myEventRsvps[$event->id] ?? null;
+                                $badgeColor = $myResponse
+                                    ? match ($myResponse) {
+                                        'yes'
+                                            => 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
+                                        'maybe'
+                                            => 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400',
+                                        'no' => 'bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400',
+                                    }
+                                    : null;
+                            @endphp
+
+                            <a href="{{ route('view.event', $event->slug) }}"
+                                wire:key="home-event-{{ $event->id }}"
+                                class="flex items-center gap-3 p-3 hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
+
+                                {{-- Date block --}}
+                                <div
+                                    class="w-14 h-14 rounded-xl bg-gradient-to-br from-[#123524] to-[#1C6B45] flex flex-col items-center justify-center text-white shrink-0">
+                                    <span class="text-[10px] uppercase tracking-wide opacity-80 leading-none">
+                                        {{ $event->starts_at->format('M') }}
+                                    </span>
+                                    <span class="text-lg font-bold leading-tight">
+                                        {{ $event->starts_at->format('j') }}
+                                    </span>
+                                </div>
+
+                                {{-- Event info --}}
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-semibold text-sm text-black dark:text-white truncate">
+                                        {{ $event->title }}
+                                    </p>
+                                    <p class="text-xs text-black/50 dark:text-white/50 mt-0.5 truncate">
+                                        {{ $event->starts_at->format('g:i A') }}
+                                        @if ($event->location)
+                                            · {{ $event->location }}
+                                        @endif
+                                    </p>
+                                </div>
+
+                                {{-- My RSVP badge --}}
+                                @if ($myResponse)
+                                    <span
+                                        class="text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wide shrink-0 {{ $badgeColor }}">
+                                        {{ $myResponse }}
+                                    </span>
+                                @else
+                                    <span class="text-[10px] font-semibold text-[#1877F2] shrink-0 whitespace-nowrap">
+                                        RSVP →
+                                    </span>
+                                @endif
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
             {{-- Feed: official posts from registrar / program head --}}
             @forelse ($this->recentPosts as $post)
                 <article

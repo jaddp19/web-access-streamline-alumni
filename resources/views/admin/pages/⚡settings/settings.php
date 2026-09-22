@@ -3,13 +3,15 @@
 use App\Models\Batch;
 use App\Models\UserProfile;
 use App\Services\PhAddressService;
+use App\Support\SettingsRules;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Str;
-use Propaganistas\LaravelPhone\Rules\Phone;
 
 new #[Layout('layouts::app-settings')] class extends Component
 {
@@ -39,46 +41,23 @@ new #[Layout('layouts::app-settings')] class extends Component
     // Avatar upload
     public $avatarFile = null;
 
-    /**
-     * Composed full name — for avatar fallback.
-     */
-    #[Computed]
-    public function fullName(): string
-    {
-        return trim(implode(' ', array_filter([
-            $this->first_name,
-            $this->middle_name,
-            $this->last_name,
-        ])));
-    }
+    #[Locked]
+    public array $allowedTabs = ['appearance', 'profile'];
+
+    // ===== Lifecycle =====
 
     public function mount(): void
     {
         $user = Auth::user();
 
-        // Hydrate three-part name. If empty (legacy user), split from `name`.
-        $first  = $user->first_name;
-        $middle = $user->middle_name;
-        $last   = $user->last_name;
+        [$first, $middle, $last] = $this->resolveNameParts($user);
 
-        if (! $first && ! $last && $user->name) {
-            $split  = preg_split('/\s+/', trim($user->name));
-            $first  = $split[0] ?? '';
-            $last   = count($split) > 1 ? end($split) : '';
-            $middle = count($split) > 2
-                ? implode(' ', array_slice($split, 1, -1))
-                : '';
-        }
+        $this->first_name  = $first;
+        $this->middle_name = $middle;
+        $this->last_name   = $last;
+        $this->email       = $user->email;
 
-        $this->first_name  = $first ?? '';
-        $this->middle_name = $middle ?? '';
-        $this->last_name   = $last ?? '';
-
-        $this->email = $user->email;
-
-        $profile = UserProfile::where('user_id', $user->id)->first();
-
-        if (! $profile) {
+        if (! $profile = $this->userProfile) {
             return;
         }
 
@@ -105,20 +84,33 @@ new #[Layout('layouts::app-settings')] class extends Component
     }
 
     #[Computed]
+    public function fullName(): string
+    {
+        return trim(implode(' ', array_filter([
+            $this->first_name,
+            $this->middle_name,
+            $this->last_name,
+        ])));
+    }
+
+    #[Computed]
     public function avatarUrl(): ?string
     {
         $avatar = $this->userProfile?->avatar;
-        if (! $avatar) return null;
+
+        if (! $avatar) {
+            return null;
+        }
 
         return filter_var($avatar, FILTER_VALIDATE_URL)
             ? $avatar
-            : \Illuminate\Support\Facades\Storage::url($avatar);
+            : Storage::url($avatar);
     }
 
     #[Computed]
     public function batches()
     {
-        return Batch::orderBy('batch_name', 'desc')->get();
+        return Batch::orderBy('batch_name', 'desc')->get(['id', 'batch_name']);
     }
 
     #[Computed]
@@ -171,77 +163,51 @@ new #[Layout('layouts::app-settings')] class extends Component
         $this->barangayCode = '';
     }
 
-    // ===== Validation =====
-
-    protected function profileRules(): array
-    {
-        return [
-            'first_name'       => 'required|string|min:2|max:255',
-            'middle_name'      => 'nullable|string|max:255',
-            'last_name'        => 'required|string|min:2|max:255',
-            'email'            => 'required|email|max:255|unique:users,email,' . Auth::id(),
-            'avatarFile'       => 'nullable|image|max:2048',
-            'gender'           => 'required|in:male,female,other',
-            'contact_number_1' => ['required', 'string', 'max:20', new Phone()],
-            'contact_number_2' => ['nullable', 'string', 'max:20', new Phone()],
-            'batch_id'         => 'required|exists:batches,id',
-            'regionCode'       => 'required|string',
-            'provinceCode'     => 'required|string',
-            'cityCode'         => 'required|string',
-            'barangayCode'     => 'required|string',
-            'street_address'   => 'required|string|max:500',
-        ];
-    }
-
-    protected function profileMessages(): array
-    {
-        return [
-            'first_name.required'       => 'First name is required.',
-            'first_name.min'            => 'First name must be at least 2 characters.',
-            'first_name.max'            => 'First name may not be greater than 255 characters.',
-            'last_name.required'        => 'Last name is required.',
-            'last_name.min'             => 'Last name must be at least 2 characters.',
-            'last_name.max'             => 'Last name may not be greater than 255 characters.',
-            'email.required'            => 'Email is required.',
-            'email.email'               => 'Please enter a valid email address.',
-            'email.unique'              => 'This email is already registered.',
-            'avatarFile.image'          => 'Avatar must be an image file.',
-            'avatarFile.max'            => 'Avatar cannot exceed 2MB.',
-            'gender.required'           => 'Please select your gender.',
-            'contact_number_1.required' => 'Mobile number is required.',
-            'contact_number_1.phone'    => 'Please enter a valid mobile number.',
-            'contact_number_2.phone'    => 'Please enter a valid alternate number.',
-            'batch_id.required'         => 'Please select your batch.',
-            'regionCode.required'       => 'Please select your region.',
-            'provinceCode.required'     => 'Please select your province.',
-            'cityCode.required'         => 'Please select your city/municipality.',
-            'barangayCode.required'     => 'Please select your barangay.',
-            'street_address.required'   => 'Street address is required.',
-        ];
-    }
-
-    // ===== Actions =====
+    // ===== Tabs =====
 
     public function setTab(string $tab): void
     {
+        if (! in_array($tab, $this->allowedTabs, true)) {
+            return;
+        }
+
         $this->activeTab = $tab;
         $this->resetErrorBag();
+        $this->resetValidation();
     }
+
+    // ===== Save =====
 
     public function saveProfile(): void
     {
-        $this->validate($this->profileRules(), $this->profileMessages());
+        $this->validate(
+            SettingsRules::profileDetails(),
+            SettingsRules::messages()
+        );
 
         $user = Auth::user();
 
-        // The User model's `saving` hook auto-syncs `name` from the three parts.
+        // Sanitize name parts + email once
+        $first  = $this->sanitize($this->first_name);
+        $middle = $this->middle_name ? $this->sanitize($this->middle_name) : null;
+        $last   = $this->sanitize($this->last_name);
+        $email  = Str::lower($this->sanitize($this->email));
+
         $user->update([
-            'first_name'  => Str::of($this->first_name)->stripTags()->trim()->toString(),
-            'middle_name' => $this->middle_name ? Str::of($this->middle_name)->stripTags()->trim()->toString() : null,
-            'last_name'   => Str::of($this->last_name)->stripTags()->trim()->toString(),
-            'email'       => Str::of($this->email)->stripTags()->trim()->toString(),
+            'first_name'  => $first,
+            'middle_name' => $middle,
+            'last_name'   => $last,
+            'email'       => $email,
+            // 'name' auto-fills via User's saving hook
         ]);
 
+        // Refresh locals with sanitized values
+        $this->first_name  = $first;
+        $this->middle_name = $middle ?? '';
+        $this->last_name   = $last;
+        $this->email       = $email;
+
+        // ===== Build full address =====
         $service  = app(PhAddressService::class);
         $region   = $service->findByCode($this->regionCode);
         $province = $service->findByCode($this->provinceCode);
@@ -258,8 +224,15 @@ new #[Layout('layouts::app-settings')] class extends Component
 
         $existing = $this->userProfile;
 
+        // ===== Avatar handling =====
         $avatarPath = $existing?->avatar;
+
         if ($this->avatarFile) {
+            // Delete old avatar
+            if ($avatarPath && Storage::disk('public')->exists($avatarPath)) {
+                Storage::disk('public')->delete($avatarPath);
+            }
+
             $avatarPath = $this->avatarFile->store('avatars', 'public');
         }
 
@@ -296,5 +269,33 @@ new #[Layout('layouts::app-settings')] class extends Component
         unset($this->userProfile, $this->avatarUrl, $this->fullName);
 
         session()->flash('profile_success', 'Profile updated successfully.');
+    }
+
+    // ===== Helpers =====
+
+    /**
+     * Resolve name parts, splitting from `name` if the parts are legacy-empty.
+     *
+     * @return array{0: string, 1: string, 2: string}
+     */
+    protected function resolveNameParts($user): array
+    {
+        $first  = $user->first_name;
+        $middle = $user->middle_name;
+        $last   = $user->last_name;
+
+        if (! $first && ! $last && $user->name) {
+            $split  = preg_split('/\s+/', trim($user->name));
+            $first  = $split[0] ?? '';
+            $last   = count($split) > 1 ? end($split) : '';
+            $middle = count($split) > 2 ? implode(' ', array_slice($split, 1, -1)) : '';
+        }
+
+        return [$first ?? '', $middle ?? '', $last ?? ''];
+    }
+
+    protected function sanitize(string $value): string
+    {
+        return Str::of($value)->stripTags()->trim()->toString();
     }
 };

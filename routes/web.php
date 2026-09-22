@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\BadgeCounts;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
 
@@ -65,6 +66,13 @@ Route::middleware(['auth', 'role:registrar'])->prefix('super-admin')->group(func
     Route::livewire('/post/update{post}', 'super-admin::pages.post.update-post')->name('super-admin.post.update');
 
     Route::livewire('/verification-queue', 'super-admin::verification.verification-queue')->name('super-admin.verification-queue');
+
+    Route::livewire('/audit-logs', 'super-admin::pages.audit-log-list')->name('super-admin.audit-logs');
+
+    Route::livewire('/events', 'super-admin::pages.event.view-event')->name('super-admin.events.view');
+    Route::livewire('/events/create', 'super-admin::pages.event.create-event')->name('super-admin.event.create');
+    Route::livewire('/events/update/{event}', 'super-admin::pages.event.update-event')->name('super-admin.event.update');
+
 });
 
 Route::middleware(['auth', 'role:program head|registrar'])->prefix('admin')->group(function () {
@@ -83,9 +91,15 @@ Route::middleware(['auth', 'role:program head|registrar'])->prefix('admin')->gro
 
     Route::livewire('/verification-queue', 'admin::pages.verification-queue')->name('admin.verification-queue');
 
+    Route::livewire('/events/view', 'admin::pages.event.view-event')->name('admin.events.view');
+    Route::livewire('/events/create', 'admin::pages.event.create-event')->name('admin.event.create');
+    Route::livewire('/events/update/{event}', 'admin::pages.event.update-event')->name('admin.event.update');
+
 });
 
 Route::middleware(['auth', 'role:alumni|registrar'])->prefix('alumni')->group(function () {
+
+    // ========== PAGES ==========
     Route::livewire('/dashboard', 'alumni::pages.dashboard')->name('alumni.dashboard');
 
     Route::livewire('/profile/view', 'alumni::pages.profile.view-profile')->name('alumni.profile');
@@ -93,11 +107,24 @@ Route::middleware(['auth', 'role:alumni|registrar'])->prefix('alumni')->group(fu
     Route::livewire('/profile/update-educational/{alumni}', 'alumni::pages.profile.update-educational-background')->name('alumni.profile.update-educational');
     Route::livewire('/profile/create-employment', 'alumni::pages.profile.create-work-history')->name('alumni.profile.create-employment');
     Route::livewire('/profile/update-employment/{history}', 'alumni::pages.profile.update-work-history')->name('alumni.profile.update-employment');
-    
+
     Route::livewire('/settings', 'alumni::pages.settings')->name('alumni.settings');
     Route::livewire('/notification', 'alumni::pages.notification.view-notification')->name('alumni.notification');
     Route::livewire('/notification/{post}', 'alumni::pages.notification.view-single-notification')->name('alumni.view-notification');
     Route::livewire('/message', 'alumni::pages.message.alumni-message')->name('alumni.message');
+    Route::livewire('/message/view/{event:slug}', 'alumni::pages.message.view-single-message')->name('alumni.view-single-message');
+
+    Route::livewire('/view-event/{event:slug}', 'alumni::pages.event.event-detail')->name('view.event');
+
+    // ========== JSON ENDPOINTS ==========
+
+    /**
+     * Lightweight endpoint the header badge script polls every 30s.
+     * Returns { "messages": N, "notifications": M } — safe, cached 20s.
+     */
+    Route::get('/badges.json', function () {
+        return response()->json(BadgeCounts::forCurrentUser());
+    })->name('alumni.badges');
 });
 
 Broadcast::routes();

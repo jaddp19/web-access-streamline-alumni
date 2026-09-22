@@ -27,10 +27,11 @@
                 $navGroups = [
                     'Home' => [
                         ['route' => 'admin.dashboard', 'label' => 'Dashboard'],
-                        ['route' => 'admin.post.view', 'label' => 'Post'],
                     ],
                     'Alumni' => [
                         ['route' => 'admin.alumni.view', 'label' => 'View All Alumni'],
+                        ['route' => 'admin.events.view', 'label' => 'Events'],
+                        ['route' => 'admin.post.view', 'label' => 'Post'],
                     ],
                     'Requests' => [
                         ['route' => 'admin.verification-queue', 'label' => 'Verification Queue'],

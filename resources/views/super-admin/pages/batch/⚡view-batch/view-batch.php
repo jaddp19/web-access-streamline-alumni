@@ -10,17 +10,14 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 {
     use WithPagination;
 
-    #[Computed]
-    public function totalBatchesCount()
-    {
-        return Batch::count();
-    }
+    protected int $perPage = 10;
 
     #[Computed]
     public function batches()
     {
-        return Batch::select('id', 'batch_name', 'created_at')
-            ->orderBy('batch_name', 'asc')
-            ->paginate(5);
+        return Batch::query()
+            ->select('id', 'batch_name', 'created_at')
+            ->orderByDesc('batch_name')
+            ->paginate($this->perPage);
     }
 };

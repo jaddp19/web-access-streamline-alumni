@@ -1,11 +1,6 @@
 <?php
 
-use App\Models\Batch;
-use App\Models\CivilStatusEmployment;
-use App\Models\Course;
-use App\Models\User;
-use App\Models\UserProfile;
-use Illuminate\Support\Facades\DB;
+use App\Support\DashboardAnalytics;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -14,263 +9,124 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 {
     public ?int $selectedBatchId = null;
 
+    /** Memoized analytics instance for this request. */
+    protected ?DashboardAnalytics $analyticsInstance = null;
+
     public function updatedSelectedBatchId(): void
     {
+        // Reset memoized instance so a fresh batch context is used.
+        $this->analyticsInstance = null;
         $this->dispatch('batch-changed');
     }
 
-    // ===== Batches for the selector =====
-
-    #[Computed]
-    public function batches()
+    protected function analytics(): DashboardAnalytics
     {
-        return Batch::orderBy('batch_name', 'desc')
-            ->get(['id', 'batch_name'])
-            ->map(fn($b) => ['id' => $b->id, 'batch_name' => $b->batch_name])
-            ->toArray();
+        return $this->analyticsInstance ??= new DashboardAnalytics($this->selectedBatchId);
     }
 
-    // ===== Analytics (no cache — always fresh) =====
+    // ===== Batches (doesn't depend on batch → persist) =====
 
-    #[Computed]
-    public function alumniByDept()
+    #[Computed(persist: true)]
+    public function batches(): array
     {
-        return DB::table('departments')
-            ->join('courses', 'courses.department_id', '=', 'departments.id')
-            ->join('student_course', 'courses.id', '=', 'student_course.course_id')
-            ->join('user_profiles', 'student_course.user_profile_id', '=', 'user_profiles.id')
-            ->where('departments.is_active', true)
-            ->where('courses.is_active', true)
-            ->when($this->selectedBatchId, fn($q) => $q->where('user_profiles.batch_id', $this->selectedBatchId))
-            ->select(
-                'departments.dept_name',
-                'departments.dept_code',
-                DB::raw('COUNT(DISTINCT user_profiles.user_id) as total')
-            )
-            ->groupBy('departments.id', 'departments.dept_name', 'departments.dept_code')
-            ->orderBy('departments.dept_name')
-            ->get()
-            ->mapWithKeys(fn($row) => [
-                $row->dept_code => [
-                    'name'  => $row->dept_name,
-                    'total' => (int) $row->total,
-                ],
-            ])
-            ->toArray();
+        return $this->analytics()->batches();
+    }
+
+    // ===== Stat cards =====
+
+    #[Computed(persist: true)]
+    public function users(): int
+    {
+        return $this->analytics()->users();
     }
 
     #[Computed]
-    public function alumniByBatch()
+    public function alumni(): int
     {
-        $alumniUserIds = DB::table('model_has_roles')
-            ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
-            ->where('roles.name', 'alumni')
-            ->where('model_has_roles.model_type', User::class)
-            ->pluck('model_has_roles.model_id');
+        return $this->analytics()->alumni();
+    }
 
-        return DB::table('user_profiles')
-            ->join('batches', 'user_profiles.batch_id', '=', 'batches.id')
-            ->whereIn('user_profiles.user_id', $alumniUserIds)
-            ->select(
-                'batches.id as batch_id',
-                'batches.batch_name',
-                DB::raw('COUNT(DISTINCT user_profiles.user_id) as total')
-            )
-            ->groupBy('batches.id', 'batches.batch_name')
-            ->orderBy('batches.batch_name', 'asc')
-            ->get()
-            ->mapWithKeys(fn($row) => [
-                $row->batch_id => [
-                    'batch_name' => $row->batch_name,
-                    'total'      => (int) $row->total,
-                ],
-            ])
-            ->toArray();
+    #[Computed(persist: true)]
+    public function programHeads(): int
+    {
+        return $this->analytics()->programHeads();
+    }
+
+    #[Computed(persist: true)]
+    public function courses(): int
+    {
+        return $this->analytics()->courses();
+    }
+
+    // ===== Charts =====
+
+    #[Computed]
+    public function alumniByDept(): array
+    {
+        return $this->analytics()->alumniByDept();
+    }
+
+    #[Computed]
+    public function alumniByBatch(): array
+    {
+        return $this->analytics()->alumniByBatch();
     }
 
     #[Computed]
     public function courseAnalytics(): array
     {
-        $courses = Course::query()
-            ->where('is_active', true)
-            ->get(['id', 'course_code']);
-
-        $out = [];
-        foreach ($courses as $course) {
-            // Alumni IDs for this course (and batch if filtered)
-            $alumniIds = UserProfile::whereHas('courses', fn($q) => $q->where('course_id', $course->id))
-                ->when($this->selectedBatchId, fn($q) => $q->where('batch_id', $this->selectedBatchId))
-                ->pluck('user_id');
-
-            if ($alumniIds->isEmpty()) continue;
-
-            // Only alumni who are EMPLOYED count toward alignment
-            $employedBase = fn() => CivilStatusEmployment::whereHas(
-                'tracerStudy',
-                fn($q) => $q->whereIn('user_id', $alumniIds)
-            )
-                ->where('employment_status', 'employed');
-
-            $employedTotal = $employedBase()->count();
-
-            if ($employedTotal === 0) continue;
-
-            $related = $employedBase()
-                ->whereIn('employed_related_to_degree', ['yes', 'partially-related'])
-                ->count();
-
-            $out[] = [
-                'course_code'  => $course->course_code,
-                'related_rate' => round(($related / $employedTotal) * 100),
-            ];
-        }
-
-        return $out;
+        return $this->analytics()->courseAnalytics();
     }
-
-    #[Computed]
-    public function users()
-    {
-        return User::count();
-    }
-
-    #[Computed]
-    public function alumni()
-    {
-        $query = User::role('alumni');
-
-        if ($this->selectedBatchId) {
-            $query->whereHas('userProfile', fn($q) => $q->where('batch_id', $this->selectedBatchId));
-        }
-
-        return $query->count();
-    }
-
-    #[Computed]
-    public function programHeads()
-    {
-        return User::role('program head')->count();
-    }
-
-    #[Computed]
-    public function courses()
-    {
-        return Course::where('is_active', true)->count();
-    }
-
-    // ===== Tracer breakdowns (single query, split in PHP) =====
 
     #[Computed]
     public function tracerBreakdowns(): array
     {
-        $query = DB::table('civil_status_employments')
-            ->select([
-                'employment_status',
-                'employment_type',
-                'organization_type',
-                'employment_area',
-                'months_to_first_job',
-            ]);
-
-        if ($this->selectedBatchId) {
-            $query
-                ->join('tracer_studies', 'civil_status_employments.tracer_study_id', '=', 'tracer_studies.id')
-                ->join('user_profiles', 'tracer_studies.user_id', '=', 'user_profiles.user_id')
-                ->where('user_profiles.batch_id', $this->selectedBatchId);
-        }
-
-        $rows = $query->get();
-
-        $out = [
-            'employment_status'   => [],
-            'employment_type'     => [],
-            'organization_type'   => [],
-            'employment_area'     => [],
-            'months_to_first_job' => [],
-        ];
-
-        foreach ($rows as $row) {
-            foreach ($out as $col => $_) {
-                $val = $row->$col ?? null;
-                if ($val === null || $val === '') {
-                    continue;
-                }
-                $out[$col][$val] = ($out[$col][$val] ?? 0) + 1;
-            }
-        }
-
-        $order        = ['1-3-months', '4-6-months', 'more-than-6-months', 'more-than-1-year'];
-        $sortedMonths = [];
-        foreach ($order as $key) {
-            $sortedMonths[$key] = (int) ($out['months_to_first_job'][$key] ?? 0);
-        }
-        $out['months_to_first_job'] = $sortedMonths;
-
-        return $out;
+        return $this->analytics()->tracerBreakdowns();
     }
 
     #[Computed]
-    public function employmentStatusBreakdown()
+    public function furtherStudiesRate(): int
+    {
+        return $this->analytics()->furtherStudiesRate();
+    }
+
+    // ===== Sub-breakdowns (reuse cached tracerBreakdowns) =====
+
+    #[Computed]
+    public function employmentStatusBreakdown(): array
     {
         return $this->tracerBreakdowns['employment_status'];
     }
 
     #[Computed]
-    public function employmentTypeBreakdown()
+    public function employmentTypeBreakdown(): array
     {
         return $this->tracerBreakdowns['employment_type'];
     }
 
     #[Computed]
-    public function organizationTypeBreakdown()
+    public function organizationTypeBreakdown(): array
     {
         return $this->tracerBreakdowns['organization_type'];
     }
 
     #[Computed]
-    public function employmentAreaBreakdown()
+    public function employmentAreaBreakdown(): array
     {
         return $this->tracerBreakdowns['employment_area'];
     }
 
     #[Computed]
-    public function monthsToFirstJobBreakdown()
+    public function monthsToFirstJobBreakdown(): array
     {
         return $this->tracerBreakdowns['months_to_first_job'];
     }
 
-    // ===== Further studies rate =====
+    // ===== Manual refresh =====
 
-    #[Computed]
-    public function furtherStudiesRate()
-    {
-        $query = DB::table('further_studies');
-
-        if ($this->selectedBatchId) {
-            $query
-                ->join('tracer_studies', 'further_studies.tracer_study_id', '=', 'tracer_studies.id')
-                ->join('user_profiles', 'tracer_studies.user_id', '=', 'user_profiles.user_id')
-                ->where('user_profiles.batch_id', $this->selectedBatchId);
-        }
-
-        $data = $query
-            ->select('is_pursued_further_studies', DB::raw('COUNT(*) as total'))
-            ->groupBy('is_pursued_further_studies')
-            ->pluck('total', 'is_pursued_further_studies')
-            ->toArray();
-
-        $yes   = (int) ($data[1] ?? $data['1'] ?? 0);
-        $total = array_sum($data);
-
-        return $total > 0 ? round(($yes / $total) * 100) : 0;
-    }
-
-    /**
-     * Manual refresh — triggered from a button in the blade.
-     * Since we no longer cache, this simply re-renders.
-     */
     public function refreshAnalytics(): void
     {
+        $this->analyticsInstance = null;
         $this->dispatch('batch-changed');
     }
 };

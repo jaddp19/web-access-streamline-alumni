@@ -1,11 +1,13 @@
 <?php
 
-use App\Models\Company;
-use App\Models\WorkHistory;
 use App\Models\CivilStatusEmployment;
+use App\Models\Company;
 use App\Models\TracerStudy;
+use App\Models\WorkHistory;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -15,13 +17,13 @@ new #[Layout('layouts.app-alumni')] class extends Component
 {
     use WithFileUploads;
 
-    // Work history fields
+    // Work history
     public string $work_name = '';
     public ?int $company_id = null;
     public string $date_hired = '';
     public bool $is_current_job = false;
 
-    // ===== Employment details (CivilStatusEmployment) =====
+    // Employment details
     public string $civil_status = '';
     public string $employment_area = '';
     public string $abroad_country = '';
@@ -30,100 +32,117 @@ new #[Layout('layouts.app-alumni')] class extends Component
     public string $organization_type = '';
     public string $months_to_first_job = '';
 
-    // Inline "new company" mode
+    // Inline new-company form
     public bool $showNewCompanyForm = false;
     public $new_company_logo = null;
     public string $new_company_name = '';
     public string $new_company_address = '';
     public string $new_company_desc = '';
 
+    // =========================================================
+    //  MOUNT
+    // =========================================================
+
     public function mount(): void
     {
-        // Prefill civil_status from existing tracer (if any) so the user
-        // doesn't have to re-enter it when they first add a job.
-        $tracerStudy = TracerStudy::where('user_id', Auth::id())->first();
+        $tracerStudy = TracerStudy::query()
+            ->where('user_id', Auth::id())
+            ->first();
 
-        if ($tracerStudy) {
-            $employment = CivilStatusEmployment::where('tracer_study_id', $tracerStudy->id)->first();
+        if (! $tracerStudy) {
+            return;
+        }
 
-            if ($employment) {
-                $this->civil_status = $employment->civil_status ?? '';
-            }
+        $civilStatus = CivilStatusEmployment::query()
+            ->where('tracer_study_id', $tracerStudy->id)
+            ->value('civil_status');
+
+        if ($civilStatus) {
+            $this->civil_status = $civilStatus;
         }
     }
 
-    // ---- Validation ----
+    // =========================================================
+    //  VALIDATION
+    // =========================================================
 
     protected function rules(): array
     {
         return [
-            'work_name'      => 'required|string|max:255',
-            'company_id'     => 'required|exists:companies,id',
-            'date_hired'     => 'required|date|before_or_equal:today',
-            'is_current_job' => 'boolean',
+            'work_name'      => ['required', 'string', 'min:2', 'max:255'],
+            'company_id'     => ['required', 'integer', 'exists:companies,id'],
+            'date_hired'     => ['required', 'date', 'before_or_equal:today'],
+            'is_current_job' => ['boolean'],
         ];
     }
 
     protected function employmentRules(): array
     {
-        // Only validate employment details when this is the current job
         if (! $this->is_current_job) {
             return [];
         }
 
         return [
-            'civil_status'               => 'required|in:single,married,widowed,separated,single-parent',
-            'employed_related_to_degree' => 'required|in:yes,no,partially-related',
-            'employment_type'            => 'required|in:full-time,part-time,contractual-project-based,freelance,other',
-            'organization_type'          => 'required|in:private-company,government-agency,non-government-organization,educational-institution,self-employed-business,other',
-            'employment_area'            => 'required|in:philippines,abroad',
-            'abroad_country'             => 'required_if:employment_area,abroad|nullable|string|max:255',
-            'months_to_first_job'        => 'required|in:1-3-months,4-6-months,more-than-6-months,more-than-1-year',
+            'civil_status'               => ['required', 'in:single,married,widowed,separated,single-parent'],
+            'employed_related_to_degree' => ['required', 'in:yes,no,partially-related'],
+            'employment_type'            => ['required', 'in:full-time,part-time,contractual-project-based,freelance,other'],
+            'organization_type'          => ['required', 'in:private-company,government-agency,non-government-organization,educational-institution,self-employed-business,other'],
+            'employment_area'            => ['required', 'in:philippines,abroad'],
+            'abroad_country'             => ['required_if:employment_area,abroad', 'nullable', 'string', 'max:255'],
+            'months_to_first_job'        => ['required', 'in:1-3-months,4-6-months,more-than-6-months,more-than-1-year'],
         ];
     }
 
     protected function companyRules(): array
     {
         return [
-            'new_company_name'    => 'required|string|max:255|unique:companies,company_name',
-            'new_company_logo'    => 'nullable|image|max:2048',
-            'new_company_address' => 'nullable|string|max:500',
-            'new_company_desc'    => 'nullable|string|max:2000',
+            'new_company_name'    => ['required', 'string', 'min:2', 'max:255', 'unique:companies,company_name'],
+            'new_company_logo'    => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'new_company_address' => ['nullable', 'string', 'max:500'],
+            'new_company_desc'    => ['nullable', 'string', 'max:2000'],
         ];
     }
 
     protected function messages(): array
     {
         return [
-            'work_name.required'                    => 'Please enter your job title or position.',
-            'company_id.required'                   => 'Please select a company.',
-            'company_id.exists'                     => 'The selected company no longer exists.',
-            'date_hired.required'                   => 'Please enter the date you were hired.',
-            'date_hired.before_or_equal'            => 'The hire date cannot be in the future.',
-            'civil_status.required'                 => 'Please select your civil status.',
-            'employed_related_to_degree.required'   => 'Please answer if your job is related to your degree.',
-            'employment_type.required'              => 'Please select type of employment.',
-            'organization_type.required'            => 'Please select type of organization.',
-            'employment_area.required'              => 'Please select employment area.',
-            'abroad_country.required_if'            => 'Please specify the country.',
-            'months_to_first_job.required'          => 'Please select how long it took to get your first job.',
-            'new_company_name.required'             => 'Please enter the company name.',
-            'new_company_name.unique'               => 'A company with this name already exists.',
-            'new_company_logo.image'                => 'The logo must be an image file.',
-            'new_company_logo.max'                  => 'The logo cannot exceed 2MB.',
+            'work_name.required'                  => 'Please enter your job title or position.',
+            'work_name.min'                       => 'Job title must be at least 2 characters.',
+            'company_id.required'                 => 'Please select a company.',
+            'company_id.exists'                   => 'The selected company no longer exists.',
+            'date_hired.required'                 => 'Please enter the date you were hired.',
+            'date_hired.before_or_equal'          => 'The hire date cannot be in the future.',
+            'civil_status.required'               => 'Please select your civil status.',
+            'employed_related_to_degree.required' => 'Please answer if your job is related to your degree.',
+            'employment_type.required'            => 'Please select type of employment.',
+            'organization_type.required'          => 'Please select type of organization.',
+            'employment_area.required'            => 'Please select employment area.',
+            'abroad_country.required_if'          => 'Please specify the country.',
+            'months_to_first_job.required'        => 'Please select how long it took to get your first job.',
+            'new_company_name.required'           => 'Please enter the company name.',
+            'new_company_name.unique'             => 'A company with this name already exists.',
+            'new_company_logo.image'              => 'The logo must be an image file.',
+            'new_company_logo.mimes'              => 'Logo must be JPG, PNG, or WebP.',
+            'new_company_logo.max'                => 'The logo cannot exceed 2MB.',
         ];
     }
 
-    // ---- Computed ----
+    // =========================================================
+    //  COMPUTED
+    // =========================================================
 
     #[Computed]
     public function companies()
     {
-        return Company::orderBy('company_name')
-            ->get(['id', 'company_name', 'company_logo', 'company_address']);
+        return Company::query()
+            ->select('id', 'company_name', 'company_logo', 'company_address')
+            ->orderBy('company_name')
+            ->get();
     }
 
-    // ---- Actions ----
+    // =========================================================
+    //  NEW COMPANY FORM
+    // =========================================================
 
     public function toggleNewCompanyForm(): void
     {
@@ -136,115 +155,160 @@ new #[Layout('layouts.app-alumni')] class extends Component
                 'new_company_address',
                 'new_company_desc',
             ]);
+
             $this->resetErrorBag([
                 'new_company_logo',
                 'new_company_name',
                 'new_company_address',
                 'new_company_desc',
             ]);
+        } else {
+            // Clear any selected company so the user doesn't submit a stale one
+            $this->company_id = null;
+            $this->resetErrorBag('company_id');
         }
     }
+
+    public function updatedNewCompanyLogo(): void
+    {
+        $this->validateOnly('new_company_logo');
+    }
+
+    // =========================================================
+    //  CREATE COMPANY
+    // =========================================================
 
     public function createCompany(): void
     {
+        abort_unless(Auth::check(), 403);
+
         $validated = $this->validate($this->companyRules(), $this->messages());
 
+        $logoPath = null;
+
         try {
-            $logoPath = null;
-            if ($this->new_company_logo) {
-                $logoPath = $this->new_company_logo->store('companies', 'public');
+            $company = DB::transaction(function () use ($validated, &$logoPath) {
+                if ($this->new_company_logo) {
+                    $logoPath = $this->new_company_logo->store('companies', 'public');
+                }
+
+                return Company::create([
+                    'company_name'    => trim(strip_tags($validated['new_company_name'])),
+                    'company_address' => filled($validated['new_company_address'])
+                        ? trim(strip_tags($validated['new_company_address']))
+                        : null,
+                    'company_logo'    => $logoPath,
+                    'company_desc'    => filled($validated['new_company_desc'])
+                        ? trim(strip_tags($validated['new_company_desc']))
+                        : null,
+                ]);
+            });
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Race condition — another request created the same company between validation and insert
+            if ($logoPath && Storage::disk('public')->exists($logoPath)) {
+                Storage::disk('public')->delete($logoPath);
             }
 
-            $company = Company::create([
-                'company_name'    => trim($validated['new_company_name']),
-                'company_address' => trim($this->new_company_address) ?: null,
-                'company_logo'    => $logoPath,
-                'company_desc'    => trim($this->new_company_desc) ?: null,
-            ]);
+            if ($e->getCode() === '23000') {
+                $this->addError('new_company_name', 'This company name was just taken. Please refresh and try again.');
+                return;
+            }
 
-            $this->company_id         = $company->id;
-            $this->showNewCompanyForm = false;
-
-            $this->reset([
-                'new_company_logo',
-                'new_company_name',
-                'new_company_address',
-                'new_company_desc',
-            ]);
-
-            unset($this->companies);
-
-            session()->flash('company_created', 'Company "' . $company->company_name . '" created and selected.');
+            report($e);
+            session()->flash('error', 'Could not create the company. Please try again.');
+            return;
         } catch (\Throwable $e) {
-            logger()->error('Company creation failed: ' . $e->getMessage(), [
-                'user_id' => Auth::id(),
-                'trace'   => $e->getTraceAsString(),
-            ]);
+            if ($logoPath && Storage::disk('public')->exists($logoPath)) {
+                Storage::disk('public')->delete($logoPath);
+            }
 
-            session()->flash('error', 'Failed to create company: ' . $e->getMessage());
+            report($e);
+            session()->flash('error', 'Could not create the company. Please try again.');
+            return;
         }
+
+        // Success
+        $this->company_id         = $company->id;
+        $this->showNewCompanyForm = false;
+
+        $this->reset([
+            'new_company_logo',
+            'new_company_name',
+            'new_company_address',
+            'new_company_desc',
+        ]);
+
+        unset($this->companies);
+
+        session()->flash('company_created', 'Company "' . $company->company_name . '" created and selected.');
     }
+
+    // =========================================================
+    //  SAVE WORK HISTORY
+    // =========================================================
 
     public function saveWorkHistory()
     {
+        abort_unless(Auth::check(), 403);
+
         $rules = array_merge($this->rules(), $this->employmentRules());
 
         $this->validate($rules, $this->messages());
 
-        try {
-            DB::transaction(function () {
+        // Sanitize
+        $workName      = trim(strip_tags($this->work_name));
+        $civilStatus   = trim(strip_tags($this->civil_status));
+        $abroadCountry = trim(strip_tags($this->abroad_country));
 
+        try {
+            DB::transaction(function () use ($workName, $civilStatus, $abroadCountry) {
                 WorkHistory::create([
                     'user_id'        => Auth::id(),
-                    'work_name'      => trim($this->work_name),
+                    'work_name'      => $workName,
                     'company_id'     => $this->company_id,
                     'date_hired'     => $this->date_hired,
                     'is_current_job' => $this->is_current_job,
                 ]);
 
-                // ===== Sync tracer study =====
                 $tracerStudy = TracerStudy::firstOrCreate(['user_id' => Auth::id()]);
 
                 $employment = CivilStatusEmployment::firstOrCreate(
                     ['tracer_study_id' => $tracerStudy->id],
                     [
-                        'civil_status'      => $this->civil_status ?: 'single',
+                        'civil_status'      => $civilStatus ?: 'single',
                         'employment_status' => 'unemployed',
                     ]
                 );
 
                 if ($this->is_current_job) {
-                    // Employed → write everything from the form
                     $employment->update([
-                        'civil_status'               => $this->civil_status,
+                        'civil_status'               => $civilStatus,
                         'employment_status'          => 'employed',
-                        'current_job_position'       => trim($this->work_name),
+                        'current_job_position'       => $workName,
                         'employed_related_to_degree' => $this->employed_related_to_degree ?: null,
                         'employment_type'            => $this->employment_type ?: null,
                         'organization_type'          => $this->organization_type ?: null,
                         'employment_area'            => $this->employment_area ?: null,
                         'abroad_country'             => $this->employment_area === 'abroad'
-                            ? ($this->abroad_country ?: null)
+                            ? ($abroadCountry ?: null)
                             : null,
                         'months_to_first_job'        => $this->months_to_first_job ?: null,
                     ]);
                 } else {
-                    // Not current → only set civil_status if this is the first-ever row
+                    // Only update civil_status if it's still empty on the tracer
                     if (! $employment->civil_status) {
-                        $employment->update(['civil_status' => $this->civil_status ?: 'single']);
+                        $employment->update(['civil_status' => $civilStatus ?: 'single']);
                     }
                 }
             });
-
-            session()->flash('success', 'Work experience added successfully.');
-            return redirect()->route('alumni.profile');
         } catch (\Throwable $e) {
-            logger()->error('Work history creation failed: ' . $e->getMessage(), [
-                'user_id' => Auth::id(),
-                'trace'   => $e->getTraceAsString(),
-            ]);
-
-            session()->flash('error', 'Error: ' . $e->getMessage());
+            report($e);
+            session()->flash('error', 'Could not save your work experience. Please try again.');
+            return;
         }
+
+        session()->flash('success', 'Work experience added successfully.');
+
+        return redirect()->route('alumni.profile');
     }
 };

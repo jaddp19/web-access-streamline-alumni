@@ -33,7 +33,7 @@
     @livewireStyles
 </head>
 
-<body>
+<body class="bg-[#F0F2F5] dark:bg-[#18191A]">
     @include('components.headers.super-admin.header')
     @include('components.navbars.super-admin.navbar')
     <main class="lg:hs-overlay-layout-open:ps-60 transition-all duration-300 lg:fixed lg:inset-0 pt-13 px-3 pb-3 bg-gradient-to-br bg-[#F8FAFC] dark:bg-[#18191A]">

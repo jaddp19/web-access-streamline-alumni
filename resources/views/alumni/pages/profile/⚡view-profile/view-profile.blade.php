@@ -1,58 +1,136 @@
 <div class="bg-[#F0F2F5] dark:bg-[#18191A] min-h-screen">
 
     {{-- ========== FB-STYLE COVER + PROFILE HEADER ========== --}}
-    <div class="bg-white dark:bg-[#242526]">
-        <div class="max-w-[900px] mx-auto">
+    <div
+        x-data="{
+            lightboxOpen: false,
+            lightboxSrc: '',
+            lightboxAlt: '',
+            open(src, alt) {
+                if (!src) return;
+                this.lightboxSrc = src;
+                this.lightboxAlt = alt || '';
+                this.lightboxOpen = true;
+                document.body.style.overflow = 'hidden';
+            },
+            close() {
+                this.lightboxOpen = false;
+                document.body.style.overflow = '';
+            }
+        }"
+        @keydown.escape.window="close()"
+    >
+        @php
+            $rawAvatar = $this->userProfile?->avatar;
+            $avatarUrl = $rawAvatar
+                ? (filter_var($rawAvatar, FILTER_VALIDATE_URL)
+                    ? $rawAvatar
+                    : \Illuminate\Support\Facades\Storage::url($rawAvatar))
+                : null;
+            $initial = strtoupper(substr($this->alumni->name ?? '?', 0, 1));
 
-            {{-- Cover photo --}}
-            <div
-                class="h-40 sm:h-56 lg:h-64 bg-gradient-to-r from-[#123524] via-[#1C6B45] to-[#123524] relative overflow-hidden">
-                <div class="absolute inset-0 opacity-20">
-                    <div class="absolute -left-10 -top-10 w-48 h-48 rounded-full bg-[#D4A537]"></div>
-                    <div class="absolute right-20 top-10 w-32 h-32 rounded-full bg-white/30"></div>
-                    <div class="absolute right-60 -bottom-10 w-40 h-40 rounded-full bg-[#D4A537]"></div>
-                </div>
+            // Optional: only if you added `cover_photo` to user_profiles
+            $rawCover = $this->userProfile?->cover_photo ?? null;
+            $coverUrl = $rawCover
+                ? (filter_var($rawCover, FILTER_VALIDATE_URL)
+                    ? $rawCover
+                    : \Illuminate\Support\Facades\Storage::url($rawCover))
+                : null;
+        @endphp
+
+        {{-- Full-width cover --}}
+        <div class="bg-white dark:bg-[#242526] w-full">
+            <div class="relative w-full h-40 sm:h-56 lg:h-72 overflow-hidden group
+                        {{ $coverUrl ? 'cursor-zoom-in' : '' }}"
+                @if ($coverUrl) @click="open('{{ $coverUrl }}', '{{ $this->alumni->name }} cover photo')" @endif>
+
+                @if ($coverUrl)
+                    <img src="{{ $coverUrl }}" alt="{{ $this->alumni->name }} cover"
+                        class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                        loading="eager">
+
+                    <div
+                        class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors
+                               flex items-center justify-center opacity-0 group-hover:opacity-100">
+                        <span
+                            class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/60 text-white text-xs font-semibold backdrop-blur-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6" />
+                            </svg>
+                            View photo
+                        </span>
+                    </div>
+                @else
+                    {{-- Fallback gradient --}}
+                    <div class="absolute inset-0 bg-gradient-to-r from-[#123524] via-[#1C6B45] to-[#123524]"></div>
+                    <div class="absolute inset-0 opacity-20 pointer-events-none">
+                        <div class="absolute -left-10 -top-10 w-48 h-48 rounded-full bg-[#D4A537]"></div>
+                        <div class="absolute right-20 top-10 w-32 h-32 rounded-full bg-white/30"></div>
+                        <div class="absolute right-60 -bottom-10 w-40 h-40 rounded-full bg-[#D4A537]"></div>
+                    </div>
+                @endif
             </div>
-            {{-- Profile strip --}}
-            <div class="px-4 pb-4 -mt-16 sm:-mt-20 relative">
-                <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-                    <div class="flex flex-col sm:flex-row sm:items-end gap-4">
-                        @php
-                            $rawAvatar = $this->userProfile?->avatar;
-                            $avatarUrl = $rawAvatar
-                                ? (filter_var($rawAvatar, FILTER_VALIDATE_URL)
-                                    ? $rawAvatar
-                                    : \Illuminate\Support\Facades\Storage::url($rawAvatar))
-                                : null;
-                            $initial = strtoupper(substr($this->alumni->name ?? '?', 0, 1));
-                        @endphp
 
-                        @if ($avatarUrl)
-                            <img src="{{ $avatarUrl }}" alt="{{ $this->alumni->name }}"
-                                class="w-32 h-32 sm:w-40 sm:h-40 rounded-full object-cover ring-4 ring-white dark:ring-[#242526] shadow-lg bg-[#D4A537] shrink-0"
-                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            <span style="display: none;"
-                                class="w-32 h-32 sm:w-40 sm:h-40 rounded-full ring-4 ring-white dark:ring-[#242526] shadow-lg bg-yellow-500 items-center justify-center shrink-0">
-                                <span class="text-[#0f2b1c] font-bold text-5xl sm:text-6xl"
-                                    style="font-family: 'Fraunces', serif;">
-                                    {{ $initial }}
+            {{-- Profile strip — responsive --}}
+            <div class="max-w-[900px] mx-auto px-4 pb-4 -mt-10 sm:-mt-14 md:-mt-20 relative">
+                <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3 md:gap-4">
+
+                    {{-- Avatar + name --}}
+                    <div
+                        class="flex flex-col items-center sm:flex-row sm:items-end sm:text-left text-center gap-3 sm:gap-4">
+                        {{-- Clickable avatar --}}
+                        <button type="button"
+                            class="relative rounded-full ring-4 ring-white dark:ring-[#242526] shadow-lg shrink-0
+                                   focus:outline-none focus:ring-4 focus:ring-[#D4A537]/60 group
+                                   {{ $avatarUrl ? 'cursor-zoom-in' : 'cursor-default' }}"
+                            @if ($avatarUrl) @click="open('{{ $avatarUrl }}', '{{ $this->alumni->name }}')" @endif
+                            title="{{ $avatarUrl ? 'View profile photo' : '' }}">
+
+                            @if ($avatarUrl)
+                                <img src="{{ $avatarUrl }}" alt="{{ $this->alumni->name }}"
+                                    class="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full object-cover bg-[#D4A537]
+                                           transition-transform duration-300 group-hover:scale-[1.03]"
+                                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <span style="display: none;"
+                                    class="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full bg-yellow-500
+                                           items-center justify-center">
+                                    <span class="text-[#0f2b1c] font-bold text-3xl sm:text-4xl md:text-6xl"
+                                        style="font-family: 'Fraunces', serif;">
+                                        {{ $initial }}
+                                    </span>
                                 </span>
-                            </span>
-                        @else
-                            <span
-                                class="w-32 h-32 sm:w-40 sm:h-40 rounded-full ring-4 ring-white dark:ring-[#242526] shadow-lg bg-yellow-500 flex items-center justify-center shrink-0">
-                                <span class="text-[#0f2b1c] font-bold text-5xl sm:text-6xl"
-                                    style="font-family: 'Fraunces', serif;">
-                                    {{ $initial }}
+
+                                <span
+                                    class="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/30
+                                           transition-colors flex items-center justify-center
+                                           opacity-0 group-hover:opacity-100">
+                                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor"
+                                        stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6" />
+                                    </svg>
                                 </span>
-                            </span>
-                        @endif
-                        <div class="pb-2">
-                            <h1 class="text-3xl font-bold text-black dark:text-white"
+                            @else
+                                <span
+                                    class="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full bg-yellow-500
+                                           flex items-center justify-center">
+                                    <span class="text-[#0f2b1c] font-bold text-3xl sm:text-4xl md:text-6xl"
+                                        style="font-family: 'Fraunces', serif;">
+                                        {{ $initial }}
+                                    </span>
+                                </span>
+                            @endif
+                        </button>
+
+                        {{-- Name + batch --}}
+                        <div class="pb-1 sm:pb-2 min-w-0">
+                            <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-black dark:text-white truncate"
                                 style="font-family: 'Fraunces', serif;">
                                 {{ $this->alumni->name }}
                             </h1>
-                            <p class="text-black/60 dark:text-white/60 text-sm mt-0.5">
+                            <p class="text-black/60 dark:text-white/60 text-xs sm:text-sm mt-0.5">
                                 @if ($this->userProfile?->batch)
                                     Batch {{ $this->userProfile->batch->batch_name }}
                                 @else
@@ -61,10 +139,14 @@
                             </p>
                         </div>
                     </div>
-                    <div class="flex flex-wrap gap-2 pb-2">
+
+                    {{-- Verified badge --}}
+                    <div class="flex flex-wrap justify-center sm:justify-start md:justify-end gap-2 pb-1 sm:pb-2">
                         @if ($this->userProfile?->is_verified)
                             <span
-                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-xs font-semibold">
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg
+                                       bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400
+                                       text-xs font-semibold">
                                 <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
@@ -74,6 +156,31 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        {{-- ========== LIGHTBOX ========== --}}
+        <div x-show="lightboxOpen" x-cloak x-transition.opacity.duration.200ms
+            class="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm
+                   flex items-center justify-center p-4 sm:p-8"
+            @click.self="close()" role="dialog" aria-modal="true">
+
+            <button type="button" @click="close()"
+                class="absolute top-4 right-4 sm:top-6 sm:right-6 z-10
+                       w-10 h-10 rounded-full bg-white/10 hover:bg-white/20
+                       text-white flex items-center justify-center transition-colors
+                       focus:outline-none focus:ring-2 focus:ring-white/50"
+                aria-label="Close">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+
+            <img :src="lightboxSrc" :alt="lightboxAlt" @click.stop x-transition.scale.duration.200ms
+                class="max-w-full max-h-full object-contain rounded-lg shadow-2xl select-none" draggable="false">
+
+            <p class="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/50 text-xs hidden sm:block">
+                Press <kbd class="px-1.5 py-0.5 rounded bg-white/10 font-mono">Esc</kbd> or click outside to close
+            </p>
         </div>
     </div>
 

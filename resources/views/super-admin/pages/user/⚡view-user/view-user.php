@@ -18,99 +18,83 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     #[Url]
     public string $search = '';
 
-    public $selectedUsers = [];
-    public $selectAll = false;
+    public array $selectedUsers = [];
+    public bool $selectAll = false;
+    public bool $selectAllFiltered = false;
 
-    public function updatedRoleFilter()
+    /** Memoized filtered query for the current request. */
+    protected $filteredQueryCache = null;
+
+    // =========================================================
+    //  FILTER UPDATES
+    // =========================================================
+
+    public function updatedRoleFilter(): void
     {
-        $this->resetPage();
-        $this->selectedUsers = [];
-        $this->selectAll = false;
+        $this->invalidateFilterCache();
     }
 
-    public function updatedSearch()
+    public function updatedSearch(): void
     {
-        $this->resetPage();
-        $this->selectedUsers = [];
-        $this->selectAll = false;
+        $this->invalidateFilterCache();
     }
 
-    public function setRoleFilter(string $role)
+    public function setRoleFilter(string $role): void
     {
         $this->roleFilter = $role;
-        $this->updatedRoleFilter();
+        $this->invalidateFilterCache();
     }
 
-    public function deleteSelected()
+    protected function invalidateFilterCache(): void
     {
-        User::role(['alumni', 'registrar', 'program head'])->whereIn('id', $this->selectedUsers)->delete();
+        $this->filteredQueryCache = null;
+        unset($this->totalUsersCount); // bust the persisted computed
+
+        $this->resetPage();
 
         $this->selectedUsers = [];
         $this->selectAll = false;
-
-        session()->flash('success', 'Selected users deleted successfully.');
+        $this->selectAllFiltered = false;
     }
 
-    public function updatedSelectAll($value)
-    {
-        if ($value) {
-            $this->selectedUsers = $this->filteredQuery()
-                ->pluck('id')
-                ->map(fn ($id) => (int) $id)
-                ->toArray();
-        } else {
-            $this->selectedUsers = [];
-        }
-    }
-
-    public function updatedSelectedUsers()
-    {
-        $this->selectAll = count($this->selectedUsers) === $this->totalUsersCount;
-    }
-
-    public function toggleSelectAll()
-    {
-        if (count($this->selectedUsers) === $this->totalUsersCount) {
-            $this->selectedUsers = [];
-            $this->selectAll = false;
-        } else {
-            $this->selectedUsers = $this->filteredQuery()
-                ->pluck('id')
-                ->map(fn ($id) => (int) $id)
-                ->toArray();
-            $this->selectAll = true;
-        }
-    }
-
-    public function toggleRowSelection($userId)
-    {
-        if (in_array($userId, $this->selectedUsers)) {
-            $this->selectedUsers = array_values(array_diff($this->selectedUsers, [$userId]));
-        } else {
-            $this->selectedUsers[] = $userId;
-        }
-
-        $this->selectAll = count($this->selectedUsers) === $this->totalUsersCount;
-    }
+    // =========================================================
+    //  QUERY BUILDERS
+    // =========================================================
 
     protected function filteredQuery()
     {
-        return User::role(['alumni', 'registrar', 'program head'])
-            ->when($this->roleFilter !== 'all', function ($query) {
-                $query->role($this->roleFilter);
-            })
-            ->when($this->search !== '', function ($query) {
-                $query->where(function ($q) {
-                    $q->where('name', 'like', '%' . $this->search . '%')
-                    ->orWhere('email', 'like', '%' . $this->search . '%')
-                    ->orWhere('school_id', 'like', '%' . $this->search . '%')   // ← new
-                    ->orWhereHas('roles', fn ($r) => $r->where('name', 'like', '%' . $this->search . '%'));
+        if ($this->filteredQueryCache !== null) {
+            return $this->filteredQueryCache;
+        }
+
+        return $this->filteredQueryCache = User::role(['alumni', 'registrar', 'program head'])
+            ->when($this->roleFilter !== 'all', fn ($q) => $q->role($this->roleFilter))
+            ->when($this->search !== '', function ($q) {
+                $q->where(function ($q) {
+                    $q->where('name', 'like', "%{$this->search}%")
+                      ->orWhere('email', 'like', "%{$this->search}%")
+                      ->orWhere('school_id', 'like', "%{$this->search}%")
+                      ->orWhereHas('roles', fn ($r) => $r->where('name', 'like', "%{$this->search}%"));
                 });
             });
     }
 
-    #[Computed]
-    public function totalUsersCount()
+    protected function selectedUsersQuery()
+    {
+        if ($this->selectAllFiltered) {
+            return $this->filteredQuery();
+        }
+
+        return User::role(['alumni', 'registrar', 'program head'])
+            ->whereIn('id', $this->selectedUsers);
+    }
+
+    // =========================================================
+    //  COMPUTED
+    // =========================================================
+
+    #[Computed(persist: true)]
+    public function totalUsersCount(): int
     {
         return $this->filteredQuery()->count();
     }
@@ -119,10 +103,108 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public function users()
     {
         return $this->filteredQuery()
-            ->with(['roles:id,name', 'tracerStudy:id,user_id', 'userProfile:id,user_id,avatar'])
+            ->with([
+                'roles:id,name',
+                'tracerStudy:id,user_id',
+                'userProfile:id,user_id,avatar',
+            ])
             ->select('id', 'name', 'email', 'created_at')
             ->latest()
-            ->paginate(5);
+            ->paginate(10);
+    }
+
+    #[Computed]
+    public function pageUserIds(): array
+    {
+        return $this->users
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->toArray();
+    }
+
+    // =========================================================
+    //  SELECTION
+    // =========================================================
+
+    public function updatedSelectAll($value): void
+    {
+        if ($value) {
+            $this->selectAllFiltered = true;
+            $this->selectedUsers = $this->filteredQuery()
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->toArray();
+        } else {
+            $this->selectAllFiltered = false;
+            $this->selectedUsers = [];
+        }
+    }
+
+    public function updatedSelectedUsers(): void
+    {
+        $pageIds = $this->pageUserIds;
+
+        $this->selectAll = ! empty($pageIds)
+            && empty(array_diff($pageIds, $this->selectedUsers));
+
+        // Manual refinement → drop the "all filtered" flag
+        $this->selectAllFiltered = false;
+    }
+
+    public function toggleSelectAll(): void
+    {
+        $pageIds = $this->pageUserIds;
+
+        $allOnPageSelected = ! empty($pageIds)
+            && empty(array_diff($pageIds, $this->selectedUsers));
+
+        if ($allOnPageSelected) {
+            $this->selectedUsers = [];
+            $this->selectAll = false;
+            $this->selectAllFiltered = false;
+        } else {
+            $this->selectedUsers = $this->filteredQuery()
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->toArray();
+
+            $this->selectAll = true;
+            $this->selectAllFiltered = true;
+        }
+    }
+
+    public function toggleRowSelection($userId): void
+    {
+        $userId = (int) $userId;
+
+        if (in_array($userId, $this->selectedUsers, true)) {
+            $this->selectedUsers = array_values(array_diff($this->selectedUsers, [$userId]));
+        } else {
+            $this->selectedUsers[] = $userId;
+        }
+
+        $pageIds = $this->pageUserIds;
+
+        $this->selectAll = ! empty($pageIds)
+            && empty(array_diff($pageIds, $this->selectedUsers));
+
+        $this->selectAllFiltered = false;
+    }
+
+    // =========================================================
+    //  ACTIONS
+    // =========================================================
+
+    public function deleteSelected(): void
+    {
+
+        $count = $this->selectedUsersQuery()->delete();
+
+        $this->selectedUsers = [];
+        $this->selectAll = false;
+        $this->selectAllFiltered = false;
+
+        session()->flash('success', "{$count} user(s) deleted successfully.");
     }
 
     protected function tracerStatusFor(User $user): ?string
@@ -134,10 +216,18 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         return $user->tracerStudy ? 'Completed' : 'Pending';
     }
 
+    // =========================================================
+    //  EXPORTS
+    // =========================================================
+
     public function exportFilteredCsv(): StreamedResponse
     {
         $users = $this->filteredQuery()
-            ->with(['roles:id,name', 'tracerStudy:id,user_id', 'userProfile:id,user_id,avatar'])
+            ->with([
+                'roles:id,name',
+                'tracerStudy:id,user_id',
+                'userProfile:id,user_id,avatar',
+            ])
             ->select('id', 'name', 'email', 'school_id', 'created_at')
             ->latest()
             ->get();
@@ -147,9 +237,12 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function exportSelectedCsv(): StreamedResponse
     {
-        $users = User::role(['alumni', 'registrar', 'program head'])
-            ->whereIn('id', $this->selectedUsers)
-            ->with(['roles:id,name', 'tracerStudy:id,user_id', 'userProfile:id,user_id,avatar'])
+        $users = $this->selectedUsersQuery()
+            ->with([
+                'roles:id,name',
+                'tracerStudy:id,user_id',
+                'userProfile:id,user_id,avatar',
+            ])
             ->select('id', 'name', 'email', 'school_id', 'created_at')
             ->latest()
             ->get();
@@ -164,6 +257,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         return response()->streamDownload(function () use ($users) {
             $handle = fopen('php://output', 'w');
 
+            // UTF-8 BOM so Excel opens it correctly
             fwrite($handle, "\xEF\xBB\xBF");
 
             fputcsv($handle, ['Name', 'Email', 'School ID', 'Roles', 'Tracer Study', 'Created At']);

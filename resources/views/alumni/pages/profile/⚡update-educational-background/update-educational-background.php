@@ -4,6 +4,8 @@ use App\Models\Batch;
 use App\Models\Course;
 use App\Models\UserProfile;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -14,8 +16,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
     public ?int $course_id = null;
     public bool $is_public = true;
 
-    // Board exam fields — optional even for board programs
-    // (alumni may not have taken the exam yet)
     public ?string $board_taken = null;
     public string $board_rate = '';
 
@@ -24,33 +24,65 @@ new #[Layout('layouts.app-alumni')] class extends Component
     public string $original_board_rate = '';
     public ?int $original_course_id = null;
 
-    protected function rules()
+    /** Earliest allowed board exam date. */
+    public const BOARD_EXAM_MIN_DATE = '2015-01-01';
+
+    // =========================================================
+    //  VALIDATION
+    // =========================================================
+
+    protected function rules(): array
     {
         return [
-            'batch_id'    => 'required|exists:batches,id',
-            'course_id'   => 'required|exists:courses,id',
-            'is_public'   => 'boolean',
-            'board_taken' => 'nullable|date|before_or_equal:today',
-            'board_rate'  => 'nullable|numeric|min:0|max:100',
+            'batch_id'    => ['required', 'integer', Rule::exists('batches', 'id')],
+            'course_id'   => ['required', 'integer', Rule::exists('courses', 'id')],
+            'is_public'   => ['boolean'],
+
+            'board_taken' => [
+                'nullable',
+                'date',
+                'after_or_equal:' . self::BOARD_EXAM_MIN_DATE,
+                'before_or_equal:today',
+                // If board_rate is filled, board_taken becomes required
+                Rule::requiredIf(fn () => filled($this->board_rate)),
+            ],
+
+            'board_rate' => [
+                'nullable',
+                'numeric',
+                'min:0',
+                'max:100',
+                // If board_taken is filled, board_rate becomes required
+                Rule::requiredIf(fn () => filled($this->board_taken)),
+            ],
         ];
     }
 
-    public function messages()
+    public function messages(): array
     {
         return [
-            'batch_id.required'           => 'Please select your batch.',
-            'batch_id.exists'             => 'Selected batch is invalid.',
-            'course_id.required'          => 'Please select your degree program.',
-            'course_id.exists'            => 'Selected degree program is invalid.',
-            'board_taken.date'            => 'Board exam date must be a valid date.',
-            'board_taken.before_or_equal' => 'Board exam date cannot be in the future.',
-            'board_rate.numeric'          => 'Board rating must be a number.',
-            'board_rate.min'              => 'Board rating cannot be less than 0.',
-            'board_rate.max'              => 'Board rating cannot be more than 100.',
+            'batch_id.required'              => 'Please select your batch.',
+            'batch_id.exists'                => 'Selected batch is invalid.',
+            'course_id.required'             => 'Please select your degree program.',
+            'course_id.exists'               => 'Selected degree program is invalid.',
+
+            'board_taken.date'               => 'Board exam date must be a valid date.',
+            'board_taken.after_or_equal'     => 'Board exam date cannot be earlier than Jan 1, 2015.',
+            'board_taken.before_or_equal'    => 'Board exam date cannot be in the future.',
+            'board_taken.required'           => 'Please provide the board exam date — it is required when a rating is entered.',
+
+            'board_rate.numeric'             => 'Board rating must be a number.',
+            'board_rate.min'                 => 'Board rating cannot be less than 0.',
+            'board_rate.max'                 => 'Board rating cannot be more than 100.',
+            'board_rate.required'            => 'Please provide your board rating — it is required when a date is entered.',
         ];
     }
 
-    public function mount()
+    // =========================================================
+    //  MOUNT
+    // =========================================================
+
+    public function mount(): void
     {
         $user    = Auth::user();
         $profile = UserProfile::where('user_id', $user->id)->first();
@@ -61,13 +93,11 @@ new #[Layout('layouts.app-alumni')] class extends Component
             return;
         }
 
-        if ($profile->batch) {
-            $this->batch_id = $profile->batch->id;
-        }
+        $this->batch_id = $profile->batch_id;
 
         $existingCourse = $profile->courses()->first();
         if ($existingCourse) {
-            $this->course_id = $existingCourse->id;
+            $this->course_id          = $existingCourse->id;
             $this->original_course_id = $existingCourse->id;
         }
 
@@ -81,14 +111,15 @@ new #[Layout('layouts.app-alumni')] class extends Component
             ? (string) $profile->board_rate
             : '';
 
-        // Snapshot originals
         $this->original_board_taken = $this->board_taken;
         $this->original_board_rate  = $this->board_rate;
     }
 
-    /**
-     * When switching to a non-board course, clear the board fields.
-     */
+    // =========================================================
+    //  HOOKS
+    // =========================================================
+
+    /** When switching to a non-board course, clear the board fields. */
     public function updatedCourseId(): void
     {
         if ($this->selectedCourse?->course_type !== 'board') {
@@ -98,10 +129,37 @@ new #[Layout('layouts.app-alumni')] class extends Component
         }
     }
 
+    /**
+     * Live-clear the "the other field is required" error as soon as the user
+     * fixes it, so the form feels responsive.
+     */
+    public function updatedBoardTaken(): void
+    {
+        if (filled($this->board_taken)) {
+            $this->resetErrorBag('board_rate');
+        }
+        if (blank($this->board_taken) && blank($this->board_rate)) {
+            $this->resetErrorBag(['board_taken', 'board_rate']);
+        }
+    }
+
+    public function updatedBoardRate(): void
+    {
+        if (filled($this->board_rate)) {
+            $this->resetErrorBag('board_taken');
+        }
+        if (blank($this->board_taken) && blank($this->board_rate)) {
+            $this->resetErrorBag(['board_taken', 'board_rate']);
+        }
+    }
+
+    // =========================================================
+    //  UPDATE
+    // =========================================================
+
     public function update()
     {
-        // Board fields are always nullable — no conditional "required" rules
-        $validated = $this->validate($this->rules());
+        $validated = $this->validate();
 
         $user    = Auth::user();
         $profile = UserProfile::where('user_id', $user->id)->first();
@@ -111,101 +169,111 @@ new #[Layout('layouts.app-alumni')] class extends Component
             return redirect()->route('alumni.profile.update', $user->id);
         }
 
+        $isBoardCourse = $this->selectedCourse?->course_type === 'board';
+
+        // ===== Detect changes =====
+        $boardChanged = $this->board_taken !== $this->original_board_taken
+            || round((float) $this->board_rate, 2) !== round((float) $this->original_board_rate, 2);
+
+        $courseChanged = (int) $this->course_id !== (int) $this->original_course_id;
+
+        // ===== Build payload =====
+        $profileData = [
+            'batch_id'   => $validated['batch_id'],
+            'is_private' => ! $validated['is_public'],
+        ];
+
+        if ($isBoardCourse) {
+            $profileData['board_taken'] = $validated['board_taken'] ?: null;
+            $profileData['board_rate']  = filled($validated['board_rate'])
+                ? round((float) $validated['board_rate'], 2)
+                : null;
+        } else {
+            $profileData['board_taken'] = null;
+            $profileData['board_rate']  = null;
+        }
+
+        // ===== Verification reset =====
+        $mustResetVerification = ! $isBoardCourse
+            || ($isBoardCourse && ($boardChanged || $courseChanged));
+
+        if ($mustResetVerification) {
+            $profileData['is_verified'] = false;
+        }
+
         try {
-            $isBoardCourse = $this->selectedCourse?->course_type === 'board';
-
-            // ===== Detect changes =====
-            $boardChanged = $this->board_taken !== $this->original_board_taken
-                || round((float) $this->board_rate, 2) !== round((float) $this->original_board_rate, 2);
-
-            $courseChanged = (int) $this->course_id !== (int) $this->original_course_id;
-
-            // ===== Build update payload =====
-            $profileData = [
-                'batch_id'   => $validated['batch_id'],
-                'is_private' => ! $validated['is_public'],
-            ];
-
-            if ($isBoardCourse) {
-                // Save whatever the user provided (both can be null)
-                $profileData['board_taken'] = $validated['board_taken'] ?: null;
-                $profileData['board_rate']  = ($validated['board_rate'] !== '' && $validated['board_rate'] !== null)
-                    ? round((float) $validated['board_rate'], 2)
-                    : null;
-            } else {
-                // Non-board course — wipe board exam data
-                $profileData['board_taken'] = null;
-                $profileData['board_rate']  = null;
-            }
-
-            // ===== Verification reset logic =====
-            // Reset is_verified when:
-            //   • Course switched to non-board
-            //   • Board data changed (added, edited, or cleared)
-            //   • Course program changed while still on a board program
-            $mustResetVerification = ! $isBoardCourse
-                || ($isBoardCourse && ($boardChanged || $courseChanged));
-
-            if ($mustResetVerification) {
-                $profileData['is_verified'] = false;
-            }
-
-            // ===== Persist =====
-            $profile->update($profileData);
-            $profile->courses()->sync([$validated['course_id']]);
-
-            // Update snapshot
-            $this->original_board_taken = $this->board_taken;
-            $this->original_board_rate  = $this->board_rate;
-            $this->original_course_id   = (int) $this->course_id;
-
-            // ===== Flash message =====
-            if (! $isBoardCourse) {
-                session()->flash('success', 'Educational Background updated successfully.');
-            } elseif ($mustResetVerification && ($this->board_taken || $this->board_rate !== '')) {
-                session()->flash('success', 'Educational Background updated. Your board exam details changed — please wait for the registrar to re-verify your submission.');
-            } elseif ($mustResetVerification) {
-                session()->flash('success', 'Educational Background updated. Board exam details cleared.');
-            } else {
-                session()->flash('success', 'Educational Background updated successfully.');
-            }
-
-            return redirect()->route('alumni.profile');
-
+            DB::transaction(function () use ($profile, $profileData, $validated) {
+                $profile->update($profileData);
+                $profile->courses()->sync([$validated['course_id']]);
+            });
         } catch (\Throwable $e) {
-            logger()->error('Educational background save failed: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            session()->flash('error', 'Something went wrong while saving: ' . $e->getMessage());
+            report($e);
+            session()->flash('error', 'Could not save changes. Please try again.');
             return;
         }
+
+        // Refresh snapshots so a second save has correct baseline
+        $this->original_board_taken = $this->board_taken;
+        $this->original_board_rate  = $this->board_rate;
+        $this->original_course_id   = (int) $this->course_id;
+
+        unset($this->selectedCourse);
+
+        session()->flash('success', match (true) {
+            ! $isBoardCourse
+                => 'Educational background updated successfully.',
+
+            $mustResetVerification && ($this->board_taken || $this->board_rate !== '')
+                => 'Educational background updated. Board exam details changed — please wait for the registrar to re-verify.',
+
+            $mustResetVerification
+                => 'Educational background updated. Board exam details cleared.',
+
+            default
+                => 'Educational background updated successfully.',
+        });
+
+        return redirect()->route('alumni.profile');
     }
+
+    // =========================================================
+    //  COMPUTED
+    // =========================================================
 
     #[Computed]
     public function courses()
     {
-        return Course::with('department')->where('is_active', true)->orderBy('course_title')->get();
+        return Course::query()
+            ->select('id', 'course_title', 'course_type', 'department_id')
+            ->with('department:id,dept_name')
+            ->where('is_active', true)
+            ->orderBy('course_title')
+            ->get();
     }
 
     #[Computed]
     public function batches()
     {
-        return Batch::orderBy('batch_name')->get();
+        return Batch::query()
+            ->select('id', 'batch_name')
+            ->orderBy('batch_name')
+            ->get();
     }
 
     #[Computed]
-    public function recentYears()
+    public function recentYears(): array
     {
         $current = (int) date('Y');
         return range($current, $current - 4);
     }
 
     #[Computed]
-    public function selectedCourse()
+    public function selectedCourse(): ?Course
     {
-        return $this->course_id
-            ? $this->courses->firstWhere('id', (int) $this->course_id)
-            : null;
+        if (! $this->course_id) {
+            return null;
+        }
+
+        return $this->courses->firstWhere('id', (int) $this->course_id);
     }
 };

@@ -1,6 +1,13 @@
 <?php
 
+namespace App\Livewire\SuperAdmin;
+
+use App\Models\Department;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -13,104 +20,241 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public string $rejectReasonInput = '';
     public ?int $rejectingUserId = null;
 
-    public function updatingSearch()
+    public function updatingSearch(): void
     {
         $this->resetPage();
     }
 
-    public function approve(int $userId)
+    // =========================================================
+    //  SCOPE
+    // =========================================================
+
+    /**
+     * null   → registrar (global)
+     * int    → program head with a dept (scoped)
+     * false  → program head with NO dept (sees nothing)
+     */
+    #[Computed]
+    public function scope(): int|false|null
     {
-        $user = User::findOrFail($userId);
+        $user = Auth::user();
+        if (! $user) return false;
+        if ($user->hasRole('registrar')) return null;
+
+        return Department::where('program_head_id', $user->id)->value('id') ?? false;
+    }
+
+    #[Computed]
+    public function hasNoDepartment(): bool
+    {
+        return $this->scope === false;
+    }
+
+    #[Computed]
+    public function myDepartmentName(): ?string
+    {
+        return is_int($this->scope)
+            ? Department::whereKey($this->scope)->value('dept_name')
+            : null;
+    }
+
+    // =========================================================
+    //  PENDING USERS
+    // =========================================================
+
+    #[Computed]
+    public function pendingUsers()
+    {
+        if ($this->scope === false) {
+            return User::query()->whereRaw('1 = 0')->paginate(10);
+        }
+
+        $scope = $this->scope;
+
+        return User::role('alumni')
+            ->whereHas('userProfile', function ($q) use ($scope) {
+                $q->where('is_verified', false)
+                  ->whereNotNull('board_taken')
+                  ->whereNotNull('board_rate')
+                  ->whereHas('courses', function ($c) use ($scope) {
+                      $c->where('course_type', 'board');
+
+                      if (is_int($scope)) {
+                          $c->where('department_id', $scope);
+                      }
+                  });
+            })
+            ->when($this->search !== '', function ($q) {
+                $term = '%' . $this->search . '%';
+                $q->where(function ($inner) use ($term) {
+                    $inner->where('name', 'like', $term)
+                          ->orWhere('email', 'like', $term)
+                          ->orWhere('school_id', 'like', $term);
+                });
+            })
+            ->with([
+                'userProfile.batch:id,batch_name',
+                'userProfile.courses:id,course_title,course_type,department_id',
+                'userProfile.courses.department:id,dept_name',
+            ])
+            ->select('id', 'name', 'email', 'school_id', 'created_at')
+            ->latest()
+            ->paginate(10);
+    }
+
+    #[Computed]
+    public function rejectingUserName(): ?string
+    {
+        if (! $this->rejectingUserId) {
+            return null;
+        }
+        return User::query()->whereKey($this->rejectingUserId)->value('name');
+    }
+
+    // =========================================================
+    //  APPROVE
+    // =========================================================
+
+    public function approve(int $userId): void
+    {
+        $scope = $this->scope;
+        if ($scope === false) {
+            abort(403, 'You do not have a department assigned.');
+        }
+
+        $user = User::with('userProfile.courses:id,course_type,department_id')->find($userId);
+
+        if (! $user) {
+            session()->flash('status', 'User not found.');
+            return;
+        }
 
         if ($user->hasAnyRole(['program head', 'registrar'])) {
             abort(403, 'Cannot modify staff accounts from this queue.');
+        }
+
+        if (is_int($scope) && ! $this->userBelongsToDepartment($user, $scope)) {
+            abort(403, 'This alumni does not belong to your department.');
         }
 
         $profile = $user->userProfile;
 
-        if (! $profile
+        if (
+            ! $profile
             || ! $profile->board_taken
             || $profile->board_rate === null
-            || ! $profile->courses()->where('course_type', 'board')->exists()
+            || ! $profile->courses->contains(fn ($c) => $c->course_type === 'board')
         ) {
-            session()->flash('status', "{$user->name} is not eligible for verification (missing board exam details or non-board program).");
+            session()->flash(
+                'status',
+                "{$user->name} is not eligible for verification (missing board exam details or non-board program)."
+            );
             return;
         }
 
-        // Ensure they hold the alumni role
-        $user->syncRoles(['alumni']);
+        try {
+            DB::transaction(function () use ($user, $profile) {
+                // Lock the profile row to prevent double-approve race.
+                $lockedProfile = $profile->newQuery()->whereKey($profile->id)->lockForUpdate()->first();
 
-        // Clear any prior rejection state + mark as approved
-        $user->update([
-            'verification_status' => 'approved',
-            'rejection_reason'    => null,
-            'rejected_at'         => null,
-        ]);
+                if ($lockedProfile && $lockedProfile->is_verified) {
+                    return; // already approved by another admin
+                }
 
-        // Mark profile as verified — removes them from this queue
-        $profile->update([
-            'is_verified' => true,
-        ]);
+                $user->syncRoles(['alumni']);
+
+                $lockedProfile?->update(['is_verified' => true]);
+            });
+        } catch (\Throwable $e) {
+            report($e);
+            session()->flash('status', 'Could not approve user. Please try again.');
+            return;
+        }
+
+        Cache::forget('verification:pending-count');
 
         session()->flash('status', "{$user->name} has been approved as a verified alumni.");
     }
 
-    public function openRejectModal(int $userId)
+    // =========================================================
+    //  REJECT
+    // =========================================================
+
+    public function openRejectModal(int $userId): void
     {
-        $this->rejectingUserId = $userId;
+        $this->rejectingUserId   = $userId;
         $this->rejectReasonInput = '';
+        $this->resetErrorBag('rejectReasonInput');
     }
 
-    public function closeRejectModal()
+    public function closeRejectModal(): void
     {
-        $this->rejectingUserId = null;
+        $this->rejectingUserId   = null;
         $this->rejectReasonInput = '';
+        $this->resetErrorBag('rejectReasonInput');
     }
 
-    public function confirmReject()
+    public function confirmReject(): void
     {
-        $user = User::findOrFail($this->rejectingUserId);
+        $scope = $this->scope;
+        if ($scope === false) {
+            abort(403, 'You do not have a department assigned.');
+        }
+
+        $this->validate([
+            'rejectReasonInput' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        if (! $this->rejectingUserId) {
+            session()->flash('status', 'No user selected.');
+            return;
+        }
+
+        $user = User::with('userProfile')->find($this->rejectingUserId);
+
+        if (! $user) {
+            session()->flash('status', 'User not found.');
+            $this->closeRejectModal();
+            return;
+        }
 
         if ($user->hasAnyRole(['program head', 'registrar'])) {
             abort(403, 'Cannot modify staff accounts from this queue.');
         }
 
-        $user->update([
-            'verification_status' => 'rejected',
-            'rejection_reason'    => $this->rejectReasonInput ?: 'Could not be verified against school records.',
-            'rejected_at'         => now(),
-        ]);
-
-        if ($user->userProfile) {
-            $user->userProfile->update(['is_verified' => false]);
+        if (is_int($scope) && ! $this->userBelongsToDepartment($user, $scope)) {
+            abort(403, 'This alumni does not belong to your department.');
         }
+
+        try {
+            DB::transaction(function () use ($user) {
+                // Keep them out of the verified pool.
+                $user->userProfile?->update(['is_verified' => false]);
+            });
+        } catch (\Throwable $e) {
+            report($e);
+            session()->flash('status', 'Could not reject user. Please try again.');
+            return;
+        }
+
+        Cache::forget('verification:pending-count');
 
         session()->flash('status', "{$user->name}'s application was rejected.");
 
         $this->closeRejectModal();
     }
 
-    public function with(): array
+    // =========================================================
+    //  HELPERS
+    // =========================================================
+
+    protected function userBelongsToDepartment(User $user, int $departmentId): bool
     {
-        return [
-            'pendingUsers' => User::role('alumni')
-                ->whereHas('userProfile', function ($q) {
-                    $q->where('is_verified', false)
-                      ->whereNotNull('board_taken')
-                      ->whereNotNull('board_rate')
-                      ->whereHas('courses', fn ($c) => $c->where('course_type', 'board'));
-                })
-                ->when($this->search, fn ($q) => $q->where(function ($q) {
-                    $q->where('name', 'like', "%{$this->search}%")
-                      ->orWhere('email', 'like', "%{$this->search}%")
-                      ->orWhere('school_id', 'like', "%{$this->search}%");
-                }))
-                ->with([
-                    'userProfile.batch',
-                    'userProfile.courses.department',
-                ])
-                ->latest()
-                ->paginate(10),   // ← changed from 5 to 10
-        ];
+        if (! $user->relationLoaded('userProfile')) {
+            $user->load('userProfile.courses:id,course_type,department_id');
+        }
+
+        return $user->userProfile
+            && $user->userProfile->courses->contains('department_id', $departmentId);
     }
 };
