@@ -14,7 +14,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function updatedSelectedBatchId(): void
     {
-        // Reset memoized instance so a fresh batch context is used.
         $this->analyticsInstance = null;
         $this->dispatch('batch-changed');
     }
@@ -24,7 +23,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         return $this->analyticsInstance ??= new DashboardAnalytics($this->selectedBatchId);
     }
 
-    // ===== Batches (doesn't depend on batch → persist) =====
+    // ===== Batches =====
 
     #[Computed(persist: true)]
     public function batches(): array
@@ -66,10 +65,28 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         return $this->analytics()->alumniByDept();
     }
 
+    /**
+     * Nested: department → courses. Used for drill-down.
+     */
+    #[Computed]
+    public function alumniByDeptAndCourse(): array
+    {
+        return $this->analytics()->alumniByDeptAndCourse();
+    }
+
     #[Computed]
     public function alumniByBatch(): array
     {
         return $this->analytics()->alumniByBatch();
+    }
+
+    /**
+     * Nested: batch → courses. Used for drill-down.
+     */
+    #[Computed]
+    public function alumniByBatchAndCourse(): array
+    {
+        return $this->analytics()->alumniByBatchAndCourse();
     }
 
     #[Computed]
@@ -90,7 +107,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         return $this->analytics()->furtherStudiesRate();
     }
 
-    // ===== Sub-breakdowns (reuse cached tracerBreakdowns) =====
+    // ===== Sub-breakdowns =====
 
     #[Computed]
     public function employmentStatusBreakdown(): array

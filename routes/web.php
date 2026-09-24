@@ -24,6 +24,7 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'role:registrar'])->prefix('super-admin')->group(function () {
     Route::livewire('/dashboard', 'super-admin::pages.dashboard')->name('super-admin.dashboard');
     Route::livewire('/settings', 'super-admin::pages.settings')->name('super-admin.settings');
+    Route::livewire('view-reports', 'super-admin::pages.view-reports')->name('super-admin.reports');
 
     Route::livewire('/roles/view', 'super-admin::pages.role.view-role')->name('view-role');
     Route::livewire('/roles/create', 'super-admin::pages.role.create-role')->name('create-role');
@@ -68,6 +69,7 @@ Route::middleware(['auth', 'role:registrar'])->prefix('super-admin')->group(func
     Route::livewire('/verification-queue', 'super-admin::verification.verification-queue')->name('super-admin.verification-queue');
 
     Route::livewire('/audit-logs', 'super-admin::pages.audit-log-list')->name('super-admin.audit-logs');
+    Route::livewire('/duplicates', 'super-admin::pages.duplicates-view')->name('super-admin.duplicates-view');
 
     Route::livewire('/events', 'super-admin::pages.event.view-event')->name('super-admin.events.view');
     Route::livewire('/events/create', 'super-admin::pages.event.create-event')->name('super-admin.event.create');
@@ -77,6 +79,7 @@ Route::middleware(['auth', 'role:registrar'])->prefix('super-admin')->group(func
 
 Route::middleware(['auth', 'role:program head|registrar'])->prefix('admin')->group(function () {
     Route::livewire('/dashboard', 'admin::pages.dashboard')->name('admin.dashboard');
+    Route::livewire('/view-reports', 'admin::pages.view-reports')->name('admin.reports');
     Route::livewire('/settings', 'admin::pages.settings')->name('admin.settings');
 
     Route::livewire('/alumni/view', 'admin::pages.alumni.view-alumni')->name('admin.alumni.view');

@@ -13,18 +13,12 @@ new #[Layout('layouts.app-admin')] class extends Component
     public $selectedBatchId = '';
     protected ?DashboardAnalytics $analyticsInstance = null;
 
-    /** Reset memoized analytics when batch changes. */
     public function updatedSelectedBatchId(): void
     {
         $this->analyticsInstance = null;
         $this->dispatch('batch-changed');
     }
 
-    /**
-     * - null  → registrar (global view)
-     * - int   → program head (department-scoped)
-     * - false → program head without a department (nothing to show)
-     */
     #[Computed]
     public function scope(): int|false|null
     {
@@ -55,7 +49,6 @@ new #[Layout('layouts.app-admin')] class extends Component
             : null;
     }
 
-    /** Memoized analytics instance with batch + dept scope. */
     protected function analytics(): DashboardAnalytics
     {
         $deptId = is_int($this->scope) ? $this->scope : null;
@@ -128,9 +121,21 @@ new #[Layout('layouts.app-admin')] class extends Component
     }
 
     #[Computed]
+    public function alumniByDeptAndCourse(): array
+    {
+        return $this->hasNoDepartment ? [] : $this->analytics()->alumniByDeptAndCourse();
+    }
+
+    #[Computed]
     public function alumniByBatch(): array
     {
         return $this->hasNoDepartment ? [] : $this->analytics()->alumniByBatch();
+    }
+
+    #[Computed]
+    public function alumniByBatchAndCourse(): array
+    {
+        return $this->hasNoDepartment ? [] : $this->analytics()->alumniByBatchAndCourse();
     }
 
     #[Computed]
@@ -155,7 +160,7 @@ new #[Layout('layouts.app-admin')] class extends Component
             : $this->analytics()->tracerBreakdowns();
     }
 
-    // ===== Breakdown props (thin wrappers over tracerBreakdowns) =====
+    // ===== Breakdown props =====
 
     #[Computed]
     public function employmentStatusBreakdown(): array
@@ -228,8 +233,6 @@ new #[Layout('layouts.app-admin')] class extends Component
     {
         return $this->hasNoDepartment ? [] : $this->analytics()->alumniByRegion();
     }
-
-    // ===== Manual refresh =====
 
     public function refreshAnalytics(): void
     {

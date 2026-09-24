@@ -130,7 +130,7 @@
             <div class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm overflow-hidden">
                 @forelse ($this->notifications as $post)
                     @php
-                        $isUnread = $post->created_at->gt($this->lastSeenAt);
+                        $isUnread = ! in_array($post->id, $this->readPostIds);
                         $authorRole = $post->user?->roles->first()?->name;
 
                         // Pick icon based on category slug

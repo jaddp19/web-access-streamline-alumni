@@ -119,7 +119,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function deletePost(int $id): void
     {
-        abort_unless(auth()->user()?->can('manage-posts'), 403);
 
         $post = Post::find($id);
 

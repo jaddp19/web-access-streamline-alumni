@@ -8,6 +8,7 @@ use App\Models\CivilStatusEmployment;
 use App\Models\FurtherStudy;
 use App\Models\UserProfile;
 use App\Models\WorkHistory;
+use App\Services\EmailTemplateService;
 use App\Services\PhAddressService;
 use App\Support\TracerStudyRules;
 use Illuminate\Support\Facades\Auth;
@@ -519,6 +520,14 @@ new #[Layout('layouts.app-form')] class extends Component
                     ->update(['is_current_job' => false]);
             }
         });
+
+        // ─── Send update confirmation email ──────────────────────────
+        EmailTemplateService::send('tracer-study-updated', $user->email, [
+            'name'       => $user->name,
+            'year'       => now()->year,
+            'updated_at' => now()->format('F j, Y · g:i A'),
+        ]);
+        // ─────────────────────────────────────────────────────────────
 
         session()->flash('status', 'Your tracer study has been updated successfully.');
         $this->dispatch('close-tab');

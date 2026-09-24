@@ -2,6 +2,7 @@
 
 use App\Models\Department;
 use App\Models\Post;
+use App\Models\PostRead;
 use App\Models\User;
 use App\Support\BadgeCounts;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -32,13 +33,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
     }
 
     #[Computed]
-    public function lastSeenAt()
-    {
-        return $this->alumni->last_seen_posts_at ?? $this->alumni->created_at;
-    }
-
-    /** Registrar user IDs — cached (small, stable set). */
-    #[Computed]
     public function registrarIds(): array
     {
         return Cache::remember('registrar_user_ids', now()->addHour(), function () {
@@ -49,7 +43,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
         });
     }
 
-    /** Department IDs this alumni belongs to (via student_course → courses). */
     #[Computed]
     public function alumniDepartmentIds(): array
     {
@@ -66,10 +59,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
             ->all();
     }
 
-    /**
-     * Program-head user IDs whose department contains this alumni.
-     * Cached by department set — many alumni in the same dept share the entry.
-     */
     #[Computed]
     public function programHeadIdsForMyDepartments(): array
     {
@@ -92,7 +81,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
         });
     }
 
-    /** The single source of truth: who can publish to this alumni. */
     #[Computed]
     public function allowedAuthorIds(): array
     {
@@ -106,9 +94,9 @@ new #[Layout('layouts.app-alumni')] class extends Component
     {
         return Post::with(['user.userProfile', 'user.roles', 'category'])
             ->where('status', 'public')
-            ->whereIn('user_id', $this->allowedAuthorIds)   // ← replaces the nested whereHas
+            ->whereIn('user_id', $this->allowedAuthorIds)
             ->when($this->filter === 'unread', function ($q) {
-                $q->where('created_at', '>', $this->lastSeenAt);
+                $q->whereDoesntHave('reads', fn ($r) => $r->where('user_id', $this->alumni->id));
             })
             ->latest();
     }
@@ -126,15 +114,23 @@ new #[Layout('layouts.app-alumni')] class extends Component
     #[Computed]
     public function unreadCount(): int
     {
-        if (empty($this->allowedAuthorIds)) {
-            return 0;
+        return BadgeCounts::unreadNotifications($this->alumni->id);
+    }
+
+    /** Which post IDs on the current page this alumni has already read. */
+    #[Computed]
+    public function readPostIds(): array
+    {
+        $postIds = collect($this->notifications->items())->pluck('id')->all();
+
+        if (empty($postIds)) {
+            return [];
         }
 
-        return Post::query()
-            ->where('status', 'public')
-            ->whereIn('user_id', $this->allowedAuthorIds)
-            ->where('created_at', '>', $this->lastSeenAt)
-            ->count();
+        return PostRead::where('user_id', $this->alumni->id)
+            ->whereIn('post_id', $postIds)
+            ->pluck('post_id')
+            ->all();
     }
 
     #[Computed]
@@ -147,11 +143,26 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
     public function markAllAsRead(): void
     {
-        Auth::user()->update(['last_seen_posts_at' => now()]);
-        BadgeCounts::forgetFor(Auth::id());
+        $postIds = Post::query()
+            ->where('status', 'public')
+            ->whereIn('user_id', $this->allowedAuthorIds)
+            ->whereDoesntHave('reads', fn ($q) => $q->where('user_id', $this->alumni->id))
+            ->pluck('id');
 
-        unset($this->unreadCount, $this->lastSeenAt, $this->notifications);
+        if ($postIds->isNotEmpty()) {
+            $now = now();
+            $rows = $postIds->map(fn ($id) => [
+                'user_id' => $this->alumni->id,
+                'post_id' => $id,
+                'read_at' => $now,
+            ])->all();
 
-        $this->dispatch('badges:refresh'); // <-- the missing piece
+            PostRead::upsert($rows, ['user_id', 'post_id'], ['read_at']);
+        }
+
+        BadgeCounts::forgetFor($this->alumni->id);
+        unset($this->unreadCount, $this->notifications, $this->readPostIds);
+
+        $this->dispatch('badges:refresh');
     }
 };

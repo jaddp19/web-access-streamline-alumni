@@ -24,9 +24,7 @@
 
                 @unless ($this->hasNoDepartment)
                     <div class="shrink-0 flex items-center gap-2">
-
                         <label for="batch-filter" class="text-[11px] font-bold text-black/50 dark:text-white/50 uppercase tracking-wide whitespace-nowrap">Batch</label>
-
                         <div class="relative">
                             <select id="batch-filter" wire:model.live.debounce.500ms="selectedBatchId"
                                 wire:loading.attr="disabled" wire:target="selectedBatchId"
@@ -81,8 +79,7 @@
                             <div class="relative flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
                                     </svg>
                                 </div>
                                 <div class="min-w-0">
@@ -119,9 +116,28 @@
 
                     {{-- Main charts --}}
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+                        {{-- Alumni Graduates (drill-down aware) --}}
                         <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
-                            <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white">Alumni Graduates</h2>
-                            <p class="text-xs text-black/40 dark:text-white/40 mt-0.5 mb-3">Breakdown by department</p>
+                            <div class="flex items-start justify-between gap-3 mb-3">
+                                <div class="min-w-0">
+                                    <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white">Alumni Graduates</h2>
+                                    <p id="dept-subtitle" class="text-xs text-black/40 dark:text-white/40 mt-0.5">
+                                        @if ($this->isRegistrar)
+                                            Breakdown by department · click a bar to see courses
+                                        @else
+                                            Breakdown by course
+                                        @endif
+                                    </p>
+                                </div>
+                                <button type="button" id="dept-back-btn"
+                                    class="hidden shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold text-[#1877F2] hover:underline">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                                    </svg>
+                                    Back to departments
+                                </button>
+                            </div>
                             @if (empty($this->alumniByDept))
                                 <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No alumni-to-department records yet.</p>
                             @else
@@ -129,6 +145,7 @@
                             @endif
                         </div>
 
+                        {{-- Comparative Analysis --}}
                         <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                             <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white">Comparative Analysis</h2>
                             <p class="text-xs text-black/40 dark:text-white/40 mt-0.5 mb-1">Course alignment with current work</p>
@@ -141,10 +158,23 @@
                         </div>
                     </div>
 
-                    {{-- Alumni by Year --}}
+                    {{-- Alumni by Year (drill-down aware) --}}
                     <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
-                        <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white">Alumni Graduates by Year</h2>
-                        <p class="text-xs text-black/40 dark:text-white/40 mt-0.5 mb-3">Total graduates per batch</p>
+                        <div class="flex items-start justify-between gap-3 mb-3">
+                            <div class="min-w-0">
+                                <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white">Alumni Graduates by Year</h2>
+                                <p id="batch-subtitle" class="text-xs text-black/40 dark:text-white/40 mt-0.5">
+                                    Total graduates per batch · click a bar to see courses
+                                </p>
+                            </div>
+                            <button type="button" id="batch-back-btn"
+                                class="hidden shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold text-[#1877F2] hover:underline">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                                </svg>
+                                Back to batches
+                            </button>
+                        </div>
                         @if (empty($this->alumniByBatch))
                             <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No batch records yet.</p>
                         @else
@@ -152,13 +182,12 @@
                         @endif
                     </div>
 
-                    {{-- Analytics section header --}}
+                    {{-- Analytics section --}}
                     <div>
                         <h2 class="text-lg sm:text-xl font-bold text-[#0f2b1c] dark:text-white" style="font-family: 'Fraunces', serif;">Analytics</h2>
                         <p class="text-sm text-black/50 dark:text-white/50 mt-0.5">Deeper breakdown from the tracer study.</p>
                     </div>
 
-                    {{-- Row: Employment status + Employment type --}}
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                         <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                             <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Employment Status</h2>
@@ -181,7 +210,6 @@
                         </div>
                     </div>
 
-                    {{-- Row: Org type + Employment area --}}
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                         <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                             <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Organization Type</h2>
@@ -204,7 +232,6 @@
                         </div>
                     </div>
 
-                    {{-- Time to First Job --}}
                     <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                         <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Time to First Job</h2>
                         <p class="text-xs text-black/40 dark:text-white/40 mb-3">How long after graduation alumni got employed</p>
@@ -215,13 +242,11 @@
                         @endif
                     </div>
 
-                    {{-- NEW SECTION HEADER --}}
                     <div class="pt-2">
                         <h2 class="text-lg sm:text-xl font-bold text-[#0f2b1c] dark:text-white" style="font-family: 'Fraunces', serif;">Demographics & Outcomes</h2>
                         <p class="text-sm text-black/50 dark:text-white/50 mt-0.5">Additional insights from profiles and work history.</p>
                     </div>
 
-                    {{-- Row: Gender + Civil status --}}
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                         <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                             <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Gender Distribution</h2>
@@ -244,7 +269,6 @@
                         </div>
                     </div>
 
-                    {{-- Row: Further studies + Job alignment --}}
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                         <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                             <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Further Studies Level</h2>
@@ -267,7 +291,6 @@
                         </div>
                     </div>
 
-                    {{-- Row: Top employers + Board exam --}}
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                         <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                             <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Top Employers</h2>
@@ -290,7 +313,6 @@
                         </div>
                     </div>
 
-                    {{-- Alumni by Region --}}
                     <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                         <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Alumni by Region</h2>
                         <p class="text-xs text-black/40 dark:text-white/40 mb-3">Geographic distribution (top regions)</p>
@@ -307,24 +329,26 @@
     </div>
 
     @unless ($this->hasNoDepartment)
-        {{-- Payload for charts --}}
         <script type="application/json" id="analytics-payload">
             {!! json_encode([
-                'alumniByDept'              => $this->alumniByDept,
-                'alumniByBatch'             => $this->alumniByBatch,
-                'courseAnalytics'           => $this->courseAnalytics,
-                'employmentStatus'          => $this->employmentStatusBreakdown,
-                'employmentType'            => $this->employmentTypeBreakdown,
-                'organizationType'          => $this->organizationTypeBreakdown,
-                'employmentArea'            => $this->employmentAreaBreakdown,
-                'monthsToFirstJob'          => $this->monthsToFirstJobBreakdown,
-                'gender'                    => $this->genderBreakdown,
-                'civilStatus'               => $this->civilStatusBreakdown,
-                'furtherStudies'            => $this->furtherStudiesLevelBreakdown,
-                'topEmployers'              => $this->topEmployers,
-                'jobAlignment'              => $this->jobAlignmentBreakdown,
-                'boardExam'                 => $this->boardExamBreakdown,
-                'alumniByRegion'            => $this->alumniByRegion,
+                'isRegistrar'             => $this->isRegistrar,
+                'alumniByDept'            => $this->alumniByDept,
+                'alumniByDeptAndCourse'   => $this->alumniByDeptAndCourse,
+                'alumniByBatch'           => $this->alumniByBatch,
+                'alumniByBatchAndCourse'  => $this->alumniByBatchAndCourse,
+                'courseAnalytics'         => $this->courseAnalytics,
+                'employmentStatus'        => $this->employmentStatusBreakdown,
+                'employmentType'          => $this->employmentTypeBreakdown,
+                'organizationType'        => $this->organizationTypeBreakdown,
+                'employmentArea'          => $this->employmentAreaBreakdown,
+                'monthsToFirstJob'        => $this->monthsToFirstJobBreakdown,
+                'gender'                  => $this->genderBreakdown,
+                'civilStatus'             => $this->civilStatusBreakdown,
+                'furtherStudies'          => $this->furtherStudiesLevelBreakdown,
+                'topEmployers'            => $this->topEmployers,
+                'jobAlignment'            => $this->jobAlignmentBreakdown,
+                'boardExam'               => $this->boardExamBreakdown,
+                'alumniByRegion'          => $this->alumniByRegion,
             ]) !!}
         </script>
     @endunless
@@ -332,15 +356,54 @@
 
 @unless ($this->hasNoDepartment)
     @assets
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     @endassets
 
     @script
     <script>
-        // ==== Theme detection (re-evaluated on every chart rebuild) ====
+        // =====================================================================
+        // Palette
+        // =====================================================================
+        const PALETTE = {
+            greenDark:   '#0f2b1c',
+            greenMid:    '#1C6B45',
+            greenBright: '#16a34a',
+            greenLight:  '#10b981',
+            goldDeep:    '#a97f1f',
+            gold:        '#D4A537',
+            goldLight:   '#E5B94A',
+            goldSoft:    '#FCD34D',
+        };
+
+        const PIE_PALETTE = [
+            PALETTE.greenBright, PALETTE.gold,
+            PALETTE.greenMid,    PALETTE.goldLight,
+            PALETTE.greenLight,  PALETTE.goldSoft,
+            PALETTE.greenDark,   PALETTE.goldDeep,
+        ];
+
+        // =====================================================================
+        // Drill state (client-side, per chart)
+        // =====================================================================
+        const drillState = {
+            dept:  { view: 'departments', selected: null },
+            batch: { view: 'batches',     selected: null },
+        };
+
+        // =====================================================================
+        // Helpers
+        // =====================================================================
         const isDark = () => document.documentElement.classList.contains('dark');
 
-        // ==== Helpers ====
+        const theme = () => ({
+            mutedText:   isDark() ? 'rgba(229,231,235,0.6)' : 'rgba(55,65,81,0.6)',
+            gridColor:   isDark() ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+            borderColor: isDark() ? '#242526' : '#fff',
+            tooltipBg:   '#0f2b1c',
+            pieLabel:    '#fff',
+            fontFamily:  "'Inter', 'Segoe UI', system-ui, sans-serif",
+        });
+
         const pretty = (label) => {
             const str = String(label).toLowerCase();
             if (str === 'not-yet-employed') return 'Not yet Employed';
@@ -375,6 +438,14 @@
             if (existing) existing.destroy();
         };
 
+        const barGradient = (ctx, chartArea, baseColor) => {
+            if (!chartArea) return baseColor;
+            const g = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+            g.addColorStop(0, baseColor);
+            g.addColorStop(1, baseColor + 'cc');
+            return g;
+        };
+
         const makeChart = (ChartLib, id, config) => {
             const el = document.getElementById(id);
             if (!el || !ChartLib) return;
@@ -382,95 +453,279 @@
             new ChartLib(el, config);
         };
 
-        // ==== THE FIX: integer-only ticks (theme-aware grid color) ====
         const integerTicks = () => ({
             beginAtZero: true,
             ticks: {
-                stepSize: 1,
-                precision: 0,
-                autoSkip: false,
-                color: isDark() ? 'rgba(255,255,255,0.5)' : '#6b7280',
-                callback: (v) => Number.isInteger(v) ? v : ''
+                stepSize: 1, precision: 0, autoSkip: false,
+                color: theme().mutedText,
+                callback: (v) => Number.isInteger(v) ? v : '',
             },
-            afterBuildTicks: (axis) => {
-                axis.ticks = axis.ticks.filter(t => Number.isInteger(t.value));
-            },
-            grid: { color: isDark() ? 'rgba(255,255,255,0.08)' : '#f1f1f1' }
+            grid: { color: theme().gridColor, drawBorder: false },
         });
 
-        const pieTooltip = {
-            callbacks: {
-                label: (ctx) => {
-                    const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                    const pct = total > 0 ? ((ctx.raw / total) * 100).toFixed(1) + '%' : '0%';
-                    return `${ctx.label}: ${ctx.raw} (${pct})`;
-                }
+        let ChartLibRef = null;
+
+        // =====================================================================
+        // Renderers for drill-down charts
+        // =====================================================================
+        const renderDeptChart = (ChartLib) => {
+            const p = window.__payload;
+            const state = drillState.dept;
+            const drillable = p.isRegistrar;   // only registrar has multiple departments
+
+            let labels = [], totals = [], names = [];
+            let clickable = false;
+            let subtitleText = '';
+            let backBtnVisible = false;
+
+            if (state.view === 'departments') {
+                const map = p.alumniByDept || {};
+                const codes = Object.keys(map);
+                labels = codes;
+                names  = codes.map(c => map[c]?.name || c);
+                totals = codes.map(c => map[c]?.total || 0);
+                clickable = drillable;
+                subtitleText = 'Breakdown by department' + (drillable ? ' · click a bar to see courses' : '');
+                backBtnVisible = false;
+            } else {
+                // Courses view
+                const map = p.alumniByDeptAndCourse || {};
+                // For program head: use the only department (first key)
+                // For registrar who drilled: use selected key
+                const deptKey = state.selected || Object.keys(map)[0];
+                const dept = map[deptKey] || { courses: {}, name: deptKey };
+                const codes = Object.keys(dept.courses || {});
+                labels = codes;
+                names  = codes.map(c => dept.courses[c]?.name || c);
+                totals = codes.map(c => dept.courses[c]?.total || 0);
+                clickable = false;
+                subtitleText = p.isRegistrar
+                    ? `${dept.name} · breakdown by course`
+                    : `Breakdown by course within ${dept.name}`;
+                backBtnVisible = p.isRegistrar;   // only registrar can go back
             }
+
+            const subEl = document.getElementById('dept-subtitle');
+            if (subEl) subEl.textContent = subtitleText;
+
+            const backBtn = document.getElementById('dept-back-btn');
+            if (backBtn) {
+                backBtn.classList.toggle('hidden', ! backBtnVisible);
+                backBtn.classList.toggle('inline-flex', backBtnVisible);
+            }
+
+            if (labels.length === 0) return;
+
+            const t = theme();
+
+            makeChart(ChartLib, 'alumniDynamicChart', {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        data: totals,
+                        backgroundColor: (ctx) => {
+                            const { ctx: c, chartArea } = ctx.chart;
+                            return barGradient(c, chartArea, PALETTE.greenBright);
+                        },
+                        hoverBackgroundColor: PALETTE.greenMid,
+                        borderRadius: 8,
+                        borderSkipped: false,
+                        maxBarThickness: 48,
+                    }],
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    onHover: (event, els) => {
+                        if (! clickable) return;
+                        event.native.target.style.cursor = els.length > 0 ? 'pointer' : 'default';
+                    },
+                    onClick: (event, els) => {
+                        if (! clickable || els.length === 0) return;
+                        drillState.dept.view = 'courses';
+                        drillState.dept.selected = labels[els[0].index];
+                        renderDeptChart(ChartLib);
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: t.tooltipBg, padding: 10, cornerRadius: 8,
+                            titleFont: { size: 12, weight: '600' }, bodyFont: { size: 12 },
+                            displayColors: false,
+                            callbacks: {
+                                title: (items) => names[items[0]?.dataIndex] || labels[items[0]?.dataIndex],
+                                label: (ctx) => `${ctx.raw} alumni`,
+                                afterLabel: () => clickable ? 'Click to see courses' : '',
+                            },
+                        },
+                    },
+                    scales: {
+                        y: integerTicks(),
+                        x: {
+                            ticks: { color: t.mutedText, font: { weight: '600' } },
+                            grid: { display: false }, border: { display: false },
+                        },
+                    },
+                },
+            });
         };
 
-        const pieLabelPlugin = {
-            id: 'piePercentLabels',
-            afterDatasetsDraw(chart) {
-                const { ctx } = chart;
-                const dataset = chart.data.datasets[0];
-                const total = dataset.data.reduce((a, b) => a + b, 0);
-                if (!total) return;
-                chart.getDatasetMeta(0).data.forEach((arc, i) => {
-                    const value = dataset.data[i];
-                    if (!value) return;
-                    const pct = ((value / total) * 100).toFixed(1) + '%';
-                    const pos = arc.tooltipPosition();
-                    ctx.save();
-                    ctx.fillStyle = isDark() ? '#ffffff' : '#000';
-                    ctx.font = 'bold 12px sans-serif';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(pct, pos.x, pos.y);
-                    ctx.restore();
-                });
+        const renderBatchChart = (ChartLib) => {
+            const p = window.__payload;
+            const state = drillState.batch;
+            const t = theme();
+
+            let labels = [], totals = [], names = [];
+            let clickable = false;
+            let subtitleText = '';
+            let backBtnVisible = false;
+            let batchKey = null;
+
+            if (state.view === 'batches') {
+                const map = p.alumniByBatch || {};
+                const ids = Object.keys(map);
+                labels = ids.map(id => map[id].batch_name);
+                names  = labels.slice();
+                totals = ids.map(id => map[id].total);
+                clickable = true;
+                subtitleText = 'Total graduates per batch · click a bar to see courses';
+                backBtnVisible = false;
+            } else {
+                const map = p.alumniByBatchAndCourse || {};
+                batchKey = state.selected;
+                const batch = map[batchKey] || { courses: {}, batch_name: batchKey };
+                const codes = Object.keys(batch.courses || {});
+                labels = codes;
+                names  = codes.map(c => batch.courses[c]?.name || c);
+                totals = codes.map(c => batch.courses[c]?.total || 0);
+                clickable = false;
+                subtitleText = `Batch ${batch.batch_name} · breakdown by course`;
+                backBtnVisible = true;
             }
+
+            const subEl = document.getElementById('batch-subtitle');
+            if (subEl) subEl.textContent = subtitleText;
+
+            const backBtn = document.getElementById('batch-back-btn');
+            if (backBtn) {
+                backBtn.classList.toggle('hidden', ! backBtnVisible);
+                backBtn.classList.toggle('inline-flex', backBtnVisible);
+            }
+
+            if (labels.length === 0) return;
+
+            makeChart(ChartLib, 'alumniByBatchChart', {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        data: totals,
+                        backgroundColor: (ctx) => {
+                            const { ctx: c, chartArea } = ctx.chart;
+                            return barGradient(c, chartArea, PALETTE.gold);
+                        },
+                        hoverBackgroundColor: PALETTE.goldDeep,
+                        borderRadius: 8,
+                        borderSkipped: false,
+                        maxBarThickness: 52,
+                    }],
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    onHover: (event, els) => {
+                        if (! clickable) return;
+                        event.native.target.style.cursor = els.length > 0 ? 'pointer' : 'default';
+                    },
+                    onClick: (event, els) => {
+                        if (! clickable || els.length === 0) return;
+                        const idx = els[0].index;
+                        const map = p.alumniByBatch || {};
+                        const ids = Object.keys(map);
+                        const found = ids.find(id => map[id].batch_name === labels[idx]);
+                        if (! found) return;
+                        drillState.batch.view = 'courses';
+                        drillState.batch.selected = found;
+                        renderBatchChart(ChartLib);
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: t.tooltipBg, padding: 10, cornerRadius: 8,
+                            titleFont: { size: 12, weight: '600' }, bodyFont: { size: 12 },
+                            displayColors: false,
+                            callbacks: {
+                                title: (items) => names[items[0]?.dataIndex] || labels[items[0]?.dataIndex],
+                                label: (ctx) => `${ctx.raw} graduate${ctx.raw === 1 ? '' : 's'}`,
+                                afterLabel: () => clickable ? 'Click to see courses' : '',
+                            },
+                        },
+                    },
+                    scales: {
+                        y: integerTicks(),
+                        x: {
+                            ticks: { color: t.mutedText, font: { weight: '600' } },
+                            grid: { display: false }, border: { display: false },
+                        },
+                    },
+                },
+            });
         };
 
-        const piePalette = ['#16a34a', '#D4A537', '#3b82f6', '#94a3b8', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4'];
+        // =====================================================================
+        // Back-button handlers
+        // =====================================================================
+        if (! window.__adminDeptBack) {
+            window.__adminDeptBack = true;
+            document.addEventListener('click', (e) => {
+                const btn = e.target.closest('#dept-back-btn');
+                if (! btn || ! ChartLibRef) return;
+                drillState.dept.view = 'departments';
+                drillState.dept.selected = null;
+                renderDeptChart(ChartLibRef);
+            });
+        }
 
+        if (! window.__adminBatchBack) {
+            window.__adminBatchBack = true;
+            document.addEventListener('click', (e) => {
+                const btn = e.target.closest('#batch-back-btn');
+                if (! btn || ! ChartLibRef) return;
+                drillState.batch.view = 'batches';
+                drillState.batch.selected = null;
+                renderBatchChart(ChartLibRef);
+            });
+        }
+
+        // =====================================================================
+        // Init
+        // =====================================================================
         const initCharts = async () => {
             const ChartLib = await waitForChart();
             if (!ChartLib) return;
+            ChartLibRef = ChartLib;
 
             const p = getPayload();
+            window.__payload = p;
 
-            // ===== Alumni by Department =====
-            const deptData = p.alumniByDept || {};
-            const deptCodes = Object.keys(deptData);
-            if (deptCodes.length > 0) {
-                makeChart(ChartLib, 'alumniDynamicChart', {
-                    type: 'bar',
-                    data: {
-                        labels: deptCodes,
-                        datasets: [{
-                            data: deptCodes.map(c => deptData[c].total),
-                            backgroundColor: '#16a34a',
-                            borderRadius: 6,
-                            maxBarThickness: 42
-                        }]
-                    },
-                    options: {
-                        responsive: true, maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                callbacks: {
-                                    title: (items) => deptData[deptCodes[items[0]?.dataIndex]]?.name || '',
-                                    label: (ctx) => ctx.raw
-                                }
-                            }
-                        },
-                        scales: { y: integerTicks(), x: { grid: { display: false } } }
-                    }
-                });
-            }
+            const t = theme();
 
-            // ===== Comparative Analysis =====
+            ChartLib.defaults.font.family = t.fontFamily;
+            ChartLib.defaults.font.size   = 11;
+            ChartLib.defaults.animation.duration = 500;
+            ChartLib.defaults.animation.easing   = 'easeOutQuart';
+
+            // Reset drill state on every init
+            // Program head → start at 'courses' (skip department level)
+            // Registrar   → start at 'departments'
+            drillState.dept  = p.isRegistrar
+                ? { view: 'departments', selected: null }
+                : { view: 'courses',     selected: null };
+            drillState.batch = { view: 'batches', selected: null };
+
+            // 1. Alumni by Dept / Courses (drill-down aware)
+            renderDeptChart(ChartLib);
+
+            // 2. Comparative Analysis
             const ca = p.courseAnalytics || [];
             if (ca.length > 0) {
                 makeChart(ChartLib, 'comparativeChart', {
@@ -478,90 +733,152 @@
                     data: {
                         labels: ca.map(i => i.course_code),
                         datasets: [
-                            { label: 'Aligned', data: ca.map(i => i.related_rate), backgroundColor: '#16a34a', borderRadius: 6, maxBarThickness: 28 },
-                            { label: 'Not Aligned', data: ca.map(i => 100 - i.related_rate), backgroundColor: '#D4A537', borderRadius: 6, maxBarThickness: 28 }
-                        ]
+                            {
+                                label: 'Aligned',
+                                data: ca.map(i => i.related_rate),
+                                backgroundColor: PALETTE.greenBright,
+                                hoverBackgroundColor: PALETTE.greenMid,
+                                borderRadius: 6, borderSkipped: false, maxBarThickness: 28,
+                            },
+                            {
+                                label: 'Not Aligned',
+                                data: ca.map(i => 100 - i.related_rate),
+                                backgroundColor: PALETTE.gold,
+                                hoverBackgroundColor: PALETTE.goldDeep,
+                                borderRadius: 6, borderSkipped: false, maxBarThickness: 28,
+                            },
+                        ],
                     },
                     options: {
                         responsive: true, maintainAspectRatio: false,
+                        layout: { padding: { top: 16 } },
                         scales: {
-                            y: { beginAtZero: true, max: 110, grid: { color: isDark() ? 'rgba(255,255,255,0.08)' : '#f1f1f1' }, ticks: { color: isDark() ? 'rgba(255,255,255,0.5)' : '#6b7280', stepSize: 25, callback: v => v > 100 ? '' : v + '%' } },
-                            x: { grid: { display: false }, ticks: { color: isDark() ? 'rgba(255,255,255,0.5)' : '#6b7280' } }
+                            y: {
+                                beginAtZero: true, max: 110,
+                                grid: { color: t.gridColor, drawBorder: false },
+                                border: { display: false },
+                                ticks: { stepSize: 25, color: t.mutedText, callback: v => v > 100 ? '' : v + '%' },
+                            },
+                            x: {
+                                ticks: { color: t.mutedText, font: { weight: '600' } },
+                                grid: { display: false }, border: { display: false },
+                            },
                         },
                         plugins: {
-                            legend: { position: 'top', align: 'end', labels: { color: isDark() ? '#ffffff' : '#0f2b1c' } },
-                            tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.formattedValue}%` } }
-                        }
+                            legend: {
+                                position: 'top', align: 'end',
+                                labels: {
+                                    color: t.mutedText, boxWidth: 10, boxHeight: 10,
+                                    usePointStyle: true, pointStyle: 'rectRounded',
+                                    padding: 14, font: { size: 11, weight: '600' },
+                                },
+                            },
+                            tooltip: {
+                                backgroundColor: t.tooltipBg, padding: 10, cornerRadius: 8,
+                                callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.formattedValue}%` },
+                            },
+                        },
                     },
                     plugins: [{
                         id: 'barPercentLabels',
                         afterDatasetsDraw(chart) {
                             const { ctx } = chart;
                             ctx.save();
-                            ctx.font = 'bold 11px sans-serif';
-                            ctx.fillStyle = isDark() ? '#ffffff' : '#0f2b1c';
+                            ctx.font = '600 10px ' + t.fontFamily;
+                            ctx.fillStyle = t.mutedText;
                             ctx.textAlign = 'center';
                             ctx.textBaseline = 'bottom';
                             chart.data.datasets.forEach((dataset, di) => {
                                 chart.getDatasetMeta(di).data.forEach((bar, i) => {
-                                    const value = dataset.data[i];
-                                    if (value == null) return;
-                                    ctx.fillText(value + '%', bar.x, bar.y - 4);
+                                    const v = dataset.data[i];
+                                    if (v == null) return;
+                                    ctx.fillText(v + '%', bar.x, bar.y - 4);
                                 });
                             });
                             ctx.restore();
-                        }
-                    }]
-                });
-            }
-
-            // ===== Alumni by Batch =====
-            const bd = p.alumniByBatch || {};
-            const bIds = Object.keys(bd);
-            if (bIds.length > 0) {
-                makeChart(ChartLib, 'alumniByBatchChart', {
-                    type: 'bar',
-                    data: {
-                        labels: bIds.map(id => bd[id].batch_name),
-                        datasets: [{ data: bIds.map(id => bd[id].total), backgroundColor: '#D4A537', borderRadius: 6, maxBarThickness: 50 }]
-                    },
-                    options: {
-                        responsive: true, maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: { callbacks: { label: ctx => `${ctx.raw} graduate${ctx.raw === 1 ? '' : 's'}` } }
                         },
-                        scales: { y: integerTicks(), x: { grid: { display: false } } }
-                    }
+                    }],
                 });
             }
 
-            // ===== Pies (status, area, gender, civil, job alignment, board exam) =====
+            // 3. Alumni by Batch (drill-down aware)
+            renderBatchChart(ChartLib);
+
+            // ===== Pie helpers =====
+            const pieLabelPlugin = {
+                id: 'piePercentLabels',
+                afterDatasetsDraw(chart) {
+                    const { ctx } = chart;
+                    const dataset = chart.data.datasets[0];
+                    const total = dataset.data.reduce((a, b) => a + b, 0);
+                    if (!total) return;
+                    chart.getDatasetMeta(0).data.forEach((arc, i) => {
+                        const v = dataset.data[i];
+                        if (!v) return;
+                        const pct = ((v / total) * 100).toFixed(0) + '%';
+                        const pos = arc.tooltipPosition();
+                        ctx.save();
+                        ctx.fillStyle = t.pieLabel;
+                        ctx.font = '700 12px ' + t.fontFamily;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(pct, pos.x, pos.y);
+                        ctx.restore();
+                    });
+                },
+            };
+
+            const pieTooltip = {
+                backgroundColor: t.tooltipBg, padding: 10, cornerRadius: 8,
+                callbacks: {
+                    label: (ctx) => {
+                        const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                        const pct = total > 0 ? ((ctx.raw / total) * 100).toFixed(1) + '%' : '0%';
+                        return ` ${ctx.raw} (${pct})`;
+                    },
+                },
+            };
+
+            const pieLegend = {
+                position: 'bottom',
+                labels: {
+                    color: t.mutedText, boxWidth: 10, boxHeight: 10,
+                    usePointStyle: true, pointStyle: 'circle',
+                    padding: 12, font: { size: 11, weight: '600' },
+                },
+            };
+
             const pieConfig = (id, dataMap, colors) => {
                 const keys = Object.keys(dataMap || {});
                 if (keys.length === 0) return;
                 makeChart(ChartLib, id, {
-                    type: 'pie',
+                    type: 'doughnut',
                     data: {
                         labels: keys.map(pretty),
-                        datasets: [{ data: keys.map(k => dataMap[k]), backgroundColor: colors || piePalette, borderWidth: 2, borderColor: isDark() ? '#242526' : '#fff' }]
+                        datasets: [{
+                            data: keys.map(k => dataMap[k]),
+                            backgroundColor: colors || PIE_PALETTE,
+                            borderWidth: 3,
+                            borderColor: t.borderColor,
+                            hoverOffset: 6,
+                        }],
                     },
                     options: {
-                        responsive: true, maintainAspectRatio: false,
-                        plugins: { legend: { position: 'bottom', labels: { color: isDark() ? '#ffffff' : '#0f2b1c' } }, tooltip: pieTooltip }
+                        responsive: true, maintainAspectRatio: false, cutout: '60%',
+                        plugins: { legend: pieLegend, tooltip: pieTooltip },
                     },
-                    plugins: [pieLabelPlugin]
+                    plugins: [pieLabelPlugin],
                 });
             };
 
             pieConfig('employmentStatusChart', p.employmentStatus);
-            pieConfig('employmentAreaChart', p.employmentArea, ['#16a34a', '#3b82f6']);
-            pieConfig('genderChart', p.gender, ['#3b82f6', '#ec4899']);
+            pieConfig('employmentAreaChart', p.employmentArea, [PALETTE.greenBright, PALETTE.gold]);
+            pieConfig('genderChart', p.gender, [PALETTE.greenMid, PALETTE.gold]);
             pieConfig('civilStatusChart', p.civilStatus);
-            pieConfig('jobAlignmentChart', p.jobAlignment, ['#16a34a', '#D4A537', '#ef4444']);
-            pieConfig('boardExamChart', p.boardExam, ['#16a34a', '#ef4444']);
+            pieConfig('jobAlignmentChart', p.jobAlignment, [PALETTE.greenBright, PALETTE.gold, '#ef4444']);
+            pieConfig('boardExamChart', p.boardExam, [PALETTE.greenBright, '#ef4444']);
 
-            // ===== Bars (integer ticks) =====
+            // ===== Bar configs =====
             const barConfig = (id, dataMap, color, horizontal = false) => {
                 const keys = Object.keys(dataMap || {});
                 if (keys.length === 0) return;
@@ -569,41 +886,47 @@
                     type: 'bar',
                     data: {
                         labels: keys.map(pretty),
-                        datasets: [{ data: keys.map(k => dataMap[k]), backgroundColor: color, borderRadius: 6, maxBarThickness: 45 }]
+                        datasets: [{
+                            data: keys.map(k => dataMap[k]),
+                            backgroundColor: color,
+                            borderRadius: 8,
+                            borderSkipped: false,
+                            maxBarThickness: 45,
+                        }],
                     },
                     options: {
                         responsive: true, maintainAspectRatio: false,
                         indexAxis: horizontal ? 'y' : 'x',
                         plugins: { legend: { display: false } },
                         scales: horizontal
-                            ? { x: integerTicks(), y: { grid: { display: false }, ticks: { color: isDark() ? 'rgba(255,255,255,0.5)' : '#6b7280' } } }
-                            : { y: integerTicks(), x: { grid: { display: false }, ticks: { color: isDark() ? 'rgba(255,255,255,0.5)' : '#6b7280' } } }
-                    }
+                            ? { x: integerTicks(), y: { grid: { display: false }, ticks: { color: t.mutedText, font: { weight: '600' } } } }
+                            : { y: integerTicks(), x: { grid: { display: false }, ticks: { color: t.mutedText, font: { weight: '600' } } } },
+                    },
                 });
             };
 
-            barConfig('employmentTypeChart', p.employmentType, '#16a34a');
-            barConfig('organizationTypeChart', p.organizationType, '#D4A537', true);
-            barConfig('monthsToFirstJobChart', p.monthsToFirstJob, '#3b82f6');
-            barConfig('furtherStudiesChart', p.furtherStudies, '#8b5cf6');
-            barConfig('topEmployersChart', p.topEmployers, isDark() ? '#D4A537' : '#0f2b1c', true);
-            barConfig('alumniByRegionChart', p.alumniByRegion, '#16a34a', true);
+            barConfig('employmentTypeChart', p.employmentType, PALETTE.greenMid);
+            barConfig('organizationTypeChart', p.organizationType, PALETTE.gold, true);
+            barConfig('monthsToFirstJobChart', p.monthsToFirstJob, PALETTE.greenBright);
+            barConfig('furtherStudiesChart', p.furtherStudies, PALETTE.goldLight);
+            barConfig('topEmployersChart', p.topEmployers, PALETTE.goldDeep, true);
+            barConfig('alumniByRegionChart', p.alumniByRegion, PALETTE.greenMid, true);
         };
 
         initCharts();
 
-        $wire.on('batch-changed', () => requestAnimationFrame(() => initCharts()));
-        $wire.on('analytics-refreshed', () => requestAnimationFrame(() => initCharts()));
+        if (! window.__adminBatchChanged) {
+            window.__adminBatchChanged = true;
+            $wire.on('batch-changed', () => requestAnimationFrame(() => initCharts()));
+            $wire.on('analytics-refreshed', () => requestAnimationFrame(() => initCharts()));
+        }
 
-        // Re-render charts when theme toggles
-        const themeObserver = new MutationObserver((mutations) => {
-            mutations.forEach((m) => {
-                if (m.attributeName === 'class') {
-                    requestAnimationFrame(() => initCharts());
-                }
+        if (! window.__adminThemeObserver) {
+            window.__adminThemeObserver = new MutationObserver(() => requestAnimationFrame(() => initCharts()));
+            window.__adminThemeObserver.observe(document.documentElement, {
+                attributes: true, attributeFilter: ['class'],
             });
-        });
-        themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+        }
     </script>
     @endscript
 @endunless

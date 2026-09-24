@@ -2,6 +2,7 @@
 
 use App\Models\Department;
 use App\Models\Post;
+use App\Models\PostRead;
 use App\Models\User;
 use App\Support\BadgeCounts;
 use Illuminate\Support\Facades\Auth;
@@ -22,10 +23,13 @@ new #[Layout('layouts.app-alumni')] class extends Component
         $this->post = $post;
 
         $user = Auth::user();
-        $watermark = $user->last_seen_posts_at ?? $user->created_at;
 
-        if ($post->created_at->gt($watermark)) {   // never move it backward
-            $user->update(['last_seen_posts_at' => $post->created_at]);
+        $read = PostRead::firstOrCreate(
+            ['user_id' => $user->id, 'post_id' => $post->id],
+            ['read_at' => now()],
+        );
+
+        if ($read->wasRecentlyCreated) {
             BadgeCounts::forgetFor($user->id);
             $this->dispatch('badges:refresh');
         }
@@ -48,9 +52,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
             return true;
         }
 
-        $programHeadIds = $this->programHeadIdsForMyDepartments();
-
-        return in_array($post->user_id, $programHeadIds);
+        return in_array($post->user_id, $this->programHeadIdsForMyDepartments());
     }
 
     protected function programHeadIdsForMyDepartments(): array
@@ -123,9 +125,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
             : Storage::url($this->post->image);
     }
 
-    /**
-     * Attachments as an array of ['url' => ..., 'name' => ..., 'ext' => ...]
-     */
     #[Computed]
     public function attachmentList(): array
     {
@@ -142,24 +141,16 @@ new #[Layout('layouts.app-alumni')] class extends Component
                     ? $path
                     : Storage::url($path);
 
-                $name = basename($path);
-                $ext  = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-
                 return [
                     'url'  => $url,
-                    'name' => $name,
-                    'ext'  => $ext,
+                    'name' => basename($path),
+                    'ext'  => strtolower(pathinfo($path, PATHINFO_EXTENSION)),
                 ];
             })
             ->values()
             ->all();
     }
 
-    /**
-     * Other recent posts for "More from CSAV" section — scoped to the
-     * same allowed-author set as the current post, so alumni never see
-     * a preview of a post from a department they don't belong to.
-     */
     #[Computed]
     public function relatedPosts()
     {

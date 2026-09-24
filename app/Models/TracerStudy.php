@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Models\CivilStatusEmployment;
+use App\Models\FurtherStudy;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;

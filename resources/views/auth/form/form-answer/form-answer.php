@@ -8,6 +8,7 @@ use App\Models\CivilStatusEmployment;
 use App\Models\FurtherStudy;
 use App\Models\UserProfile;
 use App\Models\WorkHistory;
+use App\Services\EmailTemplateService;
 use App\Services\PhAddressService;
 use App\Support\TracerStudyRules;
 use Illuminate\Support\Facades\Auth;
@@ -228,7 +229,10 @@ new #[Layout('layouts.app-form')] class extends Component
     public function nextStep(): void
     {
         $this->validate(
-            TracerStudyRules::step($this->step),
+            TracerStudyRules::step($this->step, [
+                'taken' => $this->board_taken,
+                'rate'  => $this->board_rate,
+            ]),
             TracerStudyRules::messages()
         );
 
@@ -252,7 +256,10 @@ new #[Layout('layouts.app-form')] class extends Component
     public function submit()
     {
         $this->validate(
-            TracerStudyRules::all(),
+            TracerStudyRules::all([
+                'taken' => $this->board_taken,
+                'rate'  => $this->board_rate,
+            ]),
             TracerStudyRules::messages()
         );
 
@@ -317,6 +324,8 @@ new #[Layout('layouts.app-form')] class extends Component
                     'barangay_name'  => null,
                 ]);
 
+            $boardRate = trim((string) $this->board_rate);
+
             $profile = UserProfile::updateOrCreate(
                 ['user_id' => $user->id],
                 [
@@ -329,8 +338,8 @@ new #[Layout('layouts.app-form')] class extends Component
                     'is_private'       => $existingProfile->is_private ?? false,
                     'is_verified'      => $existingProfile->is_verified ?? false,
                     'board_taken'      => $isBoardCourse ? ($this->board_taken ?: null) : null,
-                    'board_rate'       => $isBoardCourse
-                        ? ($this->board_rate !== '' ? round((float) $this->board_rate, 2) : null)
+                    'board_rate'       => $isBoardCourse && $boardRate !== ''
+                        ? round((float) $boardRate, 2)
                         : null,
                 ]
             );
@@ -384,6 +393,14 @@ new #[Layout('layouts.app-form')] class extends Component
                 }
             }
         });
+
+        // ─── Send confirmation email ─────────────────────────────────
+        EmailTemplateService::send('tracer-study-submitted', $user->email, [
+            'name'         => $user->name,
+            'year'         => now()->year,
+            'submitted_at' => now()->format('F j, Y · g:i A'),
+        ]);
+        // ─────────────────────────────────────────────────────────────
 
         return redirect()->route('alumni.dashboard');
     }

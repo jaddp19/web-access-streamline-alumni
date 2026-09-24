@@ -169,6 +169,46 @@ class EmailSeeder extends Seeder
                     ."We apologize for any inconvenience. Any future events will be announced through the alumni portal.\n\n"
                     .'— Colegio de Sta. Ana de Victorias',
             ],
+
+            // ---------- Tracer study submitted (first time) ----------
+            [
+                'slug' => 'tracer-study-submitted',
+                'subject' => 'Your CSAV Alumni Tracer Study Has Been Received',
+                'message' => "Hi {{name}},\n\n"
+                    ."We've successfully received your Alumni Tracer Study response for {{year}}.\n\n"
+                    ."Your answers help Colegio de Sta. Ana de Victorias track alumni outcomes, "
+                    ."improve our programs, and support institutional planning.\n\n"
+                    ."Submitted on: {{submitted_at}}\n\n"
+                    ."If you need to update your answers, you can do so in Settings → Update Form anytime.\n\n"
+                    ."Warm regards,\n"
+                    .'— CSAV Alumni Office',
+            ],
+
+            // ---------- Tracer study updated (yearly update) ----------
+            [
+                'slug' => 'tracer-study-updated',
+                'subject' => 'Your CSAV Alumni Tracer Study Has Been Updated',
+                'message' => "Hi {{name}},\n\n"
+                    ."Your Alumni Tracer Study has been successfully updated for {{year}}.\n\n"
+                    ."Updated on: {{updated_at}}\n\n"
+                    ."If you did not make this change, please contact the CSAV Alumni Office immediately.\n\n"
+                    ."Warm regards,\n"
+                    .'— CSAV Alumni Office',
+            ],
+
+            // ---------- Alumni profile updated (self-service) ----------
+            [
+                'slug' => 'alumni-profile-self-updated',
+                'subject' => 'Your CSAV Alumni Profile Has Been Updated',
+                'message' => "Hi {{name}},\n\n"
+                    ."Your CSAV Alumni profile has been updated successfully.\n\n"
+                    ."When: {{updated_at}}\n\n"
+                    ."If you made this change — great! No action needed.\n\n"
+                    ."If you did not make this change, please contact the CSAV Alumni Office immediately "
+                    ."so we can secure your account.\n\n"
+                    ."Warm regards,\n"
+                    .'— CSAV Alumni Office',
+            ],
         ];
 
         foreach ($templates as $template) {

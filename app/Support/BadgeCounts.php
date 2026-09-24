@@ -20,7 +20,7 @@ class BadgeCounts
 
         return [
             'messages'      => self::pendingMessages($user->id),
-            'notifications' => self::unreadNotifications($user->id, $user->last_seen_posts_at, $user->created_at),
+            'notifications' => self::unreadNotifications($user->id),
         ];
     }
 
@@ -43,11 +43,9 @@ class BadgeCounts
         });
     }
 
-    public static function unreadNotifications(int $userId, $lastSeen, $createdAt): int
+    public static function unreadNotifications(int $userId): int
     {
-        $key = "badge.unread_posts.$userId." . optional($lastSeen)->timestamp;
-
-        return Cache::remember($key, 20, function () use ($lastSeen, $createdAt) {
+        return Cache::remember("badge.unread_posts.$userId", 20, function () use ($userId) {
             $allowed = self::allowedAuthorIds();
             if (empty($allowed)) {
                 return 0;
@@ -56,7 +54,7 @@ class BadgeCounts
             return Post::query()
                 ->where('status', 'public')
                 ->whereIn('user_id', $allowed)
-                ->where('created_at', '>', $lastSeen ?? $createdAt)
+                ->whereDoesntHave('reads', fn ($q) => $q->where('user_id', $userId))
                 ->count();
         });
     }
@@ -82,8 +80,7 @@ class BadgeCounts
     public static function forgetFor(int $userId): void
     {
         Cache::forget("badge.pending_messages.$userId");
-        // unread_posts is keyed by last_seen_posts_at's timestamp, so it
-        // self-invalidates the moment that column changes — nothing to forget there.
+        Cache::forget("badge.unread_posts.$userId");
     }
 
     protected static function programHeadIdsForMyDepartments(): array

@@ -159,6 +159,87 @@ class DashboardAnalytics
     }
 
     // =========================================================
+    //  ALUMNI BY DEPARTMENT → COURSES (drill-down)
+    // =========================================================
+
+    /**
+     * Nested: department → courses, with totals at both levels.
+     * Shape:
+     *   [
+     *     'IT' => [
+     *       'name'    => 'Information Technology',
+     *       'total'   => 75,
+     *       'courses' => [
+     *         'BSIT' => ['name' => 'BS Information Technology', 'total' => 50],
+     *         'BSCS' => ['name' => 'BS Computer Science',       'total' => 25],
+     *       ],
+     *     ],
+     *   ]
+     */
+    public function alumniByDeptAndCourse(): array
+    {
+        $rows = DB::table('departments')
+            ->join('courses', 'courses.department_id', '=', 'departments.id')
+            ->join('student_course', 'courses.id', '=', 'student_course.course_id')
+            ->join('user_profiles', 'student_course.user_profile_id', '=', 'user_profiles.id')
+            ->join('model_has_roles', function ($join) {
+                $join->on('model_has_roles.model_id', '=', 'user_profiles.user_id')
+                    ->where('model_has_roles.model_type', '=', User::class);
+            })
+            ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+            ->where('roles.name', '=', 'alumni')
+            ->where('departments.is_active', true)
+            ->where('courses.is_active', true)
+            ->when($this->departmentId, fn ($q) => $q->where('departments.id', $this->departmentId))
+            ->when($this->batchId, fn ($q) => $q->where('user_profiles.batch_id', $this->batchId))
+            ->select(
+                'departments.id as dept_id',
+                'departments.dept_code',
+                'departments.dept_name',
+                'courses.id as course_id',
+                'courses.course_code',
+                'courses.course_title',
+                DB::raw('COUNT(DISTINCT user_profiles.user_id) as total')
+            )
+            ->groupBy(
+                'departments.id',
+                'departments.dept_code',
+                'departments.dept_name',
+                'courses.id',
+                'courses.course_code',
+                'courses.course_title'
+            )
+            ->orderBy('departments.dept_name')
+            ->orderBy('courses.course_code')
+            ->get();
+
+        $result = [];
+
+        foreach ($rows as $row) {
+            $deptKey = $row->dept_code ?: "DEPT-{$row->dept_id}";
+
+            if (! isset($result[$deptKey])) {
+                $result[$deptKey] = [
+                    'name'    => $row->dept_name,
+                    'total'   => 0,
+                    'courses' => [],
+                ];
+            }
+
+            $courseKey = $row->course_code ?: "COURSE-{$row->course_id}";
+            $count     = (int) $row->total;
+
+            $result[$deptKey]['courses'][$courseKey] = [
+                'name'  => $row->course_title,
+                'total' => $count,
+            ];
+            $result[$deptKey]['total'] += $count;
+        }
+
+        return $result;
+    }
+
+    // =========================================================
     //  ALUMNI BY BATCH
     // =========================================================
 
@@ -194,6 +275,84 @@ class DashboardAnalytics
                 ],
             ])
             ->toArray();
+    }
+
+    // =========================================================
+    //  ALUMNI BY BATCH → COURSES (drill-down)
+    // =========================================================
+
+    /**
+     * Nested: batch → courses, with totals at both levels.
+     * Shape:
+     *   [
+     *     '1' => [
+     *       'batch_name' => '2020',
+     *       'total'      => 45,
+     *       'courses'    => [
+     *         'BSIT' => ['name' => 'BS Information Technology', 'total' => 25],
+     *         'BSCS' => ['name' => 'BS Computer Science',       'total' => 20],
+     *       ],
+     *     ],
+     *   ]
+     */
+    public function alumniByBatchAndCourse(): array
+    {
+        $rows = DB::table('batches')
+            ->join('user_profiles', 'user_profiles.batch_id', '=', 'batches.id')
+            ->join('student_course', 'user_profiles.id', '=', 'student_course.user_profile_id')
+            ->join('courses', 'courses.id', '=', 'student_course.course_id')
+            ->join('model_has_roles', function ($join) {
+                $join->on('model_has_roles.model_id', '=', 'user_profiles.user_id')
+                    ->where('model_has_roles.model_type', '=', User::class);
+            })
+            ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+            ->where('roles.name', '=', 'alumni')
+            ->where('courses.is_active', true)
+            ->when($this->departmentId, fn ($q) => $q->where('courses.department_id', $this->departmentId))
+            ->when($this->batchId, fn ($q) => $q->where('user_profiles.batch_id', $this->batchId))
+            ->select(
+                'batches.id as batch_id',
+                'batches.batch_name',
+                'courses.id as course_id',
+                'courses.course_code',
+                'courses.course_title',
+                DB::raw('COUNT(DISTINCT user_profiles.user_id) as total')
+            )
+            ->groupBy(
+                'batches.id',
+                'batches.batch_name',
+                'courses.id',
+                'courses.course_code',
+                'courses.course_title'
+            )
+            ->orderBy('batches.batch_name')
+            ->orderBy('courses.course_code')
+            ->get();
+
+        $result = [];
+
+        foreach ($rows as $row) {
+            $batchKey = (string) $row->batch_id;
+
+            if (! isset($result[$batchKey])) {
+                $result[$batchKey] = [
+                    'batch_name' => $row->batch_name,
+                    'total'      => 0,
+                    'courses'    => [],
+                ];
+            }
+
+            $courseKey = $row->course_code ?: "COURSE-{$row->course_id}";
+            $count     = (int) $row->total;
+
+            $result[$batchKey]['courses'][$courseKey] = [
+                'name'  => $row->course_title,
+                'total' => $count,
+            ];
+            $result[$batchKey]['total'] += $count;
+        }
+
+        return $result;
     }
 
     // =========================================================
@@ -352,42 +511,36 @@ class DashboardAnalytics
     //  NEW ANALYTICS — all SQL-aggregated, no PHP loops
     // =========================================================
 
-    /**
-     * Gender distribution. Reads from user_profiles.location JSON.
-     * Uses JSON_EXTRACT — works on MySQL 5.7+ / MariaDB 10.2+.
-     */
-public function genderBreakdown(): array
-{
-    // `gender` is a real enum column → plain GROUP BY. No JSON, no COALESCE.
-    return $this->profileBaseQuery()
-        ->whereNotNull('gender')
-        ->selectRaw('gender, COUNT(*) as total')
-        ->groupBy('gender')
-        ->pluck('total', 'gender')
-        ->map(fn ($v) => (int) $v)
-        ->mapWithKeys(fn ($v, $k) => [ucfirst(strtolower($k)) => $v])
-        ->toArray();
-}
+    public function genderBreakdown(): array
+    {
+        return $this->profileBaseQuery()
+            ->whereNotNull('gender')
+            ->selectRaw('gender, COUNT(*) as total')
+            ->groupBy('gender')
+            ->pluck('total', 'gender')
+            ->map(fn ($v) => (int) $v)
+            ->mapWithKeys(fn ($v, $k) => [ucfirst(strtolower($k)) => $v])
+            ->toArray();
+    }
 
-public function alumniByRegion(): array
-{
-    // `region_name` lives inside the JSON location column.
-    $driver = DB::connection()->getDriverName();
-    $expr   = $driver === 'sqlite'
-        ? "json_extract(location, '$.region_name')"
-        : "JSON_UNQUOTE(JSON_EXTRACT(location, '$.region_name'))";
+    public function alumniByRegion(): array
+    {
+        $driver = DB::connection()->getDriverName();
+        $expr   = $driver === 'sqlite'
+            ? "json_extract(location, '$.region_name')"
+            : "JSON_UNQUOTE(JSON_EXTRACT(location, '$.region_name'))";
 
-    return $this->profileBaseQuery()
-        ->whereNotNull('location')
-        ->selectRaw("{$expr} as region_name, COUNT(*) as total")
-        ->groupByRaw($expr)   // ← raw expression, not alias
-        ->orderByDesc('total')
-        ->limit(8)
-        ->pluck('total', 'region_name')
-        ->filter(fn ($v, $k) => filled($k))
-        ->map(fn ($v) => (int) $v)
-        ->toArray();
-}
+        return $this->profileBaseQuery()
+            ->whereNotNull('location')
+            ->selectRaw("{$expr} as region_name, COUNT(*) as total")
+            ->groupByRaw($expr)
+            ->orderByDesc('total')
+            ->limit(8)
+            ->pluck('total', 'region_name')
+            ->filter(fn ($v, $k) => filled($k))
+            ->map(fn ($v) => (int) $v)
+            ->toArray();
+    }
 
     public function boardExamBreakdown(): array
     {
@@ -451,21 +604,23 @@ public function alumniByRegion(): array
         $tracer = $this->tracerBreakdowns();
 
         return [
-            'alumniByDept' => $this->alumniByDept(),
-            'alumniByBatch' => $this->alumniByBatch(),
-            'courseAnalytics' => $this->courseAnalytics(),
-            'employmentStatus' => $tracer['employment_status'],
-            'employmentType' => $tracer['employment_type'],
-            'organizationType' => $tracer['organization_type'],
-            'employmentArea' => $tracer['employment_area'],
-            'civilStatus' => $tracer['civil_status'],
-            'jobAlignment' => $tracer['job_alignment'],
-            'monthsToFirstJob' => $tracer['months_to_first_job'],
-            'gender' => $this->genderBreakdown(),
-            'furtherStudies' => $this->furtherStudiesLevelBreakdown(),
-            'boardExam' => $this->boardExamBreakdown(),
-            'topEmployers' => $this->topEmployers(),
-            'alumniByRegion' => $this->alumniByRegion(),
+            'alumniByDept'            => $this->alumniByDept(),
+            'alumniByDeptAndCourse'   => $this->alumniByDeptAndCourse(),
+            'alumniByBatch'           => $this->alumniByBatch(),
+            'alumniByBatchAndCourse'  => $this->alumniByBatchAndCourse(),
+            'courseAnalytics'         => $this->courseAnalytics(),
+            'employmentStatus'        => $tracer['employment_status'],
+            'employmentType'          => $tracer['employment_type'],
+            'organizationType'        => $tracer['organization_type'],
+            'employmentArea'          => $tracer['employment_area'],
+            'civilStatus'             => $tracer['civil_status'],
+            'jobAlignment'            => $tracer['job_alignment'],
+            'monthsToFirstJob'        => $tracer['months_to_first_job'],
+            'gender'                  => $this->genderBreakdown(),
+            'furtherStudies'          => $this->furtherStudiesLevelBreakdown(),
+            'boardExam'               => $this->boardExamBreakdown(),
+            'topEmployers'            => $this->topEmployers(),
+            'alumniByRegion'          => $this->alumniByRegion(),
         ];
     }
 }
