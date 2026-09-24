@@ -13,7 +13,7 @@
                 </svg>
             </div>
             <div class="min-w-0">
-                <p class="text-white/50 text-xs sm:text-sm">Program Head</p>
+                <p class="text-white/50 text-xs sm:text-sm">Registrar</p>
                 <h1 class="text-lg sm:text-xl lg:text-2xl font-bold text-white truncate"
                     style="font-family: 'Fraunces', serif;">
                     Update Post
@@ -315,7 +315,7 @@
                     </svg>
                 </button>
 
-                <a href="{{ route('admin.post.view') }}"
+                <a href="{{ route('super-admin.post.view') }}"
                     class="w-full sm:w-auto inline-flex items-center justify-center gap-x-2 text-sm font-semibold rounded-xl bg-white dark:bg-[#3A3B3C] border border-black/10 dark:border-white/10 text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition py-2.5 px-5">
                     Cancel
                 </a>
