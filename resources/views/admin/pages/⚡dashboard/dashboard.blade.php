@@ -875,7 +875,7 @@
             pieConfig('employmentAreaChart', p.employmentArea, [PALETTE.greenBright, PALETTE.gold]);
             pieConfig('genderChart', p.gender, [PALETTE.greenMid, PALETTE.gold]);
             pieConfig('civilStatusChart', p.civilStatus);
-            pieConfig('jobAlignmentChart', p.jobAlignment, [PALETTE.greenBright, PALETTE.gold, '#ef4444']);
+            pieConfig('jobAlignmentChart', p.jobAlignment, [PALETTE.greenBright, '#ef4444', PALETTE.gold ]);
             pieConfig('boardExamChart', p.boardExam, [PALETTE.greenBright, '#ef4444']);
 
             // ===== Bar configs =====

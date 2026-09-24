@@ -124,7 +124,7 @@ new #[Layout('layouts.app-admin')] class extends Component
             ->with([
                 'user:id,name,email,school_id',
                 'batch:id,batch_name',
-                'courses:id,course_title,course_code',
+                'courses:id,course_title,course_code,department_id',
                 'courses.department:id,dept_name',
             ])
             ->latest('id')
@@ -146,7 +146,7 @@ new #[Layout('layouts.app-admin')] class extends Component
             ->with([
                 'user:id,name,email,school_id',
                 'batch:id,batch_name',
-                'courses:id,course_title,course_code',
+                'courses:id,course_title,course_code,department_id',
                 'courses.department:id,dept_name',
             ])
             ->latest('id');

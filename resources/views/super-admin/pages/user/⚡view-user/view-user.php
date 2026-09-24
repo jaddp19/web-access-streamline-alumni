@@ -48,7 +48,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     protected function invalidateFilterCache(): void
     {
         $this->filteredQueryCache = null;
-        unset($this->totalUsersCount); // bust the persisted computed
+        unset($this->totalUsersCount);
 
         $this->resetPage();
 
@@ -87,6 +87,31 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         return User::role(['alumni', 'registrar', 'program head'])
             ->whereIn('id', $this->selectedUsers);
+    }
+
+    // =========================================================
+    //  SHARED EXPORT EAGER-LOAD
+    // =========================================================
+
+    /**
+     * Columns + eager loads shared by both export methods.
+     *
+     * Note: `userProfile.courses` needs `user_profiles.id`, and
+     * `courses.department` needs `courses.department_id` — otherwise
+     * Eloquent can't resolve the nested relation and returns null.
+     */
+    protected function exportQuery()
+    {
+        return $this->filteredQuery()
+            ->with([
+                'roles:id,name',
+                'tracerStudy:id,user_id',
+                'userProfile:id,user_id,avatar',
+                'userProfile.courses:id,course_title,course_code,department_id',
+                'userProfile.courses.department:id,dept_name,dept_code',
+            ])
+            ->select('id', 'name', 'email', 'school_id', 'created_at')
+            ->latest();
     }
 
     // =========================================================
@@ -147,7 +172,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $this->selectAll = ! empty($pageIds)
             && empty(array_diff($pageIds, $this->selectedUsers));
 
-        // Manual refinement → drop the "all filtered" flag
         $this->selectAllFiltered = false;
     }
 
@@ -197,7 +221,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function deleteSelected(): void
     {
-
         $count = $this->selectedUsersQuery()->delete();
 
         $this->selectedUsers = [];
@@ -222,15 +245,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function exportFilteredCsv(): StreamedResponse
     {
-        $users = $this->filteredQuery()
-            ->with([
-                'roles:id,name',
-                'tracerStudy:id,user_id',
-                'userProfile:id,user_id,avatar',
-            ])
-            ->select('id', 'name', 'email', 'school_id', 'created_at')
-            ->latest()
-            ->get();
+        $users = $this->exportQuery()->get();
 
         return $this->streamUsersAsCsv($users, 'users-filtered');
     }
@@ -242,6 +257,8 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                 'roles:id,name',
                 'tracerStudy:id,user_id',
                 'userProfile:id,user_id,avatar',
+                'userProfile.courses:id,course_title,course_code,department_id',
+                'userProfile.courses.department:id,dept_name,dept_code',
             ])
             ->select('id', 'name', 'email', 'school_id', 'created_at')
             ->latest()
@@ -260,14 +277,28 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             // UTF-8 BOM so Excel opens it correctly
             fwrite($handle, "\xEF\xBB\xBF");
 
-            fputcsv($handle, ['Name', 'Email', 'School ID', 'Roles', 'Tracer Study', 'Created At']);
+            fputcsv($handle, [
+                'Name',
+                'Email',
+                'School ID',
+                'Roles',
+                'Course(s)',
+                'Department(s)',
+                'Tracer Study',
+                'Created At',
+            ]);
 
             foreach ($users as $user) {
+                $courses     = $user->userProfile?->courses ?? collect();
+                $departments = $courses->pluck('department')->filter()->unique('id');
+
                 fputcsv($handle, [
                     $user->name,
                     $user->email,
                     $user->school_id ?? '',
                     $user->roles->pluck('name')->implode(', '),
+                    $courses->pluck('course_title')->filter()->join(', ') ?: 'N/A',
+                    $departments->pluck('dept_name')->filter()->join(', ') ?: 'N/A',
                     $this->tracerStatusFor($user) ?? 'N/A',
                     $user->created_at?->format('Y-m-d H:i:s'),
                 ]);

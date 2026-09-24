@@ -220,17 +220,17 @@ class DashboardAnalytics
 
             if (! isset($result[$deptKey])) {
                 $result[$deptKey] = [
-                    'name'    => $row->dept_name,
-                    'total'   => 0,
+                    'name' => $row->dept_name,
+                    'total' => 0,
                     'courses' => [],
                 ];
             }
 
             $courseKey = $row->course_code ?: "COURSE-{$row->course_id}";
-            $count     = (int) $row->total;
+            $count = (int) $row->total;
 
             $result[$deptKey]['courses'][$courseKey] = [
-                'name'  => $row->course_title,
+                'name' => $row->course_title,
                 'total' => $count,
             ];
             $result[$deptKey]['total'] += $count;
@@ -337,16 +337,16 @@ class DashboardAnalytics
             if (! isset($result[$batchKey])) {
                 $result[$batchKey] = [
                     'batch_name' => $row->batch_name,
-                    'total'      => 0,
-                    'courses'    => [],
+                    'total' => 0,
+                    'courses' => [],
                 ];
             }
 
             $courseKey = $row->course_code ?: "COURSE-{$row->course_id}";
-            $count     = (int) $row->total;
+            $count = (int) $row->total;
 
             $result[$batchKey]['courses'][$courseKey] = [
-                'name'  => $row->course_title,
+                'name' => $row->course_title,
                 'total' => $count,
             ];
             $result[$batchKey]['total'] += $count;
@@ -386,6 +386,84 @@ class DashboardAnalytics
             'course_code' => $r->course_code,
             'related_rate' => (int) round(($r->related_count / $r->employed_total) * 100),
         ])->all();
+    }
+
+    public function courseAnalyticsByDept(): array
+    {
+        $rows = DB::table('departments')
+            ->join('courses', 'courses.department_id', '=', 'departments.id')
+            ->join('student_course', 'courses.id', '=', 'student_course.course_id')
+            ->join('user_profiles', 'student_course.user_profile_id', '=', 'user_profiles.id')
+            ->join('tracer_studies', 'tracer_studies.user_id', '=', 'user_profiles.user_id')
+            ->join('civil_status_employments', 'civil_status_employments.tracer_study_id', '=', 'tracer_studies.id')
+            ->where('departments.is_active', true)
+            ->where('courses.is_active', true)
+            ->where('civil_status_employments.employment_status', 'employed')
+            ->when($this->departmentId, fn ($q) => $q->where('departments.id', $this->departmentId))
+            ->when($this->batchId, fn ($q) => $q->where('user_profiles.batch_id', $this->batchId))
+            ->select(
+                'departments.id as dept_id',
+                'departments.dept_code',
+                'departments.dept_name',
+                'courses.id as course_id',
+                'courses.course_code',
+                'courses.course_title',
+                DB::raw("COUNT(DISTINCT CASE WHEN civil_status_employments.employed_related_to_degree IN ('yes', 'partially-related') THEN user_profiles.user_id END) as related_count"),
+                DB::raw('COUNT(DISTINCT user_profiles.user_id) as employed_total')
+            )
+            ->groupBy(
+                'departments.id',
+                'departments.dept_code',
+                'departments.dept_name',
+                'courses.id',
+                'courses.course_code',
+                'courses.course_title'
+            )
+            ->orderBy('departments.dept_name')
+            ->orderBy('courses.course_code')
+            ->get();
+
+        $result = [];
+
+        foreach ($rows as $row) {
+            $deptKey = $row->dept_code ?: "DEPT-{$row->dept_id}";
+
+            if (! isset($result[$deptKey])) {
+                $result[$deptKey] = [
+                    'name' => $row->dept_name,
+                    'total' => 0,
+                    'related_count' => 0,
+                    'related_rate' => 0,
+                    'courses' => [],
+                ];
+            }
+
+            $total = (int) $row->employed_total;
+            $related = (int) $row->related_count;
+            $rate = $total > 0 ? (int) round(($related / $total) * 100) : 0;
+
+            $courseKey = $row->course_code ?: "COURSE-{$row->course_id}";
+
+            $result[$deptKey]['courses'][$courseKey] = [
+                'name' => $row->course_title,
+                'total' => $total,
+                'related_count' => $related,
+                'related_rate' => $rate,
+            ];
+
+            $result[$deptKey]['total'] += $total;
+            $result[$deptKey]['related_count'] += $related;
+        }
+
+        // Compute aggregate alignment rate per department
+        foreach ($result as &$dept) {
+            $dept['related_rate'] = $dept['total'] > 0
+                ? (int) round(($dept['related_count'] / $dept['total']) * 100)
+                : 0;
+        }
+        unset($dept);
+
+        return $result;
     }
 
     // =========================================================
@@ -526,7 +604,7 @@ class DashboardAnalytics
     public function alumniByRegion(): array
     {
         $driver = DB::connection()->getDriverName();
-        $expr   = $driver === 'sqlite'
+        $expr = $driver === 'sqlite'
             ? "json_extract(location, '$.region_name')"
             : "JSON_UNQUOTE(JSON_EXTRACT(location, '$.region_name'))";
 
@@ -604,23 +682,23 @@ class DashboardAnalytics
         $tracer = $this->tracerBreakdowns();
 
         return [
-            'alumniByDept'            => $this->alumniByDept(),
-            'alumniByDeptAndCourse'   => $this->alumniByDeptAndCourse(),
-            'alumniByBatch'           => $this->alumniByBatch(),
-            'alumniByBatchAndCourse'  => $this->alumniByBatchAndCourse(),
-            'courseAnalytics'         => $this->courseAnalytics(),
-            'employmentStatus'        => $tracer['employment_status'],
-            'employmentType'          => $tracer['employment_type'],
-            'organizationType'        => $tracer['organization_type'],
-            'employmentArea'          => $tracer['employment_area'],
-            'civilStatus'             => $tracer['civil_status'],
-            'jobAlignment'            => $tracer['job_alignment'],
-            'monthsToFirstJob'        => $tracer['months_to_first_job'],
-            'gender'                  => $this->genderBreakdown(),
-            'furtherStudies'          => $this->furtherStudiesLevelBreakdown(),
-            'boardExam'               => $this->boardExamBreakdown(),
-            'topEmployers'            => $this->topEmployers(),
-            'alumniByRegion'          => $this->alumniByRegion(),
+            'alumniByDept' => $this->alumniByDept(),
+            'alumniByDeptAndCourse' => $this->alumniByDeptAndCourse(),
+            'alumniByBatch' => $this->alumniByBatch(),
+            'alumniByBatchAndCourse' => $this->alumniByBatchAndCourse(),
+            'courseAnalytics' => $this->courseAnalytics(),
+            'employmentStatus' => $tracer['employment_status'],
+            'employmentType' => $tracer['employment_type'],
+            'organizationType' => $tracer['organization_type'],
+            'employmentArea' => $tracer['employment_area'],
+            'civilStatus' => $tracer['civil_status'],
+            'jobAlignment' => $tracer['job_alignment'],
+            'monthsToFirstJob' => $tracer['months_to_first_job'],
+            'gender' => $this->genderBreakdown(),
+            'furtherStudies' => $this->furtherStudiesLevelBreakdown(),
+            'boardExam' => $this->boardExamBreakdown(),
+            'topEmployers' => $this->topEmployers(),
+            'alumniByRegion' => $this->alumniByRegion(),
         ];
     }
 }

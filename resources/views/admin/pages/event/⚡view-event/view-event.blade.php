@@ -145,11 +145,21 @@
                                     </span>
                                 </td>
                                 <td class="px-3 lg:px-6 py-3 text-end">
-                                    <div class="flex items-center justify-end gap-3">
+                                    <div class="flex items-center justify-end gap-3 flex-wrap">
                                         <a href="{{ route('admin.event.update', $event->id) }}"
                                             class="inline-flex items-center gap-1 text-[#123524] dark:text-[#D4A537] hover:underline font-semibold whitespace-nowrap">
                                             Edit
                                         </a>
+
+                                        @if ($event->status !== 'cancelled')
+                                            <button type="button"
+                                                wire:click="cancelEvent({{ $event->id }})"
+                                                wire:confirm="Cancel '{{ $event->title }}'? Attendees will be notified."
+                                                class="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 hover:underline font-semibold whitespace-nowrap">
+                                                Cancel
+                                            </button>
+                                        @endif
+
                                         <button type="button"
                                             wire:click="deleteEvent({{ $event->id }})"
                                             wire:confirm="Delete this event? This cannot be undone."

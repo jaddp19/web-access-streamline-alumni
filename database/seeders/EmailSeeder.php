@@ -94,6 +94,7 @@ class EmailSeeder extends Seeder
                     ."Log in here: {{login_url}}\n\n"
                     .'— Colegio de Sta. Ana de Victorias',
             ],
+            
             [
                 'slug' => 'your-alumni-verification-status-was-updated',
                 'subject' => 'Your alumni verification status was updated',

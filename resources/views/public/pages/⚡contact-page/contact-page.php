@@ -1,7 +1,7 @@
 <?php
 
-use Illuminate\Support\Facades\Log;
-use Livewire\Attributes\Layout;
+use App\Mail\ContactMessageMail;
+use Illuminate\Support\Facades\Mail;
 use Livewire\Component;
 
 new class extends Component
@@ -49,17 +49,19 @@ new class extends Component
         $email   = trim(strip_tags($validated['email']));
         $message = trim(strip_tags($validated['message']));
 
-        try {
-            // ✅ Replace this with your actual handling:
-            // Mail::to('csav@example.com')->send(new ContactMessage($name, $email, $message));
-            // or store in DB, or dispatch a job.
-            Log::info('Contact form submitted', [
-                'name'    => $name,
-                'email'   => $email,
-                'message' => $message,
-            ]);
+        // 🎯 Where the email lands — the CSAV inbox that reads these.
+        $recipients = [
+            'c20234480.perlado@csav.edu.ph',
+        ];
 
-            session()->flash('contact_success', "Thanks, {$name}! We'll get back to you at {$email} within 1–2 business days.");
+        try {
+            Mail::to($recipients)
+                ->send(new ContactMessageMail($name, $email, $message));
+
+            session()->flash(
+                'contact_success',
+                "Thanks, {$name}! We'll get back to you at {$email} within 1–2 business days."
+            );
         } catch (\Throwable $e) {
             report($e);
             $this->addError('message', 'Could not send your message. Please try again later.');

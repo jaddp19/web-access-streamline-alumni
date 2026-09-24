@@ -1,5 +1,6 @@
 <?php
 
+use App\Jobs\SendEventCancellationEmail;
 use App\Jobs\SendEventInvitationEmail;
 use App\Models\Event;
 use Illuminate\Support\Facades\Auth;
@@ -279,14 +280,20 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         // Blast decision
         $justPublished = ! $wasPublished && $validated['status'] === 'published';
+
         $adminRequestedResend = $wasPublished
             && $validated['status'] === 'published'
             && $this->resendInvitation;
 
-        $shouldBlast = $justPublished || $adminRequestedResend;
+        // Fires only on the *transition* into 'cancelled', not on every save
+        $justCancelled = $wasPublished && $validated['status'] === 'cancelled';
 
-        if ($shouldBlast) {
+        if ($justPublished || $adminRequestedResend) {
             SendEventInvitationEmail::dispatch($this->event->id)->afterCommit();
+        }
+
+        if ($justCancelled) {
+            SendEventCancellationEmail::dispatch($this->event->id)->afterCommit();
         }
 
         $this->resendInvitation = false;
@@ -294,6 +301,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         session()->flash('success', match (true) {
             $justPublished        => 'Event published. Alumni will be notified shortly.',
             $adminRequestedResend => 'Event updated. Invitation re-sent to all alumni.',
+            $justCancelled        => 'Event cancelled. Attendees have been notified.',
             default               => 'Event updated successfully.',
         });
 

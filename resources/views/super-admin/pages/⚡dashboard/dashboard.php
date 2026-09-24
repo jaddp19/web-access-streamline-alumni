@@ -96,6 +96,12 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     }
 
     #[Computed]
+    public function courseAnalyticsByDept(): array
+    {
+        return $this->analytics()->courseAnalyticsByDept();
+    }
+
+    #[Computed]
     public function tracerBreakdowns(): array
     {
         return $this->analytics()->tracerBreakdowns();

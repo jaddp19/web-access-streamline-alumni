@@ -5,7 +5,8 @@
             {{-- Header with batch selector --}}
             <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                 <div>
-                    <h1 class="text-xl sm:text-2xl font-bold text-[#0f2b1c] dark:text-white" style="font-family: 'Fraunces', serif;">
+                    <h1 class="text-xl sm:text-2xl font-bold text-[#0f2b1c] dark:text-white"
+                        style="font-family: 'Fraunces', serif;">
                         Overview
                     </h1>
                     <p class="text-sm text-black/50 dark:text-white/50 mt-0.5">
@@ -39,8 +40,10 @@
                         <div wire:loading wire:target="selectedBatchId"
                             class="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
                             <svg class="w-4 h-4 animate-spin text-[#D4A537]" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                    stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z">
+                                </path>
                             </svg>
                         </div>
                     </div>
@@ -141,12 +144,27 @@
                         @endif
                     </div>
 
-                    {{-- ===== Comparative Analysis ===== --}}
+                    {{-- ===== Comparative Analysis (DRILLABLE) ===== --}}
                     <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
-                        <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white">Comparative Analysis</h2>
-                        <p class="text-xs text-black/40 dark:text-white/40 mt-0.5 mb-1">Course alignment with current work</p>
-                        <p class="text-xs text-black/50 dark:text-white/50 mb-3">{{ $this->furtherStudiesRate }}% pursued further studies</p>
-                        @if (empty($this->courseAnalytics))
+                        <div class="flex items-start justify-between gap-3 mb-3">
+                            <div class="min-w-0">
+                                <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white">Comparative Analysis</h2>
+                                <p id="comparative-subtitle" class="text-xs text-black/40 dark:text-white/40 mt-0.5">
+                                    Course alignment with work · by department · click a bar to see courses
+                                </p>
+                                <p class="text-xs text-black/50 dark:text-white/50 mt-0.5">
+                                    {{ $this->furtherStudiesRate }}% pursued further studies
+                                </p>
+                            </div>
+                            <button type="button" id="comparative-back-btn"
+                                class="hidden shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold text-[#1877F2] hover:underline">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                                </svg>
+                                Back to departments
+                            </button>
+                        </div>
+                        @if (empty($this->courseAnalyticsByDept))
                             <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No course analytics yet.</p>
                         @else
                             <div class="w-full h-64 sm:h-72 md:h-80"><canvas id="comparativeChart"></canvas></div>
@@ -245,16 +263,17 @@
     {{-- Data payload for charts --}}
     <script type="application/json" id="analytics-payload">
         {!! json_encode([
-            'alumniByDept'          => $this->alumniByDept,
-            'alumniByDeptAndCourse' => $this->alumniByDeptAndCourse,
-            'alumniByBatch'         => $this->alumniByBatch,
-            'alumniByBatchAndCourse'=> $this->alumniByBatchAndCourse,
-            'courseAnalytics'       => $this->courseAnalytics,
-            'employmentStatus'      => $this->employmentStatusBreakdown,
-            'employmentType'        => $this->employmentTypeBreakdown,
-            'organizationType'      => $this->organizationTypeBreakdown,
-            'employmentArea'        => $this->employmentAreaBreakdown,
-            'monthsToFirstJob'      => $this->monthsToFirstJobBreakdown,
+            'alumniByDept'            => $this->alumniByDept,
+            'alumniByDeptAndCourse'   => $this->alumniByDeptAndCourse,
+            'alumniByBatch'           => $this->alumniByBatch,
+            'alumniByBatchAndCourse'  => $this->alumniByBatchAndCourse,
+            'courseAnalytics'         => $this->courseAnalytics,
+            'courseAnalyticsByDept'   => $this->courseAnalyticsByDept,
+            'employmentStatus'        => $this->employmentStatusBreakdown,
+            'employmentType'          => $this->employmentTypeBreakdown,
+            'organizationType'        => $this->organizationTypeBreakdown,
+            'employmentArea'          => $this->employmentAreaBreakdown,
+            'monthsToFirstJob'        => $this->monthsToFirstJobBreakdown,
         ]) !!}
     </script>
 </div>
@@ -290,8 +309,9 @@
         // Drill-down state (per chart, client-side only)
         // =====================================================================
         const drillState = {
-            dept:  { view: 'departments', selected: null }, // 'departments' | 'courses'
-            batch: { view: 'batches',     selected: null }, // 'batches'     | 'courses'
+            dept:        { view: 'departments', selected: null },
+            batch:       { view: 'batches',     selected: null },
+            comparative: { view: 'departments', selected: null },
         };
 
         // =====================================================================
@@ -359,9 +379,6 @@
             new ChartLib(el, config);
         };
 
-        // =====================================================================
-        // Chart instances live on window so they persist across re-inits
-        // =====================================================================
         let ChartLibRef = null;
 
         // =====================================================================
@@ -380,118 +397,34 @@
             ChartLib.defaults.animation.duration = 500;
             ChartLib.defaults.animation.easing   = 'easeOutQuart';
 
-            const alumniByDept        = payload.alumniByDept        || {};
+            const alumniByDept        = payload.alumniByDept          || {};
             const alumniByDeptCourse  = payload.alumniByDeptAndCourse || {};
-            const alumniByBatch       = payload.alumniByBatch       || {};
-            const alumniByBatchCourse = payload.alumniByBatchAndCourse || {};
-            const analyticsData       = payload.courseAnalytics     || [];
-            const statusData          = payload.employmentStatus    || {};
-            const typeData            = payload.employmentType      || {};
-            const orgData             = payload.organizationType    || {};
-            const areaData            = payload.employmentArea      || {};
-            const monthsData          = payload.monthsToFirstJob    || {};
+            const alumniByBatch       = payload.alumniByBatch         || {};
+            const alumniByBatchCourse = payload.alumniByBatchAndCourse|| {};
+            const analyticsByDept     = payload.courseAnalyticsByDept || {};
+            const statusData          = payload.employmentStatus      || {};
+            const typeData            = payload.employmentType        || {};
+            const orgData             = payload.organizationType      || {};
+            const areaData            = payload.employmentArea        || {};
+            const monthsData          = payload.monthsToFirstJob      || {};
 
-            // Expose for drill-down handlers
             window.__analyticsData = {
                 alumniByDept, alumniByDeptCourse,
                 alumniByBatch, alumniByBatchCourse,
+                analyticsByDept,
                 theme,
             };
 
-            // =========================================================
-            // 1. Alumni by Department — with drill-down
-            // =========================================================
+            // 1. Alumni by Department (drillable)
             renderDeptChart(ChartLib);
 
-            // =========================================================
-            // 2. Comparative Analysis (flat)
-            // =========================================================
-            const courseCode = (analyticsData || []).map((item) => item.course_code);
+            // 2. Comparative Analysis (drillable)
+            renderComparativeChart(ChartLib);
 
-            if (courseCode.length > 0) {
-                makeChart(ChartLib, 'comparativeChart', {
-                    type: 'bar',
-                    data: {
-                        labels: courseCode,
-                        datasets: [
-                            {
-                                label: 'Aligned with Work',
-                                data: analyticsData.map((i) => i.related_rate),
-                                backgroundColor: PALETTE.greenBright,
-                                hoverBackgroundColor: PALETTE.greenMid,
-                                borderRadius: 6, borderSkipped: false, maxBarThickness: 28,
-                            },
-                            {
-                                label: 'Not Aligned',
-                                data: analyticsData.map((i) => 100 - i.related_rate),
-                                backgroundColor: PALETTE.gold,
-                                hoverBackgroundColor: PALETTE.goldDeep,
-                                borderRadius: 6, borderSkipped: false, maxBarThickness: 28,
-                            },
-                        ]
-                    },
-                    options: {
-                        responsive: true, maintainAspectRatio: false,
-                        layout: { padding: { top: 16 } },
-                        scales: {
-                            y: {
-                                beginAtZero: true, max: 110,
-                                grid: { color: theme.gridColor, drawBorder: false },
-                                border: { display: false },
-                                ticks: { stepSize: 25, color: theme.mutedText, callback: (v) => v > 100 ? '' : v + '%' },
-                            },
-                            x: {
-                                ticks: { color: theme.mutedText, font: { weight: '600' } },
-                                grid: { display: false }, border: { display: false },
-                            },
-                        },
-                        plugins: {
-                            legend: {
-                                position: 'top', align: 'end',
-                                labels: {
-                                    color: theme.mutedText, boxWidth: 10, boxHeight: 10,
-                                    usePointStyle: true, pointStyle: 'rectRounded',
-                                    padding: 14, font: { size: 11, weight: '600' },
-                                },
-                            },
-                            tooltip: {
-                                backgroundColor: theme.tooltipBg, padding: 10, cornerRadius: 8,
-                                titleFont: { size: 12, weight: '600' },
-                                bodyFont:  { size: 12 },
-                                callbacks: { label: (ctx) => ` ${ctx.dataset.label}: ${ctx.formattedValue}%` },
-                            },
-                        },
-                    },
-                    plugins: [{
-                        id: 'barPercentLabels',
-                        afterDatasetsDraw(chart) {
-                            const { ctx } = chart;
-                            ctx.save();
-                            ctx.font = '600 10px ' + theme.fontFamily;
-                            ctx.fillStyle = theme.mutedText;
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'bottom';
-                            chart.data.datasets.forEach((dataset, di) => {
-                                chart.getDatasetMeta(di).data.forEach((bar, i) => {
-                                    const v = dataset.data[i];
-                                    if (v == null) return;
-                                    ctx.fillText(v + '%', bar.x, bar.y - 4);
-                                });
-                            });
-                            ctx.restore();
-                        },
-                    }],
-                });
-            }
-
-            // =========================================================
-            // 3. Alumni by Year — with drill-down
-            // =========================================================
+            // 3. Alumni by Year (drillable)
             renderBatchChart(ChartLib);
 
-            // =========================================================
-            // Pie helpers
-            // =========================================================
+            // ===== Pie helpers =====
             const pieLabelPlugin = {
                 id: 'piePercentLabels',
                 afterDatasetsDraw(chart) {
@@ -538,9 +471,7 @@
                 },
             };
 
-            // =========================================================
-            // 4. Employment Status (doughnut)
-            // =========================================================
+            // 4. Employment Status
             if (Object.keys(statusData).length > 0) {
                 makeChart(ChartLib, 'employmentStatusChart', {
                     type: 'doughnut',
@@ -560,9 +491,7 @@
                 });
             }
 
-            // =========================================================
-            // 5. Employment Type (bar)
-            // =========================================================
+            // 5. Employment Type
             if (Object.keys(typeData).length > 0) {
                 makeChart(ChartLib, 'employmentTypeChart', {
                     type: 'bar',
@@ -592,9 +521,7 @@
                 });
             }
 
-            // =========================================================
-            // 6. Organization Type (horizontal bar)
-            // =========================================================
+            // 6. Organization Type
             if (Object.keys(orgData).length > 0) {
                 makeChart(ChartLib, 'organizationTypeChart', {
                     type: 'bar',
@@ -628,9 +555,7 @@
                 });
             }
 
-            // =========================================================
-            // 7. Employment Area (doughnut)
-            // =========================================================
+            // 7. Employment Area
             if (Object.keys(areaData).length > 0) {
                 makeChart(ChartLib, 'employmentAreaChart', {
                     type: 'doughnut',
@@ -650,9 +575,7 @@
                 });
             }
 
-            // =========================================================
-            // 8. Months to First Job (bar)
-            // =========================================================
+            // 8. Months to First Job
             if (Object.keys(monthsData).length > 0) {
                 makeChart(ChartLib, 'monthsToFirstJobChart', {
                     type: 'bar',
@@ -684,20 +607,15 @@
         };
 
         // =====================================================================
-        // Dept chart renderer — handles both 'departments' and 'courses' views
+        // Dept chart renderer
         // =====================================================================
         const renderDeptChart = (ChartLib) => {
             const data   = window.__analyticsData;
             const theme  = data.theme;
             const state  = drillState.dept;
 
-            // Determine labels + totals + click behavior based on state
-            let labels   = [];
-            let totals   = [];
-            let names    = [];   // full names for tooltip
-            let clickable = false;
-            let subtitleText = '';
-            let backBtnVisible = false;
+            let labels = [], totals = [], names = [];
+            let clickable = false, subtitleText = '', backBtnVisible = false;
 
             if (state.view === 'departments') {
                 const codes = Object.keys(data.alumniByDept);
@@ -718,7 +636,6 @@
                 backBtnVisible = true;
             }
 
-            // Update subtitle + back button
             const subEl = document.getElementById('dept-subtitle');
             if (subEl) subEl.textContent = subtitleText;
 
@@ -780,7 +697,149 @@
         };
 
         // =====================================================================
-        // Batch chart renderer — handles both 'batches' and 'courses' views
+        // Comparative chart renderer (DRILLABLE)
+        // =====================================================================
+        const renderComparativeChart = (ChartLib) => {
+            const data   = window.__analyticsData;
+            const theme  = data.theme;
+            const state  = drillState.comparative;
+
+            let labels      = [];
+            let relatedData = [];
+            let notAligned  = [];
+            let names       = [];
+            let clickable   = false;
+            let subtitleText = '';
+            let backBtnVisible = false;
+
+            if (state.view === 'departments') {
+                const codes = Object.keys(data.analyticsByDept || {});
+                labels      = codes;
+                names       = codes.map(c => data.analyticsByDept[c]?.name || c);
+                relatedData = codes.map(c => data.analyticsByDept[c]?.related_rate || 0);
+                notAligned  = relatedData.map(r => 100 - r);
+                clickable   = true;
+                subtitleText = 'Course alignment with work · by department · click a bar to see courses';
+                backBtnVisible = false;
+            } else {
+                const dept = data.analyticsByDept?.[state.selected] || { courses: {}, name: state.selected };
+                const codes = Object.keys(dept.courses || {});
+                labels      = codes;
+                names       = codes.map(c => dept.courses[c]?.name || c);
+                relatedData = codes.map(c => dept.courses[c]?.related_rate || 0);
+                notAligned  = relatedData.map(r => 100 - r);
+                clickable   = false;
+                subtitleText = `${dept.name} · course alignment`;
+                backBtnVisible = true;
+            }
+
+            const subEl = document.getElementById('comparative-subtitle');
+            if (subEl) subEl.textContent = subtitleText;
+
+            const backBtn = document.getElementById('comparative-back-btn');
+            if (backBtn) {
+                backBtn.classList.toggle('hidden', ! backBtnVisible);
+                backBtn.classList.toggle('inline-flex', backBtnVisible);
+            }
+
+            if (labels.length === 0) return;
+
+            makeChart(ChartLib, 'comparativeChart', {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Aligned with Work',
+                            data: relatedData,
+                            backgroundColor: PALETTE.greenBright,
+                            hoverBackgroundColor: PALETTE.greenMid,
+                            borderRadius: 6, borderSkipped: false, maxBarThickness: 28,
+                        },
+                        {
+                            label: 'Not Aligned',
+                            data: notAligned,
+                            backgroundColor: PALETTE.gold,
+                            hoverBackgroundColor: PALETTE.goldDeep,
+                            borderRadius: 6, borderSkipped: false, maxBarThickness: 28,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    layout: { padding: { top: 16 } },
+                    onHover: (event, els) => {
+                        if (! clickable) return;
+                        event.native.target.style.cursor = els.length > 0 ? 'pointer' : 'default';
+                    },
+                    onClick: (event, els) => {
+                        if (! clickable || els.length === 0) return;
+                        const idx  = els[0].index;
+                        const code = labels[idx];
+                        drillState.comparative.view = 'courses';
+                        drillState.comparative.selected = code;
+                        renderComparativeChart(ChartLib);
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true, max: 110,
+                            grid: { color: theme.gridColor, drawBorder: false },
+                            border: { display: false },
+                            ticks: { stepSize: 25, color: theme.mutedText, callback: (v) => v > 100 ? '' : v + '%' },
+                        },
+                        x: {
+                            ticks: { color: theme.mutedText, font: { weight: '600' } },
+                            grid: { display: false }, border: { display: false },
+                        },
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top', align: 'end',
+                            labels: {
+                                color: theme.mutedText, boxWidth: 10, boxHeight: 10,
+                                usePointStyle: true, pointStyle: 'rectRounded',
+                                padding: 14, font: { size: 11, weight: '600' },
+                            },
+                        },
+                        tooltip: {
+                            backgroundColor: theme.tooltipBg, padding: 10, cornerRadius: 8,
+                            titleFont: { size: 12, weight: '600' },
+                            bodyFont:  { size: 12 },
+                            callbacks: {
+                                title: (items) => names[items[0]?.dataIndex] || labels[items[0]?.dataIndex],
+                                label: (ctx) => ` ${ctx.dataset.label}: ${ctx.formattedValue}%`,
+                                afterLabel: (ctx) => {
+                                    if (! clickable) return '';
+                                    return ctx.datasetIndex === 1 ? 'Click to see courses' : '';
+                                },
+                            },
+                        },
+                    },
+                },
+                plugins: [{
+                    id: 'barPercentLabels',
+                    afterDatasetsDraw(chart) {
+                        const { ctx } = chart;
+                        ctx.save();
+                        ctx.font = '600 10px ' + theme.fontFamily;
+                        ctx.fillStyle = theme.mutedText;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'bottom';
+                        chart.data.datasets.forEach((dataset, di) => {
+                            chart.getDatasetMeta(di).data.forEach((bar, i) => {
+                                const v = dataset.data[i];
+                                if (v == null) return;
+                                ctx.fillText(v + '%', bar.x, bar.y - 4);
+                            });
+                        });
+                        ctx.restore();
+                    },
+                }],
+            });
+        };
+
+        // =====================================================================
+        // Batch chart renderer
         // =====================================================================
         const renderBatchChart = (ChartLib) => {
             const data   = window.__analyticsData;
@@ -843,7 +902,6 @@
                     onClick: (event, els) => {
                         if (! clickable || els.length === 0) return;
                         const idx = els[0].index;
-                        // Find the batch id by matching the label
                         const ids = Object.keys(data.alumniByBatch);
                         const batchId = ids.find(id => data.alumniByBatch[id].batch_name === labels[idx]);
                         if (! batchId) return;
@@ -873,7 +931,7 @@
         };
 
         // =====================================================================
-        // Back-button handlers (bound once)
+        // Back-button handlers
         // =====================================================================
         if (! window.__analyticsDeptBack) {
             window.__analyticsDeptBack = true;
@@ -897,6 +955,17 @@
             });
         }
 
+        if (! window.__analyticsComparativeBack) {
+            window.__analyticsComparativeBack = true;
+            document.addEventListener('click', (e) => {
+                const btn = e.target.closest('#comparative-back-btn');
+                if (! btn || ! ChartLibRef) return;
+                drillState.comparative.view = 'departments';
+                drillState.comparative.selected = null;
+                renderComparativeChart(ChartLibRef);
+            });
+        }
+
         // =====================================================================
         // Debounced init
         // =====================================================================
@@ -906,9 +975,9 @@
             __initScheduled = true;
             requestAnimationFrame(() => {
                 __initScheduled = false;
-                // Reset drill state on batch-filter change (fresh data)
-                drillState.dept  = { view: 'departments', selected: null };
-                drillState.batch = { view: 'batches',     selected: null };
+                drillState.dept        = { view: 'departments', selected: null };
+                drillState.batch       = { view: 'batches',     selected: null };
+                drillState.comparative = { view: 'departments', selected: null };
                 initCharts();
             });
         };

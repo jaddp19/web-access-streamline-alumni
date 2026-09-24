@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Jobs\SendEventCancellationEmail;
 use App\Models\Event;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -52,7 +53,6 @@ new #[Layout('layouts.app-admin')] class extends Component
         return Event::query()
             ->with('creator:id,name')
             ->select('id', 'title', 'slug', 'image', 'starts_at', 'ends_at', 'location', 'capacity', 'status', 'created_by', 'created_at')
-            // Program heads only see events they created themselves.
             ->when($this->isProgramHead, fn ($q) => $q->where('created_by', $user->id))
             ->when($this->statusFilter !== 'all', fn ($q) => $q->where('status', $this->statusFilter))
             ->when($this->timeFilter === 'upcoming', fn ($q) => $q->where('starts_at', '>=', now()))
@@ -106,5 +106,58 @@ new #[Layout('layouts.app-admin')] class extends Component
         $event->delete();
 
         session()->flash('success', 'Event deleted successfully.');
+    }
+
+    // =========================================================
+    //  CANCEL
+    // =========================================================
+
+    public function cancelEvent(int $id): void
+    {
+        $user = Auth::user();
+
+        abort_unless($user?->hasAnyRole(['registrar', 'program head']), 403);
+
+        $event = Event::find($id);
+
+        if (! $event) {
+            session()->flash('error', 'Event not found.');
+            return;
+        }
+
+        // Program heads can only cancel their own events.
+        if ($user->hasRole('program head') && $event->created_by !== $user->id) {
+            abort(403, 'You can only cancel your own events.');
+        }
+
+        if ($event->status === 'cancelled') {
+            session()->flash('error', 'This event is already cancelled.');
+            return;
+        }
+
+        $wasPublished = $event->status === 'published';
+
+        // How many people to notify (before we change the status)
+        $attendeeCount = $wasPublished
+            ? $event->rsvps()->whereIn('response', ['yes', 'maybe'])->count()
+            : 0;
+
+        $event->update(['status' => 'cancelled']);
+
+        if ($wasPublished && $attendeeCount > 0) {
+            SendEventCancellationEmail::dispatch($event->id)->afterCommit();
+        }
+
+        session()->flash(
+            'success',
+            match (true) {
+                $wasPublished && $attendeeCount > 0
+                    => "Event cancelled. {$attendeeCount} attendee(s) have been notified.",
+                $wasPublished
+                    => 'Event cancelled. No attendees to notify.',
+                default
+                    => 'Event cancelled.',
+            }
+        );
     }
 };

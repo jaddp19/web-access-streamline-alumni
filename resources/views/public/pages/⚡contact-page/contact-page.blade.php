@@ -54,7 +54,7 @@
                                 Address
                             </h2>
                             <p class="text-[#123524]/70 text-xs sm:text-sm leading-relaxed">
-                                Osmeña Avenue, Victorias City,<br>Negros Occidental, Philippines
+                                Osmeña Avenue, Victorias City,<br>Negros Occidental, Philippines, 6119
                             </p>
                         </div>
                     </div>
@@ -71,7 +71,7 @@
                                 Phone
                             </h2>
                             <a href="tel:+630341234567" class="text-[#123524]/70 hover:text-[#D4A537] text-xs sm:text-sm transition-colors">
-                                +63 (034) 123-4567
+                                (034) 399 3286
                             </a>
                         </div>
                     </div>

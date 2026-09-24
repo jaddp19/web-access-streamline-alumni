@@ -3,7 +3,7 @@
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-new #[Layout('layouts.auth')]class extends Component
+new #[Layout('layouts.app-pp-tc')]class extends Component
 {
     //
 };

@@ -1,7 +1,9 @@
 <?php
 
+use App\Jobs\SendEventCancellationEmail;
 use App\Models\Event;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
@@ -12,15 +14,31 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 {
     use WithPagination;
 
-    #[Url] public string $search = '';
-    #[Url] public string $statusFilter = 'all';   // all | draft | published | cancelled | completed
-    #[Url] public string $timeFilter = 'upcoming'; // upcoming | past | all
+    #[Url]
+    public string $search = '';
+
+    #[Url]
+    public string $statusFilter = 'all';   // all | draft | published | cancelled | completed
+
+    #[Url]
+    public string $timeFilter = 'upcoming'; // upcoming | past | all
 
     protected int $perPage = 15;
 
-    public function updatingSearch(): void { $this->resetPage(); }
-    public function updatingStatusFilter(): void { $this->resetPage(); }
-    public function updatingTimeFilter(): void { $this->resetPage(); }
+    public function updatingSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingStatusFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingTimeFilter(): void
+    {
+        $this->resetPage();
+    }
 
     public function clearFilters(): void
     {
@@ -40,11 +58,11 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             ->when($this->timeFilter === 'upcoming', fn ($q) => $q->where('starts_at', '>=', now()))
             ->when($this->timeFilter === 'past', fn ($q) => $q->where('starts_at', '<', now()))
             ->when($this->search !== '', function ($q) {
-                $term = '%' . $this->search . '%';
+                $term = '%'.$this->search.'%';
                 $q->where(function ($inner) use ($term) {
                     $inner->where('title', 'like', $term)
-                          ->orWhere('location', 'like', $term)
-                          ->orWhere('description', 'like', $term);
+                        ->orWhere('location', 'like', $term)
+                        ->orWhere('description', 'like', $term);
                 });
             })
             ->orderByDesc('starts_at')
@@ -67,15 +85,50 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         if (! $event) {
             session()->flash('error', 'Event not found.');
+
             return;
         }
 
         if ($event->image) {
-            \Illuminate\Support\Facades\Storage::disk('public')->delete($event->image);
+            Storage::disk('public')->delete($event->image);
         }
 
         $event->delete();
 
         session()->flash('success', 'Event deleted successfully.');
+    }
+
+    public function cancelEvent(int $id): void
+    {
+        abort_unless(Auth::user()?->hasAnyRole(['super admin', 'registrar']), 403);
+
+        $event = Event::find($id);
+
+        if (! $event) {
+            session()->flash('error', 'Event not found.');
+
+            return;
+        }
+
+        if ($event->status === 'cancelled') {
+            session()->flash('error', 'This event is already cancelled.');
+
+            return;
+        }
+
+        $wasPublished = $event->status === 'published';
+
+        $event->update(['status' => 'cancelled']);
+
+        if ($wasPublished) {
+            SendEventCancellationEmail::dispatch($event->id)->afterCommit();
+        }
+
+        session()->flash(
+            'success',
+            $wasPublished
+                ? 'Event cancelled. Attendees have been notified.'
+                : 'Event cancelled.'
+        );
     }
 };
