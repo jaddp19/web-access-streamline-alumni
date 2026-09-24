@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
             DepartmentSeeder::class,
             CourseSeeder::class,
             PhAddressSeeder::class,
+            DemoSeeder::class,
         ]);
 
         // Create roles if not already seeded

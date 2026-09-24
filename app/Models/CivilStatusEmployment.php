@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use App\Models\TracerStudy;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CivilStatusEmployment extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'tracer_study_id',
         'civil_status',

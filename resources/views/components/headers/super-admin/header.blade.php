@@ -64,7 +64,7 @@
 
                     <span class="hidden md:flex flex-col items-start leading-tight min-w-0">
                         <span class="text-white text-xs font-semibold truncate max-w-32">{{ $__authUser->name }}</span>
-                        <span class="text-white/50 text-[10px]">Super Admin</span>
+                        <span class="text-white/50 text-[10px]">Registrar</span>
                     </span>
                     <svg class="hidden md:block size-3.5 text-white/50 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="m6 9 6 6 6-6"/>

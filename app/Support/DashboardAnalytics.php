@@ -60,9 +60,9 @@ class DashboardAnalytics
 
     public function boardPassers(): int
     {
-        return $this->profileBaseQuery()
-            ->where('is_verified', true)
-            ->count();
+        // Delegate to the chart's breakdown so the stat card and the
+        // Board Exam Performance chart always show the same number.
+        return $this->boardExamBreakdown()['Passed'];
     }
 
     public function pendingVerifications(): int
