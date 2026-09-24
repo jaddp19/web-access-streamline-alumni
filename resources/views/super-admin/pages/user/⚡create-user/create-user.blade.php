@@ -26,7 +26,7 @@
                     </svg>
                 </div>
                 <div class="min-w-0">
-                    <p class="text-white/50 text-xs sm:text-sm">Super Admin</p>
+                    <p class="text-white/50 text-xs sm:text-sm">Registrar</p>
                     <h1 class="text-lg sm:text-xl lg:text-2xl font-bold text-white truncate"
                         style="font-family: 'Fraunces', serif;">
                         Create User
