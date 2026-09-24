@@ -208,67 +208,6 @@
                 </div>
             </div>
 
-            {{-- ========== NAME ========== --}}
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div class="min-w-0">
-                    <label for="first_name"
-                        class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
-                        First Name <span class="text-red-500">*</span>
-                    </label>
-                    <input type="text" id="first_name" wire:model="first_name" maxlength="255"
-                        autocomplete="given-name"
-                        class="w-full px-4 py-2.5 rounded-xl border bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:ring-1 transition
-                        @error('first_name') border-red-400 dark:border-red-500/50 @else border-black/10 dark:border-white/10 focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] @enderror">
-                    @error('first_name')
-                        <span class="block mt-1 text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                <div class="min-w-0">
-                    <label for="last_name"
-                        class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
-                        Last Name <span class="text-red-500">*</span>
-                    </label>
-                    <input type="text" id="last_name" wire:model="last_name" maxlength="255"
-                        autocomplete="family-name"
-                        class="w-full px-4 py-2.5 rounded-xl border bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:ring-1 transition
-                        @error('last_name') border-red-400 dark:border-red-500/50 @else border-black/10 dark:border-white/10 focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] @enderror">
-                    @error('last_name')
-                        <span class="block mt-1 text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
-                    @enderror
-                </div>
-            </div>
-
-            {{-- ========== MIDDLE NAME ========== --}}
-            <div>
-                <label for="middle_name"
-                    class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
-                    Middle Name
-                    <span class="text-black/40 dark:text-white/40 text-[10px] font-normal normal-case">(optional)</span>
-                </label>
-                <input type="text" id="middle_name" wire:model="middle_name" maxlength="255"
-                    autocomplete="additional-name"
-                    class="w-full px-4 py-2.5 rounded-xl border bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:ring-1 transition
-                    @error('middle_name') border-red-400 dark:border-red-500/50 @else border-black/10 dark:border-white/10 focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] @enderror">
-                @error('middle_name')
-                    <span class="block mt-1 text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
-                @enderror
-            </div>
-
-            {{-- ========== EMAIL ========== --}}
-            <div>
-                <label for="email"
-                    class="block text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
-                    Email <span class="text-red-500">*</span>
-                </label>
-                <input type="email" id="email" wire:model="email" maxlength="255" autocomplete="email"
-                    class="w-full px-4 py-2.5 rounded-xl border bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:ring-1 transition
-                    @error('email') border-red-400 dark:border-red-500/50 @else border-black/10 dark:border-white/10 focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] @enderror">
-                @error('email')
-                    <span class="block mt-1 text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
-                @enderror
-            </div>
-
             {{-- ========== GENDER ========== --}}
             <div>
                 <label for="gender"

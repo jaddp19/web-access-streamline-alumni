@@ -83,18 +83,28 @@
                         {{-- Clickable avatar --}}
                         <button type="button"
                             class="relative rounded-full ring-4 ring-white dark:ring-[#242526] shadow-lg shrink-0
-                                   focus:outline-none focus:ring-4 focus:ring-[#D4A537]/60 group
-                                   {{ $avatarUrl ? 'cursor-zoom-in' : 'cursor-default' }}"
-                            @if ($avatarUrl) @click="open('{{ $avatarUrl }}', '{{ $this->alumni->name }}')" @endif
-                            title="{{ $avatarUrl ? 'View profile photo' : '' }}">
+                                   focus:outline-none focus-visible:ring-4 focus-visible:ring-[#D4A537]/60 group
+                                   {{ $avatarUrl ? 'cursor-zoom-in active:scale-[0.98]' : 'cursor-default' }}
+                                   transition-transform duration-200"
+                            @if ($avatarUrl)
+                                @click="open('{{ $avatarUrl }}', @js($this->alumni->name))"
+                                aria-label="View {{ $this->alumni->name }}'s profile photo"
+                                title="View profile photo"
+                            @else
+                                aria-disabled="true"
+                            @endif>
 
                             @if ($avatarUrl)
+                                {{-- Image (interactive target itself) --}}
                                 <img src="{{ $avatarUrl }}" alt="{{ $this->alumni->name }}"
-                                    class="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full object-cover bg-[#D4A537]
+                                    class="pointer-events-none
+                                           w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full object-cover bg-[#D4A537]
                                            transition-transform duration-300 group-hover:scale-[1.03]"
                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+
+                                {{-- Fallback initial (hidden unless image errors) --}}
                                 <span style="display: none;"
-                                    class="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full bg-yellow-500
+                                    class="pointer-events-none w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full bg-yellow-500
                                            items-center justify-center">
                                     <span class="text-[#0f2b1c] font-bold text-3xl sm:text-4xl md:text-6xl"
                                         style="font-family: 'Fraunces', serif;">
@@ -102,10 +112,11 @@
                                     </span>
                                 </span>
 
+                                {{-- Hover / focus overlay — pointer-events-none so the button always receives the click --}}
                                 <span
-                                    class="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/30
+                                    class="pointer-events-none absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/30
                                            transition-colors flex items-center justify-center
-                                           opacity-0 group-hover:opacity-100">
+                                           opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100">
                                     <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor"
                                         stroke-width="2" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round"
@@ -113,8 +124,9 @@
                                     </svg>
                                 </span>
                             @else
+                                {{-- No avatar — render the initial only, button is non-interactive --}}
                                 <span
-                                    class="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full bg-yellow-500
+                                    class="pointer-events-none w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full bg-yellow-500
                                            flex items-center justify-center">
                                     <span class="text-[#0f2b1c] font-bold text-3xl sm:text-4xl md:text-6xl"
                                         style="font-family: 'Fraunces', serif;">

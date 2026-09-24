@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -22,11 +21,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
     public string $gender = 'male';
     public string $contact_number_1 = '';
     public ?string $contact_number_2 = null;
-
-    public string $first_name  = '';
-    public string $middle_name = '';
-    public string $last_name   = '';
-    public string $email       = '';
 
     public $avatarFile = null;
     public ?string $currentAvatar = null;
@@ -51,10 +45,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
     public bool $hasProfile = false;
 
-    /** Memoized address service — one instance per request. */
     protected ?PhAddressService $addressService = null;
-
-    /** Memoized profile id — one query per request instead of 3 during validation. */
     protected ?int $cachedProfileId = null;
 
     protected function addressService(): PhAddressService
@@ -71,11 +62,15 @@ new #[Layout('layouts.app-alumni')] class extends Component
     #[Computed]
     public function fullName(): string
     {
-        return trim(implode(' ', array_filter([
-            $this->first_name,
-            $this->middle_name,
-            $this->last_name,
+        $user = Auth::user();
+
+        $name = trim(implode(' ', array_filter([
+            $user->first_name,
+            $user->middle_name,
+            $user->last_name,
         ])));
+
+        return $name !== '' ? $name : (string) ($user->name ?? '');
     }
 
     // =========================================================
@@ -85,11 +80,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
     protected function rules(): array
     {
         return [
-            'first_name'        => ['required', 'string', 'min:2', 'max:255'],
-            'middle_name'       => ['nullable', 'string', 'max:255'],
-            'last_name'         => ['required', 'string', 'min:2', 'max:255'],
-            'email'             => ['required', 'email:rfc,dns', 'max:255', Rule::unique('users', 'email')->ignore(Auth::id())],
-            'gender'            => ['required', Rule::in(['male', 'female', 'other'])],
+            'gender' => ['required', Rule::in(['male', 'female', 'other'])],
 
             'contact_number_1' => [
                 'required', 'string', 'max:20', new Phone(),
@@ -145,15 +136,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
     protected function messages(): array
     {
         return [
-            'first_name.required'       => 'The first name is required.',
-            'first_name.min'            => 'The first name must be at least 2 characters.',
-            'first_name.max'            => 'The first name may not be greater than 255 characters.',
-            'last_name.required'        => 'The last name is required.',
-            'last_name.min'             => 'The last name must be at least 2 characters.',
-            'last_name.max'             => 'The last name may not be greater than 255 characters.',
-            'email.required'            => 'The email field is required.',
-            'email.email'               => 'The email must be a valid email address.',
-            'email.unique'              => 'The email has already been taken.',
             'gender.required'           => 'Please select your gender.',
             'gender.in'                 => 'Please select a valid gender.',
             'contact_number_1.required' => 'The mobile number is required.',
@@ -180,22 +162,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
     public function mount(): void
     {
         $user = Auth::user();
-
-        $first  = $user->first_name;
-        $middle = $user->middle_name;
-        $last   = $user->last_name;
-
-        if (! $first && ! $last && $user->name) {
-            $split  = preg_split('/\s+/', trim($user->name));
-            $first  = $split[0] ?? '';
-            $last   = count($split) > 1 ? end($split) : '';
-            $middle = count($split) > 2 ? implode(' ', array_slice($split, 1, -1)) : '';
-        }
-
-        $this->first_name  = $first ?? '';
-        $this->middle_name = $middle ?? '';
-        $this->last_name   = $last ?? '';
-        $this->email       = $user->email;
 
         $profile = UserProfile::where('user_id', $user->id)->first();
 
@@ -331,28 +297,16 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
         $validated = $this->validate();
 
-        $validated['first_name']     = $this->sanitize($validated['first_name']);
-        $validated['middle_name']    = $validated['middle_name'] ? $this->sanitize($validated['middle_name']) : null;
-        $validated['last_name']      = $this->sanitize($validated['last_name']);
-        $validated['email']          = $this->sanitize($validated['email']);
         $validated['street_address'] = $this->sanitize($validated['street_address']);
 
         $user    = Auth::user();
         $service = $this->addressService();
 
-        // Track new file for cleanup on failure.
         $newAvatarPath = null;
         $oldAvatarPath = null;
 
         try {
             DB::transaction(function () use ($validated, $user, $service, &$newAvatarPath, &$oldAvatarPath) {
-                $user->update([
-                    'first_name'  => $validated['first_name'],
-                    'middle_name' => $validated['middle_name'],
-                    'last_name'   => $validated['last_name'],
-                    'email'       => $validated['email'],
-                ]);
-
                 $existing = UserProfile::where('user_id', $user->id)->first();
 
                 // ----- Build location payload -----
@@ -412,7 +366,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
                     ]);
                 }
 
-                // ----- Avatar: store new file first, track both paths -----
+                // ----- Avatar -----
                 $avatarPath    = $existing?->avatar;
                 $oldAvatarPath = $avatarPath;
 
@@ -435,13 +389,11 @@ new #[Layout('layouts.app-alumni')] class extends Component
                     ]
                 );
 
-                // Delete old avatar only AFTER successful DB write
                 if ($newAvatarPath && $oldAvatarPath && Storage::disk('public')->exists($oldAvatarPath)) {
                     Storage::disk('public')->delete($oldAvatarPath);
                 }
             });
         } catch (\Throwable $e) {
-            // Roll back the uploaded file if the DB write failed.
             if ($newAvatarPath && Storage::disk('public')->exists($newAvatarPath)) {
                 Storage::disk('public')->delete($newAvatarPath);
             }
@@ -451,7 +403,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
             return;
         }
 
-        // Reset state
         $this->avatarFile       = null;
         $this->currentAvatar    = $newAvatarPath ?? $oldAvatarPath;
         $this->hasProfile       = true;

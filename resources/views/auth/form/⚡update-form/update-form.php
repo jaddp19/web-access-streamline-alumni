@@ -522,10 +522,22 @@ new #[Layout('layouts.app-form')] class extends Component
         });
 
         // ─── Send update confirmation email ──────────────────────────
+        $updater      = Auth::user();
+        $isSelfUpdate = $updater->id === $user->id;
+        $isRegistrar  = ! $isSelfUpdate && $updater->hasRole('registrar');
+
         EmailTemplateService::send('tracer-study-updated', $user->email, [
-            'name'       => $user->name,
-            'year'       => now()->year,
-            'updated_at' => now()->format('F j, Y · g:i A'),
+            'name'           => $user->name,
+            'year'           => now()->year,
+            'updated_at'     => now()->format('F j, Y · g:i A'),
+
+            // ── New: lets the template word itself correctly ──
+            'is_self_update' => $isSelfUpdate,
+            'updater_label'  => match (true) {
+                $isSelfUpdate => $user->name,       // themselves
+                $isRegistrar  => 'the registrar',
+                default       => 'an administrator',
+            },
         ]);
         // ─────────────────────────────────────────────────────────────
 

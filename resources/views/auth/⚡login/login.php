@@ -3,10 +3,12 @@
 use App\Models\Course;
 use App\Models\Department;
 use App\Models\User;
+use App\Services\EmailTemplateService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
@@ -19,6 +21,13 @@ new #[Layout('layouts.auth')] class extends Component
     public string $password = '';
     public bool $remember = false;
 
+    // ============ FORGOT PASSWORD STATE ============
+    public bool $showForgotModal = false;
+    public int $forgotStep = 1;   // 1 = email, 2 = school ID, 3 = success
+    public string $forgotEmail = '';
+    public string $forgotSchoolId = '';
+    public string $forgotSuccessMessage = '';
+
     /** Max failed attempts before lockout. */
     protected const MAX_ATTEMPTS = 5;
 
@@ -26,7 +35,7 @@ new #[Layout('layouts.auth')] class extends Component
     protected const LOCKOUT_SECONDS = 60;
 
     // =========================================================
-    //  VALIDATION
+    //  LOGIN VALIDATION
     // =========================================================
 
     protected function rules(): array
@@ -57,7 +66,6 @@ new #[Layout('layouts.auth')] class extends Component
 
         $key = $this->throttleKey();
 
-        // ----- Rate limit check -----
         if (RateLimiter::tooManyAttempts($key, self::MAX_ATTEMPTS)) {
             $seconds = RateLimiter::availableIn($key);
 
@@ -68,7 +76,6 @@ new #[Layout('layouts.auth')] class extends Component
             return;
         }
 
-        // ----- Find user -----
         $user = User::where('email', Str::lower($this->email))
             ->with('roles:id,name')
             ->first();
@@ -79,7 +86,6 @@ new #[Layout('layouts.auth')] class extends Component
             return;
         }
 
-        // ----- Verify password (single check, no double-query) -----
         if (! Hash::check($this->password, $user->password)) {
             RateLimiter::hit($key, self::LOCKOUT_SECONDS);
 
@@ -92,12 +98,10 @@ new #[Layout('layouts.auth')] class extends Component
             return;
         }
 
-        // ----- Log the user in (no second Hash check) -----
         Auth::login($user, $this->remember);
         request()->session()->regenerate();
         RateLimiter::clear($key);
 
-        // ----- Role-based redirect -----
         return $this->redirectBasedOnRole($user);
     }
 
@@ -112,15 +116,11 @@ new #[Layout('layouts.auth')] class extends Component
         }
 
         if ($user->hasRole('alumni')) {
-            // Has the alumni started their tracer study yet?
             $hasTracer = $user->tracerStudy()->exists();
 
-            return redirect()->route(
-                $hasTracer ? 'alumni.dashboard' : 'form'
-            );
+            return redirect()->route($hasTracer ? 'alumni.dashboard' : 'form');
         }
 
-        // No recognized role → log out immediately
         Auth::logout();
         request()->session()->invalidate();
         request()->session()->regenerateToken();
@@ -128,9 +128,6 @@ new #[Layout('layouts.auth')] class extends Component
         $this->addError('email', 'This account has no assigned role. Please contact the registrar.');
     }
 
-    /**
-     * Unique key for this email + IP combo.
-     */
     protected function throttleKey(): string
     {
         return Str::transliterate(
@@ -139,7 +136,103 @@ new #[Layout('layouts.auth')] class extends Component
     }
 
     // =========================================================
-    //  COMPUTED (cached — this page loads these every request)
+    //  FORGOT PASSWORD — two-step verification
+    // =========================================================
+
+    public function openForgotModal(): void
+    {
+        $this->reset('forgotStep', 'forgotEmail', 'forgotSchoolId', 'forgotSuccessMessage');
+        $this->forgotStep      = 1;
+        $this->resetErrorBag();
+        $this->showForgotModal = true;
+    }
+
+    public function closeForgotModal(): void
+    {
+        $this->showForgotModal      = false;
+        $this->forgotStep           = 1;
+        $this->forgotEmail          = '';
+        $this->forgotSchoolId       = '';
+        $this->forgotSuccessMessage = '';
+        $this->resetErrorBag();
+    }
+
+    /** Step 1 — verify the email exists, then ask for the school ID. */
+    public function verifyForgotEmail(): void
+    {
+        $this->validate([
+            'forgotEmail' => ['required', 'email:rfc', 'max:255'],
+        ], [
+            'forgotEmail.required' => 'Please enter your email address.',
+            'forgotEmail.email'    => 'Please enter a valid email address.',
+        ]);
+
+        $exists = User::where('email', Str::lower($this->forgotEmail))->exists();
+
+        if (! $exists) {
+            $this->addError('forgotEmail', 'This email is not registered.');
+            return;
+        }
+
+        $this->resetErrorBag();
+        $this->forgotStep = 2;
+    }
+
+    /** Step 2 — verify the school ID, then send the reset link. */
+    public function verifyForgotSchoolIdAndSend(): void
+    {
+        $this->validate([
+            'forgotSchoolId' => ['required', 'string', 'max:50'],
+        ], [
+            'forgotSchoolId.required' => 'Please enter your school ID number.',
+        ]);
+
+        $user = User::where('email', Str::lower($this->forgotEmail))->first();
+
+        if (! $user) {
+            $this->forgotStep = 1;
+            $this->addError('forgotEmail', 'This email is not registered.');
+            return;
+        }
+
+        $matches = Str::lower(trim($user->school_id)) === Str::lower(trim($this->forgotSchoolId));
+
+        if (! $matches) {
+            $this->addError('forgotSchoolId', 'That school ID does not match our records for this email.');
+            return;
+        }
+
+        try {
+            $token = Password::broker()->createToken($user);
+
+            $resetUrl = route('password.reset', [
+                'token' => $token,
+                'email' => $user->email,
+            ]);
+
+            EmailTemplateService::send('password-reset', $user->email, [
+                'name'       => $user->name,
+                'reset_url'  => $resetUrl,
+                'expires_in' => (string) config('auth.passwords.users.expire', 60),
+            ]);
+
+            Log::info('Password reset requested', [
+                'user_id' => $user->id,
+                'email'   => $user->email,
+                'ip'      => request()->ip(),
+            ]);
+        } catch (\Throwable $e) {
+            report($e);
+            $this->addError('forgotSchoolId', 'Could not send the reset email right now. Please try again later.');
+            return;
+        }
+
+        $this->forgotSuccessMessage = "If that information matches our records, we've sent a password reset link to {$user->email}. Check your inbox (and spam folder).";
+        $this->forgotStep           = 3;
+    }
+
+    // =========================================================
+    //  COMPUTED
     // =========================================================
 
     #[Computed]

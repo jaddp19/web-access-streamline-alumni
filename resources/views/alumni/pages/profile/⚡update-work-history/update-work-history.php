@@ -305,7 +305,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
     //  UPDATE
     // =========================================================
 
-    public function updateWorkHistory(): void
+    public function updateWorkHistory()
     {
         abort_unless($this->history->user_id === Auth::id(), 403);
 
@@ -344,7 +344,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
     //  DELETE
     // =========================================================
 
-    public function deleteWorkHistory(): void
+    public function deleteWorkHistory()
     {
         abort_unless($this->history->user_id === Auth::id(), 403);
 

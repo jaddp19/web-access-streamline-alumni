@@ -146,6 +146,19 @@ class EmailSeeder extends Seeder
                     .'— Colegio de Sta. Ana de Victorias',
             ],
 
+            // ---------- Password reset ----------
+            [
+                'slug' => 'password-reset',
+                'subject' => 'Reset your CSAV Alumni password',
+                'message' => "Hi {{name}},\n\n"
+                    ."We received a request to reset your CSAV Alumni Network password.\n\n"
+                    ."To choose a new password, open this link:\n"
+                    ."{{reset_url}}\n\n"
+                    ."This link expires in {{expires_in}} minutes. If you didn't request a password reset, you can safely ignore this email — your password won't change.\n\n"
+                    ."If you need help, contact the CSAV Alumni Office.\n\n"
+                    .'— CSAV Alumni Office',
+            ],
+
             // ---------- Event reminder (1 day before) ----------
             [
                 'slug' => 'reminder-event-is-tomorrow',

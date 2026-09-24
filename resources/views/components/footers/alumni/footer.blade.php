@@ -25,7 +25,7 @@
         <div class="flex flex-col items-center md:items-end gap-y-2 text-sm text-white/70">
           <a href="{{ route('privacy-policy') }}" class="hover:text-[#D4A537] transition-colors">Privacy Policy</a>
           <a href="{{ route('terms-and-conditions') }}"
-            class="text-white/60 hover:text-[#D4A537] transition-colors">
+            class="hover:text-[#D4A537] transition-colors">
               Terms and Conditions
           </a>
           <a href="#" class="hover:text-[#D4A537] transition-colors">Contact Administration</a>
