@@ -1,8 +1,10 @@
 <?php
 
+use App\Models\Batch;
 use App\Models\CivilStatusEmployment;
 use App\Models\Company;
 use App\Models\TracerStudy;
+use App\Models\UserProfile;
 use App\Models\WorkHistory;
 use App\Services\PhAddressService;
 use Illuminate\Support\Facades\Auth;
@@ -72,15 +74,59 @@ new #[Layout('layouts.app-alumni')] class extends Component
     }
 
     // =========================================================
+    //  HELPERS
+    // =========================================================
+
+    /**
+     * Earliest allowed hire date = Jan 1 of the alumni's batch year.
+     * Returns null when no batch is set (then we skip the check).
+     * Also returns null when the batch name isn't numeric.
+     */
+    protected function graduateMinDate(): ?string
+    {
+        $batchId = UserProfile::query()
+            ->where('user_id', Auth::id())
+            ->value('batch_id');
+
+        if (! $batchId) {
+            return null;
+        }
+
+        $batchName = Batch::query()
+            ->whereKey($batchId)
+            ->value('batch_name');
+
+        if (! $batchName || ! is_numeric($batchName)) {
+            return null;
+        }
+
+        return ((int) $batchName) . '-01-01';
+    }
+
+    // =========================================================
     //  VALIDATION
     // =========================================================
 
     protected function rules(): array
     {
         return [
-            'work_name'      => ['required', 'string', 'min:2', 'max:255'],
-            'company_id'     => ['required', 'integer', 'exists:companies,id'],
-            'date_hired'     => ['required', 'date', 'before_or_equal:today'],
+            'work_name'  => ['required', 'string', 'min:2', 'max:255'],
+            'company_id' => ['required', 'integer', 'exists:companies,id'],
+
+            'date_hired' => [
+                'required',
+                'date',
+                'before_or_equal:today',
+                function ($attribute, $value, $fail) {
+                    $minDate = $this->graduateMinDate();
+
+                    if ($minDate && $value < $minDate) {
+                        $year = (int) substr($minDate, 0, 4);
+                        $fail("The hire date cannot be earlier than your graduation year ({$year}).");
+                    }
+                },
+            ],
+
             'is_current_job' => ['boolean'],
         ];
     }
@@ -199,7 +245,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
         if (! $this->showNewCompanyForm) {
             $this->resetNewCompanyFields();
         } else {
-            // Clear any selected company so the user doesn't submit a stale one
             $this->company_id = null;
             $this->resetErrorBag('company_id');
         }
@@ -241,8 +286,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
         $this->validateOnly('new_company_logo');
     }
 
-    // ===== New-company address cascade hooks =====
-
     public function updatedNewCompanyAddressType(): void
     {
         $this->resetErrorBag([
@@ -277,7 +320,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
         $service = app(PhAddressService::class);
 
-        // ---- Compose address string ----
         if ($this->new_company_address_type === 'philippines') {
             $region   = $service->findByCode($this->new_company_region_code);
             $province = $service->findByCode($this->new_company_province_code);
@@ -337,7 +379,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
             return;
         }
 
-        // Success
         $this->company_id         = $company->id;
         $this->showNewCompanyForm = false;
 
@@ -360,7 +401,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
         $this->validate($rules, $this->messages());
 
-        // Sanitize
         $workName      = trim(strip_tags($this->work_name));
         $civilStatus   = trim(strip_tags($this->civil_status));
         $abroadCountry = trim(strip_tags($this->abroad_country));

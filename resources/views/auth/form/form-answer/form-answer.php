@@ -334,6 +334,44 @@ new #[Layout('layouts.app-form')] class extends Component
         }
     }
 
+    // ===== Hire-date validation =====
+
+    /**
+     * Earliest allowed hire date = Jan 1 of the alumni's chosen batch year.
+     * Returns null when no batch is set (then we skip the check).
+     */
+    protected function graduateMinDate(): ?string
+    {
+        if (! $this->batch_id) {
+            return null;
+        }
+
+        $batchName = Batch::whereKey($this->batch_id)->value('batch_name');
+
+        if (! $batchName || ! is_numeric($batchName)) {
+            return null;
+        }
+
+        return ((int) $batchName) . '-01-01';
+    }
+
+    protected function validateHireDate(): void
+    {
+        if (blank($this->date_hired)) {
+            return;
+        }
+
+        $minDate = $this->graduateMinDate();
+
+        if ($minDate && $this->date_hired < $minDate) {
+            $year = (int) substr($minDate, 0, 4);
+
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'date_hired' => "The hire date cannot be earlier than your graduation year ({$year}).",
+            ]);
+        }
+    }
+
     // ===== Navigation =====
 
     public function nextStep(): void
@@ -345,6 +383,8 @@ new #[Layout('layouts.app-form')] class extends Component
             ]),
             TracerStudyRules::messages()
         );
+
+        $this->validateHireDate();
 
         if ($this->step < $this->totalSteps) {
             $this->step++;
@@ -372,6 +412,8 @@ new #[Layout('layouts.app-form')] class extends Component
             ]),
             TracerStudyRules::messages()
         );
+
+        $this->validateHireDate();
 
         $user    = Auth::user();
         $service = app(PhAddressService::class);

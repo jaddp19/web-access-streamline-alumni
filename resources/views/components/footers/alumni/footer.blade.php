@@ -23,8 +23,9 @@
       <div class="space-y-4 text-center md:text-right">
         <h4 class="text-white font-bold uppercase tracking-wider text-xs">Support & Legal</h4>
         <div class="flex flex-col items-center md:items-end gap-y-2 text-sm text-white/70">
-          <a href="{{ route('privacy-policy') }}" class="hover:text-[#D4A537] transition-colors">Privacy Policy</a>
-          <a href="{{ route('terms-and-conditions') }}"
+          <a href="{{ route('privacy-policy') }}" target="_blank" 
+            class="hover:text-[#D4A537] transition-colors">Privacy Policy</a>
+          <a href="{{ route('terms-and-conditions') }} "target="_blank"
             class="hover:text-[#D4A537] transition-colors">
               Terms and Conditions
           </a>
