@@ -15,26 +15,8 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public array $selectedCompanies = [];
     public bool $selectAllFiltered = false;
-    public bool $selectAllOnPage = false;
 
     protected int $perPage = 10;
-
-    public function updatingPage(): void
-    {
-        $this->clearSelection();
-    }
-
-    protected function clearSelection(): void
-    {
-        $this->selectedCompanies  = [];
-        $this->selectAllFiltered  = false;
-        $this->selectAllOnPage    = false;
-
-        // Invalidate memoized computed props so the next render sees
-        // the fresh state (Livewire 3 caches them per-request).
-        unset($this->selectedCount);
-        unset($this->pageRowIds);
-    }
 
     // =========================================================
     //  COMPUTED
@@ -60,7 +42,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     #[Computed]
     public function pageRowIds(): array
     {
-        return $this->companies->getCollection()->pluck('id')->map(fn ($id) => (int) $id)->all();
+        return $this->companies->getCollection()
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
     }
 
     #[Computed]
@@ -72,71 +57,93 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     }
 
     // =========================================================
+    //  PAGE CHANGE
+    // =========================================================
+
+    /** Keep selection across pages — just bust the paginated cache. */
+    public function updatedPage(): void
+    {
+        unset($this->pageRowIds, $this->companies);
+    }
+
+    // =========================================================
     //  SELECTION
     // =========================================================
 
-    public function toggleSelectAllOnPage(): void
+    /** Header checkbox / mobile "Select all" — selects everything across all pages. */
+    public function toggleSelectAll(): void
     {
-        $pageIds = $this->pageRowIds;
-
-        if (empty($pageIds)) {
+        if ($this->selectAllFiltered) {
+            $this->clearSelection();
             return;
         }
 
-        $allOnPageSelected = ! empty($pageIds)
-            && empty(array_diff($pageIds, $this->selectedCompanies));
+        $this->selectedCompanies = Company::query()
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
 
-        if ($allOnPageSelected && ! $this->selectAllFiltered) {
-            $this->selectedCompanies = array_values(
-                array_diff($this->selectedCompanies, $pageIds)
-            );
-        } else {
-            $this->selectedCompanies = array_values(array_unique(
-                array_merge($this->selectedCompanies, $pageIds)
-            ));
-        }
+        $this->selectAllFiltered = true;
 
-        $this->recomputeSelectAllOnPage();
-
-        // Count changed → drop the memoized value so the UI updates.
-        unset($this->selectedCount);
+        $this->refreshSelection();
     }
 
-    public function toggleRowSelection(int $id): void
+    /** Enter "all N" mode without materialising IDs. */
+    public function selectAllMatching(): void
     {
+        $this->selectAllFiltered = true;
+        $this->selectedCompanies = [];
+
+        $this->refreshSelection();
+    }
+
+    /** Reset everything. Public so Blade can wire a "Clear selection" link. */
+    public function clearSelection(): void
+    {
+        $this->selectedCompanies = [];
+        $this->selectAllFiltered = false;
+
+        $this->refreshSelection();
+    }
+
+    /** Individual row toggle. */
+    public function toggleRowSelection($companyId): void
+    {
+        $companyId = (int) $companyId;
+
+        // Leaving "all" mode: materialise the full set so unchecking one
+        // row leaves everything else selected.
         if ($this->selectAllFiltered) {
             $this->selectAllFiltered = false;
-            $this->selectedCompanies = $this->pageRowIds;
+            $this->selectedCompanies = Company::query()
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
         }
 
-        if (in_array($id, $this->selectedCompanies, true)) {
+        if (in_array($companyId, $this->selectedCompanies, true)) {
             $this->selectedCompanies = array_values(
-                array_diff($this->selectedCompanies, [$id])
+                array_diff($this->selectedCompanies, [$companyId])
             );
         } else {
-            $this->selectedCompanies[] = $id;
+            $this->selectedCompanies[] = $companyId;
         }
 
-        $this->recomputeSelectAllOnPage();
-
-        // Count changed → drop the memoized value so the UI updates.
-        unset($this->selectedCount);
+        $this->refreshSelection();
     }
 
     public function isRowSelected(int $id): bool
     {
-        if ($this->selectAllFiltered) {
-            return true;
-        }
-        return in_array($id, $this->selectedCompanies, true);
+        return $this->selectAllFiltered
+            || in_array($id, $this->selectedCompanies, true);
     }
 
-    protected function recomputeSelectAllOnPage(): void
+    protected function refreshSelection(): void
     {
-        $pageIds = $this->pageRowIds;
-
-        $this->selectAllOnPage = ! empty($pageIds)
-            && empty(array_diff($pageIds, $this->selectedCompanies));
+        unset(
+            $this->selectedCount,
+            $this->pageRowIds,
+        );
     }
 
     // =========================================================
@@ -155,6 +162,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                 $query = Company::query();
 
                 if (! $this->selectAllFiltered) {
+                    if (empty($this->selectedCompanies)) {
+                        return ['count' => 0, 'logos' => []];
+                    }
                     $query->whereIn('id', $this->selectedCompanies);
                 }
 
@@ -177,19 +187,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         Cache::forget('companies:count');
 
-        // Reset internal state.
-        $this->selectedCompanies = [];
-        $this->selectAllFiltered = false;
-        $this->selectAllOnPage   = false;
-
-        // Invalidate memoized computed props so the re-render:
-        //   • hides the "N company(ies) selected" bar (selectedCount → 0)
-        //   • shows the fresh list (companies recomputed from DB)
-        unset($this->selectedCount);
-        unset($this->totalCompaniesCount);
-        unset($this->pageRowIds);
-        unset($this->companies);
-
+        $this->clearSelection();
         $this->resetPage();
 
         session()->flash('success', "{$result['count']} company(ies) deleted successfully.");
@@ -225,13 +223,8 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $this->selectedCompanies = array_values(
             array_diff($this->selectedCompanies, [$id])
         );
-        $this->recomputeSelectAllOnPage();
 
-        // The single row is gone — invalidate memoized computeds.
-        unset($this->selectedCount);
-        unset($this->totalCompaniesCount);
-        unset($this->pageRowIds);
-        unset($this->companies);
+        $this->refreshSelection();
 
         session()->flash('success', "Company \"{$name}\" deleted.");
     }
@@ -256,7 +249,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         if ($stillUsed) return;
 
-        // One filesystem call — delete() returns false if missing.
         Storage::disk('public')->delete($relative);
     }
 };

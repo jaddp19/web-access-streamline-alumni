@@ -3,7 +3,7 @@
         <div class="relative flex flex-col rounded-2xl border border-black/5 dark:border-white/5 bg-white dark:bg-[#242526] shadow-sm overflow-hidden">
 
             <!-- Loading overlay -->
-            <div wire:loading.flex wire:target="nextPage,previousPage,gotoPage,deleteSelected,deleteCompany"
+            <div wire:loading.flex wire:target="nextPage,previousPage,gotoPage,deleteSelected,deleteCompany,clearSelection"
                 class="absolute inset-0 z-20 hidden items-start justify-center bg-white/70 dark:bg-[#242526]/70 pt-24 pointer-events-none">
                 <svg class="w-6 h-6 animate-spin text-[#123524] dark:text-[#D4A537]" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -43,18 +43,13 @@
             <!-- ===================== BULK ACTION BAR ===================== -->
             @if ($this->selectedCount > 0)
                 <div class="px-4 sm:px-6 py-3 bg-red-50 dark:bg-red-500/10 border-b border-red-100 dark:border-red-500/20 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <p class="text-xs sm:text-sm text-red-700 dark:text-red-400 font-medium">
+                    <div class="text-xs sm:text-sm text-red-700 dark:text-red-400 font-medium">
                         <span class="font-bold">{{ $this->selectedCount }}</span> company(ies) selected
-                        @if ($selectAllFiltered)
-                            <span class="text-[10px] font-normal opacity-70">(all)</span>
-                        @endif
-                    </p>
-                    <button x-data
-                        @click="
-                            if (confirm('Are you sure you want to delete {{ $this->selectedCount }} company(ies)?')) {
-                                $wire.deleteSelected()
-                            }
-                        "
+                    </div>
+
+                    <button
+                        wire:click="deleteSelected"
+                        wire:confirm="Are you sure you want to delete {{ $this->selectedCount }} company(ies)?"
                         class="w-full sm:w-auto px-4 py-1.5 bg-red-600 text-white text-xs sm:text-sm font-semibold rounded-lg hover:bg-red-700 transition">
                         Delete Selected
                     </button>
@@ -66,6 +61,7 @@
                 @forelse ($this->companies as $company)
                     <div wire:key="mobile-company-{{ $company->id }}" class="p-4 flex items-start gap-3">
                         <input type="checkbox"
+                            wire:key="mobile-company-cb-{{ $company->id }}-{{ $this->isRowSelected($company->id) ? '1' : '0' }}"
                             wire:click="toggleRowSelection({{ $company->id }})"
                             @checked($this->isRowSelected($company->id))
                             class="mt-1.5 rounded border-black/20 dark:border-white/20 text-[#123524] dark:text-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] dark:bg-[#3A3B3C] shrink-0">
@@ -116,11 +112,25 @@
                 @endforelse
 
                 @if ($this->companies->count() > 0)
-                    <div class="px-4 py-3">
-                        <button type="button" wire:click="toggleSelectAllOnPage"
+                    <div class="px-4 py-3 flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <button type="button" wire:click="toggleSelectAll"
                             class="text-xs font-semibold text-[#123524] dark:text-[#D4A537] hover:underline">
-                            {{ $selectAllOnPage ? 'Deselect this page' : 'Select this page' }}
+                            {{ $selectAllFiltered ? 'Deselect all' : 'Select all companies' }}
                         </button>
+
+                        @if ($this->selectedCount > 0 && ! $selectAllFiltered && $this->selectedCount < $this->totalCompaniesCount)
+                            <button type="button" wire:click="selectAllMatching"
+                                class="text-xs font-semibold text-[#123524] dark:text-[#D4A537] hover:underline">
+                                Select all {{ $this->totalCompaniesCount }}
+                            </button>
+                        @endif
+
+                        @if ($this->selectedCount > 0)
+                            <button type="button" wire:click="clearSelection"
+                                class="text-xs font-semibold text-black/50 dark:text-white/50 hover:underline">
+                                Clear selection
+                            </button>
+                        @endif
                     </div>
                 @endif
             </div>
@@ -132,8 +142,17 @@
                         <tr>
                             <th class="ps-4 sm:ps-6 py-3 w-4">
                                 <input type="checkbox"
-                                    wire:click="toggleSelectAllOnPage"
-                                    @checked($selectAllOnPage)
+                                    wire:key="header-company-cb-{{ $this->totalCompaniesCount }}"
+                                    wire:click="toggleSelectAll"
+                                    x-data
+                                    x-effect="
+                                        const total = {{ $this->totalCompaniesCount }};
+                                        const allFiltered = $wire.selectAllFiltered === true;
+                                        const selCount = allFiltered ? total : ($wire.selectedCompanies || []).length;
+                                        $el.checked = total > 0 && selCount >= total;
+                                        $el.indeterminate = selCount > 0 && selCount < total;
+                                    "
+                                    title="Select all companies (all pages)"
                                     class="rounded border-black/20 dark:border-white/20 text-[#123524] dark:text-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] dark:bg-[#3A3B3C]">
                             </th>
                             <th class="px-3 lg:px-6 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Company Name</th>
@@ -148,6 +167,7 @@
                             <tr wire:key="row-company-{{ $company->id }}" class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
                                 <td class="w-4 ps-4 sm:ps-6 py-3 text-center align-middle">
                                     <input type="checkbox"
+                                        wire:key="row-company-cb-{{ $company->id }}-{{ $this->isRowSelected($company->id) ? '1' : '0' }}"
                                         wire:click="toggleRowSelection({{ $company->id }})"
                                         @checked($this->isRowSelected($company->id))
                                         class="rounded border-black/20 dark:border-white/20 text-[#123524] dark:text-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] dark:bg-[#3A3B3C] align-middle">

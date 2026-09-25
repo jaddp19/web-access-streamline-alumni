@@ -28,7 +28,7 @@ class DatabaseSeeder extends Seeder
             DepartmentSeeder::class,
             CourseSeeder::class,
             PhAddressSeeder::class,
-            DemoSeeder::class,
+            //DemoSeeder::class,
         ]);
 
         // Create roles if not already seeded
@@ -42,7 +42,7 @@ class DatabaseSeeder extends Seeder
             [
                 'first_name'  => 'Registrar',
                 'middle_name' => null,
-                'last_name'   => 'User',
+                'last_name'   => 'CSAV',
                 'school_id'   => '0001-0001',
                 'password'    => Hash::make('password123'),
             ]
@@ -53,8 +53,8 @@ class DatabaseSeeder extends Seeder
         $admin = User::firstOrCreate(
             ['email' => 'program-head@csav.edu.ph'],
             [
-                'first_name'  => 'Program',
-                'middle_name' => 'Head',
+                'first_name'  => 'Program Head',
+                'middle_name' => null,
                 'last_name'   => 'User',
                 'school_id'   => '0001-0002',
                 'password'    => Hash::make('password123'),
@@ -74,5 +74,17 @@ class DatabaseSeeder extends Seeder
             ]
         );
         $alumni->assignRole($alumniRole);
+
+        $alumni1 = User::firstOrCreate(
+            ['email' => 'alumni1@csav.edu.ph'],
+            [
+                'first_name'  => 'Alumni',
+                'middle_name' => null,
+                'last_name'   => 'User',
+                'school_id'   => '0001-0004',
+                'password'    => Hash::make('password123'),
+            ]
+        );
+        $alumni1->assignRole($alumniRole);
     }
 }
