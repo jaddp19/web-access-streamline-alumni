@@ -470,7 +470,7 @@ class DashboardAnalytics
 
         return $rows->map(fn ($r) => [
             'course_code' => $r->course_code,
-            'related_rate' => (int) round(($r->related_count / $r->employed_total) * 100),
+            'related_rate' => round(($r->related_count / $r->employed_total) * 100, 2),
         ])->all();
     }
 
@@ -526,7 +526,7 @@ class DashboardAnalytics
 
             $total = (int) $row->employed_total;
             $related = (int) $row->related_count;
-            $rate = $total > 0 ? (int) round(($related / $total) * 100) : 0;
+            $rate = $total > 0 ? round(($related / $total) * 100, 2) : 0;
 
             $courseKey = $row->course_code ?: "COURSE-{$row->course_id}";
 
@@ -544,7 +544,7 @@ class DashboardAnalytics
         // Compute aggregate alignment rate per department
         foreach ($result as &$dept) {
             $dept['related_rate'] = $dept['total'] > 0
-                ? (int) round(($dept['related_count'] / $dept['total']) * 100)
+                ? round(($dept['related_count'] / $dept['total']) * 100, 2)
                 : 0;
         }
         unset($dept);
@@ -705,6 +705,7 @@ class DashboardAnalytics
             ->map(fn ($v) => (int) $v)
             ->toArray();
     }
+
     public function boardExamBreakdown(): array
     {
         $row = $this->profileBaseQuery()
@@ -728,7 +729,7 @@ class DashboardAnalytics
     {
         $q = DB::table('work_histories')
             ->join('companies', 'work_histories.company_id', '=', 'companies.id')
-            ->join('user_profiles', 'work_histories.user_id', '=', 'user_profiles.user_id')
+            ->join('user_profiles', 'work_histories.user_id', '=', 'user_profiles.id')
             ->join('model_has_roles', function ($join) {
                 $join->on('model_has_roles.model_id', '=', 'user_profiles.user_id')
                     ->where('model_has_roles.model_type', '=', User::class);

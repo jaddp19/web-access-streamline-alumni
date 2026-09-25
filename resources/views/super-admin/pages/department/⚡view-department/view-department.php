@@ -19,16 +19,30 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     protected int $perPage = 10;
 
-    public function updatingPage(): void
+    /**
+     * Called AFTER the page changes. Selection persists across pages —
+     * we only refresh memoized computeds and the page indicator.
+     */
+    public function updatedPage(): void
     {
-        $this->clearSelection();
+        unset($this->pageRowIds);
+        unset($this->selectedCount);
+        unset($this->allSelected);
+
+        $this->recomputeSelectAllOnPage();
     }
 
     protected function clearSelection(): void
     {
         $this->selectedDepartments = [];
-        $this->selectAllFiltered  = false;
-        $this->selectAllOnPage    = false;
+        $this->selectAllFiltered   = false;
+        $this->selectAllOnPage     = false;
+
+        // Invalidate memoized computed props so the next render sees
+        // the fresh state (Livewire 3 caches them per-request).
+        unset($this->selectedCount);
+        unset($this->allSelected);
+        unset($this->pageRowIds);
     }
 
     // =========================================================
@@ -66,21 +80,50 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             : count($this->selectedDepartments);
     }
 
+    /**
+     * True when every department across every page is selected.
+     * Drives the header checkbox state.
+     */
+    #[Computed]
+    public function allSelected(): bool
+    {
+        if ($this->selectAllFiltered) {
+            return true;
+        }
+
+        $total = $this->totalDepartmentsCount;
+
+        return $total > 0 && count($this->selectedDepartments) >= $total;
+    }
+
     // =========================================================
     //  SELECTION
     // =========================================================
 
-    public function updatedSelectAllDepartments($value): void
+    /**
+     * Header checkbox — toggles ALL departments across ALL pages.
+     */
+    public function toggleSelectAll(): void
     {
-        if ($value) {
-            $this->selectAllFiltered = true;
-            $this->selectedDepartments = [];
-            $this->selectAllOnPage = true;
-        } else {
+        if ($this->allSelected) {
             $this->clearSelection();
+            return;
         }
+
+        // Flip into "all selected" mode. isRowSelected() and deleteSelected()
+        // both honor this flag, so every department everywhere is treated
+        // as selected without needing to load all IDs.
+        $this->selectAllFiltered = true;
+        $this->selectedDepartments = [];
+        $this->selectAllOnPage   = true;
+
+        unset($this->selectedCount);
+        unset($this->allSelected);
     }
 
+    /**
+     * Footer button (mobile) — toggles just the current page.
+     */
     public function toggleSelectAllOnPage(): void
     {
         $pageIds = $this->pageRowIds;
@@ -103,14 +146,23 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         }
 
         $this->recomputeSelectAllOnPage();
+
+        // Count changed → drop the memoized value so the UI updates.
+        unset($this->selectedCount);
+        unset($this->allSelected);
     }
 
     public function toggleRowSelection(int $id): void
     {
+        // If we're in "select all" mode, materialize the full set of
+        // department IDs first, then fall through to the normal toggle.
+        // This makes unchecking a single row leave everything else selected.
         if ($this->selectAllFiltered) {
-            // Disallow checkbox toggles while in "select all" mode.
             $this->selectAllFiltered = false;
-            $this->selectedDepartments = $this->pageRowIds;
+            $this->selectedDepartments = Department::query()
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
         }
 
         if (in_array($id, $this->selectedDepartments, true)) {
@@ -122,6 +174,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         }
 
         $this->recomputeSelectAllOnPage();
+
+        // Count changed → drop the memoized value so the UI updates.
+        unset($this->selectedCount);
+        unset($this->allSelected);
     }
 
     public function isRowSelected(int $id): bool
@@ -146,8 +202,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function deleteSelected(): void
     {
-        abort_unless(auth()->user()?->can('manage-departments'), 403);
-
         if ($this->selectedCount <= 0) {
             session()->flash('error', 'Nothing is selected.');
             return;
@@ -183,7 +237,20 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         Cache::forget('assign:active-departments:v2');
         Cache::forget('dept:ph_count');
 
-        $this->clearSelection();
+        // Reset internal state.
+        $this->selectedDepartments = [];
+        $this->selectAllFiltered   = false;
+        $this->selectAllOnPage     = false;
+
+        // Invalidate memoized computed props so the re-render:
+        //   • hides the "N department(s) selected" bar (selectedCount → 0)
+        //   • shows the fresh list (departments recomputed from DB)
+        unset($this->selectedCount);
+        unset($this->totalDepartmentsCount);
+        unset($this->pageRowIds);
+        unset($this->departments);
+        unset($this->allSelected);
+
         $this->resetPage();
 
         session()->flash('success', "{$result['count']} department(s) deleted successfully.");
@@ -219,6 +286,13 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             array_diff($this->selectedDepartments, [$id])
         );
         $this->recomputeSelectAllOnPage();
+
+        // The single row is gone — invalidate memoized computeds.
+        unset($this->selectedCount);
+        unset($this->totalDepartmentsCount);
+        unset($this->pageRowIds);
+        unset($this->departments);
+        unset($this->allSelected);
 
         session()->flash('success', "Department \"{$name}\" deleted.");
     }

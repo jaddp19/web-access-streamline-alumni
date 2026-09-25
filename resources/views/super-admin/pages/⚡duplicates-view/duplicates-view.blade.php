@@ -104,6 +104,20 @@
                             </span>
                         @endif
                     </button>
+
+                    {{-- Company tab --}}
+                    <button type="button" wire:click="setTab('company')"
+                        class="px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition whitespace-nowrap
+                            {{ $tab === 'company'
+                                ? 'bg-white dark:bg-[#242526] text-[#123524] dark:text-white shadow-sm'
+                                : 'text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white' }}">
+                        Company
+                        @if ($this->companyGroups->count() > 0)
+                            <span class="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500 text-white font-bold">
+                                {{ $this->companyGroups->count() }}
+                            </span>
+                        @endif
+                    </button>
                 </div>
             </div>
 
@@ -272,6 +286,92 @@
                             </div>
                             <p class="text-sm font-semibold text-[#123524] dark:text-white">No email duplicates</p>
                             <p class="text-xs text-black/50 dark:text-white/50 mt-1">Every email address is unique.</p>
+                        </div>
+                    @endforelse
+                @endif
+
+                {{-- ============== COMPANY TAB ============== --}}
+                @if ($tab === 'company')
+                    @forelse ($this->companyGroups as $group)
+                        <div wire:key="company-group-{{ md5($group['key']) }}" class="p-4 sm:p-6">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide
+                                             bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400">
+                                    {{ $group['count'] }} matches
+                                </span>
+                                <p class="text-sm font-semibold text-[#123524] dark:text-white truncate">
+                                    {{ $group['key'] }}
+                                </p>
+                            </div>
+
+                            <div class="space-y-2">
+                                @foreach ($group['companies'] as $company)
+                                    <div class="flex items-center gap-3 p-3 rounded-xl
+                                                bg-[#F7F5EF] dark:bg-[#3A3B3C]
+                                                border border-black/5 dark:border-white/5">
+
+                                        {{-- Logo or initial --}}
+                                        <div class="w-10 h-10 rounded-lg bg-white dark:bg-[#242526] border border-black/10 dark:border-white/10 flex items-center justify-center shrink-0 overflow-hidden">
+                                            @php
+                                                $rawLogo = $company->company_logo;
+                                                $logoUrl = $rawLogo
+                                                    ? (filter_var($rawLogo, FILTER_VALIDATE_URL)
+                                                        ? $rawLogo
+                                                        : \Illuminate\Support\Facades\Storage::url($rawLogo))
+                                                    : null;
+                                            @endphp
+                                            @if ($logoUrl)
+                                                <img src="{{ $logoUrl }}" alt="{{ $company->company_name }}"
+                                                    class="w-full h-full object-contain"
+                                                    loading="lazy"
+                                                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                <div style="display: none;"
+                                                    class="w-full h-full items-center justify-center text-[#123524] dark:text-[#D4A537] font-bold text-sm bg-[#123524]/10 dark:bg-[#D4A537]/15">
+                                                    {{ strtoupper(substr($company->company_name ?? '?', 0, 1)) }}
+                                                </div>
+                                            @else
+                                                <div class="w-full h-full flex items-center justify-center text-[#123524] dark:text-[#D4A537] font-bold text-sm bg-[#123524]/10 dark:bg-[#D4A537]/15">
+                                                    {{ strtoupper(substr($company->company_name ?? '?', 0, 1)) }}
+                                                </div>
+                                            @endif
+                                        </div>
+
+                                        {{-- Info --}}
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-semibold text-[#123524] dark:text-white truncate">
+                                                {{ $company->company_name }}
+                                            </p>
+                                            <p class="text-xs text-black/60 dark:text-white/60 truncate">
+                                                @if ($company->company_address)
+                                                    {{ $company->company_address }}
+                                                @else
+                                                    <span class="italic text-black/40 dark:text-white/40">No address on file</span>
+                                                @endif
+                                            </p>
+                                        </div>
+
+                                        {{-- Meta --}}
+                                        <div class="shrink-0 text-right">
+                                            <p class="text-[10px] text-black/40 dark:text-white/40">
+                                                Added {{ \Carbon\Carbon::parse($company->created_at)->format('M Y') }}
+                                            </p>
+                                            <p class="text-[10px] text-black/40 dark:text-white/40 font-mono">
+                                                ID #{{ $company->id }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @empty
+                        <div class="px-6 py-12 text-center">
+                            <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                </svg>
+                            </div>
+                            <p class="text-sm font-semibold text-[#123524] dark:text-white">No company name duplicates</p>
+                            <p class="text-xs text-black/50 dark:text-white/50 mt-1">Every company name is unique.</p>
                         </div>
                     @endforelse
                 @endif

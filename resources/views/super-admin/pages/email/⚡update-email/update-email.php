@@ -109,8 +109,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function update()
     {
-        abort_unless(auth()->user()?->can('manage-emails'), 403);
-
         $validated = $this->validate();
 
         $subject = $this->sanitizeSubject($validated['subject']);

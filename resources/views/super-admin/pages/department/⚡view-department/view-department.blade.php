@@ -65,6 +65,7 @@
                 @forelse ($this->departments as $department)
                     <div wire:key="mobile-dept-{{ $department->id }}" class="p-4 flex items-start gap-3">
                         <input type="checkbox"
+                            wire:key="mobile-dept-cb-{{ $department->id }}-{{ $this->isRowSelected($department->id) ? '1' : '0' }}"
                             wire:click="toggleRowSelection({{ $department->id }})"
                             @checked($this->isRowSelected($department->id))
                             class="mt-1.5 rounded border-black/20 dark:border-white/20 text-[#123524] dark:text-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] dark:bg-[#3A3B3C] shrink-0">
@@ -115,9 +116,9 @@
 
                 @if ($this->departments->count() > 0)
                     <div class="px-4 py-3">
-                        <button type="button" wire:click="toggleSelectAllOnPage"
+                        <button type="button" wire:click="toggleSelectAll"
                             class="text-xs font-semibold text-[#123524] dark:text-[#D4A537] hover:underline">
-                            {{ $selectAllOnPage ? 'Deselect this page' : 'Select this page' }}
+                            {{ $selectAllFiltered ? 'Deselect all' : 'Select all departments' }}
                         </button>
                     </div>
                 @endif
@@ -130,8 +131,16 @@
                         <tr>
                             <th class="ps-4 sm:ps-6 py-3 w-4">
                                 <input type="checkbox"
-                                    wire:click="toggleSelectAllOnPage"
-                                    @checked($selectAllOnPage)
+                                    wire:key="header-dept-cb-{{ $this->departments->total() }}"
+                                    wire:click="toggleSelectAll"
+                                    x-data
+                                    x-effect="
+                                        const total = {{ $this->departments->total() }};
+                                        const selCount = $wire.selectAllFiltered ? total : ($wire.selectedDepartments || []).length;
+                                        $el.checked = total > 0 && selCount >= total;
+                                        $el.indeterminate = selCount > 0 && selCount < total;
+                                    "
+                                    title="Select all departments (all pages)"
                                     class="rounded border-black/20 dark:border-white/20 text-[#123524] dark:text-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] dark:bg-[#3A3B3C]">
                             </th>
                             <th class="px-3 lg:px-6 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Name</th>
@@ -147,6 +156,7 @@
                             <tr wire:key="row-dept-{{ $department->id }}" class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
                                 <td class="w-4 ps-4 sm:ps-6 py-3 text-center align-middle">
                                     <input type="checkbox"
+                                        wire:key="table-dept-cb-{{ $department->id }}-{{ $this->isRowSelected($department->id) ? '1' : '0' }}"
                                         wire:click="toggleRowSelection({{ $department->id }})"
                                         @checked($this->isRowSelected($department->id))
                                         class="rounded border-black/20 dark:border-white/20 text-[#123524] dark:text-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] dark:bg-[#3A3B3C] align-middle">

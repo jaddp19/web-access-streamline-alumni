@@ -3,6 +3,7 @@
 use App\Models\Course;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -18,9 +19,13 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     protected int $perPage = 10;
 
-    public function updatingPage(): void
+    public function updatedPage(): void
     {
-        $this->clearSelection();
+        unset($this->pageRowIds);
+        unset($this->selectedCount);
+        unset($this->allSelected);
+
+        $this->recomputeSelectAllOnPage();
     }
 
     protected function clearSelection(): void
@@ -28,6 +33,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $this->selectedPrograms   = [];
         $this->selectAllFiltered  = false;
         $this->selectAllOnPage    = false;
+
+        unset($this->selectedCount);
+        unset($this->pageRowIds);
+        unset($this->allSelected);
     }
 
     // =========================================================
@@ -66,10 +75,50 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             : count($this->selectedPrograms);
     }
 
+    /**
+     * True when EVERY course across every page is selected.
+     * Used for the header checkbox state.
+     */
+    #[Computed]
+    public function allSelected(): bool
+    {
+        if ($this->selectAllFiltered) {
+            return true;
+        }
+
+        $total = $this->totalProgramsCount;
+
+        return $total > 0 && count($this->selectedPrograms) === $total;
+    }
+
     // =========================================================
     //  SELECTION
     // =========================================================
 
+    /**
+     * Header checkbox — toggles ALL courses across ALL pages.
+     */
+    public function toggleSelectAll(): void
+    {
+        if ($this->allSelected) {
+            $this->clearSelection();
+            return;
+        }
+
+        // Flip into "all selected" mode. deleteSelected() and
+        // isRowSelected() both honor this flag, so every row everywhere
+        // is treated as selected without needing to load all IDs.
+        $this->selectAllFiltered = true;
+        $this->selectedPrograms  = [];
+        $this->selectAllOnPage   = true;
+
+        unset($this->selectedCount);
+        unset($this->allSelected);
+    }
+
+    /**
+     * Footer button on mobile — toggles just the current page.
+     */
     public function toggleSelectAllOnPage(): void
     {
         $pageIds = $this->pageRowIds;
@@ -92,14 +141,22 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         }
 
         $this->recomputeSelectAllOnPage();
+
+        unset($this->selectedCount);
+        unset($this->allSelected);
     }
 
     public function toggleRowSelection(int $id): void
     {
+        // If we're in "all selected" mode, materialize the full set of
+        // course IDs first, then fall through to the normal toggle. This
+        // makes unchecking a single row leave everything else selected.
         if ($this->selectAllFiltered) {
-            // Drop out of "all" mode into specific mode when manually toggling
             $this->selectAllFiltered = false;
-            $this->selectedPrograms = $this->pageRowIds;
+            $this->selectedPrograms = Course::query()
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
         }
 
         if (in_array($id, $this->selectedPrograms, true)) {
@@ -111,6 +168,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         }
 
         $this->recomputeSelectAllOnPage();
+
+        unset($this->selectedCount);
+        unset($this->allSelected);
     }
 
     public function isRowSelected(int $id): bool
@@ -129,14 +189,14 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             && empty(array_diff($pageIds, $this->selectedPrograms));
     }
 
+    
+
     // =========================================================
     //  ACTIONS
     // =========================================================
 
     public function deleteSelected(): void
     {
-        abort_unless(auth()->user()?->can('manage-courses'), 403);
-
         if ($this->selectedCount <= 0) {
             session()->flash('error', 'Nothing is selected.');
             return;
@@ -144,13 +204,22 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         try {
             $count = DB::transaction(function () {
-                $query = Course::query();
+                $targetIds = Course::query()
+                    ->when(! $this->selectAllFiltered, fn ($q) => $q->whereIn('id', $this->selectedPrograms))
+                    ->pluck('id')
+                    ->all();
 
-                if (! $this->selectAllFiltered) {
-                    $query->whereIn('id', $this->selectedPrograms);
+                if (empty($targetIds)) {
+                    return 0;
                 }
 
-                return $query->delete();
+                if (Schema::hasTable('student_course')) {
+                    DB::table('student_course')
+                        ->whereIn('course_id', $targetIds)
+                        ->delete();
+                }
+
+                return Course::whereIn('id', $targetIds)->delete();
             });
         } catch (\Throwable $e) {
             report($e);
@@ -161,7 +230,16 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         Cache::forget('courses:count');
         Cache::forget('dashboard:course-analytics');
 
-        $this->clearSelection();
+        $this->selectedPrograms  = [];
+        $this->selectAllFiltered = false;
+        $this->selectAllOnPage   = false;
+
+        unset($this->selectedCount);
+        unset($this->totalProgramsCount);
+        unset($this->pageRowIds);
+        unset($this->programs);
+        unset($this->allSelected);
+
         $this->resetPage();
 
         session()->flash('success', "{$count} course(s) deleted successfully.");

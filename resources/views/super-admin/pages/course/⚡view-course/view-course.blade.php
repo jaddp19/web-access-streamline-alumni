@@ -65,6 +65,7 @@
                 @forelse ($this->programs as $program)
                     <div wire:key="mobile-course-{{ $program->id }}" class="p-4 flex items-start gap-3">
                         <input type="checkbox"
+                            wire:key="mobile-cb-{{ $program->id }}-{{ $this->isRowSelected($program->id) ? '1' : '0' }}"
                             wire:click="toggleRowSelection({{ $program->id }})"
                             @checked($this->isRowSelected($program->id))
                             class="mt-1.5 rounded border-black/20 dark:border-white/20 text-[#123524] dark:text-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] dark:bg-[#3A3B3C] shrink-0">
@@ -118,8 +119,16 @@
                         <tr>
                             <th class="ps-4 sm:ps-6 py-3 w-4">
                                 <input type="checkbox"
-                                    wire:click="toggleSelectAllOnPage"
-                                    @checked($selectAllOnPage)
+                                    wire:key="header-course-cb-{{ $this->programs->total() }}"
+                                    wire:click="toggleSelectAll"
+                                    x-data
+                                    x-effect="
+                                        const total = {{ $this->programs->total() }};
+                                        const selCount = $wire.selectAllFiltered ? total : ($wire.selectedPrograms || []).length;
+                                        $el.checked = total > 0 && selCount >= total;
+                                        $el.indeterminate = selCount > 0 && selCount < total;
+                                    "
+                                    title="Select all courses (all pages)"
                                     class="rounded border-black/20 dark:border-white/20 text-[#123524] dark:text-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] dark:bg-[#3A3B3C]">
                             </th>
                             <th class="px-3 lg:px-6 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Course Name</th>
@@ -134,6 +143,7 @@
                             <tr wire:key="row-course-{{ $program->id }}" class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
                                 <td class="w-4 ps-4 sm:ps-6 py-3 text-center align-middle">
                                     <input type="checkbox"
+                                        wire:key="row-cb-{{ $program->id }}-{{ $this->isRowSelected($program->id) ? '1' : '0' }}"
                                         wire:click="toggleRowSelection({{ $program->id }})"
                                         @checked($this->isRowSelected($program->id))
                                         class="rounded border-black/20 dark:border-white/20 text-[#123524] dark:text-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] dark:bg-[#3A3B3C] align-middle">

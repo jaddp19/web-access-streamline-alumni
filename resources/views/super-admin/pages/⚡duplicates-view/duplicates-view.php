@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Company;
 use App\Models\User;
 use App\Models\UserProfile;
 use Illuminate\Support\Facades\DB;
@@ -14,7 +15,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function setTab(string $tab): void
     {
-        if (! in_array($tab, ['name', 'contact', 'email'], true)) {
+        if (! in_array($tab, ['name', 'contact', 'email', 'company'], true)) {
             return;
         }
 
@@ -117,11 +118,45 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         });
     }
 
+    /**
+     * Group companies by a normalized (lowercase, trimmed) name so
+     * "Acme Corp" and "acme corp " end up in the same bucket.
+     */
+    #[Computed]
+    public function companyGroups()
+    {
+        $groups = DB::table('companies')
+            ->select(
+                DB::raw('LOWER(TRIM(company_name)) as normalized_name'),
+                DB::raw('COUNT(*) as total')
+            )
+            ->whereNotNull('company_name')
+            ->where('company_name', '!=', '')
+            ->groupBy('normalized_name')
+            ->having('total', '>', 1)
+            ->orderByDesc('total')
+            ->get();
+
+        return $groups->map(function ($group) {
+            $companies = Company::query()
+                ->whereRaw('LOWER(TRIM(company_name)) = ?', [$group->normalized_name])
+                ->orderBy('id')
+                ->get(['id', 'company_name', 'company_address', 'company_logo', 'company_desc', 'created_at']);
+
+            return [
+                'key'       => $companies->first()?->company_name ?? $group->normalized_name,
+                'count'     => (int) $group->total,
+                'companies' => $companies,
+            ];
+        });
+    }
+
     #[Computed]
     public function totalIssues(): int
     {
         return $this->nameGroups->count()
             + $this->contactGroups->count()
-            + $this->emailGroups->count();
+            + $this->emailGroups->count()
+            + $this->companyGroups->count();
     }
 };

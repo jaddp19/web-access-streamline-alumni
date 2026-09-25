@@ -506,12 +506,6 @@
 
         // =====================================================================
         // Smart Y-axis — nice round steps based on the data's max value.
-        //   7    → 1    → 0, 1, 2, … 7
-        //   42   → 5    → 0, 5, 10, … 40
-        //   87   → 10   → 0, 10, 20, … 80
-        //   480  → 50   → 0, 50, 100, … 450
-        //   1200 → 200  → 0, 200, 400, … 1200
-        //   9000 → 1000 → 0, 1000, 2000, … 9000
         // =====================================================================
         const niceStep = (max) => {
             if (!Number.isFinite(max) || max <= 0) return 1;
@@ -543,6 +537,62 @@
                     callback: (v) => Number.isInteger(v) ? v : '',
                 },
             };
+        };
+
+        // =====================================================================
+        // Minimum y-axis width enforcement for horizontal bar charts
+        //   Chart.js measures tick-label width using only the first label,
+        //   which clips the longest ones (e.g. "Non Government Organization").
+        //   afterFit overrides the computed width with a safe minimum.
+        // =====================================================================
+        const horizontalYAxis = (minWidth = 170) => {
+            const t = chartTheme();
+            return {
+                grid: { display: false },
+                border: { display: false },
+                ticks: { color: t.mutedText, font: { weight: '600' } },
+                afterFit: (scale) => {
+                    scale.width = Math.max(scale.width, minWidth);
+                },
+            };
+        };
+
+        // =====================================================================
+        // Universal bar-value label plugin
+        //   Vertical bars → value drawn above each bar.
+        //   Horizontal bars → value drawn to the right of each bar.
+        //   Zero values are skipped to reduce clutter.
+        // =====================================================================
+        const barValueLabelPlugin = {
+            id: 'barValueLabels',
+            afterDatasetsDraw(chart) {
+                const { ctx } = chart;
+                const t = chartTheme();
+                const isHorizontal = chart.options.indexAxis === 'y';
+
+                ctx.save();
+                ctx.font = '600 10px ' + t.fontFamily;
+                ctx.fillStyle = t.mutedText;
+                ctx.textAlign = isHorizontal ? 'left' : 'center';
+                ctx.textBaseline = isHorizontal ? 'middle' : 'bottom';
+
+                chart.data.datasets.forEach((dataset, di) => {
+                    chart.getDatasetMeta(di).data.forEach((bar, i) => {
+                        const v = dataset.data[i];
+                        if (v == null || v === 0) return;
+
+                        const text = String(v);
+
+                        if (isHorizontal) {
+                            ctx.fillText(text, bar.x + 6, bar.y);
+                        } else {
+                            ctx.fillText(text, bar.x, bar.y - 4);
+                        }
+                    });
+                });
+
+                ctx.restore();
+            },
         };
 
         let ChartLibRef = null;
@@ -695,6 +745,7 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        layout: { padding: { top: 18 } },
                         plugins: {
                             legend: { display: false },
                             tooltip: {
@@ -713,6 +764,7 @@
                             },
                         },
                     },
+                    plugins: [barValueLabelPlugin],
                 });
             }
 
@@ -743,6 +795,7 @@
                         responsive: true,
                         maintainAspectRatio: false,
                         indexAxis: 'y',
+                        layout: { padding: { left: 4, right: 28 } },
                         plugins: {
                             legend: { display: false },
                             tooltip: {
@@ -754,13 +807,10 @@
                         },
                         scales: {
                             x: integerTicks(Math.max(0, ...orgValues), theme),
-                            y: {
-                                ticks: { color: theme.mutedText, font: { weight: '600' } },
-                                grid: { display: false },
-                                border: { display: false }
-                            },
+                            y: horizontalYAxis(180),
                         },
                     },
+                    plugins: [barValueLabelPlugin],
                 });
             }
 
@@ -810,6 +860,7 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        layout: { padding: { top: 18 } },
                         plugins: {
                             legend: { display: false },
                             tooltip: {
@@ -828,6 +879,7 @@
                             },
                         },
                     },
+                    plugins: [barValueLabelPlugin],
                 });
             }
         };
@@ -886,8 +938,6 @@
                     labels,
                     datasets: [{
                         data: totals,
-                        // Dept colors ALWAYS — top-level or drilled into courses,
-                        // courses inherit their parent department's color.
                         backgroundColor: (ctx) => deptColor(labels[ctx.dataIndex], ctx.dataIndex),
                         hoverBackgroundColor: (ctx) => darken(deptColor(labels[ctx.dataIndex], ctx.dataIndex), 0.2),
                         borderRadius: 8,
@@ -898,6 +948,7 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    layout: { padding: { top: 18 } },
                     onHover: (event, els) => {
                         if (!clickable) return;
                         event.native.target.style.cursor = els.length > 0 ? 'pointer' : 'default';
@@ -935,6 +986,7 @@
                         },
                     },
                 },
+                plugins: [barValueLabelPlugin],
             });
         };
 
@@ -1069,7 +1121,7 @@
                             bodyFont: { size: 12 },
                             callbacks: {
                                 title: (items) => names[items[0]?.dataIndex] || labels[items[0]?.dataIndex],
-                                label: (ctx) => ` ${ctx.dataset.label}: ${ctx.formattedValue}%`,
+                                label: (ctx) => ` ${ctx.dataset.label}: ${Number(ctx.raw).toFixed(2)}%`,
                                 afterLabel: (ctx) => {
                                     if (!clickable) return '';
                                     return ctx.datasetIndex === 1 ? 'Click to see courses' : '';
@@ -1091,7 +1143,7 @@
                             chart.getDatasetMeta(di).data.forEach((bar, i) => {
                                 const v = dataset.data[i];
                                 if (v == null) return;
-                                ctx.fillText(v + '%', bar.x, bar.y - 4);
+                                ctx.fillText(Number(v).toFixed(2) + '%', bar.x, bar.y - 4);
                             });
                         });
                         ctx.restore();
@@ -1102,9 +1154,6 @@
 
         // =====================================================================
         // Batch chart renderer  (batch → department → course)
-        //   • batches view      → uniform green
-        //   • departments view  → per-dept colors
-        //   • courses view      → courses inherit their parent dept color
         // =====================================================================
         const renderBatchChart = (ChartLib) => {
             const data = window.__analyticsData;
@@ -1176,12 +1225,10 @@
                     datasets: [{
                         data: totals,
                         backgroundColor: (ctx) => {
-                            // Level 1 (batches) → uniform green gradient
                             if (state.view === 'batches') {
                                 const { ctx: c, chartArea } = ctx.chart;
                                 return barGradient(c, chartArea, PALETTE.greenBright);
                             }
-                            // Level 2 & 3 → per-dept color (courses inherit)
                             return deptColor(labels[ctx.dataIndex], ctx.dataIndex);
                         },
                         hoverBackgroundColor: (ctx) => {
@@ -1196,6 +1243,7 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    layout: { padding: { top: 18 } },
                     onHover: (event, els) => {
                         if (!clickable) return;
                         event.native.target.style.cursor = els.length > 0 ? 'pointer' : 'default';
@@ -1249,6 +1297,7 @@
                         },
                     },
                 },
+                plugins: [barValueLabelPlugin],
             });
         };
 

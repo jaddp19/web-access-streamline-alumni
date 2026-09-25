@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -38,13 +39,18 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function monthsToFirstJobLabel(): string
     {
-        $value = $this->user?->tracerStudy?->civilStatusEmployment?->months_to_first_job;
+        $value = $this->user->tracerStudy?->civilStatusEmployment?->months_to_first_job;
 
         if (! $value) {
             return '—';
         }
 
-        // Preserve numeric ranges like "4-6", only split on word hyphens
-        return ucwords(preg_replace('/-(?=[a-zA-Z])/', ' ', $value));
+        return [
+            '1-3-months'         => '1–3 Months',
+            '4-6-months'         => '4–6 Months',
+            'more-than-6-months' => 'More than 6 Months',
+            'more-than-1-year'   => 'More than 1 Year',
+            'not-yet-employed'   => 'Not yet employed',
+        ][$value] ?? Str::headline($value);
     }
 };

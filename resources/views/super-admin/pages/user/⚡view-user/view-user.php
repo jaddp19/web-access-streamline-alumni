@@ -31,7 +31,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public string $batchFilter = '';
 
     public array $selectedUsers = [];
+
     public bool $selectAll = false;
+
     public bool $selectAllFiltered = false;
 
     /** Memoized filtered query for the current request. */
@@ -128,9 +130,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             ->when($this->search !== '', function ($q) {
                 $q->where(function ($q) {
                     $q->where('name', 'like', "%{$this->search}%")
-                      ->orWhere('email', 'like', "%{$this->search}%")
-                      ->orWhere('school_id', 'like', "%{$this->search}%")
-                      ->orWhereHas('roles', fn ($r) => $r->where('name', 'like', "%{$this->search}%"));
+                        ->orWhere('email', 'like', "%{$this->search}%")
+                        ->orWhere('school_id', 'like', "%{$this->search}%")
+                        ->orWhereHas('roles', fn ($r) => $r->where('name', 'like', "%{$this->search}%"));
                 });
             })
             ->when($this->departmentFilter !== '', function ($q) {
@@ -158,6 +160,17 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         return User::role(['alumni', 'registrar', 'program head'])
             ->whereIn('id', $this->selectedUsers);
+    }
+
+    public function updatedPage(): void
+    {
+        unset($this->pageUserIds);
+
+        // Recompute the header checkbox state for the new page.
+        $pageIds = $this->pageUserIds;
+
+        $this->selectAll = ! empty($pageIds)
+            && empty(array_diff($pageIds, $this->selectedUsers));
     }
 
     // =========================================================
@@ -286,24 +299,24 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function toggleSelectAll(): void
     {
-        $pageIds = $this->pageUserIds;
-
-        $allOnPageSelected = ! empty($pageIds)
-            && empty(array_diff($pageIds, $this->selectedUsers));
-
-        if ($allOnPageSelected) {
+        // Everything is already selected → clear it.
+        if ($this->selectAllFiltered) {
             $this->selectedUsers = [];
             $this->selectAll = false;
             $this->selectAllFiltered = false;
-        } else {
-            $this->selectedUsers = $this->filteredQuery()
-                ->pluck('id')
-                ->map(fn ($id) => (int) $id)
-                ->toArray();
 
-            $this->selectAll = true;
-            $this->selectAllFiltered = true;
+            return;
         }
+
+        // Otherwise: select EVERY user matching the current filters,
+        // across every page — not just the current page.
+        $this->selectedUsers = $this->filteredQuery()
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->toArray();
+
+        $this->selectAll = true;
+        $this->selectAllFiltered = true;
     }
 
     public function toggleRowSelection($userId): void
@@ -379,7 +392,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     protected function streamUsersAsCsv($users, string $filenamePrefix): StreamedResponse
     {
-        $filename = $filenamePrefix . '-' . now()->format('Y-m-d_His') . '.csv';
+        $filename = $filenamePrefix.'-'.now()->format('Y-m-d_His').'.csv';
 
         return response()->streamDownload(function () use ($users) {
             $handle = fopen('php://output', 'w');
@@ -399,7 +412,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             ]);
 
             foreach ($users as $user) {
-                $courses     = $user->userProfile?->courses ?? collect();
+                $courses = $user->userProfile?->courses ?? collect();
                 $departments = $courses->pluck('department')->filter()->unique('id');
 
                 fputcsv($handle, [

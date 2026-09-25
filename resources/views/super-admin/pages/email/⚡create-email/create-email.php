@@ -93,7 +93,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function create()
     {
-        abort_unless(auth()->user()?->can('manage-emails'), 403);
 
         $validated = $this->validate();
 

@@ -8,81 +8,131 @@ use Spatie\Permission\Models\Role;
 
 new #[Layout('layouts.app-super-admin')] class extends Component
 {
-    use WithPagination; // 🔑 enable pagination methods
-    public $selectedRoles = []; 
-    public $selectAll = false;
-    public function deleteSelected()
-    {
-        Role::whereIn('id', $this->selectedRoles)->delete();
+    use WithPagination;
 
-        $this->selectedRoles = [];
-        $this->selectAll = false;
+    public array $selectedRoles = [];
 
-        session()->flash('success', 'Selected roles deleted successfully.');
-    }
+    /** True when "select every role across all pages" mode is active. */
+    public bool $selectAllFiltered = false;
 
-    public function updatedSelectAll($value) 
-    { 
-        if ($value) 
-        { 
-            // Grab IDs from the current page 
-            $this->selectedRoles = $this->roles->getCollection()
-            ->pluck('id')
-            ->map(fn($id) => (int) $id)
-            ->toArray(); 
-        } else { 
-            $this->selectedRoles = []; 
-        } 
-    } 
-                     
-    public function updatedselectedRoles() 
-    { 
-        // Keep header checkbox in sync 
-        $this->selectAll = count($this->selectedRoles) === $this->totalRolesCount(); 
-    }
+    // =========================================================
+    //  COMPUTED
+    // =========================================================
 
-    public function toggleSelectAll()
-    {
-        $allIds = Role::pluck('id')->map(fn($id) => (int) $id)->toArray();
-
-        $selectedCount = count($this->selectedRoles);
-        $totalCount = $this->totalRolesCount;
-
-        if ($selectedCount === $totalCount) {
-            $this->selectedRoles = [];
-            $this->selectAll = false;
-        } else {
-            $this->selectedRoles = $allIds;
-            $this->selectAll = true;
-        }
-    }
-
-    public function toggleRowSelection($userId)
-    {
-        if (in_array($userId, $this->selectedRoles)) {
-            // Remove if already selected
-            $this->selectedRoles = array_values(array_diff($this->selectedRoles, [$userId]));
-        } else {
-            // Add if not selected
-            $this->selectedRoles[] = $userId;
-        }
-
-        // Sync header checkbox
-        $this->selectAll = count($this->selectedRoles) === $this->totalRolesCount();
-    }
     #[Computed]
-    public function totalRolesCount()
-    {
-        return Role::count();
-    }
-    
-    #[Computed()]
     public function roles()
     {
         return Role::with('permissions')
-            ->select('id','name','created_at')
+            ->select('id', 'name', 'created_at')
             ->latest()
             ->paginate(5);
     }
-    
+
+    #[Computed]
+    public function totalRolesCount(): int
+    {
+        return Role::count();
+    }
+
+    #[Computed]
+    public function pageRoleIds(): array
+    {
+        return $this->roles->getCollection()
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
+    // =========================================================
+    //  PAGE CHANGE
+    // =========================================================
+
+    /** Keep the selection across pages — just refresh memoized computeds. */
+    public function updatedPage(): void
+    {
+        unset($this->pageRoleIds);
+    }
+
+    // =========================================================
+    //  SELECTION
+    // =========================================================
+
+    /** Header checkbox — selects everything across all pages. */
+    public function toggleSelectAll(): void
+    {
+        if ($this->selectAllFiltered) {
+            $this->selectedRoles = [];
+            $this->selectAllFiltered = false;
+
+            return;
+        }
+
+        $this->selectedRoles = Role::query()
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $this->selectAllFiltered = true;
+    }
+
+    /** Individual row toggle. */
+    public function toggleRowSelection($roleId): void
+    {
+        $roleId = (int) $roleId;
+
+        // Leaving "all" mode: materialise full list so unchecking one row
+        // leaves the rest selected.
+        if ($this->selectAllFiltered) {
+            $this->selectAllFiltered = false;
+            $this->selectedRoles = Role::query()
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+        }
+
+        if (in_array($roleId, $this->selectedRoles, true)) {
+            $this->selectedRoles = array_values(
+                array_diff($this->selectedRoles, [$roleId])
+            );
+        } else {
+            $this->selectedRoles[] = $roleId;
+        }
+    }
+
+    public function isRowSelected(int $id): bool
+    {
+        return in_array($id, $this->selectedRoles, true);
+    }
+
+    // =========================================================
+    //  ACTIONS
+    // =========================================================
+
+    public function deleteSelected(): void
+    {
+        if (empty($this->selectedRoles)) {
+            session()->flash('error', 'Nothing is selected.');
+            return;
+        }
+
+        $protected = ['super-admin', 'super admin', 'admin'];
+
+        $deletable = Role::whereIn('id', $this->selectedRoles)
+            ->whereNotIn('name', $protected)
+            ->pluck('id')
+            ->all();
+
+        if (empty($deletable)) {
+            session()->flash('error', 'No deletable roles in selection.');
+            return;
+        }
+
+        Role::whereIn('id', $deletable)->delete();
+
+        $this->selectedRoles = [];
+        $this->selectAllFiltered = false;
+        $this->resetPage();
+
+        session()->flash('success', count($deletable) . ' role(s) deleted successfully.');
+    }
 };

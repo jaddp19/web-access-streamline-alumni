@@ -435,13 +435,6 @@
 
         // =====================================================================
         // Smart Y-axis — nice round steps based on data max.
-        //   7    → 1    → 0, 1, 2, … 7
-        //   25   → 5    → 0, 5, 10, 15, 20, 25
-        //   42   → 10   → 0, 10, 20, 30, 40
-        //   87   → 20   → 0, 20, 40, 60, 80
-        //   480  → 50   → 0, 50, 100, … 450
-        //   1200 → 200  → 0, 200, 400, … 1200
-        //   9000 → 1000 → 0, 1000, 2000, … 9000
         // =====================================================================
         const niceStep = (max) => {
             if (! Number.isFinite(max) || max <= 0) return 1;
@@ -547,6 +540,43 @@
             };
         };
 
+        // =====================================================================
+        // Universal bar-value label plugin
+        //   Draws the raw value above each vertical bar (or to the right of
+        //   each horizontal bar). Skips zero values to reduce clutter.
+        // =====================================================================
+        const barValueLabelPlugin = {
+            id: 'barValueLabels',
+            afterDatasetsDraw(chart) {
+                const { ctx } = chart;
+                const t = theme();
+                const isHorizontal = chart.options.indexAxis === 'y';
+
+                ctx.save();
+                ctx.font = '600 10px ' + t.fontFamily;
+                ctx.fillStyle = t.mutedText;
+                ctx.textAlign = isHorizontal ? 'left' : 'center';
+                ctx.textBaseline = isHorizontal ? 'middle' : 'bottom';
+
+                chart.data.datasets.forEach((dataset, di) => {
+                    chart.getDatasetMeta(di).data.forEach((bar, i) => {
+                        const v = dataset.data[i];
+                        if (v == null || v === 0) return;
+
+                        const text = String(v);
+
+                        if (isHorizontal) {
+                            ctx.fillText(text, bar.x + 6, bar.y);
+                        } else {
+                            ctx.fillText(text, bar.x, bar.y - 4);
+                        }
+                    });
+                });
+
+                ctx.restore();
+            },
+        };
+
         let ChartLibRef = null;
 
         // =====================================================================
@@ -615,6 +645,7 @@
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
+                    layout: { padding: { top: 18 } },
                     onHover: (event, els) => {
                         if (! clickable) return;
                         event.native.target.style.cursor = els.length > 0 ? 'pointer' : 'default';
@@ -646,6 +677,7 @@
                         },
                     },
                 },
+                plugins: [barValueLabelPlugin],
             });
         };
 
@@ -717,6 +749,7 @@
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
+                    layout: { padding: { top: 18 } },
                     onHover: (event, els) => {
                         if (! clickable) return;
                         event.native.target.style.cursor = els.length > 0 ? 'pointer' : 'default';
@@ -753,6 +786,7 @@
                         },
                     },
                 },
+                plugins: [barValueLabelPlugin],
             });
         };
 
@@ -861,7 +895,7 @@
                             },
                             tooltip: {
                                 backgroundColor: t.tooltipBg, padding: 10, cornerRadius: 8,
-                                callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.formattedValue}%` },
+                                callbacks: { label: ctx => ` ${ctx.dataset.label}: ${Number(ctx.raw).toFixed(2)}%` },
                             },
                         },
                     },
@@ -878,7 +912,7 @@
                                 chart.getDatasetMeta(di).data.forEach((bar, i) => {
                                     const v = dataset.data[i];
                                     if (v == null) return;
-                                    ctx.fillText(v + '%', bar.x, bar.y - 4);
+                                    ctx.fillText(Number(v).toFixed(2) + '%', bar.x, bar.y - 4);
                                 });
                             });
                             ctx.restore();
@@ -1007,6 +1041,7 @@
                     options: {
                         responsive: true, maintainAspectRatio: false,
                         indexAxis: horizontal ? 'y' : 'x',
+                        layout: { padding: horizontal ? { right: 24 } : { top: 18 } },
                         plugins: { legend: { display: false } },
                         scales: horizontal
                             ? {
@@ -1021,6 +1056,7 @@
                                 },
                             },
                     },
+                    plugins: [barValueLabelPlugin],
                 });
             };
 

@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -34,6 +35,6 @@ new #[Layout('layouts::app-admin')] class extends Component
             'more-than-6-months' => 'More than 6 Months',
             'more-than-1-year'   => 'More than 1 Year',
             'not-yet-employed'   => 'Not yet employed',
-        ][$value] ?? \Illuminate\Support\Str::headline($value);
+        ][$value] ?? Str::headline($value);
     }
 };

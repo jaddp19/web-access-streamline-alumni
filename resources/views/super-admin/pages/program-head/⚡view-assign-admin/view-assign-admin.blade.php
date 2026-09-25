@@ -81,6 +81,7 @@
                     @endphp
                     <div wire:key="mobile-row-{{ $row->id }}" class="p-4 flex items-start gap-3">
                         <input type="checkbox"
+                            wire:key="mobile-ph-cb-{{ $row->id }}-{{ $isSelected ? '1' : '0' }}"
                             wire:click="toggleRowSelection('{{ $rowKey }}')"
                             @checked($isSelected)
                             class="mt-1.5 rounded border-black/20 dark:border-white/20 text-[#123524] dark:text-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] dark:bg-[#3A3B3C] shrink-0">
@@ -118,9 +119,9 @@
 
                 @if ($this->programHeads->count() > 0)
                     <div class="px-4 py-3">
-                        <button type="button" wire:click="toggleSelectAllOnPage"
+                        <button type="button" wire:click="toggleSelectAll"
                             class="text-xs font-semibold text-[#123524] dark:text-[#D4A537] hover:underline">
-                            {{ $selectAllOnPage ? 'Deselect this page' : 'Select this page' }}
+                            {{ $this->allSelected ? 'Deselect all' : 'Select all assignments' }}
                         </button>
                     </div>
                 @endif
@@ -132,10 +133,20 @@
                     <thead class="bg-[#F7F5EF] dark:bg-[#3A3B3C] border-b border-black/5 dark:border-white/5">
                         <tr>
                             <th class="ps-4 sm:ps-6 py-3 w-4">
-                                {{-- Server-driven — no Alpine $watch. Much faster. --}}
                                 <input type="checkbox"
-                                    wire:click="toggleSelectAllOnPage"
-                                    @checked($selectAllOnPage)
+                                    wire:key="header-ph-cb-{{ $this->totalProgramHeadsCount }}"
+                                    wire:click="toggleSelectAll"
+                                    x-data
+                                    x-effect="
+                                        const total = {{ $this->totalProgramHeadsCount }};
+                                        const allFiltered = $wire.selectAllFiltered === true;
+                                        const selCount = allFiltered
+                                            ? total - ($wire.excludedProgramHeads || []).length
+                                            : ($wire.selectedProgramHeads || []).length;
+                                        $el.checked = total > 0 && selCount >= total;
+                                        $el.indeterminate = selCount > 0 && selCount < total;
+                                    "
+                                    title="Select all assignments (all pages)"
                                     class="rounded border-black/20 dark:border-white/20 text-[#123524] dark:text-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] dark:bg-[#3A3B3C]">
                             </th>
                             <th class="px-3 lg:px-6 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">
@@ -162,6 +173,7 @@
                             <tr wire:key="row-{{ $row->id }}" class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
                                 <td class="w-4 ps-4 sm:ps-6 py-3 text-center align-middle">
                                     <input type="checkbox"
+                                        wire:key="table-ph-cb-{{ $row->id }}-{{ $isSelected ? '1' : '0' }}"
                                         wire:click="toggleRowSelection('{{ $rowKey }}')"
                                         @checked($isSelected)
                                         class="rounded border-black/20 dark:border-white/20 text-[#123524] dark:text-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] dark:bg-[#3A3B3C] align-middle">

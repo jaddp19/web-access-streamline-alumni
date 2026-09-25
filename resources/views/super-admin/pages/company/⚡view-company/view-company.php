@@ -26,9 +26,14 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     protected function clearSelection(): void
     {
-        $this->selectedCompanies   = [];
-        $this->selectAllFiltered   = false;
-        $this->selectAllOnPage     = false;
+        $this->selectedCompanies  = [];
+        $this->selectAllFiltered  = false;
+        $this->selectAllOnPage    = false;
+
+        // Invalidate memoized computed props so the next render sees
+        // the fresh state (Livewire 3 caches them per-request).
+        unset($this->selectedCount);
+        unset($this->pageRowIds);
     }
 
     // =========================================================
@@ -92,6 +97,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         }
 
         $this->recomputeSelectAllOnPage();
+
+        // Count changed → drop the memoized value so the UI updates.
+        unset($this->selectedCount);
     }
 
     public function toggleRowSelection(int $id): void
@@ -110,6 +118,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         }
 
         $this->recomputeSelectAllOnPage();
+
+        // Count changed → drop the memoized value so the UI updates.
+        unset($this->selectedCount);
     }
 
     public function isRowSelected(int $id): bool
@@ -134,8 +145,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function deleteSelected(): void
     {
-        abort_unless(auth()->user()?->can('manage-companies'), 403);
-
         if ($this->selectedCount <= 0) {
             session()->flash('error', 'Nothing is selected.');
             return;
@@ -168,7 +177,19 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         Cache::forget('companies:count');
 
-        $this->clearSelection();
+        // Reset internal state.
+        $this->selectedCompanies = [];
+        $this->selectAllFiltered = false;
+        $this->selectAllOnPage   = false;
+
+        // Invalidate memoized computed props so the re-render:
+        //   • hides the "N company(ies) selected" bar (selectedCount → 0)
+        //   • shows the fresh list (companies recomputed from DB)
+        unset($this->selectedCount);
+        unset($this->totalCompaniesCount);
+        unset($this->pageRowIds);
+        unset($this->companies);
+
         $this->resetPage();
 
         session()->flash('success', "{$result['count']} company(ies) deleted successfully.");
@@ -205,6 +226,12 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             array_diff($this->selectedCompanies, [$id])
         );
         $this->recomputeSelectAllOnPage();
+
+        // The single row is gone — invalidate memoized computeds.
+        unset($this->selectedCount);
+        unset($this->totalCompaniesCount);
+        unset($this->pageRowIds);
+        unset($this->companies);
 
         session()->flash('success', "Company \"{$name}\" deleted.");
     }

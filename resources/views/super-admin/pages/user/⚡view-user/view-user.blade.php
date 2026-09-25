@@ -255,7 +255,9 @@
             <div class="sm:hidden divide-y divide-black/5 dark:divide-white/5">
                 @forelse ($this->users as $user)
                     <div wire:key="mobile-user-{{ $user->id }}" class="p-3 xs:p-4 flex items-start gap-3">
-                        <input type="checkbox" wire:click="toggleRowSelection({{ $user->id }})"
+                        <input type="checkbox"
+                            wire:key="mobile-user-cb-{{ $user->id }}-{{ in_array($user->id, $selectedUsers, true) ? '1' : '0' }}"
+                            wire:click="toggleRowSelection({{ $user->id }})"
                             @checked(in_array($user->id, $selectedUsers, true))
                             class="mt-1.5 rounded border-black/20 dark:border-white/20 text-[#123524] dark:text-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] dark:bg-[#3A3B3C] shrink-0">
 
@@ -354,7 +356,7 @@
                     <div class="px-3 xs:px-4 py-3">
                         <button type="button" wire:click="toggleSelectAll"
                             class="text-xs font-semibold text-[#123524] dark:text-[#D4A537] hover:underline">
-                            {{ $selectAll ? 'Deselect all' : 'Select all on this page' }}
+                            {{ $selectAllFiltered ? 'Deselect all' : 'Select all users' }}
                         </button>
                     </div>
                 @endif
@@ -368,13 +370,18 @@
                     <thead class="bg-[#F7F5EF] dark:bg-[#3A3B3C] border-b border-black/5 dark:border-white/5">
                         <tr>
                             <th class="ps-4 lg:ps-6 py-3 w-4">
-                                <input type="checkbox" wire:click="toggleSelectAll" @checked($selectAll)
-                                    x-data x-init="$watch('$wire.selectedUsers', value => {
+                                <input type="checkbox"
+                                    wire:key="header-user-cb-{{ $this->totalUsersCount }}"
+                                    wire:click="toggleSelectAll"
+                                    x-data
+                                    x-effect="
                                         const total = {{ $this->totalUsersCount }};
-                                        const selected = value.length;
-                                        $el.indeterminate = selected > 0 && selected < total;
-                                        $el.checked = selected === total;
-                                    });"
+                                        const allFiltered = $wire.selectAllFiltered === true;
+                                        const selCount = allFiltered ? total : ($wire.selectedUsers || []).length;
+                                        $el.checked = total > 0 && selCount >= total;
+                                        $el.indeterminate = selCount > 0 && selCount < total;
+                                    "
+                                    title="Select all users (all pages)"
                                     class="rounded border-black/20 dark:border-white/20 text-[#123524] dark:text-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] dark:bg-[#3A3B3C]">
                             </th>
                             <th
@@ -417,7 +424,9 @@
                             <tr wire:key="table-user-{{ $user->id }}"
                                 class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
                                 <td class="w-4 ps-4 lg:ps-6 py-3 text-center align-middle">
-                                    <input type="checkbox" wire:click="toggleRowSelection({{ $user->id }})"
+                                    <input type="checkbox"
+                                        wire:key="table-user-cb-{{ $user->id }}-{{ in_array($user->id, $selectedUsers, true) ? '1' : '0' }}"
+                                        wire:click="toggleRowSelection({{ $user->id }})"
                                         @checked(in_array($user->id, $selectedUsers, true))
                                         class="rounded border-black/20 dark:border-white/20 text-[#123524] dark:text-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] dark:bg-[#3A3B3C] align-middle">
                                 </td>

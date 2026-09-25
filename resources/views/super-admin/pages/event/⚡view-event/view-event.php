@@ -79,7 +79,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function deleteEvent(int $id): void
     {
-        abort_unless(Auth::user()?->hasAnyRole(['super admin', 'registrar']), 403);
+        abort_unless(Auth::user()?->hasAnyRole(['registrar']), 403);
 
         $event = Event::find($id);
 
@@ -100,7 +100,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function cancelEvent(int $id): void
     {
-        abort_unless(Auth::user()?->hasAnyRole(['super admin', 'registrar']), 403);
+        abort_unless(Auth::user()?->hasAnyRole(['registrar']), 403);
 
         $event = Event::find($id);
 

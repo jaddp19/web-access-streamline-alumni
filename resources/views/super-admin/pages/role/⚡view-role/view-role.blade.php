@@ -30,17 +30,30 @@
             </div>
             <!-- End Header -->
 
+            <!-- Flash messages -->
+            @if (session('success'))
+                <div class="px-6 py-3 bg-green-50 dark:bg-green-500/10 border-b border-green-100 dark:border-green-500/20">
+                    <p class="text-sm text-green-700 dark:text-green-400 font-medium">{{ session('success') }}</p>
+                </div>
+            @endif
+            @if (session('error'))
+                <div class="px-6 py-3 bg-red-50 dark:bg-red-500/10 border-b border-red-100 dark:border-red-500/20">
+                    <p class="text-sm text-red-700 dark:text-red-400 font-medium">{{ session('error') }}</p>
+                </div>
+            @endif
+
             <!-- Bulk action bar (only when rows selected) -->
-            @if (!empty($selectedRoles))
+            @if (count($selectedRoles))
                 <div class="px-6 py-3 bg-red-50 dark:bg-red-500/10 border-b border-red-100 dark:border-red-500/20 flex items-center justify-between">
-                    <p class="text-sm text-red-700 dark:text-red-400 font-medium">{{ count($selectedRoles) }} role(s) selected</p>
+                    <p class="text-sm text-red-700 dark:text-red-400 font-medium">
+                        {{ count($selectedRoles) }} role(s) selected
+                        @if ($selectAllFiltered)
+                            <span class="text-[10px] font-normal opacity-70">(all)</span>
+                        @endif
+                    </p>
                     <button
-                        x-data
-                        @click="
-                            if (confirm('Are you sure you want to delete ' + {{ count($selectedRoles) }} + ' role(s)?')) {
-                                $wire.deleteSelected()
-                            }
-                        "
+                        wire:click="deleteSelected"
+                        wire:confirm="Are you sure you want to delete {{ count($selectedRoles) }} role(s)?"
                         class="px-4 py-1.5 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition">
                         Delete Selected
                     </button>
@@ -53,13 +66,18 @@
                     <thead class="bg-[#F7F5EF] dark:bg-[#3A3B3C] border-b border-black/5 dark:border-white/5">
                         <tr>
                             <th class="ps-6 py-3 w-4">
-                                <input type="checkbox" wire:click="toggleSelectAll" @checked($selectAll)
-                                    x-data x-init="$watch('$wire.selectedRoles', value => {
+                                <input type="checkbox"
+                                    wire:key="header-role-cb-{{ $this->totalRolesCount }}"
+                                    wire:click="toggleSelectAll"
+                                    x-data
+                                    x-effect="
                                         const total = {{ $this->totalRolesCount }};
-                                        const selected = value.length;
-                                        $el.indeterminate = selected > 0 && selected < total;
-                                        $el.checked = selected === total;
-                                    })"
+                                        const allFiltered = $wire.selectAllFiltered === true;
+                                        const selCount = allFiltered ? total : ($wire.selectedRoles || []).length;
+                                        $el.checked = total > 0 && selCount >= total;
+                                        $el.indeterminate = selCount > 0 && selCount < total;
+                                    "
+                                    title="Select all roles (all pages)"
                                     class="rounded border-black/20 dark:border-white/20 text-[#123524] dark:text-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] dark:bg-[#3A3B3C]">
                             </th>
                             <th class="px-2 sm:px-6 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Role</th>
@@ -73,9 +91,10 @@
                         @forelse ($this->roles as $role)
                             <tr class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
                                 <td class="w-4 ps-6 py-3 text-center align-middle">
-                                    <input type="checkbox" wire:click="toggleRowSelection({{ $role->id }})"
-                                        x-data
-                                        x-bind:checked="@js($selectedRoles).includes({{ $role->id }})"
+                                    <input type="checkbox"
+                                        wire:key="row-role-cb-{{ $role->id }}-{{ $this->isRowSelected($role->id) ? '1' : '0' }}"
+                                        wire:click="toggleRowSelection({{ $role->id }})"
+                                        @checked($this->isRowSelected($role->id))
                                         class="rounded border-black/20 dark:border-white/20 text-[#123524] dark:text-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] dark:bg-[#3A3B3C] align-middle">
                                 </td>
                                 <td class="px-2 sm:px-6 py-3">

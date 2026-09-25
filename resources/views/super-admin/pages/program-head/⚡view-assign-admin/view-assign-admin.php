@@ -18,7 +18,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     /** Specific keys when NOT in select-all-filtered mode. */
     public array $selectedProgramHeads = [];
 
-    /** Keys to EXCLUDE when in select-all-filtered mode (like Gmail). */
+    /** Keys to EXCLUDE when in select-all-filtered mode (Gmail-style). */
     public array $excludedProgramHeads = [];
 
     /** Current page all-selected (UI state for the header checkbox). */
@@ -26,10 +26,18 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     protected int $perPage = 10;
 
-    /** Clear everything when moving between pages. */
-    public function updatingPage(): void
+    /**
+     * Called AFTER the page changes. Selection intentionally persists —
+     * we only refresh memoized computeds and the page indicator.
+     */
+    public function updatedPage(): void
     {
-        $this->clearSelection();
+        unset($this->pageRowKeys);
+        unset($this->selectedCount);
+        unset($this->allSelected);
+        unset($this->programHeads);
+
+        $this->recomputeSelectAllOnPage();
     }
 
     protected function clearSelection(): void
@@ -38,6 +46,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $this->excludedProgramHeads = [];
         $this->selectAllFiltered = false;
         $this->selectAllOnPage = false;
+
+        unset($this->selectedCount);
+        unset($this->allSelected);
+        unset($this->pageRowKeys);
     }
 
     // =========================================================
@@ -92,6 +104,23 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         return count($this->selectedProgramHeads);
     }
 
+    /**
+     * True when EVERY assignment across every page is selected.
+     * Drives the header checkbox state.
+     */
+    #[Computed]
+    public function allSelected(): bool
+    {
+        if ($this->selectAllFiltered) {
+            // All selected unless the user has unchecked at least one row.
+            return count($this->excludedProgramHeads) === 0;
+        }
+
+        $total = $this->totalProgramHeadsCount;
+
+        return $total > 0 && count($this->selectedProgramHeads) >= $total;
+    }
+
     /** For the footer: total pages, first/last item numbers. */
     #[Computed]
     public function lastPage(): int
@@ -120,16 +149,38 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     //  SELECTION
     // =========================================================
 
-    /** Called from the bulk bar "Select all N" button. */
+    /**
+     * Header checkbox — toggles ALL assignments across ALL pages.
+     */
+    public function toggleSelectAll(): void
+    {
+        if ($this->allSelected) {
+            $this->clearSelection();
+            return;
+        }
+
+        $this->selectAllFiltered = true;
+        $this->excludedProgramHeads = [];
+        $this->selectedProgramHeads = [];
+        $this->selectAllOnPage = true;
+
+        unset($this->selectedCount);
+        unset($this->allSelected);
+    }
+
+    /** Bulk-bar button alias — same effect as the header checkbox. */
     public function selectAllMatching(): void
     {
         $this->selectAllFiltered = true;
         $this->excludedProgramHeads = [];
         $this->selectedProgramHeads = [];
         $this->selectAllOnPage = true;
+
+        unset($this->selectedCount);
+        unset($this->allSelected);
     }
 
-    /** Header checkbox: toggles the current page only. */
+    /** Mobile footer — toggles just the current page. */
     public function toggleSelectAllOnPage(): void
     {
         $pageKeys = $this->pageRowKeys;
@@ -166,6 +217,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         }
 
         $this->recomputeSelectAllOnPage();
+
+        unset($this->selectedCount);
+        unset($this->allSelected);
     }
 
     public function toggleRowSelection(string $key): void
@@ -190,6 +244,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         }
 
         $this->recomputeSelectAllOnPage();
+
+        unset($this->selectedCount);
+        unset($this->allSelected);
     }
 
     public function isRowSelected(string $key): bool
@@ -259,7 +316,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                     ->whereNotNull('program_head_id')
                     ->update(['program_head_id' => null]);
             });
-        } catch (Throwable $e) {
+        } catch (\Throwable $e) {
             report($e);
             session()->flash('error', 'Delete failed: '.$e->getMessage());
 
@@ -267,6 +324,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         }
 
         Cache::forget('dept:ph_count');
+        Cache::forget('dept:count');
+        Cache::forget('assign:active-departments:v2');
+
         $this->clearSelection();
         $this->resetPage();
 
