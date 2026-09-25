@@ -356,6 +356,92 @@ class DashboardAnalytics
     }
 
     // =========================================================
+    //  ALUMNI BY BATCH → DEPARTMENTS → COURSES (3-level drill-down)
+    // =========================================================
+
+    public function alumniByBatchAndDepartment(): array
+    {
+        // Single aggregated query — no PHP-side filtering of rows.
+        // Result rows are bounded by batches × departments × courses (small),
+        // even when user_profiles has hundreds of thousands of rows.
+        $rows = DB::table('batches')
+            ->join('user_profiles', 'user_profiles.batch_id', '=', 'batches.id')
+            ->join('student_course', 'user_profiles.id', '=', 'student_course.user_profile_id')
+            ->join('courses', 'courses.id', '=', 'student_course.course_id')
+            ->join('departments', 'departments.id', '=', 'courses.department_id')
+            ->join('model_has_roles', function ($join) {
+                $join->on('model_has_roles.model_id', '=', 'user_profiles.user_id')
+                    ->where('model_has_roles.model_type', '=', User::class);
+            })
+            ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+            ->where('roles.name', '=', 'alumni')
+            ->where('departments.is_active', true)
+            ->where('courses.is_active', true)
+            ->when($this->departmentId, fn ($q) => $q->where('departments.id', $this->departmentId))
+            ->when($this->batchId, fn ($q) => $q->where('user_profiles.batch_id', $this->batchId))
+            ->select(
+                'batches.id as batch_id',
+                'batches.batch_name',
+                'departments.id as dept_id',
+                'departments.dept_code',
+                'departments.dept_name',
+                'courses.id as course_id',
+                'courses.course_code',
+                'courses.course_title',
+                DB::raw('COUNT(DISTINCT user_profiles.user_id) as total')
+            )
+            ->groupBy(
+                'batches.id',
+                'batches.batch_name',
+                'departments.id',
+                'departments.dept_code',
+                'departments.dept_name',
+                'courses.id',
+                'courses.course_code',
+                'courses.course_title'
+            )
+            ->orderBy('batches.batch_name')
+            ->orderBy('departments.dept_name')
+            ->orderBy('courses.course_code')
+            ->get();
+
+        $result = [];
+
+        foreach ($rows as $row) {
+            $batchKey = (string) $row->batch_id;
+            $deptKey = $row->dept_code ?: "DEPT-{$row->dept_id}";
+            $courseKey = $row->course_code ?: "COURSE-{$row->course_id}";
+            $count = (int) $row->total;
+
+            if (! isset($result[$batchKey])) {
+                $result[$batchKey] = [
+                    'batch_name' => $row->batch_name,
+                    'total' => 0,
+                    'departments' => [],
+                ];
+            }
+
+            if (! isset($result[$batchKey]['departments'][$deptKey])) {
+                $result[$batchKey]['departments'][$deptKey] = [
+                    'name' => $row->dept_name,
+                    'total' => 0,
+                    'courses' => [],
+                ];
+            }
+
+            $result[$batchKey]['departments'][$deptKey]['courses'][$courseKey] = [
+                'name' => $row->course_title,
+                'total' => $count,
+            ];
+
+            $result[$batchKey]['departments'][$deptKey]['total'] += $count;
+            $result[$batchKey]['total'] += $count;
+        }
+
+        return $result;
+    }
+
+    // =========================================================
     //  COURSE ANALYTICS (single query)
     // =========================================================
 
@@ -619,11 +705,12 @@ class DashboardAnalytics
             ->map(fn ($v) => (int) $v)
             ->toArray();
     }
-
     public function boardExamBreakdown(): array
     {
         $row = $this->profileBaseQuery()
+            ->where('is_verified', true)
             ->whereNotNull('board_taken')
+            ->whereHas('courses', fn ($c) => $c->where('course_type', 'board'))
             ->selectRaw('COUNT(*) as taken')
             ->selectRaw('SUM(CASE WHEN board_rate >= 75 THEN 1 ELSE 0 END) as passed')
             ->first();

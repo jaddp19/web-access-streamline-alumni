@@ -1,5 +1,8 @@
 <?php
 
+use App\Models\Batch;
+use App\Models\Course;
+use App\Models\Department;
 use App\Models\User;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -17,6 +20,15 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     #[Url]
     public string $search = '';
+
+    #[Url]
+    public string $departmentFilter = '';
+
+    #[Url]
+    public string $courseFilter = '';
+
+    #[Url]
+    public string $batchFilter = '';
 
     public array $selectedUsers = [];
     public bool $selectAll = false;
@@ -39,9 +51,53 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $this->invalidateFilterCache();
     }
 
+    public function updatedDepartmentFilter(): void
+    {
+        // If the currently selected course doesn't belong to the new
+        // department, drop it so we never end up in an impossible state
+        // (department X, course from department Y).
+        if ($this->courseFilter !== '' && $this->departmentFilter !== '') {
+            $belongs = Course::where('id', (int) $this->courseFilter)
+                ->where('department_id', (int) $this->departmentFilter)
+                ->exists();
+
+            if (! $belongs) {
+                $this->courseFilter = '';
+            }
+        }
+
+        $this->invalidateFilterCache();
+    }
+
+    public function updatedCourseFilter(): void
+    {
+        $this->invalidateFilterCache();
+    }
+
+    public function updatedBatchFilter(): void
+    {
+        $this->invalidateFilterCache();
+    }
+
     public function setRoleFilter(string $role): void
     {
         $this->roleFilter = $role;
+
+        // Course / department / batch filters only make sense on alumni views.
+        if (! in_array($role, ['all', 'alumni'], true)) {
+            $this->courseFilter = '';
+            $this->departmentFilter = '';
+            $this->batchFilter = '';
+        }
+
+        $this->invalidateFilterCache();
+    }
+
+    public function clearCourseFilters(): void
+    {
+        $this->courseFilter = '';
+        $this->departmentFilter = '';
+        $this->batchFilter = '';
         $this->invalidateFilterCache();
     }
 
@@ -76,6 +132,21 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                       ->orWhere('school_id', 'like', "%{$this->search}%")
                       ->orWhereHas('roles', fn ($r) => $r->where('name', 'like', "%{$this->search}%"));
                 });
+            })
+            ->when($this->departmentFilter !== '', function ($q) {
+                $q->whereHas('userProfile.courses', function ($c) {
+                    $c->where('courses.department_id', (int) $this->departmentFilter);
+                });
+            })
+            ->when($this->courseFilter !== '', function ($q) {
+                $q->whereHas('userProfile.courses', function ($c) {
+                    $c->where('courses.id', (int) $this->courseFilter);
+                });
+            })
+            ->when($this->batchFilter !== '', function ($q) {
+                $q->whereHas('userProfile', function ($p) {
+                    $p->where('batch_id', (int) $this->batchFilter);
+                });
             });
     }
 
@@ -90,23 +161,61 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     }
 
     // =========================================================
+    //  FILTER OPTIONS
+    // =========================================================
+
+    #[Computed]
+    public function departmentsList()
+    {
+        return Department::query()
+            ->where('is_active', true)
+            ->orderBy('dept_name')
+            ->get(['id', 'dept_name', 'dept_code']);
+    }
+
+    #[Computed]
+    public function coursesList()
+    {
+        return Course::query()
+            ->where('is_active', true)
+            ->when($this->departmentFilter !== '', fn ($q) => $q->where('department_id', (int) $this->departmentFilter))
+            ->orderBy('course_title')
+            ->get(['id', 'course_title', 'course_code', 'department_id']);
+    }
+
+    /**
+     * Batches that actually contain alumni in the current scope.
+     * If a department filter is active, only batches with alumni in that dept.
+     */
+    #[Computed]
+    public function batchesList()
+    {
+        $deptId = $this->departmentFilter !== '' ? (int) $this->departmentFilter : null;
+
+        return Batch::query()
+            ->whereHas('userProfiles', function ($p) use ($deptId) {
+                $p->whereHas('user', fn ($u) => $u->role('alumni'));
+
+                if ($deptId !== null) {
+                    $p->whereHas('courses', fn ($c) => $c->where('department_id', $deptId));
+                }
+            })
+            ->orderByDesc('batch_name')
+            ->get(['id', 'batch_name']);
+    }
+
+    // =========================================================
     //  SHARED EXPORT EAGER-LOAD
     // =========================================================
 
-    /**
-     * Columns + eager loads shared by both export methods.
-     *
-     * Note: `userProfile.courses` needs `user_profiles.id`, and
-     * `courses.department` needs `courses.department_id` — otherwise
-     * Eloquent can't resolve the nested relation and returns null.
-     */
     protected function exportQuery()
     {
         return $this->filteredQuery()
             ->with([
                 'roles:id,name',
                 'tracerStudy:id,user_id',
-                'userProfile:id,user_id,avatar',
+                'userProfile:id,user_id,avatar,batch_id',
+                'userProfile.batch:id,batch_name',
                 'userProfile.courses:id,course_title,course_code,department_id',
                 'userProfile.courses.department:id,dept_name,dept_code',
             ])
@@ -256,7 +365,8 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             ->with([
                 'roles:id,name',
                 'tracerStudy:id,user_id',
-                'userProfile:id,user_id,avatar',
+                'userProfile:id,user_id,avatar,batch_id',
+                'userProfile.batch:id,batch_name',
                 'userProfile.courses:id,course_title,course_code,department_id',
                 'userProfile.courses.department:id,dept_name,dept_code',
             ])
@@ -274,7 +384,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         return response()->streamDownload(function () use ($users) {
             $handle = fopen('php://output', 'w');
 
-            // UTF-8 BOM so Excel opens it correctly
             fwrite($handle, "\xEF\xBB\xBF");
 
             fputcsv($handle, [
@@ -284,6 +393,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                 'Roles',
                 'Course(s)',
                 'Department(s)',
+                'Batch',
                 'Tracer Study',
                 'Created At',
             ]);
@@ -299,6 +409,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                     $user->roles->pluck('name')->implode(', '),
                     $courses->pluck('course_title')->filter()->join(', ') ?: 'N/A',
                     $departments->pluck('dept_name')->filter()->join(', ') ?: 'N/A',
+                    $user->userProfile?->batch?->batch_name ?? 'N/A',
                     $this->tracerStatusFor($user) ?? 'N/A',
                     $user->created_at?->format('Y-m-d H:i:s'),
                 ]);

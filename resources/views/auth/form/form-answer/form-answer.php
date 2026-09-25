@@ -35,7 +35,7 @@ new #[Layout('layouts.app-form')] class extends Component
     public string $contact_number_2 = '';
     public bool $consentGiven = false;
 
-    // Step 1 — Address
+    // Step 1 — Address (alumni's own)
     public string $address_type = 'philippines';
     public string $regionCode = '';
     public string $provinceCode = '';
@@ -43,7 +43,7 @@ new #[Layout('layouts.app-form')] class extends Component
     public string $barangayCode = '';
     public string $street_address = '';
 
-    // Step 1 — International address
+    // Step 1 — International address (alumni's own)
     public string $intl_country = '';
     public string $intl_state = '';
     public string $intl_city = '';
@@ -67,12 +67,21 @@ new #[Layout('layouts.app-form')] class extends Component
     public ?int $company_id = null;
     public string $date_hired = '';
 
-    // Step 3 — Inline new company
+    // Step 3 — Inline new company (basic)
     public bool $showNewCompanyForm = false;
     public $new_company_logo = null;
     public string $new_company_name = '';
-    public string $new_company_address = '';
     public string $new_company_desc = '';
+
+    // Step 3 — Inline new company (address cascade)
+    public string $new_company_address_type = 'philippines';
+    public string $new_company_region_code = '';
+    public string $new_company_province_code = '';
+    public string $new_company_city_code = '';
+    public string $new_company_street_address = '';
+    public string $new_company_intl_country = '';
+    public string $new_company_intl_state = '';
+    public string $new_company_intl_city = '';
 
     // Step 4
     public bool $is_pursued_further_studies = false;
@@ -94,7 +103,7 @@ new #[Layout('layouts.app-form')] class extends Component
         $this->batches = Batch::orderBy('batch_name', 'desc')->pluck('batch_name', 'id');
     }
 
-    // ===== Cascading address =====
+    // ===== Cascading address (alumni's own) =====
 
     public function updatedRegionCode(): void
     {
@@ -129,6 +138,30 @@ new #[Layout('layouts.app-form')] class extends Component
             $this->board_rate  = '';
             $this->resetErrorBag(['board_taken', 'board_rate']);
         }
+    }
+
+    // ===== Cascading address (new company inline) =====
+
+    public function updatedNewCompanyAddressType(): void
+    {
+        $this->resetErrorBag([
+            'new_company_region_code', 'new_company_province_code', 'new_company_city_code',
+            'new_company_street_address',
+            'new_company_intl_country', 'new_company_intl_state', 'new_company_intl_city',
+        ]);
+    }
+
+    public function updatedNewCompanyRegionCode(): void
+    {
+        $this->new_company_province_code = '';
+        $this->new_company_city_code = '';
+        $this->resetErrorBag(['new_company_province_code', 'new_company_city_code']);
+    }
+
+    public function updatedNewCompanyProvinceCode(): void
+    {
+        $this->new_company_city_code = '';
+        $this->resetErrorBag('new_company_city_code');
     }
 
     // ===== Computed =====
@@ -176,6 +209,24 @@ new #[Layout('layouts.app-form')] class extends Component
         return $this->course_id ? Course::find($this->course_id) : null;
     }
 
+    // ---- New-company address cascades ----
+
+    #[Computed]
+    public function newCompanyProvinces()
+    {
+        return $this->new_company_region_code
+            ? app(PhAddressService::class)->provinces($this->new_company_region_code)
+            : collect();
+    }
+
+    #[Computed]
+    public function newCompanyCities()
+    {
+        return $this->new_company_province_code
+            ? app(PhAddressService::class)->cities($this->new_company_province_code)
+            : collect();
+    }
+
     // ===== Inline company creation =====
 
     public function toggleNewCompanyForm(): void
@@ -183,8 +234,20 @@ new #[Layout('layouts.app-form')] class extends Component
         $this->showNewCompanyForm = ! $this->showNewCompanyForm;
 
         if (! $this->showNewCompanyForm) {
-            $this->reset(['new_company_logo', 'new_company_name', 'new_company_address', 'new_company_desc']);
-            $this->resetErrorBag(['new_company_logo', 'new_company_name', 'new_company_address', 'new_company_desc']);
+            $this->reset([
+                'new_company_logo', 'new_company_name', 'new_company_desc',
+                'new_company_region_code', 'new_company_province_code', 'new_company_city_code',
+                'new_company_street_address',
+                'new_company_intl_country', 'new_company_intl_state', 'new_company_intl_city',
+            ]);
+            $this->new_company_address_type = 'philippines';
+
+            $this->resetErrorBag([
+                'new_company_logo', 'new_company_name', 'new_company_desc',
+                'new_company_region_code', 'new_company_province_code', 'new_company_city_code',
+                'new_company_street_address',
+                'new_company_intl_country', 'new_company_intl_state', 'new_company_intl_city',
+            ]);
         } else {
             $this->company_id = null;
         }
@@ -195,9 +258,49 @@ new #[Layout('layouts.app-form')] class extends Component
         $this->validate([
             'new_company_name'    => 'required|string|max:255|unique:companies,company_name',
             'new_company_logo'    => 'nullable|image|max:2048',
-            'new_company_address' => 'nullable|string|max:500',
             'new_company_desc'    => 'nullable|string|max:2000',
+
+            'new_company_address_type' => 'required|in:philippines,abroad',
+
+            'new_company_region_code'     => 'required_if:new_company_address_type,philippines|nullable|string',
+            'new_company_province_code'   => 'required_if:new_company_address_type,philippines|nullable|string',
+            'new_company_city_code'       => 'required_if:new_company_address_type,philippines|nullable|string',
+            'new_company_street_address'  => 'nullable|string|max:500',
+
+            'new_company_intl_country' => 'required_if:new_company_address_type,abroad|nullable|string|max:255',
+            'new_company_intl_state'   => 'nullable|string|max:255',
+            'new_company_intl_city'    => 'required_if:new_company_address_type,abroad|nullable|string|max:255',
+        ], [
+            'new_company_name.required'    => 'Company name is required.',
+            'new_company_name.unique'      => 'A company with this name already exists.',
+            'new_company_region_code.required_if'   => 'Please select a region.',
+            'new_company_province_code.required_if' => 'Please select a province.',
+            'new_company_city_code.required_if'     => 'Please select a city / municipality.',
+            'new_company_intl_country.required_if'  => 'Please enter the country.',
+            'new_company_intl_city.required_if'     => 'Please enter the city.',
         ]);
+
+        $service = app(PhAddressService::class);
+
+        // ---- Compose address string ----
+        if ($this->new_company_address_type === 'philippines') {
+            $region   = $service->findByCode($this->new_company_region_code);
+            $province = $service->findByCode($this->new_company_province_code);
+            $city     = $service->findByCode($this->new_company_city_code);
+
+            $companyAddress = collect([
+                $this->new_company_street_address,
+                $city->name ?? null,
+                $province->name ?? null,
+                $region->name ?? null,
+            ])->filter(fn ($p) => filled($p))->implode(', ');
+        } else {
+            $companyAddress = collect([
+                $this->new_company_intl_city,
+                $this->new_company_intl_state,
+                $this->new_company_intl_country,
+            ])->filter(fn ($p) => filled($p))->implode(', ');
+        }
 
         try {
             $logoPath = $this->new_company_logo
@@ -206,7 +309,7 @@ new #[Layout('layouts.app-form')] class extends Component
 
             $company = Company::create([
                 'company_name'    => trim($this->new_company_name),
-                'company_address' => trim($this->new_company_address) ?: null,
+                'company_address' => $companyAddress ?: null,
                 'company_logo'    => $logoPath,
                 'company_desc'    => trim($this->new_company_desc) ?: null,
             ]);
@@ -214,7 +317,14 @@ new #[Layout('layouts.app-form')] class extends Component
             $this->company_id         = $company->id;
             $this->showNewCompanyForm = false;
 
-            $this->reset(['new_company_logo', 'new_company_name', 'new_company_address', 'new_company_desc']);
+            $this->reset([
+                'new_company_logo', 'new_company_name', 'new_company_desc',
+                'new_company_region_code', 'new_company_province_code', 'new_company_city_code',
+                'new_company_street_address',
+                'new_company_intl_country', 'new_company_intl_state', 'new_company_intl_city',
+            ]);
+            $this->new_company_address_type = 'philippines';
+
             unset($this->companies);
 
             session()->flash('company_created', 'Company "' . $company->company_name . '" created and selected.');
@@ -336,7 +446,7 @@ new #[Layout('layouts.app-form')] class extends Component
                     'location'         => $location,
                     'batch_id'         => $this->batch_id,
                     'is_private'       => $existingProfile->is_private ?? false,
-                    'is_verified'      => $existingProfile->is_verified ?? false,
+                    'is_verified'      => ! $isBoardCourse,
                     'board_taken'      => $isBoardCourse ? ($this->board_taken ?: null) : null,
                     'board_rate'       => $isBoardCourse && $boardRate !== ''
                         ? round((float) $boardRate, 2)
@@ -394,13 +504,11 @@ new #[Layout('layouts.app-form')] class extends Component
             }
         });
 
-        // ─── Send confirmation email ─────────────────────────────────
         EmailTemplateService::send('tracer-study-submitted', $user->email, [
             'name'         => $user->name,
             'year'         => now()->year,
             'submitted_at' => now()->format('F j, Y · g:i A'),
         ]);
-        // ─────────────────────────────────────────────────────────────
 
         return redirect()->route('alumni.dashboard');
     }

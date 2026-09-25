@@ -53,6 +53,11 @@ new #[Layout('layouts.app-form')] class extends Component
     public ?string $board_taken = null;
     public string $board_rate = '';
 
+    // Step 2 — snapshots for change detection
+    public ?int $original_course_id = null;
+    public ?string $original_board_taken = null;
+    public string $original_board_rate = '';
+
     // Step 3
     public string $employment_status = '';
     public string $current_job_position = '';
@@ -65,12 +70,21 @@ new #[Layout('layouts.app-form')] class extends Component
     public ?int $company_id = null;
     public string $date_hired = '';
 
-    // Step 3 — Inline new company
+    // Step 3 — Inline new company (basic)
     public bool $showNewCompanyForm = false;
     public $new_company_logo = null;
     public string $new_company_name = '';
-    public string $new_company_address = '';
     public string $new_company_desc = '';
+
+    // Step 3 — Inline new company (address cascade)
+    public string $new_company_address_type = 'philippines';
+    public string $new_company_region_code = '';
+    public string $new_company_province_code = '';
+    public string $new_company_city_code = '';
+    public string $new_company_street_address = '';
+    public string $new_company_intl_country = '';
+    public string $new_company_intl_state = '';
+    public string $new_company_intl_city = '';
 
     // Step 4
     public bool $is_pursued_further_studies = false;
@@ -96,6 +110,9 @@ new #[Layout('layouts.app-form')] class extends Component
 
             $this->course_id = $profile->courses()->value('courses.id') ?? '';
 
+            // ── Snapshots for change detection ──
+            $this->original_course_id = $this->course_id ? (int) $this->course_id : null;
+
             // Hydrate board fields
             $this->board_taken = $profile->board_taken
                 ? \Carbon\Carbon::parse($profile->board_taken)->format('Y-m-d')
@@ -103,6 +120,9 @@ new #[Layout('layouts.app-form')] class extends Component
             $this->board_rate = $profile->board_rate !== null
                 ? (string) $profile->board_rate
                 : '';
+
+            $this->original_board_taken = $this->board_taken;
+            $this->original_board_rate  = $this->board_rate;
 
             $location = $profile->location ?? [];
 
@@ -157,7 +177,7 @@ new #[Layout('layouts.app-form')] class extends Component
         }
     }
 
-    // ===== Cascading address =====
+    // ===== Cascading address (alumni's own) =====
 
     public function updatedRegionCode(): void
     {
@@ -215,6 +235,30 @@ new #[Layout('layouts.app-form')] class extends Component
         }
     }
 
+    // ===== Cascading address (new company inline) =====
+
+    public function updatedNewCompanyAddressType(): void
+    {
+        $this->resetErrorBag([
+            'new_company_region_code', 'new_company_province_code', 'new_company_city_code',
+            'new_company_street_address',
+            'new_company_intl_country', 'new_company_intl_state', 'new_company_intl_city',
+        ]);
+    }
+
+    public function updatedNewCompanyRegionCode(): void
+    {
+        $this->new_company_province_code = '';
+        $this->new_company_city_code = '';
+        $this->resetErrorBag(['new_company_province_code', 'new_company_city_code']);
+    }
+
+    public function updatedNewCompanyProvinceCode(): void
+    {
+        $this->new_company_city_code = '';
+        $this->resetErrorBag('new_company_city_code');
+    }
+
     // ===== Computed =====
 
     #[Computed]
@@ -260,6 +304,24 @@ new #[Layout('layouts.app-form')] class extends Component
         return $this->course_id ? Course::find($this->course_id) : null;
     }
 
+    // ---- New-company address cascades ----
+
+    #[Computed]
+    public function newCompanyProvinces()
+    {
+        return $this->new_company_region_code
+            ? app(PhAddressService::class)->provinces($this->new_company_region_code)
+            : collect();
+    }
+
+    #[Computed]
+    public function newCompanyCities()
+    {
+        return $this->new_company_province_code
+            ? app(PhAddressService::class)->cities($this->new_company_province_code)
+            : collect();
+    }
+
     // ===== Inline company creation =====
 
     public function toggleNewCompanyForm(): void
@@ -267,8 +329,20 @@ new #[Layout('layouts.app-form')] class extends Component
         $this->showNewCompanyForm = ! $this->showNewCompanyForm;
 
         if (! $this->showNewCompanyForm) {
-            $this->reset(['new_company_logo', 'new_company_name', 'new_company_address', 'new_company_desc']);
-            $this->resetErrorBag(['new_company_logo', 'new_company_name', 'new_company_address', 'new_company_desc']);
+            $this->reset([
+                'new_company_logo', 'new_company_name', 'new_company_desc',
+                'new_company_region_code', 'new_company_province_code', 'new_company_city_code',
+                'new_company_street_address',
+                'new_company_intl_country', 'new_company_intl_state', 'new_company_intl_city',
+            ]);
+            $this->new_company_address_type = 'philippines';
+
+            $this->resetErrorBag([
+                'new_company_logo', 'new_company_name', 'new_company_desc',
+                'new_company_region_code', 'new_company_province_code', 'new_company_city_code',
+                'new_company_street_address',
+                'new_company_intl_country', 'new_company_intl_state', 'new_company_intl_city',
+            ]);
         } else {
             $this->company_id = null;
         }
@@ -301,7 +375,13 @@ new #[Layout('layouts.app-form')] class extends Component
 
             if ($this->showNewCompanyForm) {
                 $this->showNewCompanyForm = false;
-                $this->reset(['new_company_logo', 'new_company_name', 'new_company_address', 'new_company_desc']);
+                $this->reset([
+                    'new_company_logo', 'new_company_name', 'new_company_desc',
+                    'new_company_region_code', 'new_company_province_code', 'new_company_city_code',
+                    'new_company_street_address',
+                    'new_company_intl_country', 'new_company_intl_state', 'new_company_intl_city',
+                ]);
+                $this->new_company_address_type = 'philippines';
             }
         }
     }
@@ -311,9 +391,49 @@ new #[Layout('layouts.app-form')] class extends Component
         $this->validate([
             'new_company_name'    => 'required|string|max:255|unique:companies,company_name',
             'new_company_logo'    => 'nullable|image|max:2048',
-            'new_company_address' => 'nullable|string|max:500',
             'new_company_desc'    => 'nullable|string|max:2000',
+
+            'new_company_address_type' => 'required|in:philippines,abroad',
+
+            'new_company_region_code'     => 'required_if:new_company_address_type,philippines|nullable|string',
+            'new_company_province_code'   => 'required_if:new_company_address_type,philippines|nullable|string',
+            'new_company_city_code'       => 'required_if:new_company_address_type,philippines|nullable|string',
+            'new_company_street_address'  => 'nullable|string|max:500',
+
+            'new_company_intl_country' => 'required_if:new_company_address_type,abroad|nullable|string|max:255',
+            'new_company_intl_state'   => 'nullable|string|max:255',
+            'new_company_intl_city'    => 'required_if:new_company_address_type,abroad|nullable|string|max:255',
+        ], [
+            'new_company_name.required'    => 'Company name is required.',
+            'new_company_name.unique'      => 'A company with this name already exists.',
+            'new_company_region_code.required_if'   => 'Please select a region.',
+            'new_company_province_code.required_if' => 'Please select a province.',
+            'new_company_city_code.required_if'     => 'Please select a city / municipality.',
+            'new_company_intl_country.required_if'  => 'Please enter the country.',
+            'new_company_intl_city.required_if'     => 'Please enter the city.',
         ]);
+
+        $service = app(PhAddressService::class);
+
+        // ---- Compose address string ----
+        if ($this->new_company_address_type === 'philippines') {
+            $region   = $service->findByCode($this->new_company_region_code);
+            $province = $service->findByCode($this->new_company_province_code);
+            $city     = $service->findByCode($this->new_company_city_code);
+
+            $companyAddress = collect([
+                $this->new_company_street_address,
+                $city->name ?? null,
+                $province->name ?? null,
+                $region->name ?? null,
+            ])->filter(fn ($p) => filled($p))->implode(', ');
+        } else {
+            $companyAddress = collect([
+                $this->new_company_intl_city,
+                $this->new_company_intl_state,
+                $this->new_company_intl_country,
+            ])->filter(fn ($p) => filled($p))->implode(', ');
+        }
 
         try {
             $logoPath = $this->new_company_logo
@@ -322,7 +442,7 @@ new #[Layout('layouts.app-form')] class extends Component
 
             $company = Company::create([
                 'company_name'    => trim($this->new_company_name),
-                'company_address' => trim($this->new_company_address) ?: null,
+                'company_address' => $companyAddress ?: null,
                 'company_logo'    => $logoPath,
                 'company_desc'    => trim($this->new_company_desc) ?: null,
             ]);
@@ -330,7 +450,14 @@ new #[Layout('layouts.app-form')] class extends Component
             $this->company_id         = $company->id;
             $this->showNewCompanyForm = false;
 
-            $this->reset(['new_company_logo', 'new_company_name', 'new_company_address', 'new_company_desc']);
+            $this->reset([
+                'new_company_logo', 'new_company_name', 'new_company_desc',
+                'new_company_region_code', 'new_company_province_code', 'new_company_city_code',
+                'new_company_street_address',
+                'new_company_intl_country', 'new_company_intl_state', 'new_company_intl_city',
+            ]);
+            $this->new_company_address_type = 'philippines';
+
             unset($this->companies);
 
             session()->flash('company_created', 'Company "' . $company->company_name . '" created and selected.');
@@ -404,9 +531,23 @@ new #[Layout('layouts.app-form')] class extends Component
             ])->filter()->implode(', ');
         }
 
-        DB::transaction(function () use ($user, $region, $province, $city, $barangay, $fullAddress) {
+        // ===== Determine verification outcome BEFORE the transaction =====
+        $isBoardCourse = $this->selectedCourse?->course_type === 'board';
+
+        $wasBoardCourse = $this->original_course_id
+            ? (Course::whereKey($this->original_course_id)->value('course_type') === 'board')
+            : false;
+
+        $boardChanged = $this->board_taken !== $this->original_board_taken
+            || round((float) $this->board_rate, 2) !== round((float) $this->original_board_rate, 2);
+
+        $courseChanged = (int) $this->course_id !== (int) $this->original_course_id;
+
+        DB::transaction(function () use (
+            $user, $region, $province, $city, $barangay, $fullAddress,
+            $isBoardCourse, $wasBoardCourse, $boardChanged, $courseChanged
+        ) {
             $existingProfile = UserProfile::where('user_id', $user->id)->first();
-            $isBoardCourse   = $this->selectedCourse?->course_type === 'board';
 
             $location = $this->address_type === 'philippines'
                 ? array_merge($existingProfile->location ?? [], [
@@ -444,6 +585,15 @@ new #[Layout('layouts.app-form')] class extends Component
 
             $boardRate = trim((string) $this->board_rate);
 
+            // ===== Verification flag =====
+            $isVerified = $existingProfile->is_verified ?? false;
+
+            if (! $isBoardCourse) {
+                $isVerified = true;
+            } elseif (! $wasBoardCourse || $courseChanged || $boardChanged) {
+                $isVerified = false;
+            }
+
             $profile = UserProfile::updateOrCreate(
                 ['user_id' => $user->id],
                 [
@@ -454,7 +604,7 @@ new #[Layout('layouts.app-form')] class extends Component
                     'location'         => $location,
                     'batch_id'         => $this->batch_id,
                     'is_private'       => $existingProfile->is_private ?? false,
-                    'is_verified'      => $existingProfile->is_verified ?? false,
+                    'is_verified'      => $isVerified,
                     'board_taken'      => $isBoardCourse ? ($this->board_taken ?: null) : null,
                     'board_rate'       => $isBoardCourse && $boardRate !== ''
                         ? round((float) $boardRate, 2)
@@ -521,6 +671,11 @@ new #[Layout('layouts.app-form')] class extends Component
             }
         });
 
+        // ── Refresh snapshots so a second save has correct baseline ──
+        $this->original_course_id   = $this->course_id ? (int) $this->course_id : null;
+        $this->original_board_taken = $this->board_taken;
+        $this->original_board_rate  = $this->board_rate;
+
         // ─── Send update confirmation email ──────────────────────────
         $updater      = Auth::user();
         $isSelfUpdate = $updater->id === $user->id;
@@ -531,10 +686,9 @@ new #[Layout('layouts.app-form')] class extends Component
             'year'           => now()->year,
             'updated_at'     => now()->format('F j, Y · g:i A'),
 
-            // ── New: lets the template word itself correctly ──
             'is_self_update' => $isSelfUpdate,
             'updater_label'  => match (true) {
-                $isSelfUpdate => $user->name,       // themselves
+                $isSelfUpdate => $user->name,
                 $isRegistrar  => 'the registrar',
                 default       => 'an administrator',
             },

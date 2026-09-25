@@ -383,6 +383,82 @@
         ];
 
         // =====================================================================
+        // Per-department bar colors
+        // =====================================================================
+        const DEPT_COLOR_MAP = {
+            'EDUC': '#2563eb', // Blue
+            'DOCS': '#6b7280', // Gray
+            'CRIM': '#7f1d1d', // Maroon
+            'BMAD': '#eab308', // Yellow
+            'ENGR': '#ea580c', // Orange
+            'ARTS': '#111827', // Black
+        };
+
+        const DEPT_COLORS = [
+            '#16a34a', '#D4A537', '#1C6B45', '#E5B94A',
+            '#10b981', '#a97f1f', '#0f2b1c', '#FCD34D',
+            '#2563eb', '#9333ea', '#dc2626', '#0891b2',
+        ];
+
+        // Course code → parent department code, built from payload.
+        let COURSE_TO_DEPT = {};
+
+        const buildCourseDeptMap = () => {
+            COURSE_TO_DEPT = {};
+            const byDept = window.__payload?.alumniByDeptAndCourse || {};
+
+            Object.entries(byDept).forEach(([deptCode, info]) => {
+                Object.keys(info?.courses || {}).forEach((courseCode) => {
+                    COURSE_TO_DEPT[courseCode] = deptCode;
+                });
+            });
+        };
+
+        const deptColor = (key, index = 0) => {
+            if (! key) return DEPT_COLORS[index % DEPT_COLORS.length];
+
+            if (DEPT_COLOR_MAP[key]) return DEPT_COLOR_MAP[key];
+
+            const parent = COURSE_TO_DEPT[key];
+            if (parent && DEPT_COLOR_MAP[parent]) return DEPT_COLOR_MAP[parent];
+
+            return DEPT_COLORS[index % DEPT_COLORS.length];
+        };
+
+        const darken = (hex, factor = 0.2) => {
+            const h = hex.replace('#', '');
+            const r = Math.round(parseInt(h.substring(0, 2), 16) * (1 - factor));
+            const g = Math.round(parseInt(h.substring(2, 4), 16) * (1 - factor));
+            const b = Math.round(parseInt(h.substring(4, 6), 16) * (1 - factor));
+            return `#${[r, g, b].map(v => v.toString(16).padStart(2, '0')).join('')}`;
+        };
+
+        // =====================================================================
+        // Smart Y-axis — nice round steps based on data max.
+        //   7    → 1    → 0, 1, 2, … 7
+        //   25   → 5    → 0, 5, 10, 15, 20, 25
+        //   42   → 10   → 0, 10, 20, 30, 40
+        //   87   → 20   → 0, 20, 40, 60, 80
+        //   480  → 50   → 0, 50, 100, … 450
+        //   1200 → 200  → 0, 200, 400, … 1200
+        //   9000 → 1000 → 0, 1000, 2000, … 9000
+        // =====================================================================
+        const niceStep = (max) => {
+            if (! Number.isFinite(max) || max <= 0) return 1;
+            if (max <= 10)    return 1;
+            if (max <= 30)    return 5;
+            if (max <= 80)    return 10;
+            if (max <= 200)   return 20;
+            if (max <= 500)   return 50;
+            if (max <= 1000)  return 100;
+            if (max <= 2500)  return 200;
+            if (max <= 5000)  return 500;
+            if (max <= 10000) return 1000;
+            const pow = Math.pow(10, Math.max(0, Math.floor(Math.log10(max)) - 1));
+            return pow;
+        };
+
+        // =====================================================================
         // Drill state (client-side, per chart)
         // =====================================================================
         const drillState = {
@@ -453,15 +529,23 @@
             new ChartLib(el, config);
         };
 
-        const integerTicks = () => ({
-            beginAtZero: true,
-            ticks: {
-                stepSize: 1, precision: 0, autoSkip: false,
-                color: theme().mutedText,
-                callback: (v) => Number.isInteger(v) ? v : '',
-            },
-            grid: { color: theme().gridColor, drawBorder: false },
-        });
+        // Nice-step integer tick helper. Pass max value to control density.
+        const integerTicks = (dataMax = 0) => {
+            const t = theme();
+            return {
+                beginAtZero: true,
+                grid: { color: t.gridColor, drawBorder: false },
+                border: { display: false },
+                ticks: {
+                    stepSize: dataMax > 0 ? niceStep(dataMax) : undefined,
+                    precision: 0,
+                    autoSkip: true,
+                    maxTicksLimit: 10,
+                    color: t.mutedText,
+                    callback: (v) => Number.isInteger(v) ? v : '',
+                },
+            };
+        };
 
         let ChartLibRef = null;
 
@@ -488,10 +572,7 @@
                 subtitleText = 'Breakdown by department' + (drillable ? ' · click a bar to see courses' : '');
                 backBtnVisible = false;
             } else {
-                // Courses view
                 const map = p.alumniByDeptAndCourse || {};
-                // For program head: use the only department (first key)
-                // For registrar who drilled: use selected key
                 const deptKey = state.selected || Object.keys(map)[0];
                 const dept = map[deptKey] || { courses: {}, name: deptKey };
                 const codes = Object.keys(dept.courses || {});
@@ -502,7 +583,7 @@
                 subtitleText = p.isRegistrar
                     ? `${dept.name} · breakdown by course`
                     : `Breakdown by course within ${dept.name}`;
-                backBtnVisible = p.isRegistrar;   // only registrar can go back
+                backBtnVisible = p.isRegistrar;
             }
 
             const subEl = document.getElementById('dept-subtitle');
@@ -524,11 +605,9 @@
                     labels,
                     datasets: [{
                         data: totals,
-                        backgroundColor: (ctx) => {
-                            const { ctx: c, chartArea } = ctx.chart;
-                            return barGradient(c, chartArea, PALETTE.greenBright);
-                        },
-                        hoverBackgroundColor: PALETTE.greenMid,
+                        // Department colors — courses inherit their parent dept's color.
+                        backgroundColor: (ctx) => deptColor(labels[ctx.dataIndex], ctx.dataIndex),
+                        hoverBackgroundColor: (ctx) => darken(deptColor(labels[ctx.dataIndex], ctx.dataIndex), 0.2),
                         borderRadius: 8,
                         borderSkipped: false,
                         maxBarThickness: 48,
@@ -560,9 +639,9 @@
                         },
                     },
                     scales: {
-                        y: integerTicks(),
+                        y: integerTicks(Math.max(0, ...totals)),
                         x: {
-                            ticks: { color: t.mutedText, font: { weight: '600' } },
+                            ticks: { color: t.mutedText, font: { weight: '600' }, autoSkip: true, maxRotation: 45 },
                             grid: { display: false }, border: { display: false },
                         },
                     },
@@ -579,7 +658,6 @@
             let clickable = false;
             let subtitleText = '';
             let backBtnVisible = false;
-            let batchKey = null;
 
             if (state.view === 'batches') {
                 const map = p.alumniByBatch || {};
@@ -592,8 +670,7 @@
                 backBtnVisible = false;
             } else {
                 const map = p.alumniByBatchAndCourse || {};
-                batchKey = state.selected;
-                const batch = map[batchKey] || { courses: {}, batch_name: batchKey };
+                const batch = map[state.selected] || { courses: {}, batch_name: state.selected };
                 const codes = Object.keys(batch.courses || {});
                 labels = codes;
                 names  = codes.map(c => batch.courses[c]?.name || c);
@@ -621,10 +698,18 @@
                     datasets: [{
                         data: totals,
                         backgroundColor: (ctx) => {
-                            const { ctx: c, chartArea } = ctx.chart;
-                            return barGradient(c, chartArea, PALETTE.gold);
+                            // Level 1 (batches) → uniform green gradient
+                            if (state.view === 'batches') {
+                                const { ctx: c, chartArea } = ctx.chart;
+                                return barGradient(c, chartArea, PALETTE.greenBright);
+                            }
+                            // Level 2 (courses) → courses inherit their parent dept color
+                            return deptColor(labels[ctx.dataIndex], ctx.dataIndex);
                         },
-                        hoverBackgroundColor: PALETTE.goldDeep,
+                        hoverBackgroundColor: (ctx) => {
+                            if (state.view === 'batches') return PALETTE.greenMid;
+                            return darken(deptColor(labels[ctx.dataIndex], ctx.dataIndex), 0.2);
+                        },
                         borderRadius: 8,
                         borderSkipped: false,
                         maxBarThickness: 52,
@@ -661,9 +746,9 @@
                         },
                     },
                     scales: {
-                        y: integerTicks(),
+                        y: integerTicks(Math.max(0, ...totals)),
                         x: {
-                            ticks: { color: t.mutedText, font: { weight: '600' } },
+                            ticks: { color: t.mutedText, font: { weight: '600' }, autoSkip: true, maxRotation: 45 },
                             grid: { display: false }, border: { display: false },
                         },
                     },
@@ -714,9 +799,10 @@
             ChartLib.defaults.animation.duration = 500;
             ChartLib.defaults.animation.easing   = 'easeOutQuart';
 
-            // Reset drill state on every init
-            // Program head → start at 'courses' (skip department level)
-            // Registrar   → start at 'departments'
+            // Build the course→dept lookup so course bars get their dept's color.
+            buildCourseDeptMap();
+
+            // Reset drill state on every init.
             drillState.dept  = p.isRegistrar
                 ? { view: 'departments', selected: null }
                 : { view: 'courses',     selected: null };
@@ -760,7 +846,7 @@
                                 ticks: { stepSize: 25, color: t.mutedText, callback: v => v > 100 ? '' : v + '%' },
                             },
                             x: {
-                                ticks: { color: t.mutedText, font: { weight: '600' } },
+                                ticks: { color: t.mutedText, font: { weight: '600' }, autoSkip: true, maxRotation: 45 },
                                 grid: { display: false }, border: { display: false },
                             },
                         },
@@ -848,16 +934,27 @@
                 },
             };
 
-            const pieConfig = (id, dataMap, colors) => {
+            // Accepts an array OR a function (key, index) => color
+            const pieConfig = (id, dataMap, colorsOrFn) => {
                 const keys = Object.keys(dataMap || {});
                 if (keys.length === 0) return;
+
+                let colors;
+                if (typeof colorsOrFn === 'function') {
+                    colors = keys.map((k, i) => colorsOrFn(k, i));
+                } else if (Array.isArray(colorsOrFn)) {
+                    colors = colorsOrFn;
+                } else {
+                    colors = PIE_PALETTE;
+                }
+
                 makeChart(ChartLib, id, {
                     type: 'doughnut',
                     data: {
                         labels: keys.map(pretty),
                         datasets: [{
                             data: keys.map(k => dataMap[k]),
-                            backgroundColor: colors || PIE_PALETTE,
+                            backgroundColor: colors,
                             borderWidth: 3,
                             borderColor: t.borderColor,
                             hoverOffset: 6,
@@ -871,23 +968,36 @@
                 });
             };
 
+            // Job alignment — Yes green, No red, Partially Related yellow
+            const jobAlignColorFn = (key) => {
+                const k = String(key).toLowerCase();
+                if (k === 'yes')               return PALETTE.greenBright;
+                if (k === 'no')                return '#ef4444';
+                if (k === 'partially-related') return PALETTE.gold;
+                return PALETTE.greenMid;
+            };
+
             pieConfig('employmentStatusChart', p.employmentStatus);
             pieConfig('employmentAreaChart', p.employmentArea, [PALETTE.greenBright, PALETTE.gold]);
             pieConfig('genderChart', p.gender, [PALETTE.greenMid, PALETTE.gold]);
             pieConfig('civilStatusChart', p.civilStatus);
-            pieConfig('jobAlignmentChart', p.jobAlignment, [PALETTE.greenBright, '#ef4444', PALETTE.gold ]);
+            pieConfig('jobAlignmentChart', p.jobAlignment, jobAlignColorFn);
             pieConfig('boardExamChart', p.boardExam, [PALETTE.greenBright, '#ef4444']);
 
             // ===== Bar configs =====
             const barConfig = (id, dataMap, color, horizontal = false) => {
                 const keys = Object.keys(dataMap || {});
                 if (keys.length === 0) return;
+
+                const values = keys.map(k => dataMap[k]);
+                const dataMax = Math.max(0, ...values);
+
                 makeChart(ChartLib, id, {
                     type: 'bar',
                     data: {
                         labels: keys.map(pretty),
                         datasets: [{
-                            data: keys.map(k => dataMap[k]),
+                            data: values,
                             backgroundColor: color,
                             borderRadius: 8,
                             borderSkipped: false,
@@ -899,8 +1009,17 @@
                         indexAxis: horizontal ? 'y' : 'x',
                         plugins: { legend: { display: false } },
                         scales: horizontal
-                            ? { x: integerTicks(), y: { grid: { display: false }, ticks: { color: t.mutedText, font: { weight: '600' } } } }
-                            : { y: integerTicks(), x: { grid: { display: false }, ticks: { color: t.mutedText, font: { weight: '600' } } } },
+                            ? {
+                                x: integerTicks(dataMax),
+                                y: { grid: { display: false }, ticks: { color: t.mutedText, font: { weight: '600' } } },
+                            }
+                            : {
+                                y: integerTicks(dataMax),
+                                x: {
+                                    grid: { display: false },
+                                    ticks: { color: t.mutedText, font: { weight: '600' }, autoSkip: true, maxRotation: 45 },
+                                },
+                            },
                     },
                 });
             };

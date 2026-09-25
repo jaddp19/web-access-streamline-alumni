@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Batch;
+use App\Models\Course;
 use App\Models\Department;
 use App\Models\UserProfile;
 use Illuminate\Support\Facades\Auth;
@@ -17,7 +19,13 @@ new #[Layout('layouts.app-admin')] class extends Component
     #[Url]
     public string $search = '';
 
-    protected int $perPage = 15;
+    #[Url]
+    public string $courseFilter = '';
+
+    #[Url]
+    public string $batchFilter = '';
+
+    protected int $perPage = 10;
 
     /** Memoized filtered query for the current request. */
     protected $filteredQueryCache = null;
@@ -28,14 +36,45 @@ new #[Layout('layouts.app-admin')] class extends Component
         $this->resetPage();
     }
 
+    public function updatingCourseFilter(): void
+    {
+        $this->filteredQueryCache = null;
+        $this->resetPage();
+    }
+
+    public function updatingBatchFilter(): void
+    {
+        $this->filteredQueryCache = null;
+        $this->resetPage();
+    }
+
+    public function clearCourseFilter(): void
+    {
+        $this->courseFilter = '';
+        $this->filteredQueryCache = null;
+        $this->resetPage();
+    }
+
+    public function clearBatchFilter(): void
+    {
+        $this->batchFilter = '';
+        $this->filteredQueryCache = null;
+        $this->resetPage();
+    }
+
+    public function clearAllFilters(): void
+    {
+        $this->search = '';
+        $this->courseFilter = '';
+        $this->batchFilter = '';
+        $this->filteredQueryCache = null;
+        $this->resetPage();
+    }
+
     // =========================================================
     //  ACCESS + SCOPE
     // =========================================================
 
-    /**
-     * Department IDs the current user is allowed to see.
-     * Registrar → [] (global) · Program head → [ids] · No dept → []
-     */
     #[Computed]
     public function departmentIds(): array
     {
@@ -72,6 +111,39 @@ new #[Layout('layouts.app-admin')] class extends Component
         return Auth::user()?->hasRole('registrar') ?? false;
     }
 
+    #[Computed]
+    public function coursesList()
+    {
+        return Course::query()
+            ->where('is_active', true)
+            ->when(! empty($this->departmentIds), function ($q) {
+                $q->whereIn('department_id', $this->departmentIds);
+            })
+            ->orderBy('course_title')
+            ->get(['id', 'course_title', 'course_code', 'department_id']);
+    }
+
+    /**
+     * Batches that actually contain alumni in the current user's scope.
+     * Program head → only batches with alumni in their dept(s).
+     * Registrar    → only batches with any alumni.
+     */
+    #[Computed]
+    public function batchesList()
+    {
+        return Batch::query()
+            ->whereHas('userProfiles', function ($p) {
+                $p->whereHas('user', fn ($u) => $u->role('alumni'));
+
+                if (! empty($this->departmentIds)) {
+                    $deptIds = $this->departmentIds;
+                    $p->whereHas('courses', fn ($c) => $c->whereIn('department_id', $deptIds));
+                }
+            })
+            ->orderByDesc('batch_name')
+            ->get(['id', 'batch_name']);
+    }
+
     // =========================================================
     //  QUERY
     // =========================================================
@@ -93,6 +165,18 @@ new #[Layout('layouts.app-admin')] class extends Component
         if ($this->isProgramHead && ! empty($this->departmentIds)) {
             $deptIds = $this->departmentIds;
             $query->whereHas('courses', fn ($q) => $q->whereIn('department_id', $deptIds));
+        }
+
+        // ---- Course filter ----
+        if ($this->courseFilter !== '') {
+            $courseId = (int) $this->courseFilter;
+            $query->whereHas('courses', fn ($c) => $c->where('courses.id', $courseId));
+        }
+
+        // ---- Batch filter ----
+        if ($this->batchFilter !== '') {
+            $batchId = (int) $this->batchFilter;
+            $query->where('batch_id', $batchId);
         }
 
         if ($this->search !== '') {
@@ -141,7 +225,6 @@ new #[Layout('layouts.app-admin')] class extends Component
 
         $filename = 'alumni-' . now()->format('Y-m-d_His') . '.csv';
 
-        // Capture the query now — the callback runs after the response is queued.
         $query = $this->filteredQuery()
             ->with([
                 'user:id,name,email,school_id',
@@ -154,7 +237,6 @@ new #[Layout('layouts.app-admin')] class extends Component
         return response()->streamDownload(function () use ($query) {
             $handle = fopen('php://output', 'w');
 
-            // UTF-8 BOM for Excel
             fwrite($handle, "\xEF\xBB\xBF");
 
             fputcsv($handle, [
@@ -167,7 +249,6 @@ new #[Layout('layouts.app-admin')] class extends Component
                 'Registered',
             ]);
 
-            // Stream in chunks — avoids loading thousands of profiles into memory.
             $query->chunk(500, function ($profiles) use ($handle) {
                 foreach ($profiles as $profile) {
                     fputcsv($handle, [

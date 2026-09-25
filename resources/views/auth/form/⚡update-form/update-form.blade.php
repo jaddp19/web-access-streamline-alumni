@@ -473,7 +473,8 @@
                             @endif
 
                             @if ($showNewCompanyForm)
-                                <div class="space-y-3 p-4 rounded-xl bg-[#F7F5EF] border border-[#123524]/10">
+                                <div class="space-y-4 p-4 rounded-xl bg-[#F7F5EF] border border-[#123524]/10">
+
                                     {{-- Logo --}}
                                     <div class="flex items-center gap-3">
                                         <div
@@ -503,19 +504,119 @@
                                         <span class="text-red-500 text-xs block">{{ $message }}</span>
                                     @enderror
 
+                                    {{-- Name --}}
                                     <input type="text" wire:model="new_company_name" placeholder="Company name *"
                                         class="w-full px-3 py-2 rounded-lg border border-[#123524]/15 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4A537]">
                                     @error('new_company_name')
                                         <span class="text-red-500 text-xs block">{{ $message }}</span>
                                     @enderror
 
-                                    <input type="text" wire:model="new_company_address"
-                                        placeholder="Company address (optional)"
-                                        class="w-full px-3 py-2 rounded-lg border border-[#123524]/15 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4A537]">
-                                    @error('new_company_address')
-                                        <span class="text-red-500 text-xs block">{{ $message }}</span>
-                                    @enderror
+                                    {{-- ===== Address ===== --}}
+                                    <div>
+                                        <label class="block text-xs font-semibold text-[#123524]/70 mb-2">
+                                            Company Address
+                                        </label>
 
+                                        {{-- Address Type Toggle --}}
+                                        <div class="flex flex-wrap gap-x-6 gap-y-2 mb-3">
+                                            <label class="flex items-center gap-2 cursor-pointer min-h-[36px]">
+                                                <input type="radio" wire:model.live="new_company_address_type"
+                                                    value="philippines"
+                                                    class="text-[#123524] focus:ring-[#D4A537] h-4 w-4">
+                                                <span class="text-sm text-[#123524]">Philippines</span>
+                                            </label>
+                                            <label class="flex items-center gap-2 cursor-pointer min-h-[36px]">
+                                                <input type="radio" wire:model.live="new_company_address_type"
+                                                    value="abroad"
+                                                    class="text-[#123524] focus:ring-[#D4A537] h-4 w-4">
+                                                <span class="text-sm text-[#123524]">Abroad</span>
+                                            </label>
+                                        </div>
+
+                                        {{-- Philippines cascade --}}
+                                        @if ($new_company_address_type === 'philippines')
+                                            <div class="space-y-3">
+
+                                                {{-- Region --}}
+                                                <select wire:model.live="new_company_region_code"
+                                                    class="w-full px-3 py-2 rounded-lg border border-[#123524]/15 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4A537]">
+                                                    <option value="">Select Region *</option>
+                                                    @foreach ($this->regions as $region)
+                                                        <option value="{{ $region->code }}">{{ $region->name }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                @error('new_company_region_code')
+                                                    <span class="text-red-500 text-xs block">{{ $message }}</span>
+                                                @enderror
+
+                                                {{-- Province --}}
+                                                <select wire:model.live="new_company_province_code"
+                                                    @disabled(!$new_company_region_code)
+                                                    class="w-full px-3 py-2 rounded-lg border border-[#123524]/15 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4A537] disabled:opacity-50 disabled:cursor-not-allowed">
+                                                    <option value="">Select Province *</option>
+                                                    @foreach ($this->newCompanyProvinces as $province)
+                                                        <option value="{{ $province->code }}">{{ $province->name }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                @error('new_company_province_code')
+                                                    <span class="text-red-500 text-xs block">{{ $message }}</span>
+                                                @enderror
+
+                                                {{-- City --}}
+                                                <select wire:model="new_company_city_code" @disabled(!$new_company_province_code)
+                                                    class="w-full px-3 py-2 rounded-lg border border-[#123524]/15 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4A537] disabled:opacity-50 disabled:cursor-not-allowed">
+                                                    <option value="">Select City / Municipality *</option>
+                                                    @foreach ($this->newCompanyCities as $city)
+                                                        <option value="{{ $city->code }}">{{ $city->name }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                @error('new_company_city_code')
+                                                    <span class="text-red-500 text-xs block">{{ $message }}</span>
+                                                @enderror
+
+                                                {{-- Street Address --}}
+                                                <input type="text" wire:model="new_company_street_address"
+                                                    maxlength="500" placeholder="Street address (optional)"
+                                                    class="w-full px-3 py-2 rounded-lg border border-[#123524]/15 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4A537]">
+                                                @error('new_company_street_address')
+                                                    <span class="text-red-500 text-xs block">{{ $message }}</span>
+                                                @enderror
+                                            </div>
+                                        @endif
+
+                                        {{-- Abroad --}}
+                                        @if ($new_company_address_type === 'abroad')
+                                            <div class="space-y-3">
+                                                <input type="text" wire:model="new_company_intl_country"
+                                                    maxlength="255"
+                                                    placeholder="Country * (e.g. United Arab Emirates)"
+                                                    class="w-full px-3 py-2 rounded-lg border border-[#123524]/15 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4A537]">
+                                                @error('new_company_intl_country')
+                                                    <span class="text-red-500 text-xs block">{{ $message }}</span>
+                                                @enderror
+
+                                                <input type="text" wire:model="new_company_intl_state"
+                                                    maxlength="255"
+                                                    placeholder="State / Province / Emirate (optional)"
+                                                    class="w-full px-3 py-2 rounded-lg border border-[#123524]/15 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4A537]">
+                                                @error('new_company_intl_state')
+                                                    <span class="text-red-500 text-xs block">{{ $message }}</span>
+                                                @enderror
+
+                                                <input type="text" wire:model="new_company_intl_city"
+                                                    maxlength="255" placeholder="City * (e.g. Dubai, Los Angeles)"
+                                                    class="w-full px-3 py-2 rounded-lg border border-[#123524]/15 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4A537]">
+                                                @error('new_company_intl_city')
+                                                    <span class="text-red-500 text-xs block">{{ $message }}</span>
+                                                @enderror
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    {{-- Description --}}
                                     <textarea wire:model="new_company_desc" rows="2" placeholder="Short description (optional)"
                                         class="w-full px-3 py-2 rounded-lg border border-[#123524]/15 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4A537] resize-none"></textarea>
                                     @error('new_company_desc')

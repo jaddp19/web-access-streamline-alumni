@@ -4,6 +4,7 @@ use App\Models\CivilStatusEmployment;
 use App\Models\Company;
 use App\Models\TracerStudy;
 use App\Models\WorkHistory;
+use App\Services\PhAddressService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -33,12 +34,21 @@ new #[Layout('layouts.app-alumni')] class extends Component
     public string $organization_type = '';
     public string $months_to_first_job = '';
 
-    // Inline new-company
+    // Inline new-company — basic
     public bool $showNewCompanyForm = false;
     public $new_company_logo = null;
     public string $new_company_name = '';
-    public string $new_company_address = '';
     public string $new_company_desc = '';
+
+    // Inline new-company — address cascade
+    public string $new_company_address_type = 'philippines';
+    public string $new_company_region_code = '';
+    public string $new_company_province_code = '';
+    public string $new_company_city_code = '';
+    public string $new_company_street_address = '';
+    public string $new_company_intl_country = '';
+    public string $new_company_intl_state = '';
+    public string $new_company_intl_city = '';
 
     // =========================================================
     //  MOUNT
@@ -114,10 +124,20 @@ new #[Layout('layouts.app-alumni')] class extends Component
     protected function companyRules(): array
     {
         return [
-            'new_company_name'    => ['required', 'string', 'min:2', 'max:255', 'unique:companies,company_name'],
-            'new_company_logo'    => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
-            'new_company_address' => ['nullable', 'string', 'max:500'],
-            'new_company_desc'    => ['nullable', 'string', 'max:2000'],
+            'new_company_name' => ['required', 'string', 'min:2', 'max:255', 'unique:companies,company_name'],
+            'new_company_logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'new_company_desc' => ['nullable', 'string', 'max:2000'],
+
+            'new_company_address_type' => ['required', 'in:philippines,abroad'],
+
+            'new_company_region_code'    => ['required_if:new_company_address_type,philippines', 'nullable', 'string'],
+            'new_company_province_code'  => ['required_if:new_company_address_type,philippines', 'nullable', 'string'],
+            'new_company_city_code'      => ['required_if:new_company_address_type,philippines', 'nullable', 'string'],
+            'new_company_street_address' => ['nullable', 'string', 'max:500'],
+
+            'new_company_intl_country' => ['required_if:new_company_address_type,abroad', 'nullable', 'string', 'max:255'],
+            'new_company_intl_state'   => ['nullable', 'string', 'max:255'],
+            'new_company_intl_city'    => ['required_if:new_company_address_type,abroad', 'nullable', 'string', 'max:255'],
         ];
     }
 
@@ -137,11 +157,18 @@ new #[Layout('layouts.app-alumni')] class extends Component
             'employment_area.required'            => 'Please select employment area.',
             'abroad_country.required_if'          => 'Please specify the country.',
             'months_to_first_job.required'        => 'Please select how long it took to get your first job.',
-            'new_company_name.required'           => 'Please enter the company name.',
-            'new_company_name.unique'             => 'A company with this name already exists.',
-            'new_company_logo.image'              => 'The logo must be an image file.',
-            'new_company_logo.mimes'              => 'Logo must be JPG, PNG, or WebP.',
-            'new_company_logo.max'                => 'The logo cannot exceed 2MB.',
+
+            'new_company_name.required'   => 'Please enter the company name.',
+            'new_company_name.unique'     => 'A company with this name already exists.',
+            'new_company_logo.image'      => 'The logo must be an image file.',
+            'new_company_logo.mimes'      => 'Logo must be JPG, PNG, or WebP.',
+            'new_company_logo.max'        => 'The logo cannot exceed 2MB.',
+
+            'new_company_region_code.required_if'   => 'Please select a region.',
+            'new_company_province_code.required_if' => 'Please select a province.',
+            'new_company_city_code.required_if'     => 'Please select a city / municipality.',
+            'new_company_intl_country.required_if'  => 'Please enter the country.',
+            'new_company_intl_city.required_if'     => 'Please enter the city.',
         ];
     }
 
@@ -158,6 +185,28 @@ new #[Layout('layouts.app-alumni')] class extends Component
             ->get();
     }
 
+    #[Computed]
+    public function regions()
+    {
+        return app(PhAddressService::class)->regions();
+    }
+
+    #[Computed]
+    public function newCompanyProvinces()
+    {
+        return $this->new_company_region_code
+            ? app(PhAddressService::class)->provinces($this->new_company_region_code)
+            : collect();
+    }
+
+    #[Computed]
+    public function newCompanyCities()
+    {
+        return $this->new_company_province_code
+            ? app(PhAddressService::class)->cities($this->new_company_province_code)
+            : collect();
+    }
+
     // =========================================================
     //  NEW COMPANY FORM
     // =========================================================
@@ -167,20 +216,39 @@ new #[Layout('layouts.app-alumni')] class extends Component
         $this->showNewCompanyForm = ! $this->showNewCompanyForm;
 
         if (! $this->showNewCompanyForm) {
-            $this->reset([
-                'new_company_logo',
-                'new_company_name',
-                'new_company_address',
-                'new_company_desc',
-            ]);
-
-            $this->resetErrorBag([
-                'new_company_logo',
-                'new_company_name',
-                'new_company_address',
-                'new_company_desc',
-            ]);
+            $this->resetNewCompanyFields();
         }
+    }
+
+    protected function resetNewCompanyFields(): void
+    {
+        $this->reset([
+            'new_company_logo',
+            'new_company_name',
+            'new_company_desc',
+            'new_company_region_code',
+            'new_company_province_code',
+            'new_company_city_code',
+            'new_company_street_address',
+            'new_company_intl_country',
+            'new_company_intl_state',
+            'new_company_intl_city',
+        ]);
+
+        $this->new_company_address_type = 'philippines';
+
+        $this->resetErrorBag([
+            'new_company_logo',
+            'new_company_name',
+            'new_company_desc',
+            'new_company_region_code',
+            'new_company_province_code',
+            'new_company_city_code',
+            'new_company_street_address',
+            'new_company_intl_country',
+            'new_company_intl_state',
+            'new_company_intl_city',
+        ]);
     }
 
     public function updatedNewCompanyLogo(): void
@@ -188,25 +256,73 @@ new #[Layout('layouts.app-alumni')] class extends Component
         $this->validateOnly('new_company_logo');
     }
 
+    // ---- New-company address cascade hooks ----
+
+    public function updatedNewCompanyAddressType(): void
+    {
+        $this->resetErrorBag([
+            'new_company_region_code', 'new_company_province_code', 'new_company_city_code',
+            'new_company_street_address',
+            'new_company_intl_country', 'new_company_intl_state', 'new_company_intl_city',
+        ]);
+    }
+
+    public function updatedNewCompanyRegionCode(): void
+    {
+        $this->new_company_province_code = '';
+        $this->new_company_city_code     = '';
+        $this->resetErrorBag(['new_company_province_code', 'new_company_city_code']);
+    }
+
+    public function updatedNewCompanyProvinceCode(): void
+    {
+        $this->new_company_city_code = '';
+        $this->resetErrorBag('new_company_city_code');
+    }
+
+    // =========================================================
+    //  CREATE COMPANY
+    // =========================================================
+
     public function createCompany(): void
     {
         abort_unless(Auth::check(), 403);
 
         $validated = $this->validate($this->companyRules(), $this->messages());
 
+        $service = app(PhAddressService::class);
+
+        // ---- Compose address string ----
+        if ($this->new_company_address_type === 'philippines') {
+            $region   = $service->findByCode($this->new_company_region_code);
+            $province = $service->findByCode($this->new_company_province_code);
+            $city     = $service->findByCode($this->new_company_city_code);
+
+            $companyAddress = collect([
+                $this->new_company_street_address,
+                $city->name ?? null,
+                $province->name ?? null,
+                $region->name ?? null,
+            ])->filter(fn ($p) => filled($p))->implode(', ');
+        } else {
+            $companyAddress = collect([
+                $this->new_company_intl_city,
+                $this->new_company_intl_state,
+                $this->new_company_intl_country,
+            ])->filter(fn ($p) => filled($p))->implode(', ');
+        }
+
         $logoPath = null;
 
         try {
-            $company = DB::transaction(function () use ($validated, &$logoPath) {
+            $company = DB::transaction(function () use ($validated, $companyAddress, &$logoPath) {
                 if ($this->new_company_logo) {
                     $logoPath = $this->new_company_logo->store('companies', 'public');
                 }
 
                 return Company::create([
                     'company_name'    => trim(strip_tags($validated['new_company_name'])),
-                    'company_address' => filled($validated['new_company_address'])
-                        ? trim(strip_tags($validated['new_company_address']))
-                        : null,
+                    'company_address' => $companyAddress ?: null,
                     'company_logo'    => $logoPath,
                     'company_desc'    => filled($validated['new_company_desc'])
                         ? trim(strip_tags($validated['new_company_desc']))
@@ -239,12 +355,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
         $this->company_id         = $company->id;
         $this->showNewCompanyForm = false;
 
-        $this->reset([
-            'new_company_logo',
-            'new_company_name',
-            'new_company_address',
-            'new_company_desc',
-        ]);
+        $this->resetNewCompanyFields();
 
         unset($this->companies);
 
@@ -288,7 +399,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
                 'months_to_first_job'        => $this->months_to_first_job ?: null,
             ]);
         } else {
-            // No current job → mark unemployed, clear job-specific fields
             $employment->update([
                 'employment_status'          => 'unemployed',
                 'current_job_position'       => null,
@@ -313,7 +423,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
         $this->validate($rules, $this->messages());
 
-        // Sanitize
         $workName      = trim(strip_tags($this->work_name));
         $civilStatus   = trim(strip_tags($this->civil_status));
         $abroadCountry = trim(strip_tags($this->abroad_country));

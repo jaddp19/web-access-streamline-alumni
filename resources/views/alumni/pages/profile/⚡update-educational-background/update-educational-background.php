@@ -171,6 +171,12 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
         $isBoardCourse = $this->selectedCourse?->course_type === 'board';
 
+        // Was the *previous* course also a board course?
+        // Used to decide whether a course change means "needs verification".
+        $wasBoardCourse = $this->original_course_id
+            ? ($this->courses->firstWhere('id', (int) $this->original_course_id)?->course_type === 'board')
+            : false;
+
         // ===== Detect changes =====
         $boardChanged = $this->board_taken !== $this->original_board_taken
             || round((float) $this->board_rate, 2) !== round((float) $this->original_board_rate, 2);
@@ -193,13 +199,25 @@ new #[Layout('layouts.app-alumni')] class extends Component
             $profileData['board_rate']  = null;
         }
 
-        // ===== Verification reset =====
-        $mustResetVerification = ! $isBoardCourse
-            || ($isBoardCourse && ($boardChanged || $courseChanged));
+        // ===== Verification flag =====
+        //   non-board course                          → is_verified = true   (nothing to verify)
+        //   non-board → board                         → is_verified = false  (needs verification)
+        //   board → another board                     → is_verified = false  (needs re-verification)
+        //   board data (board_taken / board_rate) changed → is_verified = false  (needs re-verification)
+        //   board → non-board                         → is_verified = true   (nothing to verify)
+        //   same board, no changes                    → leave as-is
+        $mustResetVerification = false;
 
-        if ($mustResetVerification) {
+        if (! $isBoardCourse) {
+            // Non-board course → always treated as "verified" because
+            // there is no board exam to verify.
+            $profileData['is_verified'] = true;
+        } elseif (! $wasBoardCourse || $courseChanged || $boardChanged) {
+            // Board course that is new, changed, or has changed board data.
             $profileData['is_verified'] = false;
+            $mustResetVerification = true;
         }
+        // else: still the same board course with no changes → keep current value
 
         try {
             DB::transaction(function () use ($profile, $profileData, $validated) {

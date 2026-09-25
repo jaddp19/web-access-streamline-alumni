@@ -24,8 +24,10 @@
 
             {{-- Top-of-card flashes --}}
             @if (session('error'))
-                <div class="mb-5 px-4 py-3 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-400 text-sm font-medium flex items-start gap-2">
-                    <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <div
+                    class="mb-5 px-4 py-3 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-400 text-sm font-medium flex items-start gap-2">
+                    <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="1.5"
+                        viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round"
                             d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                     </svg>
@@ -34,9 +36,12 @@
             @endif
 
             @if (session('company_created'))
-                <div class="mb-5 px-4 py-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-sm font-medium flex items-start gap-2">
-                    <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <div
+                    class="mb-5 px-4 py-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-sm font-medium flex items-start gap-2">
+                    <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="1.5"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <span>{{ session('company_created') }}</span>
                 </div>
@@ -72,20 +77,24 @@
 
                     @if ($showNewCompanyForm)
                         {{-- ========== NEW COMPANY FORM ========== --}}
-                        <div class="space-y-4 p-4 rounded-xl bg-[#F0F2F5] dark:bg-[#3A3B3C] border border-black/5 dark:border-white/10">
+                        <div
+                            class="space-y-4 p-4 rounded-xl bg-[#F0F2F5] dark:bg-[#3A3B3C] border border-black/5 dark:border-white/10">
 
                             {{-- Logo --}}
                             <div>
-                                <label class="block text-xs font-semibold text-black/70 dark:text-white/70 mb-2 uppercase tracking-wide">
+                                <label
+                                    class="block text-xs font-semibold text-black/70 dark:text-white/70 mb-2 uppercase tracking-wide">
                                     Company Logo
                                 </label>
                                 <div class="flex items-center gap-3">
-                                    <div class="w-16 h-16 rounded-xl bg-white dark:bg-[#242526] border border-black/10 dark:border-white/10 flex items-center justify-center shrink-0 overflow-hidden">
+                                    <div
+                                        class="w-16 h-16 rounded-xl bg-white dark:bg-[#242526] border border-black/10 dark:border-white/10 flex items-center justify-center shrink-0 overflow-hidden">
                                         @if ($new_company_logo)
-                                            <img src="{{ $new_company_logo->temporaryUrl() }}" alt="Preview" loading="lazy"
-                                                class="w-full h-full object-cover">
+                                            <img src="{{ $new_company_logo->temporaryUrl() }}" alt="Preview"
+                                                loading="lazy" class="w-full h-full object-cover">
                                         @else
-                                            <svg class="w-6 h-6 text-black/20 dark:text-white/20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                            <svg class="w-6 h-6 text-black/20 dark:text-white/20" fill="none"
+                                                stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round"
                                                     d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
                                             </svg>
@@ -105,7 +114,8 @@
                                         </p>
                                     </div>
                                 </div>
-                                <div wire:loading wire:target="new_company_logo" class="mt-2 text-xs text-[#1877F2] font-semibold">
+                                <div wire:loading wire:target="new_company_logo"
+                                    class="mt-2 text-xs text-[#1877F2] font-semibold">
                                     Uploading…
                                 </div>
                                 @error('new_company_logo')
@@ -115,7 +125,8 @@
 
                             {{-- Name --}}
                             <div>
-                                <label class="block text-xs font-semibold text-black/70 dark:text-white/70 mb-1.5 uppercase tracking-wide">
+                                <label
+                                    class="block text-xs font-semibold text-black/70 dark:text-white/70 mb-1.5 uppercase tracking-wide">
                                     Company Name <span class="text-red-500">*</span>
                                 </label>
                                 <input type="text" wire:model="new_company_name" maxlength="255"
@@ -129,21 +140,118 @@
 
                             {{-- Address --}}
                             <div>
-                                <label class="block text-xs font-semibold text-black/70 dark:text-white/70 mb-1.5 uppercase tracking-wide">
+                                <label
+                                    class="block text-xs font-semibold text-black/70 dark:text-white/70 mb-2 uppercase tracking-wide">
                                     Address
                                 </label>
-                                <input type="text" wire:model="new_company_address" maxlength="500"
-                                    placeholder="e.g. 123 Main St, Victorias City"
-                                    class="w-full px-4 py-3 rounded-xl border bg-white dark:bg-[#242526] text-black dark:text-white text-sm placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:border-transparent transition
-                                    @error('new_company_address') border-red-400 focus:ring-red-400/50 @else border-black/10 dark:border-white/10 focus:ring-[#1877F2] @enderror">
-                                @error('new_company_address')
-                                    <span class="block mt-1 text-red-500 text-sm">{{ $message }}</span>
-                                @enderror
+
+                                {{-- Address Type Toggle --}}
+                                <div class="flex flex-wrap gap-x-5 gap-y-2 mb-3">
+                                    <label class="flex items-center gap-2 cursor-pointer min-h-[36px]">
+                                        <input type="radio" wire:model.live="new_company_address_type"
+                                            value="philippines" class="text-[#1877F2] focus:ring-[#1877F2] h-4 w-4">
+                                        <span class="text-sm text-black dark:text-white">Philippines</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer min-h-[36px]">
+                                        <input type="radio" wire:model.live="new_company_address_type" value="abroad"
+                                            class="text-[#1877F2] focus:ring-[#1877F2] h-4 w-4">
+                                        <span class="text-sm text-black dark:text-white">Abroad</span>
+                                    </label>
+                                </div>
+
+                                {{-- ===== PHILIPPINES ===== --}}
+                                @if ($new_company_address_type === 'philippines')
+                                    <div class="space-y-3">
+
+                                        {{-- Region --}}
+                                        <select wire:model.live="new_company_region_code"
+                                            class="w-full px-4 py-3 rounded-xl border bg-white dark:bg-[#242526] text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:border-transparent transition
+                @error('new_company_region_code') border-red-400 focus:ring-red-400/50 @else border-black/10 dark:border-white/10 focus:ring-[#1877F2] @enderror">
+                                            <option value="">Select Region *</option>
+                                            @foreach ($this->regions as $region)
+                                                <option value="{{ $region->code }}">{{ $region->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        @error('new_company_region_code')
+                                            <span class="block mt-1 text-red-500 text-xs">{{ $message }}</span>
+                                        @enderror
+
+                                        {{-- Province --}}
+                                        <select wire:model.live="new_company_province_code"
+                                            @disabled(!$new_company_region_code)
+                                            class="w-full px-4 py-3 rounded-xl border bg-white dark:bg-[#242526] text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed
+                @error('new_company_province_code') border-red-400 focus:ring-red-400/50 @else border-black/10 dark:border-white/10 focus:ring-[#1877F2] @enderror">
+                                            <option value="">Select Province *</option>
+                                            @foreach ($this->newCompanyProvinces as $province)
+                                                <option value="{{ $province->code }}">{{ $province->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        @error('new_company_province_code')
+                                            <span class="block mt-1 text-red-500 text-xs">{{ $message }}</span>
+                                        @enderror
+
+                                        {{-- City --}}
+                                        <select wire:model="new_company_city_code" @disabled(!$new_company_province_code)
+                                            class="w-full px-4 py-3 rounded-xl border bg-white dark:bg-[#242526] text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed
+                @error('new_company_city_code') border-red-400 focus:ring-red-400/50 @else border-black/10 dark:border-white/10 focus:ring-[#1877F2] @enderror">
+                                            <option value="">Select City / Municipality *</option>
+                                            @foreach ($this->newCompanyCities as $city)
+                                                <option value="{{ $city->code }}">{{ $city->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        @error('new_company_city_code')
+                                            <span class="block mt-1 text-red-500 text-xs">{{ $message }}</span>
+                                        @enderror
+
+                                        {{-- Street Address --}}
+                                        <input type="text" wire:model="new_company_street_address" maxlength="500"
+                                            placeholder="Street address (optional)"
+                                            class="w-full px-4 py-3 rounded-xl border bg-white dark:bg-[#242526] text-black dark:text-white text-sm placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:border-transparent transition
+                @error('new_company_street_address') border-red-400 focus:ring-red-400/50 @else border-black/10 dark:border-white/10 focus:ring-[#1877F2] @enderror">
+                                        @error('new_company_street_address')
+                                            <span class="block mt-1 text-red-500 text-xs">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                @endif
+
+                                {{-- ===== ABROAD ===== --}}
+                                @if ($new_company_address_type === 'abroad')
+                                    <div class="space-y-3">
+
+                                        {{-- Country --}}
+                                        <input type="text" wire:model="new_company_intl_country" maxlength="255"
+                                            placeholder="Country * (e.g. United Arab Emirates)"
+                                            class="w-full px-4 py-3 rounded-xl border bg-white dark:bg-[#242526] text-black dark:text-white text-sm placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:border-transparent transition
+                @error('new_company_intl_country') border-red-400 focus:ring-red-400/50 @else border-black/10 dark:border-white/10 focus:ring-[#1877F2] @enderror">
+                                        @error('new_company_intl_country')
+                                            <span class="block mt-1 text-red-500 text-xs">{{ $message }}</span>
+                                        @enderror
+
+                                        {{-- State --}}
+                                        <input type="text" wire:model="new_company_intl_state" maxlength="255"
+                                            placeholder="State / Province / Emirate (optional)"
+                                            class="w-full px-4 py-3 rounded-xl border bg-white dark:bg-[#242526] text-black dark:text-white text-sm placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:border-transparent transition
+                @error('new_company_intl_state') border-red-400 focus:ring-red-400/50 @else border-black/10 dark:border-white/10 focus:ring-[#1877F2] @enderror">
+                                        @error('new_company_intl_state')
+                                            <span class="block mt-1 text-red-500 text-xs">{{ $message }}</span>
+                                        @enderror
+
+                                        {{-- City --}}
+                                        <input type="text" wire:model="new_company_intl_city" maxlength="255"
+                                            placeholder="City * (e.g. Dubai, Los Angeles)"
+                                            class="w-full px-4 py-3 rounded-xl border bg-white dark:bg-[#242526] text-black dark:text-white text-sm placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:border-transparent transition
+                @error('new_company_intl_city') border-red-400 focus:ring-red-400/50 @else border-black/10 dark:border-white/10 focus:ring-[#1877F2] @enderror">
+                                        @error('new_company_intl_city')
+                                            <span class="block mt-1 text-red-500 text-xs">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                @endif
                             </div>
 
                             {{-- Description --}}
                             <div>
-                                <label class="block text-xs font-semibold text-black/70 dark:text-white/70 mb-1.5 uppercase tracking-wide">
+                                <label
+                                    class="block text-xs font-semibold text-black/70 dark:text-white/70 mb-1.5 uppercase tracking-wide">
                                     Description
                                 </label>
                                 <textarea wire:model="new_company_desc" rows="3" maxlength="2000"
@@ -157,17 +265,20 @@
 
                             {{-- Create button --}}
                             <div class="flex justify-end pt-2">
-                                <button type="button"
-                                    wire:click="createCompany"
-                                    wire:loading.attr="disabled"
+                                <button type="button" wire:click="createCompany" wire:loading.attr="disabled"
                                     wire:target="createCompany,new_company_logo"
                                     class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#123524] hover:bg-[#0d2819] text-white text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed">
-                                    <svg wire:loading.remove wire:target="createCompany" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                    <svg wire:loading.remove wire:target="createCompany" class="w-4 h-4"
+                                        fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M12 4.5v15m7.5-7.5h-15" />
                                     </svg>
-                                    <svg wire:loading wire:target="createCompany" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                                    <svg wire:loading wire:target="createCompany" class="w-4 h-4 animate-spin"
+                                        fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10"
+                                            stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor"
+                                            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
                                     </svg>
                                     <span wire:loading.remove wire:target="createCompany">Create Company</span>
                                     <span wire:loading wire:target="createCompany">Creating…</span>
@@ -205,7 +316,8 @@
                 </div>
 
                 {{-- Current Job Toggle --}}
-                <label class="flex items-start gap-3 cursor-pointer p-3 rounded-xl bg-[#F0F2F5] dark:bg-[#3A3B3C] border border-black/5 dark:border-white/10">
+                <label
+                    class="flex items-start gap-3 cursor-pointer p-3 rounded-xl bg-[#F0F2F5] dark:bg-[#3A3B3C] border border-black/5 dark:border-white/10">
                     <input type="checkbox" wire:model.live="is_current_job"
                         class="mt-0.5 rounded border-black/20 dark:border-white/20 text-[#1877F2] focus:ring-[#1877F2] h-4 w-4">
                     <div class="flex-1">
@@ -220,7 +332,8 @@
 
                 {{-- ========== EMPLOYMENT DETAILS ========== --}}
                 @if ($is_current_job)
-                    <div class="space-y-5 p-4 sm:p-5 rounded-xl bg-[#F0F2F5] dark:bg-[#3A3B3C]/60 border border-black/5 dark:border-white/10">
+                    <div
+                        class="space-y-5 p-4 sm:p-5 rounded-xl bg-[#F0F2F5] dark:bg-[#3A3B3C]/60 border border-black/5 dark:border-white/10">
 
                         <h3 class="text-sm font-bold text-black dark:text-white uppercase tracking-wide">
                             Employment Details
@@ -253,8 +366,10 @@
                             </label>
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                 @foreach (['yes' => 'Yes', 'no' => 'No', 'partially-related' => 'Partially related'] as $value => $label)
-                                    <label class="flex items-center gap-2 cursor-pointer p-2.5 rounded-lg bg-white dark:bg-[#242526] border border-black/10 dark:border-white/10 hover:border-[#1877F2] transition min-h-[42px]">
-                                        <input type="radio" wire:model="employed_related_to_degree" value="{{ $value }}"
+                                    <label
+                                        class="flex items-center gap-2 cursor-pointer p-2.5 rounded-lg bg-white dark:bg-[#242526] border border-black/10 dark:border-white/10 hover:border-[#1877F2] transition min-h-[42px]">
+                                        <input type="radio" wire:model="employed_related_to_degree"
+                                            value="{{ $value }}"
                                             class="text-[#1877F2] focus:ring-[#1877F2] h-4 w-4">
                                         <span class="text-sm text-black dark:text-white">{{ $label }}</span>
                                     </label>
@@ -347,7 +462,8 @@
                         {{-- Months to First Job --}}
                         <div>
                             <label class="block text-sm font-semibold text-black dark:text-white mb-2">
-                                How long after graduation did you get your first job? <span class="text-red-500">*</span>
+                                How long after graduation did you get your first job? <span
+                                    class="text-red-500">*</span>
                             </label>
                             <select wire:model="months_to_first_job"
                                 class="w-full px-4 py-3 rounded-xl border bg-white dark:bg-[#242526] text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:border-transparent transition
@@ -366,14 +482,13 @@
                 @endif
 
                 {{-- ========== ACTIONS ========== --}}
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2 pt-4 border-t border-black/5 dark:border-white/10">
+                <div
+                    class="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2 pt-4 border-t border-black/5 dark:border-white/10">
                     <a href="{{ route('alumni.profile') }}"
                         class="w-full sm:w-auto text-center px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 text-sm font-semibold text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition">
                         Cancel
                     </a>
-                    <button type="submit"
-                        wire:loading.attr="disabled"
-                        wire:target="saveWorkHistory"
+                    <button type="submit" wire:loading.attr="disabled" wire:target="saveWorkHistory"
                         class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#1877F2] hover:bg-[#166FE5] text-white text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed">
                         <span wire:loading.remove wire:target="saveWorkHistory">Save Work Experience</span>
                         <span wire:loading wire:target="saveWorkHistory">Saving…</span>

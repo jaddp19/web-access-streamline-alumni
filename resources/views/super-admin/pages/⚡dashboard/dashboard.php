@@ -90,6 +90,12 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     }
 
     #[Computed]
+    public function alumniByBatchAndDepartment(): array
+    {
+        return $this->analytics()->alumniByBatchAndDepartment();
+    }
+
+    #[Computed]
     public function courseAnalytics(): array
     {
         return $this->analytics()->courseAnalytics();
