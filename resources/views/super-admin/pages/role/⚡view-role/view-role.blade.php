@@ -47,9 +47,6 @@
                 <div class="px-6 py-3 bg-red-50 dark:bg-red-500/10 border-b border-red-100 dark:border-red-500/20 flex items-center justify-between">
                     <p class="text-sm text-red-700 dark:text-red-400 font-medium">
                         {{ count($selectedRoles) }} role(s) selected
-                        @if ($selectAllFiltered)
-                            <span class="text-[10px] font-normal opacity-70">(all)</span>
-                        @endif
                     </p>
                     <button
                         wire:click="deleteSelected"

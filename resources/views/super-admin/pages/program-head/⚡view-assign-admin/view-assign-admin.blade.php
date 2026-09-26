@@ -46,9 +46,6 @@
                 <div class="px-4 sm:px-6 py-3 bg-red-50 dark:bg-red-500/10 border-b border-red-100 dark:border-red-500/20 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <p class="text-xs sm:text-sm text-red-700 dark:text-red-400 font-medium">
                         <span class="font-bold">{{ $this->selectedCount }}</span> assignment(s) selected
-                        @if ($selectAllFiltered)
-                            <span class="text-[10px] font-normal opacity-70">(all matching)</span>
-                        @endif
                     </p>
                     <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
                         @if (! $selectAllFiltered)

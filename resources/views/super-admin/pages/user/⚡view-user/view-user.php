@@ -85,8 +85,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     {
         $this->roleFilter = $role;
 
-        // Course / department / batch filters only make sense on alumni views.
-        if (! in_array($role, ['all', 'alumni'], true)) {
+        // Course / department / batch filters only make sense on alumni
+        // and "pending tracer" views (pending = alumni without a tracer).
+        if (! in_array($role, ['all', 'alumni', 'pending'], true)) {
             $this->courseFilter = '';
             $this->departmentFilter = '';
             $this->batchFilter = '';
@@ -126,7 +127,14 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         }
 
         return $this->filteredQueryCache = User::role(['alumni', 'registrar', 'program head'])
-            ->when($this->roleFilter !== 'all', fn ($q) => $q->role($this->roleFilter))
+            // "Pending Tracer" = alumni without a tracer study submission.
+            ->when($this->roleFilter === 'pending', function ($q) {
+                $q->role('alumni')->whereDoesntHave('tracerStudy');
+            })
+            // Regular role filter for everything else (skips 'all' and 'pending').
+            ->when(! in_array($this->roleFilter, ['all', 'pending'], true), function ($q) {
+                $q->role($this->roleFilter);
+            })
             ->when($this->search !== '', function ($q) {
                 $q->where(function ($q) {
                     $q->where('name', 'like', "%{$this->search}%")
@@ -217,6 +225,13 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             ->get(['id', 'batch_name']);
     }
 
+    /** Badge count for the "Pending Tracer" tab. */
+    #[Computed]
+    public function pendingTracerCount(): int
+    {
+        return User::role('alumni')->whereDoesntHave('tracerStudy')->count();
+    }
+
     // =========================================================
     //  SHARED EXPORT EAGER-LOAD
     // =========================================================
@@ -232,7 +247,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                 'userProfile.courses:id,course_title,course_code,department_id',
                 'userProfile.courses.department:id,dept_name,dept_code',
             ])
-            ->select('id', 'name', 'email', 'school_id', 'created_at')
+            ->select('id', 'first_name', 'middle_name', 'last_name', 'email', 'school_id', 'created_at')
             ->latest();
     }
 
@@ -383,7 +398,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                 'userProfile.courses:id,course_title,course_code,department_id',
                 'userProfile.courses.department:id,dept_name,dept_code',
             ])
-            ->select('id', 'name', 'email', 'school_id', 'created_at')
+            ->select('id', 'first_name', 'middle_name', 'last_name', 'email', 'school_id', 'created_at')
             ->latest()
             ->get();
 
@@ -400,7 +415,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             fwrite($handle, "\xEF\xBB\xBF");
 
             fputcsv($handle, [
-                'Name',
+                'First Name',
+                'Middle Name',
+                'Last Name',
                 'Email',
                 'School ID',
                 'Roles',
@@ -416,7 +433,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                 $departments = $courses->pluck('department')->filter()->unique('id');
 
                 fputcsv($handle, [
-                    $user->name,
+                    $user->first_name ?? '',
+                    $user->middle_name ?? '',
+                    $user->last_name ?? '',
                     $user->email,
                     $user->school_id ?? '',
                     $user->roles->pluck('name')->implode(', '),

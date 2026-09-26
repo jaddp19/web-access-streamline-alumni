@@ -206,6 +206,7 @@
                                 'alumni' => 'Alumni',
                                 'program head' => 'Program Head',
                                 'registrar' => 'Registrar',
+                                'pending' => 'Pending Tracer',
                             ];
                         @endphp
                         @foreach ($tabs as $key => $label)

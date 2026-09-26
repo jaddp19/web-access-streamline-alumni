@@ -29,7 +29,7 @@
             class="hover:text-[#D4A537] transition-colors">
               Terms and Conditions
           </a>
-          <a href="#" class="hover:text-[#D4A537] transition-colors">Contact Administration</a>
+          <a href="mailto:colegiodestaanadevictorias@yahoo.com" class="hover:text-[#D4A537] transition-colors">Contact Administration</a>
         </div>
         <div class="pt-4 border-t border-white/10">
           <p class="text-xs text-white/40">

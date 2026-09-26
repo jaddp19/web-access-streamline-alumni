@@ -3,6 +3,7 @@
 use App\Jobs\SendEventCancellationEmail;
 use App\Models\Event;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -85,15 +86,26 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         if (! $event) {
             session()->flash('error', 'Event not found.');
-
             return;
         }
 
-        if ($event->image) {
-            Storage::disk('public')->delete($event->image);
+        // Guard: published events must be cancelled first so attendees
+        // get a cancellation email before the record disappears.
+        if ($event->status === 'published') {
+            session()->flash(
+                'error',
+                'Cancel this event first — attendees must be notified before it can be deleted.'
+            );
+            return;
         }
 
+        $imagePath = $event->image;
+
         $event->delete();
+
+        if ($imagePath) {
+            Storage::disk('public')->delete($imagePath);
+        }
 
         session()->flash('success', 'Event deleted successfully.');
     }
@@ -106,19 +118,19 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         if (! $event) {
             session()->flash('error', 'Event not found.');
-
             return;
         }
 
         if ($event->status === 'cancelled') {
             session()->flash('error', 'This event is already cancelled.');
-
             return;
         }
 
         $wasPublished = $event->status === 'published';
 
-        $event->update(['status' => 'cancelled']);
+        DB::transaction(function () use ($event) {
+            $event->update(['status' => 'cancelled']);
+        });
 
         if ($wasPublished) {
             SendEventCancellationEmail::dispatch($event->id)->afterCommit();

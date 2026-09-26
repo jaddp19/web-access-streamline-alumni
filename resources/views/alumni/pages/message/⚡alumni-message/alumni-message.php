@@ -53,7 +53,12 @@ new #[Layout('layouts.app-alumni')] class extends Component
         });
     }
 
-    /** Program-head user IDs whose department contains this alumni. */
+    /**
+     * Program-head user IDs whose department contains this alumni.
+     *
+     * Uses the User->department() relation directly (hasOne via program_head_id),
+     * so we don't rely on pivot column ambiguity or the user_profiles.courses pluck.
+     */
     #[Computed]
     public function programHeadIdsForMyDepartments(): array
     {
@@ -62,8 +67,9 @@ new #[Layout('layouts.app-alumni')] class extends Component
             return [];
         }
 
+        // Explicitly qualified — avoids ambiguity with the pivot table.
         $deptIds = $profile->courses()
-            ->pluck('department_id')
+            ->pluck('courses.department_id')
             ->filter()
             ->unique()
             ->values()
@@ -74,15 +80,17 @@ new #[Layout('layouts.app-alumni')] class extends Component
         }
 
         sort($deptIds);
-        $key = 'program_head_ids_by_dept_' . implode('_', $deptIds);
 
-        return Cache::remember($key, now()->addHour(), function () use ($deptIds) {
-            return Department::query()
-                ->whereIn('id', $deptIds)
-                ->whereNotNull('program_head_id')
-                ->pluck('program_head_id')
-                ->unique()
-                ->values()
+        // v2 prefix so we never read stale data written by the old logic.
+        // Shorter TTL — department assignments change more often than 1 hour.
+        $key = 'program_head_ids_by_dept_v2_' . implode('_', $deptIds);
+
+        return Cache::remember($key, now()->addMinutes(15), function () use ($deptIds) {
+            return User::query()
+                ->role('program head')
+                ->whereHas('department', fn ($q) => $q->whereIn('id', $deptIds))
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
                 ->all();
         });
     }
@@ -99,11 +107,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
     /**
      * Messages = published events from allowed authors.
-     *
-     * Optimizations:
-     *  - Select only the columns we render
-     *  - Eager-load relations with explicit column lists
-     *  - Push pending/responded filtering into SQL (not PHP)
      */
     #[Computed]
     public function messages()
@@ -162,7 +165,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
     /**
      * The alumni's RSVP response per event — scoped to the current page only.
-     * Avoids loading every RSVP the alumni has ever made.
      */
     #[Computed]
     public function myRsvps(): array

@@ -14,7 +14,8 @@ class EmailSeeder extends Seeder
             [
                 'slug' => 'please-update-your-alumni-profile',
                 'subject' => 'Please update your alumni profile',
-                'message' => "Hi {{name}}, it's been a while — please log in and update your profile.",
+                'message' => "Hi {{name}}, it's been a while, please log in and update your profile."
+                            ."\nDisregard this message if you already updated your profile.",
             ],
             [
                 'slug' => 'we-would-love-your-feedback',
@@ -38,6 +39,20 @@ class EmailSeeder extends Seeder
                     ."• Temporary password: {{temp_password}}\n\n"
                     ."Please log in at {{login_url}} and change your password immediately.\n\n"
                     ."Welcome to the community!\n\n"
+                    .'— Colegio de Sta. Ana de Victorias',
+            ],
+
+            [
+                'slug' => 'alumni-verification-rejected',
+                'subject' => 'Update on your CSAV alumni verification, {{name}}',
+                'message' => "Hi {{name}},\n\n"
+                    ."Thank you for submitting your alumni profile for verification.\n\n"
+                    ."After reviewing your board exam details, we were unable to verify your account at this time.\n\n"
+                    ."Reason:\n"
+                    ."{{reason}}\n\n"
+                    ."You may log back in, update your board exam details, and resubmit for verification:\n"
+                    ."{{login_url}}\n\n"
+                    ."If you believe this decision was made in error, please contact the CSAV Alumni Office.\n\n"
                     .'— Colegio de Sta. Ana de Victorias',
             ],
 
@@ -84,14 +99,12 @@ class EmailSeeder extends Seeder
             // ---------- Profile verification ----------
             [
                 'slug' => 'your-alumni-profile-has-been-verified',
-                'subject' => 'Your alumni profile has been verified, {{name}}!',
+                'subject' => 'You\'re a board passer, {{name}} — your alumni profile is verified!',
                 'message' => "Hi {{name}},\n\n"
-                    ."Great news — your alumni profile has been verified.\n\n"
-                    ."You now have full access to the alumni network:\n"
-                    ."• Announcements and events\n"
-                    ."• Tracer study submissions\n"
-                    ."• Job board and networking\n\n"
+                    ."After reviewing your board exam details, we've confirmed that you're a board passer — "
+                    ."your alumni profile has been verified!\n\n"
                     ."Log in here: {{login_url}}\n\n"
+                    ."Congratulations, and welcome to the alumni community!\n\n"
                     .'— Colegio de Sta. Ana de Victorias',
             ],
             

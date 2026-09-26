@@ -68,9 +68,9 @@
                         </div>
                         <div class="min-w-0">
                             <h2 class="text-base sm:text-lg font-bold text-[#123524] mb-1" style="font-family: 'Fraunces', serif;">
-                                Phone
+                                Telefax No.
                             </h2>
-                            <a href="tel:+630341234567" class="text-[#123524]/70 hover:text-[#D4A537] text-xs sm:text-sm transition-colors">
+                            <a href="tel:(034) 399 3286" class="text-[#123524]/70 hover:text-[#D4A537] text-xs sm:text-sm transition-colors">
                                 (034) 399 3286
                             </a>
                         </div>
@@ -87,8 +87,8 @@
                             <h2 class="text-base sm:text-lg font-bold text-[#123524] mb-1" style="font-family: 'Fraunces', serif;">
                                 Email
                             </h2>
-                            <a href="mailto:c20233855.arroyo@csav.edu.ph" class="text-[#123524]/70 hover:text-[#D4A537] text-xs sm:text-sm transition-colors break-all">
-                                c20233855.arroyo@csav.edu.ph
+                            <a href="mailto:colegiodestaanadevictorias@yahoo.com" class="text-[#123524]/70 hover:text-[#D4A537] text-xs sm:text-sm transition-colors break-all">
+                                colegiodestaanadevictorias@yahoo.com
                             </a>
                         </div>
                     </div>

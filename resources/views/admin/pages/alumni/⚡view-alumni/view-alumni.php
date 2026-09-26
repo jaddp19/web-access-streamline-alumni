@@ -227,7 +227,7 @@ new #[Layout('layouts.app-admin')] class extends Component
 
         $query = $this->filteredQuery()
             ->with([
-                'user:id,name,email,school_id',
+                'user:id,first_name,middle_name,last_name,email,school_id',
                 'batch:id,batch_name',
                 'courses:id,course_title,course_code,department_id',
                 'courses.department:id,dept_name',
@@ -240,7 +240,9 @@ new #[Layout('layouts.app-admin')] class extends Component
             fwrite($handle, "\xEF\xBB\xBF");
 
             fputcsv($handle, [
-                'Name',
+                'First Name',
+                'Middle Name',
+                'Last Name',
                 'Email',
                 'School ID',
                 'Course(s)',
@@ -252,7 +254,9 @@ new #[Layout('layouts.app-admin')] class extends Component
             $query->chunk(500, function ($profiles) use ($handle) {
                 foreach ($profiles as $profile) {
                     fputcsv($handle, [
-                        $profile->user?->name ?? 'N/A',
+                        $profile->user?->first_name ?? '',
+                        $profile->user?->middle_name ?? '',
+                        $profile->user?->last_name ?? '',
                         $profile->user?->email ?? 'N/A',
                         $profile->user?->school_id ?? '',
                         $profile->courses->pluck('course_title')->filter()->join(', ') ?: 'N/A',

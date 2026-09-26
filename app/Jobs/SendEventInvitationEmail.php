@@ -19,8 +19,8 @@ class SendEventInvitationEmail implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $tries = 1;         // no retries — partial blasts shouldn't re-send
-    public int $timeout = 900;     // 15 minutes for large batches
+    public int $tries   = 1;      // no retries — partial blasts shouldn't re-send
+    public int $timeout = 900;    // 15 minutes for large batches
 
     public function __construct(public int $eventId) {}
 
@@ -56,21 +56,23 @@ class SendEventInvitationEmail implements ShouldQueue
 
         // =========================================================
         //  RECIPIENT SCOPING
-        //  · Registrar / Super Admin  → all alumni
-        //  · Program Head             → only their department's alumni
+        //  · Registrar / Super Admin → all alumni
+        //  · Program Head            → only their department(s) alumni
         // =========================================================
 
         $creator       = $event->creator;
         $isProgramHead = $creator?->hasRole('program head') ?? false;
-        $departmentId  = null;
+        $departmentIds = [];
 
         if ($isProgramHead) {
-            $departmentId = Department::query()
+            $departmentIds = Department::query()
                 ->where('program_head_id', $creator->id)
-                ->value('id');
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
 
             // Program head without a department → nothing to send
-            if (! $departmentId) {
+            if (empty($departmentIds)) {
                 Log::warning('Event invitation: program head has no department — no emails sent', [
                     'event_id'   => $event->id,
                     'creator_id' => $creator->id,
@@ -83,7 +85,7 @@ class SendEventInvitationEmail implements ShouldQueue
             'event_id'        => $event->id,
             'created_by'      => $creator?->id,
             'is_program_head' => $isProgramHead,
-            'department_id'   => $departmentId,
+            'department_ids'  => $departmentIds,
         ]);
 
         // =========================================================
@@ -91,14 +93,31 @@ class SendEventInvitationEmail implements ShouldQueue
         // =========================================================
 
         $recipients = User::role('alumni')
-            ->whereNotNull('email')
-            ->select('id', 'name', 'email');
+            ->whereNotNull('users.email')
+            ->select('users.id', 'users.name', 'users.email');
 
-        if ($isProgramHead && $departmentId) {
-            $recipients->whereHas('userProfile.courses', function ($q) use ($departmentId) {
-                $q->where('department_id', $departmentId);
+        if ($isProgramHead && ! empty($departmentIds)) {
+            $recipients->whereHas('userProfile.courses', function ($q) use ($departmentIds) {
+                // Fully qualified — avoids ambiguity with the student_course pivot.
+                $q->whereIn('courses.department_id', $departmentIds);
             });
         }
+
+        $recipientCount = (clone $recipients)->count();
+
+        if ($recipientCount === 0) {
+            Log::warning('Event invitation: zero recipients after scoping — no emails sent', [
+                'event_id'        => $event->id,
+                'is_program_head' => $isProgramHead,
+                'department_ids'  => $departmentIds,
+            ]);
+            return;
+        }
+
+        Log::info('Event invitation: recipients ready', [
+            'event_id'        => $event->id,
+            'recipient_count' => $recipientCount,
+        ]);
 
         // =========================================================
         //  SEND

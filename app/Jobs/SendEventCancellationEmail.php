@@ -16,8 +16,8 @@ class SendEventCancellationEmail implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $tries = 1;         // no retries — partial blasts shouldn't re-send
-    public int $timeout = 900;     // 15 minutes
+    public int $tries   = 1;
+    public int $timeout = 900;
 
     public function __construct(public int $eventId) {}
 
@@ -38,9 +38,9 @@ class SendEventCancellationEmail implements ShouldQueue
             return;
         }
 
-        // Fail fast if the template doesn't exist
+        // Match the invitation job's proven syntax.
         $templateExists = EmailTemplate::query()
-            ->where('template->slug', 'event-has-been-cancelled')
+            ->whereJsonContains('template->slug', 'event-has-been-cancelled')
             ->exists();
 
         if (! $templateExists) {
@@ -51,15 +51,23 @@ class SendEventCancellationEmail implements ShouldQueue
             return;
         }
 
-        Log::info('Event cancellation: blast starting', [
-            'event_id' => $event->id,
-        ]);
-
         // Only attendees who said yes or maybe
         $attendees = $event->rsvps()
             ->whereIn('response', ['yes', 'maybe'])
             ->with('user:id,name,email')
             ->get();
+
+        Log::info('Event cancellation: blast starting', [
+            'event_id'        => $event->id,
+            'attendee_count'  => $attendees->count(),
+        ]);
+
+        if ($attendees->isEmpty()) {
+            Log::warning('Event cancellation: no attendees to notify', [
+                'event_id' => $event->id,
+            ]);
+            return;
+        }
 
         $sent   = 0;
         $failed = 0;
@@ -85,8 +93,6 @@ class SendEventCancellationEmail implements ShouldQueue
                 );
 
                 $sent++;
-
-                usleep(200_000); // 200ms — max 5 emails/sec
             } catch (\Throwable $e) {
                 $failed++;
 
@@ -111,5 +117,13 @@ class SendEventCancellationEmail implements ShouldQueue
                 'sent_count'   => $sent,
             ]);
         }
+    }
+
+    public function failed(\Throwable $e): void
+    {
+        Log::error('Event cancellation: job-level failure', [
+            'event_id' => $this->eventId,
+            'error'    => $e->getMessage(),
+        ]);
     }
 }

@@ -43,6 +43,10 @@ new #[Layout('layouts.app-alumni')] class extends Component
         });
     }
 
+    /**
+     * The alumni's department IDs — explicitly qualified so the pivot
+     * table columns don't get mixed up with the courses table columns.
+     */
     #[Computed]
     public function alumniDepartmentIds(): array
     {
@@ -52,13 +56,21 @@ new #[Layout('layouts.app-alumni')] class extends Component
         }
 
         return $profile->courses()
-            ->pluck('department_id')
+            ->pluck('courses.department_id')
             ->filter()
             ->unique()
             ->values()
+            ->map(fn ($id) => (int) $id)
             ->all();
     }
 
+    /**
+     * Program-head user IDs whose department contains this alumni.
+     *
+     * Resolved via the User->department() relation so we always land on
+     * users that actually hold the 'program head' role — instead of
+     * trusting whatever raw ID happens to sit on departments.program_head_id.
+     */
     #[Computed]
     public function programHeadIdsForMyDepartments(): array
     {
@@ -68,15 +80,18 @@ new #[Layout('layouts.app-alumni')] class extends Component
         }
 
         sort($deptIds);
-        $key = 'program_head_ids_by_dept_' . implode('_', $deptIds);
 
-        return Cache::remember($key, now()->addHour(), function () use ($deptIds) {
-            return Department::query()
-                ->whereIn('id', $deptIds)
-                ->whereNotNull('program_head_id')
-                ->pluck('program_head_id')
-                ->unique()
-                ->values()
+        // v2 prefix — bypasses any stale entries written by the old logic.
+        // 15-minute TTL — department head reassignments should reach alumni
+        // quickly without hammering the DB on every page render.
+        $key = 'program_head_ids_by_dept_v2_' . implode('_', $deptIds);
+
+        return Cache::remember($key, now()->addMinutes(15), function () use ($deptIds) {
+            return User::query()
+                ->role('program head')
+                ->whereHas('department', fn ($q) => $q->whereIn('id', $deptIds))
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
                 ->all();
         });
     }

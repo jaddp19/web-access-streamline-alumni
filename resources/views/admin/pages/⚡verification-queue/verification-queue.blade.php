@@ -165,22 +165,6 @@
                                         </div>
                                     @endif
                                 </div>
-
-                                {{-- Rejection banner --}}
-                                @if ($user->rejected_at)
-                                    <div class="mt-3 text-xs sm:text-sm text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-xl p-3 sm:p-3.5">
-                                        <div class="text-[10px] sm:text-xs text-red-500 dark:text-red-400 font-semibold tracking-wide uppercase flex items-center gap-1.5">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                                            </svg>
-                                            Previously Rejected
-                                        </div>
-                                        <div class="mt-1">{{ $user->rejection_reason }}</div>
-                                        <div class="text-[11px] sm:text-xs text-red-400 dark:text-red-400/70 mt-1">
-                                            {{ $user->rejected_at->diffForHumans() }}
-                                        </div>
-                                    </div>
-                                @endif
                             </div>
                         </div>
 
@@ -287,7 +271,7 @@
                     @if ($this->rejectingUserName)
                         Rejecting <span class="font-semibold">{{ $this->rejectingUserName }}</span>'s application.
                     @endif
-                    Optionally add a reason below — it may be shared with the applicant.
+                    Optionally add a reason below — it will be shared with the applicant.
                 </p>
 
                 <textarea wire:model="rejectReasonInput" rows="3" maxlength="500"

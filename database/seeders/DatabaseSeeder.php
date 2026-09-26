@@ -75,16 +75,16 @@ class DatabaseSeeder extends Seeder
         );
         $alumni->assignRole($alumniRole);
 
-        $alumni1 = User::firstOrCreate(
-            ['email' => 'alumni1@csav.edu.ph'],
-            [
-                'first_name'  => 'Alumni',
-                'middle_name' => null,
-                'last_name'   => 'User',
-                'school_id'   => '0001-0004',
-                'password'    => Hash::make('password123'),
-            ]
-        );
-        $alumni1->assignRole($alumniRole);
+        // $alumni1 = User::firstOrCreate(
+        //     ['email' => 'alumni1@csav.edu.ph'],
+        //     [
+        //         'first_name'  => 'Alumni',
+        //         'middle_name' => null,
+        //         'last_name'   => 'User',
+        //         'school_id'   => '0001-0004',
+        //         'password'    => Hash::make('password123'),
+        //     ]
+        // );
+        // $alumni1->assignRole($alumniRole);
     }
 }

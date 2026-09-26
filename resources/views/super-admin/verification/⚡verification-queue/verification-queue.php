@@ -4,9 +4,11 @@ namespace App\Livewire\SuperAdmin;
 
 use App\Models\Department;
 use App\Models\User;
+use App\Services\EmailTemplateService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -195,54 +197,84 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     }
 
     public function confirmReject(): void
-    {
-        $scope = $this->scope;
-        if ($scope === false) {
-            abort(403, 'You do not have a department assigned.');
-        }
-
-        $this->validate([
-            'rejectReasonInput' => ['nullable', 'string', 'max:500'],
-        ]);
-
-        if (! $this->rejectingUserId) {
-            session()->flash('status', 'No user selected.');
-            return;
-        }
-
-        $user = User::with('userProfile')->find($this->rejectingUserId);
-
-        if (! $user) {
-            session()->flash('status', 'User not found.');
-            $this->closeRejectModal();
-            return;
-        }
-
-        if ($user->hasAnyRole(['program head', 'registrar'])) {
-            abort(403, 'Cannot modify staff accounts from this queue.');
-        }
-
-        if (is_int($scope) && ! $this->userBelongsToDepartment($user, $scope)) {
-            abort(403, 'This alumni does not belong to your department.');
-        }
-
-        try {
-            DB::transaction(function () use ($user) {
-                // Keep them out of the verified pool.
-                $user->userProfile?->update(['is_verified' => false]);
-            });
-        } catch (\Throwable $e) {
-            report($e);
-            session()->flash('status', 'Could not reject user. Please try again.');
-            return;
-        }
-
-        Cache::forget('verification:pending-count');
-
-        session()->flash('status', "{$user->name}'s application was rejected.");
-
-        $this->closeRejectModal();
+{
+    $scope = $this->scope;
+    if ($scope === false) {
+        abort(403, 'You do not have a department assigned.');
     }
+
+    $this->validate([
+        'rejectReasonInput' => ['nullable', 'string', 'max:500'],
+    ]);
+
+    if (! $this->rejectingUserId) {
+        session()->flash('status', 'No user selected.');
+        return;
+    }
+
+    $user = User::with('userProfile')->find($this->rejectingUserId);
+
+    if (! $user) {
+        session()->flash('status', 'User not found.');
+        $this->closeRejectModal();
+        return;
+    }
+
+    if ($user->hasAnyRole(['program head', 'registrar'])) {
+        abort(403, 'Cannot modify staff accounts from this queue.');
+    }
+
+    if (is_int($scope) && ! $this->userBelongsToDepartment($user, $scope)) {
+        abort(403, 'This alumni does not belong to your department.');
+    }
+
+    $profile = $user->userProfile;
+
+    if (! $profile) {
+        session()->flash('status', 'This user has no profile to reject.');
+        $this->closeRejectModal();
+        return;
+    }
+
+    $reason = trim($this->rejectReasonInput);
+
+    try {
+        DB::transaction(function () use ($profile) {
+            $profile->update([
+                'is_verified' => false,
+                'board_taken' => null,
+                'board_rate'  => null,
+            ]);
+        });
+    } catch (\Throwable $e) {
+        report($e);
+        session()->flash('status', 'Could not reject user. Please try again.');
+        return;
+    }
+
+    // Email goes out AFTER the DB commit — a mail failure should never
+    // roll back the rejection itself.
+    try {
+        EmailTemplateService::send('alumni-verification-rejected', $user->email, [
+            'name'      => $user->name,
+            'reason'    => $reason !== ''
+                ? $reason
+                : 'No specific reason was provided by the reviewer.',
+            'login_url' => route('login'),
+        ]);
+    } catch (\Throwable $e) {
+        Log::warning('Rejection email failed', [
+            'user_id' => $user->id,
+            'error'   => $e->getMessage(),
+        ]);
+    }
+
+    Cache::forget('verification:pending-count');
+
+    session()->flash('status', "{$user->name}'s application was rejected.");
+
+    $this->closeRejectModal();
+}
 
     // =========================================================
     //  HELPERS

@@ -18,7 +18,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
     public function mount(Post $post): void
     {
-        abort_unless($this->isAuthorizedFor($post), 403);
 
         $this->post = $post;
 
