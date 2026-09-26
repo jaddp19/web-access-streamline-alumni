@@ -59,7 +59,7 @@
                             class="block mb-2 text-[11px] sm:text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold">
                             First Name
                         </label>
-                        <input wire:model="first_name" type="text" id="first_name" autocomplete="given-name"
+                        <input wire:model="first_name" type="text" id="first_name" autocomplete="given-name" placeholder="Juan"
                             class="w-full px-3 sm:px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-sm text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition @error('first_name') border-red-400 dark:border-red-500/50 @enderror">
                         @error('first_name')
                             <span class="block mt-1 text-red-500 dark:text-red-400 text-xs">{{ $message }}</span>
@@ -71,7 +71,7 @@
                             class="block mb-2 text-[11px] sm:text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold">
                             Last Name
                         </label>
-                        <input wire:model="last_name" type="text" id="last_name" autocomplete="family-name"
+                        <input wire:model="last_name" type="text" id="last_name" autocomplete="family-name" placeholder="Dela Cruz"
                             class="w-full px-3 sm:px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-sm text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition @error('last_name') border-red-400 dark:border-red-500/50 @enderror">
                         @error('last_name')
                             <span class="block mt-1 text-red-500 dark:text-red-400 text-xs">{{ $message }}</span>
@@ -86,7 +86,7 @@
                         Middle Name
                         <span class="text-black/40 dark:text-white/40 text-[10px] font-normal normal-case">(optional)</span>
                     </label>
-                    <input wire:model="middle_name" type="text" id="middle_name" autocomplete="additional-name"
+                    <input wire:model="middle_name" type="text" id="middle_name" autocomplete="additional-name" placeholder="Martinez"
                         class="w-full px-3 sm:px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-sm text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition @error('middle_name') border-red-400 dark:border-red-500/50 @enderror">
                     @error('middle_name')
                         <span class="block mt-1 text-red-500 dark:text-red-400 text-xs">{{ $message }}</span>
@@ -99,7 +99,7 @@
                         class="block mb-2 text-[11px] sm:text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold">
                         Email
                     </label>
-                    <input wire:model="email" type="email" id="email" autocomplete="email"
+                    <input wire:model="email" type="email" id="email" autocomplete="email" placeholder="juandelacruz@gmail.com"
                         class="w-full px-3 sm:px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-sm text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition @error('email') border-red-400 dark:border-red-500/50 @enderror">
                     @error('email')
                         <span class="block mt-1 text-red-500 dark:text-red-400 text-xs">{{ $message }}</span>
@@ -108,15 +108,35 @@
 
                 <!-- School ID -->
                 <div>
-                    <label for="school_id"
+                    <label for="school_year"
                         class="block mb-2 text-[11px] sm:text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold">
                         School ID
                     </label>
-                    <input wire:model="school_id" type="text" id="school_id" inputmode="numeric"
-                        autocomplete="off"
-                        oninput="this.value = this.value.replace(/[^0-9\-]/g, '').slice(0, 9)"
-                        class="w-full px-3 sm:px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-sm text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition @error('school_id') border-red-400 dark:border-red-500/50 @enderror">
-                    @error('school_id')
+                    <div class="grid grid-cols-[1fr_auto_1fr] gap-2 items-center">
+                        {{-- Year dropdown --}}
+                        <select wire:model="school_year" id="school_year"
+                            class="w-full px-3 sm:px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-sm text-black dark:text-white focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition @error('school_year') border-red-400 dark:border-red-500/50 @enderror">
+                            <option value="" disabled>Year</option>
+                            @foreach ($this->batchYears as $year)
+                                <option value="{{ $year }}">{{ $year }}</option>
+                            @endforeach
+                        </select>
+
+                        {{-- Dash --}}
+                        <span class="text-black/40 dark:text-white/40 font-bold select-none">-</span>
+
+                        {{-- 4-digit suffix --}}
+                        <input wire:model="school_id_suffix" type="text" id="school_id_suffix"
+                            inputmode="numeric" autocomplete="off"
+                            maxlength="4" placeholder="0000"
+                            oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 4)"
+                            class="w-full px-3 sm:px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-sm text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition @error('school_id_suffix') border-red-400 dark:border-red-500/50 @enderror">
+                    </div>
+
+                    @error('school_year')
+                        <span class="block mt-1 text-red-500 dark:text-red-400 text-xs">{{ $message }}</span>
+                    @enderror
+                    @error('school_id_suffix')
                         <span class="block mt-1 text-red-500 dark:text-red-400 text-xs">{{ $message }}</span>
                     @enderror
                 </div>

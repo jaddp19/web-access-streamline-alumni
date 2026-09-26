@@ -1,14 +1,11 @@
 <?php
 
 use App\Models\Batch;
-use App\Models\Course;
 use App\Models\User;
 use App\Models\UserProfile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -22,15 +19,13 @@ new #[Layout('layouts.app-admin')] class extends Component
     public string $middle_name = '';
     public string $last_name = '';
     public string $email = '';
-    public string $school_id = '';
-    public ?int $batch_id = null;
-    public ?int $course_id = null;
+    public string $school_year = '';         // dropdown (from batches.batch_name)
+    public string $school_id_suffix = '';    // 4-digit input
 
     public function mount(User $user): void
     {
         $this->user = $user->load([
             'userProfile:id,user_id,batch_id',
-            'userProfile.courses:id,course_title',
         ]);
 
         // Hydrate name parts. If empty (legacy user), split from `name`.
@@ -51,13 +46,19 @@ new #[Layout('layouts.app-admin')] class extends Component
         $this->middle_name = $middle ?? '';
         $this->last_name   = $last ?? '';
 
-        $this->email     = $user->email ?? '';
-        $this->school_id = $user->school_id ?? '';
+        $this->email = $user->email ?? '';
 
-        $profile = $user->userProfile;
+        // Split the stored "YYYY-NNNN" back into year + suffix.
+        $this->school_year      = '';
+        $this->school_id_suffix = '';
 
-        $this->batch_id  = $profile?->batch_id;
-        $this->course_id = $profile?->courses->first()?->id;
+        if ($user->school_id && str_contains($user->school_id, '-')) {
+            [$year, $suffix] = explode('-', $user->school_id, 2);
+            $this->school_year      = $year;
+            $this->school_id_suffix = $suffix;
+        }
+
+        $this->batch_id = $user->userProfile?->batch_id;
     }
 
     // =========================================================
@@ -74,53 +75,32 @@ new #[Layout('layouts.app-admin')] class extends Component
         ])));
     }
 
-    /** Cached array of ['id', 'batch_name'] — safe across cache boundary. */
+    /**
+     * Composed school ID: "YYYY-NNNN".
+     */
     #[Computed]
-    public function batches(): array
+    public function schoolId(): string
     {
-        return Cache::remember('admin:batch-list', now()->addMinutes(10), function () {
+        if (blank($this->school_year) || blank($this->school_id_suffix)) {
+            return '';
+        }
+
+        return $this->school_year.'-'.$this->school_id_suffix;
+    }
+
+    /**
+     * Batch years for the school-ID dropdown.
+     */
+    #[Computed(persist: true)]
+    public function batchYears()
+    {
+        return Cache::remember('batches:years-list', now()->addMinutes(10), function () {
             return Batch::query()
                 ->orderByDesc('batch_name')
-                ->get(['id', 'batch_name'])
-                ->map(fn ($b) => ['id' => (int) $b->id, 'name' => (string) $b->batch_name])
+                ->pluck('batch_name')
+                ->map(fn ($y) => (string) $y)
                 ->all();
         });
-    }
-
-    /** Cached array of ['id', 'course_title', 'department_id']. */
-    #[Computed]
-    public function courses(): array
-    {
-        return Cache::remember('admin:course-list', now()->addMinutes(10), function () {
-            return Course::query()
-                ->where('is_active', true)
-                ->orderBy('course_title')
-                ->get(['id', 'course_title', 'department_id'])
-                ->map(fn ($c) => [
-                    'id'            => (int) $c->id,
-                    'title'         => (string) $c->course_title,
-                    'department_id' => (int) $c->department_id,
-                ])
-                ->all();
-        });
-    }
-
-    /** Department name for the selected course — no extra DB hit. */
-    #[Computed]
-    public function selectedDepartmentName(): ?string
-    {
-        if (! $this->course_id) {
-            return null;
-        }
-
-        $deptId = collect($this->courses)
-            ->firstWhere('id', $this->course_id)['department_id'] ?? null;
-
-        if (! $deptId) {
-            return null;
-        }
-
-        return \App\Models\Department::query()->whereKey($deptId)->value('dept_name');
     }
 
     // =========================================================
@@ -133,38 +113,49 @@ new #[Layout('layouts.app-admin')] class extends Component
             'first_name'  => ['required', 'string', 'min:2', 'max:255'],
             'middle_name' => ['nullable', 'string', 'max:255'],
             'last_name'   => ['required', 'string', 'min:2', 'max:255'],
-            'email'       => [
+
+            'email' => [
                 'required', 'email:rfc,dns', 'max:255',
                 Rule::unique('users', 'email')->ignore($this->user->id),
             ],
-            'school_id'   => [
-                'required', 'string', 'max:20',
-                Rule::unique('users', 'school_id')->ignore($this->user->id),
+
+            'school_year' => [
+                'required',
+                Rule::in($this->batchYears),
+                function ($attribute, $value, $fail) {
+                    // Only validate uniqueness once the suffix is fully typed.
+                    if (strlen($this->school_id_suffix) !== 4) {
+                        return;
+                    }
+                    $combined = $value.'-'.$this->school_id_suffix;
+                    if (User::where('school_id', $combined)
+                        ->where('id', '!=', $this->user->id)
+                        ->exists()) {
+                        $fail('This school ID is already registered.');
+                    }
+                },
             ],
-            'batch_id'    => ['required', 'integer', Rule::exists('batches', 'id')],
-            'course_id'   => ['required', 'integer', Rule::exists('courses', 'id')],
+
+            'school_id_suffix' => ['required', 'string', 'digits:4'],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'first_name.required' => 'The first name is required.',
-            'first_name.min'      => 'The first name must be at least 2 characters.',
-            'first_name.max'      => 'The first name may not be greater than 255 characters.',
-            'last_name.required'  => 'The last name is required.',
-            'last_name.min'       => 'The last name must be at least 2 characters.',
-            'last_name.max'       => 'The last name may not be greater than 255 characters.',
-            'email.required'      => 'The email field is required.',
-            'email.email'         => 'The email must be a valid email address.',
-            'email.unique'        => 'This email is already registered.',
-            'school_id.required'  => 'The school ID field is required.',
-            'school_id.unique'    => 'This school ID is already registered.',
-            'school_id.max'       => 'The school ID may not be greater than 20 characters.',
-            'batch_id.required'   => 'Please select a batch.',
-            'batch_id.exists'     => 'The selected batch is invalid.',
-            'course_id.required'  => 'Please select a course.',
-            'course_id.exists'    => 'The selected course is invalid.',
+            'first_name.required'        => 'The first name is required.',
+            'first_name.min'             => 'The first name must be at least 2 characters.',
+            'first_name.max'             => 'The first name may not be greater than 255 characters.',
+            'last_name.required'         => 'The last name is required.',
+            'last_name.min'              => 'The last name must be at least 2 characters.',
+            'last_name.max'              => 'The last name may not be greater than 255 characters.',
+            'email.required'             => 'The email field is required.',
+            'email.email'                => 'The email must be a valid email address.',
+            'email.unique'               => 'This email is already registered.',
+            'school_year.required'       => 'Please select a batch year.',
+            'school_year.in'             => 'The selected batch year is invalid.',
+            'school_id_suffix.required'  => 'Please enter the last 4 digits of the school ID.',
+            'school_id_suffix.digits'    => 'The last 4 digits must be numeric.',
         ];
     }
 
@@ -182,7 +173,7 @@ new #[Layout('layouts.app-admin')] class extends Component
         $middleName = $validated['middle_name'] ? $this->sanitize($validated['middle_name']) : null;
         $lastName   = $this->sanitize($validated['last_name']);
         $email      = $this->sanitize($validated['email']);
-        $schoolId   = $this->sanitize($validated['school_id']);
+        $schoolId   = $this->schoolId;   // composed from school_year + school_id_suffix
 
         try {
             DB::transaction(function () use (
@@ -196,29 +187,10 @@ new #[Layout('layouts.app-admin')] class extends Component
                     'email'       => $email,
                     'school_id'   => $schoolId,
                 ]);
-
-                // 2. Get or create the profile.
-                $profile = UserProfile::firstOrCreate(
-                    ['user_id' => $this->user->id],
-                    [
-                        'avatar'      => null,
-                        'location'    => [],
-                        'is_private'  => false,
-                        'is_verified' => false,
-                        'batch_id'    => $validated['batch_id'],
-                    ]
-                );
-
-                if (! $profile->wasRecentlyCreated) {
-                    $profile->update(['batch_id' => $validated['batch_id']]);
-                }
-
-                // 3. Sync the course pivot — one course per alumni.
-                $profile->courses()->sync([$validated['course_id']]);
             });
         } catch (\Illuminate\Database\QueryException $e) {
             if ($e->getCode() === '23000') {
-                $field = str_contains($e->getMessage(), 'school_id') ? 'school_id' : 'email';
+                $field = str_contains($e->getMessage(), 'school_id') ? 'school_id_suffix' : 'email';
                 $this->addError($field, 'This value was just taken by another account. Please refresh and try again.');
                 return;
             }

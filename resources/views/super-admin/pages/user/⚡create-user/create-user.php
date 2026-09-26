@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Batch;
 use App\Models\User;
 use App\Services\EmailTemplateService;
 use Illuminate\Support\Facades\Cache;
@@ -19,7 +20,8 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public string $middle_name = '';
     public string $last_name = '';
     public string $email = '';
-    public string $school_id = '';
+    public string $school_year = '';         // dropdown (from batches.batch_name)
+    public string $school_id_suffix = '';    // 4-digit input
     public string $selectedRole = '';
 
     // =========================================================
@@ -56,6 +58,19 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     }
 
     /**
+     * Composed school ID: "YYYY-NNNN".
+     */
+    #[Computed]
+    public function schoolId(): string
+    {
+        if (blank($this->school_year) || blank($this->school_id_suffix)) {
+            return '';
+        }
+
+        return $this->school_year . '-' . $this->school_id_suffix;
+    }
+
+    /**
      * Roles are static — cache for 10 minutes to skip the query
      * on every Livewire render (keystroke, blur, etc.).
      */
@@ -66,6 +81,21 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             return Role::query()
                 ->orderBy('name')
                 ->pluck('name')
+                ->all();
+        });
+    }
+
+    /**
+     * Batch years for the school-ID dropdown.
+     */
+    #[Computed(persist: true)]
+    public function batchYears()
+    {
+        return Cache::remember('batches:years-list', now()->addMinutes(10), function () {
+            return Batch::query()
+                ->orderByDesc('batch_name')
+                ->pluck('batch_name')
+                ->map(fn ($y) => (string) $y)
                 ->all();
         });
     }
@@ -88,11 +118,25 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                 Rule::unique('users', 'email'),
             ],
 
-            'school_id' => [
+            'school_year' => [
+                'required',
+                Rule::in($this->batchYears),
+                function ($attribute, $value, $fail) {
+                    // Only validate uniqueness once the suffix is fully typed.
+                    if (strlen($this->school_id_suffix) !== 4) {
+                        return;
+                    }
+                    $combined = $value . '-' . $this->school_id_suffix;
+                    if (User::where('school_id', $combined)->exists()) {
+                        $fail('This school ID is already registered to an account.');
+                    }
+                },
+            ],
+
+            'school_id_suffix' => [
                 'required',
                 'string',
-                'max:9',
-                Rule::unique('users', 'school_id'),
+                'digits:4',
             ],
 
             'selectedRole' => [
@@ -105,20 +149,21 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public function messages(): array
     {
         return [
-            'first_name.required'   => 'The first name is required.',
-            'first_name.min'        => 'The first name must be at least 2 characters.',
-            'first_name.max'        => 'The first name may not be greater than 255 characters.',
-            'last_name.required'    => 'The last name is required.',
-            'last_name.min'         => 'The last name must be at least 2 characters.',
-            'last_name.max'         => 'The last name may not be greater than 255 characters.',
-            'school_id.required'    => 'Your school ID number is required.',
-            'school_id.unique'      => 'This school ID is already registered to an account.',
-            'school_id.max'         => 'Your school ID number must not exceed 9 characters.',
-            'email.unique'          => 'The email address is already registered.',
-            'email.required'        => 'The email address is required.',
-            'email.email'           => 'The email address is invalid.',
-            'selectedRole.required' => 'Please select a role.',
-            'selectedRole.in'       => 'The selected role is invalid.',
+            'first_name.required'         => 'The first name is required.',
+            'first_name.min'              => 'The first name must be at least 2 characters.',
+            'first_name.max'              => 'The first name may not be greater than 255 characters.',
+            'last_name.required'          => 'The last name is required.',
+            'last_name.min'               => 'The last name must be at least 2 characters.',
+            'last_name.max'               => 'The last name may not be greater than 255 characters.',
+            'school_year.required'        => 'Please select a batch year.',
+            'school_year.in'              => 'The selected batch year is invalid.',
+            'school_id_suffix.required'   => 'Please enter the last 4 digits of the school ID.',
+            'school_id_suffix.digits'     => 'The last 4 digits must be numeric.',
+            'email.unique'                => 'The email address is already registered.',
+            'email.required'              => 'The email address is required.',
+            'email.email'                 => 'The email address is invalid.',
+            'selectedRole.required'       => 'Please select a role.',
+            'selectedRole.in'             => 'The selected role is invalid.',
         ];
     }
 
@@ -135,7 +180,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $middleName = $validated['middle_name'] ? $this->sanitize($validated['middle_name']) : null;
         $lastName   = $this->sanitize($validated['last_name']);
         $email      = $this->sanitize($validated['email']);
-        $schoolId   = $this->sanitize($validated['school_id']);
+        $schoolId   = $this->schoolId;   // composed from school_year + school_id_suffix
 
         $plainPassword = $this->generatedPassword;
         $role          = $validated['selectedRole'];
@@ -164,7 +209,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             // between validation and this insert. Show a friendly error.
             if ($e->getCode() === '23000' || str_contains($e->getMessage(), 'Duplicate entry')) {
                 $this->addError(
-                    str_contains($e->getMessage(), 'school_id') ? 'school_id' : 'email',
+                    str_contains($e->getMessage(), 'school_id') ? 'school_id_suffix' : 'email',
                     'This value was just registered by another account. Please refresh and try again.'
                 );
                 return;

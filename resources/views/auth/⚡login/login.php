@@ -28,14 +28,20 @@ new #[Layout('layouts.auth')] class extends Component
     public string $forgotSchoolId = '';
     public string $forgotSuccessMessage = '';
 
-    /** Max failed attempts before lockout. */
+    /** Max failed login attempts before lockout. */
     protected const MAX_ATTEMPTS = 5;
 
-    /** Lockout window in seconds. */
+    /** Login lockout window in seconds. */
     protected const LOCKOUT_SECONDS = 60;
 
+    /** Max failed forgot-password attempts before lockout. */
+    protected const FORGOT_MAX_ATTEMPTS = 5;
+
+    /** Forgot-password lockout window in seconds (5 minutes). */
+    protected const FORGOT_LOCKOUT_SECONDS = 300;
+
     // =========================================================
-    //  LOGIN VALIDATION
+    //  VALIDATION
     // =========================================================
 
     protected function rules(): array
@@ -76,25 +82,20 @@ new #[Layout('layouts.auth')] class extends Component
             return;
         }
 
-        $user = User::where('email', Str::lower($this->email))
-            ->with('roles:id,name')
-            ->first();
+        $user = User::where('email', Str::lower($this->email))->first();
 
-        if (! $user) {
-            RateLimiter::hit($key, self::LOCKOUT_SECONDS);
-            $this->addError('email', 'This email is not registered.');
-            return;
-        }
-
-        if (! Hash::check($this->password, $user->password)) {
+        // Combined check — the SAME error is shown whether the email
+        // exists or the password is wrong, so attackers can't tell.
+        if (! $user || ! Hash::check($this->password, $user->password)) {
             RateLimiter::hit($key, self::LOCKOUT_SECONDS);
 
             Log::warning('Failed login attempt', [
-                'email' => $this->email,
-                'ip'    => request()->ip(),
+                'email'  => $this->email,
+                'ip'     => request()->ip(),
+                'reason' => $user ? 'wrong_password' : 'unknown_email',
             ]);
 
-            $this->addError('password', 'Wrong password.');
+            $this->addError('email', 'Invalid credentials.');
             return;
         }
 
@@ -107,15 +108,19 @@ new #[Layout('layouts.auth')] class extends Component
 
     protected function redirectBasedOnRole(User $user)
     {
-        if ($user->hasRole('registrar')) {
+        // One DB hit for all roles at once — Spatie caches internally,
+        // but this avoids repeated `hasRole()` lookups.
+        $roles = $user->getRoleNames();
+
+        if ($roles->contains('registrar')) {
             return redirect()->route('super-admin.dashboard');
         }
 
-        if ($user->hasRole('program head')) {
+        if ($roles->contains('program head')) {
             return redirect()->route('admin.dashboard');
         }
 
-        if ($user->hasRole('alumni')) {
+        if ($roles->contains('alumni')) {
             $hasTracer = $user->tracerStudy()->exists();
 
             return redirect()->route($hasTracer ? 'alumni.dashboard' : 'form');
@@ -157,7 +162,11 @@ new #[Layout('layouts.auth')] class extends Component
         $this->resetErrorBag();
     }
 
-    /** Step 1 — verify the email exists, then ask for the school ID. */
+    /**
+     * Step 1 — always advances to step 2, regardless of whether the email
+     * exists. Prevents user enumeration via the "email not registered"
+     * message.
+     */
     public function verifyForgotEmail(): void
     {
         $this->validate([
@@ -167,20 +176,29 @@ new #[Layout('layouts.auth')] class extends Component
             'forgotEmail.email'    => 'Please enter a valid email address.',
         ]);
 
-        $exists = User::where('email', Str::lower($this->forgotEmail))->exists();
-
-        if (! $exists) {
-            $this->addError('forgotEmail', 'This email is not registered.');
-            return;
-        }
-
+        $this->forgotEmail = Str::lower(trim($this->forgotEmail));
         $this->resetErrorBag();
         $this->forgotStep = 2;
     }
 
-    /** Step 2 — verify the school ID, then send the reset link. */
+    /**
+     * Step 2 — verifies the school ID, then sends the reset link.
+     * Uses the same generic error for "email not found" and
+     * "school ID mismatch" so the failure path leaks nothing.
+     */
     public function verifyForgotSchoolIdAndSend(): void
     {
+        // Rate-limit per email + IP so an attacker can't brute-force
+        // school IDs. School IDs are somewhat predictable (0001-0001,
+        // 0001-0002, ...), so this matters.
+        $key = 'forgot:' . Str::transliterate($this->forgotEmail) . '|' . request()->ip();
+
+        if (RateLimiter::tooManyAttempts($key, self::FORGOT_MAX_ATTEMPTS)) {
+            $minutes = (int) ceil(RateLimiter::availableIn($key) / 60);
+            $this->addError('forgotSchoolId', "Too many attempts. Please try again in {$minutes} minute(s).");
+            return;
+        }
+
         $this->validate([
             'forgotSchoolId' => ['required', 'string', 'max:50'],
         ], [
@@ -189,18 +207,26 @@ new #[Layout('layouts.auth')] class extends Component
 
         $user = User::where('email', Str::lower($this->forgotEmail))->first();
 
-        if (! $user) {
-            $this->forgotStep = 1;
-            $this->addError('forgotEmail', 'This email is not registered.');
-            return;
-        }
-
-        $matches = Str::lower(trim($user->school_id)) === Str::lower(trim($this->forgotSchoolId));
+        // Combined, constant-time comparison. Same error for both branches.
+        $matches = $user && hash_equals(
+            Str::lower(trim((string) $user->school_id)),
+            Str::lower(trim($this->forgotSchoolId))
+        );
 
         if (! $matches) {
-            $this->addError('forgotSchoolId', 'That school ID does not match our records for this email.');
+            RateLimiter::hit($key, self::FORGOT_LOCKOUT_SECONDS);
+
+            Log::warning('Forgot-password verification failed', [
+                'email'  => $this->forgotEmail,
+                'ip'     => request()->ip(),
+                'reason' => $user ? 'school_id_mismatch' : 'unknown_email',
+            ]);
+
+            $this->addError('forgotSchoolId', 'The information provided does not match our records.');
             return;
         }
+
+        RateLimiter::clear($key);
 
         try {
             $token = Password::broker()->createToken($user);
@@ -218,7 +244,6 @@ new #[Layout('layouts.auth')] class extends Component
 
             Log::info('Password reset requested', [
                 'user_id' => $user->id,
-                'email'   => $user->email,
                 'ip'      => request()->ip(),
             ]);
         } catch (\Throwable $e) {
@@ -227,12 +252,14 @@ new #[Layout('layouts.auth')] class extends Component
             return;
         }
 
-        $this->forgotSuccessMessage = "If that information matches our records, we've sent a password reset link to {$user->email}. Check your inbox (and spam folder).";
-        $this->forgotStep           = 3;
+        // Generic success message — doesn't echo back the email,
+        // so it can't be used to confirm an address either.
+        $this->forgotSuccessMessage = 'If that information matches our records, a password reset link has been sent. Check your inbox and spam folder.';
+        $this->forgotStep = 3;
     }
 
     // =========================================================
-    //  COMPUTED
+    //  COMPUTED STATS
     // =========================================================
 
     #[Computed]
