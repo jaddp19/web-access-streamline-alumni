@@ -20,7 +20,7 @@ new #[Layout('layouts.app-admin')] class extends Component
     #[Url] public string $statusFilter = 'all';   // all | draft | published | cancelled | completed
     #[Url] public string $timeFilter = 'upcoming'; // upcoming | past | all
 
-    protected int $perPage = 15;
+    protected int $perPage = 10;
 
     public function updatingSearch(): void { $this->resetPage(); }
     public function updatingStatusFilter(): void { $this->resetPage(); }
@@ -75,37 +75,6 @@ new #[Layout('layouts.app-admin')] class extends Component
         return $this->search !== ''
             || $this->statusFilter !== 'all'
             || $this->timeFilter !== 'upcoming';
-    }
-
-    // =========================================================
-    //  DELETE
-    // =========================================================
-
-    public function deleteEvent(int $id): void
-    {
-        $user = Auth::user();
-
-        abort_unless($user?->hasAnyRole(['registrar', 'program head']), 403);
-
-        $event = Event::find($id);
-
-        if (! $event) {
-            session()->flash('error', 'Event not found.');
-            return;
-        }
-
-        // Program heads can only delete their own events.
-        if ($user->hasRole('program head') && $event->created_by !== $user->id) {
-            abort(403, 'You can only delete your own events.');
-        }
-
-        if ($event->image && Storage::disk('public')->exists($event->image)) {
-            Storage::disk('public')->delete($event->image);
-        }
-
-        $event->delete();
-
-        session()->flash('success', 'Event deleted successfully.');
     }
 
     // =========================================================

@@ -20,8 +20,19 @@ class EventRsvpFactory extends Factory
             'user_id'      => User::factory(),
             'response'     => $response,
             'responded_at' => now(),
-            'attended_at'  => $response === 'yes' && fake()->boolean(60) ? now() : null,
+            'attended_at'  => $response === 'yes' && fake()->boolean(60)
+                ? now()->subMinutes(fake()->numberBetween(1, 120))
+                : null,
             'notes'        => null,
         ];
+    }
+
+    /** Force "yes" for attendance fixtures. */
+    public function attending(): static
+    {
+        return $this->state([
+            'response'    => 'yes',
+            'attended_at' => now()->subMinutes(30),
+        ]);
     }
 }

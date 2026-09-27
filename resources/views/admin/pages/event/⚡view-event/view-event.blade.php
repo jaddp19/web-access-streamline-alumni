@@ -159,13 +159,6 @@
                                                 Cancel
                                             </button>
                                         @endif
-
-                                        <button type="button"
-                                            wire:click="deleteEvent({{ $event->id }})"
-                                            wire:confirm="Delete this event? This cannot be undone."
-                                            class="inline-flex items-center gap-1 text-red-600 dark:text-red-400 hover:underline font-semibold whitespace-nowrap">
-                                            Delete
-                                        </button>
                                     </div>
                                 </td>
                             </tr>

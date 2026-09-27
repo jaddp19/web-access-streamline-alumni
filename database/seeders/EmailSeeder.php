@@ -203,8 +203,7 @@ class EmailSeeder extends Seeder
                 'subject' => 'Your CSAV Alumni Tracer Study Has Been Received',
                 'message' => "Hi {{name}},\n\n"
                     ."We've successfully received your Alumni Tracer Study response for {{year}}.\n\n"
-                    ."Your answers help Colegio de Sta. Ana de Victorias track alumni outcomes, "
-                    ."improve our programs, and support institutional planning.\n\n"
+                    ."Your Alumni Tracer Study has been successfully updated.\n\n"
                     ."Submitted on: {{submitted_at}}\n\n"
                     ."If you need to update your answers, you can do so in Settings → Update Form anytime.\n\n"
                     ."Warm regards,\n"

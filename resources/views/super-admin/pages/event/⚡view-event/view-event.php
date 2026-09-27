@@ -22,7 +22,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public string $statusFilter = 'all';   // all | draft | published | cancelled | completed
 
     #[Url]
-    public string $timeFilter = 'upcoming'; // upcoming | past | all
+    public string $timeFilter = 'all';     // all | upcoming | past
 
     protected int $perPage = 15;
 
@@ -45,7 +45,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     {
         $this->search = '';
         $this->statusFilter = 'all';
-        $this->timeFilter = 'upcoming';
+        $this->timeFilter = 'all';
         $this->resetPage();
     }
 
@@ -75,7 +75,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     {
         return $this->search !== ''
             || $this->statusFilter !== 'all'
-            || $this->timeFilter !== 'upcoming';
+            || $this->timeFilter !== 'all';
     }
 
     public function deleteEvent(int $id): void

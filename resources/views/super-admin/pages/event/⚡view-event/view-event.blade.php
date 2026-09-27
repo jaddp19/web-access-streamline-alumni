@@ -72,9 +72,9 @@
 
                         <select wire:model.live="timeFilter"
                             class="px-3 py-2 text-xs sm:text-sm rounded-lg bg-[#F7F5EF] dark:bg-[#3A3B3C] border border-black/10 dark:border-white/10 text-black dark:text-white focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] w-full lg:w-36">
+                            <option value="all">All time</option>
                             <option value="upcoming">Upcoming</option>
                             <option value="past">Past</option>
-                            <option value="all">All time</option>
                         </select>
                     </div>
 
@@ -104,7 +104,12 @@
                             <th
                                 class="hidden sm:table-cell px-3 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">
                                 Status</th>
-                            <th class="px-3 lg:px-6 py-3 text-end"></th>
+                            <th
+                                class="hidden lg:table-cell px-3 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">
+                                Created By</th>
+                            <th
+                                class="hidden sm:table-cell w-[180px] px-4 sm:px-6 py-3 text-center font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">
+                                Actions</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-black/5 dark:divide-white/5">
@@ -117,8 +122,15 @@
                                     'completed' => 'bg-blue-100 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400',
                                     default => 'bg-black/5 dark:bg-white/10 text-black/50 dark:text-white/50',
                                 };
+
+                                $creatorName = $event->creator?->name ?? '—';
+                                $creatorInitial = $creatorName !== '—'
+                                    ? strtoupper(substr($creatorName, 0, 1))
+                                    : '?';
                             @endphp
-                            <tr wire:key="event-{{ $event->id }}"
+
+                            {{-- Main row --}}
+                            <tr wire:key="event-{{ $event->id }}-main"
                                 class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
                                 <td class="ps-4 sm:ps-6 py-3">
                                     <div class="flex items-center gap-3 min-w-0">
@@ -142,6 +154,10 @@
                                                 class="md:hidden text-black/50 dark:text-white/50 text-[11px] block truncate">
                                                 {{ $event->starts_at->format('M d, Y · g:i A') }}
                                             </span>
+                                            <span
+                                                class="lg:hidden text-black/40 dark:text-white/40 text-[11px] block truncate">
+                                                By {{ $creatorName }}
+                                            </span>
                                         </div>
                                     </div>
                                 </td>
@@ -161,24 +177,82 @@
                                         {{ $event->status }}
                                     </span>
                                 </td>
-                                <td class="px-3 lg:px-6 py-3 text-end">
-                                    <div class="flex items-center justify-end gap-3 flex-wrap">
+                                <td class="hidden lg:table-cell px-3 py-3">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <div
+                                            class="w-7 h-7 rounded-full bg-[#123524]/10 dark:bg-[#D4A537]/15 flex items-center justify-center text-[#123524] dark:text-[#D4A537] text-[10px] font-bold shrink-0">
+                                            {{ $creatorInitial }}
+                                        </div>
+                                        <span class="text-black/70 dark:text-white/70 truncate block max-w-[140px]">
+                                            {{ $creatorName }}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="hidden sm:table-cell px-4 sm:px-6 py-3 text-end">
+                                    <div class="inline-flex items-center gap-2 whitespace-nowrap">
                                         <a href="{{ route('super-admin.event.update', $event->id) }}"
-                                            class="inline-flex items-center gap-1 text-[#123524] dark:text-[#D4A537] hover:underline font-semibold whitespace-nowrap">
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-black/10 dark:border-white/10 text-[#123524] dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
+                                            </svg>
                                             Edit
                                         </a>
 
                                         @if ($event->status !== 'cancelled')
                                             <button type="button" wire:click="cancelEvent({{ $event->id }})"
                                                 wire:confirm="Cancel '{{ $event->title }}'? Attendees will be notified."
-                                                class="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 hover:underline font-semibold whitespace-nowrap">
+                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                                </svg>
                                                 Cancel
                                             </button>
                                         @endif
 
                                         <button type="button" wire:click="deleteEvent({{ $event->id }})"
                                             wire:confirm="Delete this event? This cannot be undone."
-                                            class="inline-flex items-center gap-1 text-red-600 dark:text-red-400 hover:underline font-semibold whitespace-nowrap">
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                                            </svg>
+                                            Delete
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            {{-- Mobile-only actions row --}}
+                            <tr wire:key="event-{{ $event->id }}-actions" class="sm:hidden bg-[#F7F5EF]/40 dark:bg-[#3A3B3C]/40">
+                                <td colspan="6" class="px-3 sm:px-6 py-3">
+                                    <div class="grid grid-cols-3 gap-2">
+                                        <a href="{{ route('super-admin.event.update', $event->id) }}"
+                                            class="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-[#242526] text-[#123524] dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
+                                            </svg>
+                                            Edit
+                                        </a>
+
+                                        @if ($event->status !== 'cancelled')
+                                            <button type="button" wire:click="cancelEvent({{ $event->id }})"
+                                                wire:confirm="Cancel '{{ $event->title }}'? Attendees will be notified."
+                                                class="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border border-amber-200 dark:border-amber-500/30 bg-white dark:bg-[#242526] text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                                </svg>
+                                                Cancel
+                                            </button>
+                                        @else
+                                            <span class="hidden sm:block"></span>
+                                            <span class="sm:hidden"></span>
+                                        @endif
+
+                                        <button type="button" wire:click="deleteEvent({{ $event->id }})"
+                                            wire:confirm="Delete this event? This cannot be undone."
+                                            class="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border border-red-200 dark:border-red-500/30 bg-white dark:bg-[#242526] text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                                            </svg>
                                             Delete
                                         </button>
                                     </div>
@@ -186,7 +260,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="px-6 py-12 text-center">
+                                <td colspan="6" class="px-6 py-12 text-center">
                                     <div
                                         class="w-12 h-12 mx-auto mb-3 rounded-full bg-[#123524]/5 dark:bg-white/5 flex items-center justify-center">
                                         <svg class="w-6 h-6 text-[#123524]/30 dark:text-white/30" fill="none"

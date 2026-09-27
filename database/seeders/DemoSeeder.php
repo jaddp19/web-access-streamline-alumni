@@ -37,13 +37,19 @@ class DemoSeeder extends Seeder
     {
         $this->command->info('→ Seeding demo data...');
 
-        if (User::role('program head')->count() > 0 && User::role('alumni')->count() > 100) {
-            $this->command->warn('Demo data already appears to exist. Skipping.');
-            return;
+        // Registrar must exist before events can be created.
+        $this->seedRegistrarIfMissing();
+
+        // Only skip the alumni-heavy part — never the events/posts.
+        $hasAlumni = User::role('alumni')->count() > 100;
+
+        if (! $hasAlumni) {
+            $this->seedProgramHeads();
+            $this->seedAlumni();
+        } else {
+            $this->command->warn('Alumni already seeded — skipping program heads + alumni.');
         }
 
-        $this->seedProgramHeads();
-        $this->seedAlumni();
         $this->seedEventsAndRsvps();
         $this->seedPosts();
 
@@ -53,6 +59,22 @@ class DemoSeeder extends Seeder
         $this->command->info('  Program Head: ' . User::role('program head')->count());
         $this->command->info('  Events:       ' . Event::count());
         $this->command->info('  Posts:        ' . Post::count());
+    }
+
+    // =========================================================
+    //  0. REGISTRAR (created on demand if missing)
+    // =========================================================
+
+    protected function seedRegistrarIfMissing(): void
+    {
+        if (User::role('registrar')->exists()) {
+            return;
+        }
+
+        $registrar = User::factory()->registrar()->create();
+        UserProfile::factory()->create(['user_id' => $registrar->id]);
+
+        $this->command->info('→ Registrar: created (was missing)');
     }
 
     // =========================================================
@@ -187,18 +209,27 @@ class DemoSeeder extends Seeder
 
     protected function seedEventsAndRsvps(): void
     {
-        $registrar = User::role('registrar')->first();
-        $alumni    = User::role('alumni')->get();
+        // Registrar OR program head can author events.
+        $authors = User::role(['registrar', 'program head'])->get();
+        $alumni  = User::role('alumni')->get();
 
-        if (! $registrar || $alumni->isEmpty()) {
+        if ($authors->isEmpty()) {
+            $this->command->error('→ Events: SKIPPED — no registrar/program head found.');
             return;
         }
 
-        $this->command->info("→ Events: {$this->eventCount}");
+        if ($alumni->isEmpty()) {
+            $this->command->error('→ Events: SKIPPED — no alumni found.');
+            return;
+        }
+
+        $this->command->info("→ Events: {$this->eventCount} (mixed authors)");
 
         for ($i = 0; $i < $this->eventCount; $i++) {
+            $author = $authors->random();
+
             $event = Event::factory()->create([
-                'created_by' => $registrar->id,
+                'created_by' => $author->id,
             ]);
 
             $responders = $alumni->random(min($alumni->count(), fake()->numberBetween(
@@ -213,6 +244,8 @@ class DemoSeeder extends Seeder
                 ]);
             }
         }
+
+        $this->command->info('  ✓ Events: ' . Event::count() . ', RSVPs: ' . EventRsvp::count());
     }
 
     // =========================================================
@@ -221,21 +254,21 @@ class DemoSeeder extends Seeder
 
     protected function seedPosts(): void
     {
-        $authors = User::role('registrar')
-            ->orWhere('email', 'like', '%program-head%')
-            ->get();
+        $authors = User::role(['registrar', 'program head'])->get();
 
         if ($authors->isEmpty()) {
-            $authors = User::role('program head')->get();
+            $this->command->error('→ Posts: SKIPPED — no registrar/program head found.');
+            return;
         }
 
-        if ($authors->isEmpty()) {
+        $categories = Category::pluck('id');
+
+        if ($categories->isEmpty()) {
+            $this->command->error('→ Posts: SKIPPED — no categories found.');
             return;
         }
 
         $this->command->info("→ Posts: {$this->postCount}");
-
-        $categories = Category::pluck('id');
 
         for ($i = 0; $i < $this->postCount; $i++) {
             Post::factory()->create([
@@ -243,5 +276,7 @@ class DemoSeeder extends Seeder
                 'category_id' => $categories->random(),
             ]);
         }
+
+        $this->command->info('  ✓ Posts: ' . Post::count());
     }
 }
