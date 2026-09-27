@@ -534,64 +534,97 @@
         </div>
     </div>
 
-    <style>
-        @media print {
-            @page {
-                margin: 12mm;
-            }
+<style>
+    @media print {
+        @page {
+            margin: 12mm;
+        }
 
-            body {
-                background: #fff !important;
-            }
+        body {
+            background: #fff !important;
+        }
 
-            body * {
-                visibility: hidden;
-            }
+        body * {
+            visibility: hidden;
+        }
 
-            .print-area,
-            .print-area * {
-                visibility: visible;
-            }
+        .print-area,
+        .print-area * {
+            visibility: visible;
+        }
 
-            .print-area {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                border: none !important;
-                box-shadow: none !important;
-                border-radius: 0 !important;
-            }
+        .print-area {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            border: none !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+        }
 
-            .no-print {
-                display: none !important;
-            }
-
-            .print-only {
-                display: block !important;
-            }
-
-            table {
-                font-size: 11px !important;
-                page-break-inside: auto;
-            }
-
-            tr {
-                page-break-inside: avoid;
-                page-break-after: auto;
-            }
-
-            thead {
-                display: table-header-group;
-            }
-
-            tfoot {
-                display: table-footer-group;
-            }
+        .no-print {
+            display: none !important;
         }
 
         .print-only {
-            display: none;
+            display: block !important;
         }
-    </style>
+
+        /* ============ NEW — kill the height traps ============ */
+        html,
+        body {
+            height: auto !important;
+            min-height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: visible !important;
+        }
+
+        /* The app layout's main wrapper usually has min-h-screen,
+           which forces a full page even when the content is short. */
+        body > *,
+        body > * > *,
+        main,
+        [class*="min-h-screen"] {
+            min-height: 0 !important;
+            height: auto !important;
+            max-height: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: visible !important;
+        }
+
+        /* Wrappers around the report itself */
+        .w-full.p-4,
+        .space-y-6 {
+            padding: 0 !important;
+            margin: 0 !important;
+            gap: 0 !important;
+        }
+        /* =================================================== */
+
+        table {
+            font-size: 11px !important;
+            page-break-inside: auto;
+        }
+
+        tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
+        }
+
+        thead {
+            display: table-header-group;
+        }
+
+        tfoot {
+            display: table-footer-group;
+        }
+    }
+
+    .print-only {
+        display: none;
+    }
+</style>
 </div>

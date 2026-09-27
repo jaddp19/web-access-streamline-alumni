@@ -122,6 +122,30 @@ new #[Layout('layouts.app-alumni')] class extends Component
         return ((int) $batchName) . '-01-01';
     }
 
+    /**
+     * Date the alumni's OTHER current job started, if any.
+     *
+     * Excludes the record currently being edited — otherwise editing
+     * the current job would compare its date against itself.
+     */
+    protected function currentJobStartDate(): ?string
+    {
+        $current = WorkHistory::query()
+            ->where('user_id', Auth::id())
+            ->where('is_current_job', true)
+            ->where('id', '!=', $this->history->id)
+            ->orderByDesc('date_hired')
+            ->first();
+
+        if (! $current || ! $current->date_hired) {
+            return null;
+        }
+
+        return $current->date_hired instanceof \Carbon\Carbon
+            ? $current->date_hired->toDateString()
+            : (string) $current->date_hired;
+    }
+
     // =========================================================
     //  VALIDATION
     // =========================================================
@@ -137,11 +161,35 @@ new #[Layout('layouts.app-alumni')] class extends Component
                 'date',
                 'before_or_equal:today',
                 function ($attribute, $value, $fail) {
+                    // 1. Must not predate graduation year.
                     $minDate = $this->graduateMinDate();
 
                     if ($minDate && $value < $minDate) {
                         $year = (int) substr($minDate, 0, 4);
                         $fail("The hire date cannot be earlier than your graduation year ({$year}).");
+                        return;
+                    }
+
+                    // 2. Timeline rule — compare against the alumni's OTHER current job.
+                    $currentJobDate = $this->currentJobStartDate();
+
+                    if (! $currentJobDate) {
+                        // No other current job — nothing to compare against.
+                        return;
+                    }
+
+                    $formatted = \Carbon\Carbon::parse($currentJobDate)->format('M d, Y');
+
+                    if (! $this->is_current_job) {
+                        // Editing into a PAST job → its date must be strictly BEFORE the current job.
+                        if ($value >= $currentJobDate) {
+                            $fail("A past position's hire date must be before your current job's hire date ({$formatted}).");
+                        }
+                    } else {
+                        // Editing into a NEW CURRENT job → its date must be AFTER the existing current job.
+                        if ($value <= $currentJobDate) {
+                            $fail("A new current job's hire date must be after your existing current job's hire date ({$formatted}).");
+                        }
                     }
                 },
             ],
@@ -472,6 +520,16 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
         try {
             DB::transaction(function () use ($workName, $civilStatus, $abroadCountry) {
+                // If we're promoting this record to the current job,
+                // demote any OTHER current job first — keeps exactly one current.
+                if ($this->is_current_job) {
+                    WorkHistory::query()
+                        ->where('user_id', Auth::id())
+                        ->where('is_current_job', true)
+                        ->where('id', '!=', $this->history->id)
+                        ->update(['is_current_job' => false]);
+                }
+
                 $this->history->update([
                     'work_name'      => $workName,
                     'company_id'     => $this->company_id,

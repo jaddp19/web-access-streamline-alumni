@@ -64,13 +64,21 @@ new #[Layout('layouts.app-alumni')] class extends Component
             return;
         }
 
-        $civilStatus = CivilStatusEmployment::query()
+        $employment = CivilStatusEmployment::query()
             ->where('tracer_study_id', $tracerStudy->id)
-            ->value('civil_status');
+            ->first();
 
-        if ($civilStatus) {
-            $this->civil_status = $civilStatus;
+        if (! $employment) {
+            return;
         }
+
+        $this->civil_status               = $employment->civil_status ?? '';
+        $this->employment_area            = $employment->employment_area ?? '';
+        $this->abroad_country             = $employment->abroad_country ?? '';
+        $this->employed_related_to_degree = $employment->employed_related_to_degree ?? '';
+        $this->employment_type            = $employment->employment_type ?? '';
+        $this->organization_type          = $employment->organization_type ?? '';
+        $this->months_to_first_job        = $employment->months_to_first_job ?? '';
     }
 
     // =========================================================
@@ -103,6 +111,27 @@ new #[Layout('layouts.app-alumni')] class extends Component
         return ((int) $batchName) . '-01-01';
     }
 
+    /**
+     * Date the alumni's current job started, if any.
+     * Returns null if they don't have a current-job record yet.
+     */
+    protected function currentJobStartDate(): ?string
+    {
+        $current = WorkHistory::query()
+            ->where('user_id', Auth::id())
+            ->where('is_current_job', true)
+            ->orderByDesc('date_hired')
+            ->first();
+
+        if (! $current || ! $current->date_hired) {
+            return null;
+        }
+
+        return $current->date_hired instanceof \Carbon\Carbon
+            ? $current->date_hired->toDateString()
+            : (string) $current->date_hired;
+    }
+
     // =========================================================
     //  VALIDATION
     // =========================================================
@@ -118,11 +147,35 @@ new #[Layout('layouts.app-alumni')] class extends Component
                 'date',
                 'before_or_equal:today',
                 function ($attribute, $value, $fail) {
+                    // 1. Must not predate graduation year.
                     $minDate = $this->graduateMinDate();
 
                     if ($minDate && $value < $minDate) {
                         $year = (int) substr($minDate, 0, 4);
                         $fail("The hire date cannot be earlier than your graduation year ({$year}).");
+                        return;
+                    }
+
+                    // 2. Timeline rule — compare against the existing current job, if any.
+                    $currentJobDate = $this->currentJobStartDate();
+
+                    if (! $currentJobDate) {
+                        // No current job yet — nothing to compare against.
+                        return;
+                    }
+
+                    $formatted = \Carbon\Carbon::parse($currentJobDate)->format('M d, Y');
+
+                    if (! $this->is_current_job) {
+                        // Adding a PAST job → its date must be strictly BEFORE the current job.
+                        if ($value >= $currentJobDate) {
+                            $fail("A past position's hire date must be before your current job's hire date ({$formatted}).");
+                        }
+                    } else {
+                        // Adding a NEW CURRENT job → its date must be AFTER the existing current job.
+                        if ($value <= $currentJobDate) {
+                            $fail("A new current job's hire date must be after your existing current job's hire date ({$formatted}).");
+                        }
                     }
                 },
             ],
@@ -407,6 +460,15 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
         try {
             DB::transaction(function () use ($workName, $civilStatus, $abroadCountry) {
+                // If the new entry is a current job, demote any existing current job first.
+                // Ensures exactly one row per user is flagged as current.
+                if ($this->is_current_job) {
+                    WorkHistory::query()
+                        ->where('user_id', Auth::id())
+                        ->where('is_current_job', true)
+                        ->update(['is_current_job' => false]);
+                }
+
                 WorkHistory::create([
                     'user_id'        => Auth::id(),
                     'work_name'      => $workName,

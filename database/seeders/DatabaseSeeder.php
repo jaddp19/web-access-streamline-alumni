@@ -32,7 +32,7 @@ class DatabaseSeeder extends Seeder
             DepartmentSeeder::class,
             CourseSeeder::class,
             PhAddressSeeder::class,
-            //DemoSeeder::class
+            DemoSeeder::class
         ]);
 
         // Seed the three default accounts. Roles are already created

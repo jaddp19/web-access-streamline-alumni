@@ -582,6 +582,40 @@
                 display: block !important;
             }
 
+            /* ============ NEW — kill the height traps ============ */
+            html,
+            body {
+                height: auto !important;
+                min-height: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: visible !important;
+            }
+
+            /* The app layout's main wrapper usually has min-h-screen,
+           which forces a full page even when the content is short. */
+            body>*,
+            body>*>*,
+            main,
+            [class*="min-h-screen"] {
+                min-height: 0 !important;
+                height: auto !important;
+                max-height: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: visible !important;
+            }
+
+            /* Wrappers around the report itself */
+            .w-full.p-4,
+            .space-y-6 {
+                padding: 0 !important;
+                margin: 0 !important;
+                gap: 0 !important;
+            }
+
+            /* =================================================== */
+
             table {
                 font-size: 11px !important;
                 page-break-inside: auto;

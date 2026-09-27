@@ -212,8 +212,9 @@
                         <div class="flex flex-col gap-1 items-end">
                             @if ($work->is_current_job)
                                 <span
-                                    class="text-xs font-semibold text-[#123524] dark:text-[#D4A537] bg-[#D4A537]/20 dark:bg-[#D4A537]/20 px-2.5 py-1 rounded-full">Current
-                                    Role</span>
+                                    class="text-xs font-semibold text-[#123524] dark:text-[#D4A537] bg-[#D4A537]/20 dark:bg-[#D4A537]/20 px-2.5 py-1 rounded-full">
+                                    Currently Employed
+                                </span>
                             @endif
                             @if ($work->is_current_employed)
                                 <span
