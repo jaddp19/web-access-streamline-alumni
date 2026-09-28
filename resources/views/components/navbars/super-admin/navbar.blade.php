@@ -48,7 +48,6 @@
                         ['route' => 'view-role',                  'label' => 'Roles',              'icon' => 'shield'],
                         ['route' => 'super-admin.assign.view',    'label' => 'Assign Department',  'icon' => 'user-plus'],
                         ['route' => 'super-admin.audit-logs',     'label' => 'Audit Logs',         'icon' => 'clipboard'],
-                        ['route' => 'super-admin.duplicates-view','label' => 'View Duplications',  'icon' => 'clipboard'],
                     ],
                     'Academics' => [
                         ['route' => 'super-admin.department.view', 'label' => 'Departments', 'icon' => 'building'],

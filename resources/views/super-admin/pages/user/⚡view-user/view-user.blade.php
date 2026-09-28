@@ -4,7 +4,7 @@
 
             {{-- Loading overlay --}}
             <div wire:loading.flex
-                wire:target="search,roleFilter,departmentFilter,courseFilter,setRoleFilter,clearCourseFilters,nextPage,previousPage,gotoPage,deleteSelected"
+                wire:target="search,roleFilter,departmentFilter,courseFilter,setRoleFilter,setStatusFilter,clearCourseFilters,nextPage,previousPage,gotoPage,deleteSelected"
                 class="absolute inset-0 z-20 hidden items-start justify-center bg-white/60 dark:bg-[#242526]/60 backdrop-blur-[1px] pt-24 pointer-events-none">
                 <svg class="w-6 h-6 animate-spin text-[#123524] dark:text-[#D4A537]" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -58,7 +58,7 @@
                 </div>
             </div>
 
-            {{-- Search + Role tabs --}}
+            {{-- Search + filters + status tabs + role tabs --}}
             <div class="px-3 sm:px-5 lg:px-6 pt-3 sm:pt-4 border-b border-black/5 dark:border-white/5">
                 <div class="pb-3 flex flex-col gap-2 sm:gap-3">
                     <div class="flex flex-col lg:flex-row lg:items-center gap-2 sm:gap-3">
@@ -144,7 +144,7 @@
                                     </div>
                                 </div>
 
-                                @if ($courseFilter !== '' || $departmentFilter !== '' || $batchFilter !== '')
+                                @if ($courseFilter !== '' || $departmentFilter !== '' || $batchFilter !== '' || $statusFilter !== '')
                                     <button type="button" wire:click="clearCourseFilters"
                                         class="shrink-0 px-3 py-2 text-xs font-semibold rounded-lg border border-black/10 dark:border-white/10 text-[#123524] dark:text-[#D4A537] hover:bg-black/5 dark:hover:bg-white/5 transition whitespace-nowrap">
                                         Clear filters
@@ -154,22 +154,56 @@
                         @endif
                     </div>
 
-                    @if ($search !== '' || $courseFilter !== '' || $departmentFilter !== '' || $batchFilter !== '')
+                    {{-- ===================== STATUS FILTER TABS (Alumni only) ===================== --}}
+                    @if ($roleFilter === 'alumni')
+                        <div class="flex items-center gap-1 overflow-x-auto pb-1 [&::-webkit-scrollbar]:h-0 [scrollbar-width:none]">
+                            @php
+                                $statusTabs = [
+                                    ''         => ['label' => 'All',             'count' => $this->statusCounts['all'],      'accent' => 'bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524]'],
+                                    'approved' => ['label' => 'Approved',        'count' => $this->statusCounts['approved'], 'accent' => 'bg-emerald-600 text-white'],
+                                    'pending'  => ['label' => 'Awaiting Review', 'count' => $this->statusCounts['pending'],  'accent' => 'bg-amber-600 text-white'],
+                                    'rejected' => ['label' => 'Rejected',        'count' => $this->statusCounts['rejected'], 'accent' => 'bg-red-600 text-white'],
+                                ];
+                            @endphp
+
+                            @foreach ($statusTabs as $value => $tab)
+                                @php $isActive = $statusFilter === $value; @endphp
+                                <button type="button" wire:click="setStatusFilter('{{ $value }}')"
+                                    class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition
+                                        {{ $isActive
+                                            ? $tab['accent'] . ' border-transparent'
+                                            : 'bg-white dark:bg-[#3A3B3C] border-black/10 dark:border-white/10 text-black/60 dark:text-white/60 hover:bg-black/5 dark:hover:bg-white/5' }}">
+                                    {{ $tab['label'] }}
+                                    @if ($tab['count'] > 0)
+                                        <span class="text-[10px] px-1.5 py-0.5 rounded-full font-bold
+                                            {{ $isActive
+                                                ? 'bg-white/25'
+                                                : 'bg-black/5 dark:bg-white/10' }}">
+                                            {{ $tab['count'] }}
+                                        </span>
+                                    @endif
+                                </button>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    @if ($search !== '' || $courseFilter !== '' || $departmentFilter !== '' || $batchFilter !== '' || ($roleFilter === 'alumni' && $statusFilter !== ''))
                         <p class="text-xs text-black/50 dark:text-white/50 truncate">
                             <span class="font-semibold text-[#123524] dark:text-white">{{ $this->users->total() }}</span>
                             result(s)
                             @if ($search !== '')
                                 for "<span class="font-semibold">{{ $search }}</span>"
                             @endif
-                            @if ($departmentFilter !== '' || $courseFilter !== '' || $batchFilter !== '')
+                            @php
+                                $activeFilters = array_filter([
+                                    $departmentFilter !== '' ? 'dept' : null,
+                                    $courseFilter !== '' ? 'course' : null,
+                                    $batchFilter !== '' ? 'batch' : null,
+                                    ($roleFilter === 'alumni' && $statusFilter !== '') ? 'status' : null,
+                                ]);
+                            @endphp
+                            @if (! empty($activeFilters))
                                 <span class="text-black/40 dark:text-white/40">
-                                    @php
-                                        $activeFilters = array_filter([
-                                            $departmentFilter !== '' ? 'dept' : null,
-                                            $courseFilter !== '' ? 'course' : null,
-                                            $batchFilter !== '' ? 'batch' : null,
-                                        ]);
-                                    @endphp
                                     (filtered by {{ implode(' / ', $activeFilters) }})
                                 </span>
                             @endif
@@ -367,7 +401,7 @@
                                 Role
                             </th>
                             <th class="hidden xl:table-cell px-3 lg:px-6 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">
-                                Pending
+                                Status
                             </th>
                             <th class="hidden xl:table-cell px-3 lg:px-6 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">
                                 Created

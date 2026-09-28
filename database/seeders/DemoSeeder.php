@@ -33,6 +33,14 @@ class DemoSeeder extends Seeder
     /** Number of posts to create. */
     protected int $postCount = 15;
 
+    /**
+     * Approval distribution for seeded alumni.
+     * Must sum to 100.
+     */
+    protected int $approvedPercent = 85;
+    protected int $pendingPercent  = 10;
+    // remainder is rejected
+
     public function run(): void
     {
         $this->command->info('→ Seeding demo data...');
@@ -54,11 +62,14 @@ class DemoSeeder extends Seeder
         $this->seedPosts();
 
         $this->command->info('✓ Demo seeding complete.');
-        $this->command->info('  Alumni:       ' . User::role('alumni')->count());
-        $this->command->info('  Tracer:       ' . TracerStudy::count());
-        $this->command->info('  Program Head: ' . User::role('program head')->count());
-        $this->command->info('  Events:       ' . Event::count());
-        $this->command->info('  Posts:        ' . Post::count());
+        $this->command->info('  Alumni:            ' . User::role('alumni')->count());
+        $this->command->info('    → Approved:      ' . UserProfile::where('is_approved', true)->whereHas('user', fn ($q) => $q->role('alumni'))->count());
+        $this->command->info('    → Pending:       ' . UserProfile::where('is_approved', false)->whereNull('last_rejection_reason')->whereHas('user', fn ($q) => $q->role('alumni'))->count());
+        $this->command->info('    → Rejected:      ' . UserProfile::where('is_approved', false)->whereNotNull('last_rejection_reason')->whereHas('user', fn ($q) => $q->role('alumni'))->count());
+        $this->command->info('  Tracer:            ' . TracerStudy::count());
+        $this->command->info('  Program Head:      ' . User::role('program head')->count());
+        $this->command->info('  Events:            ' . Event::count());
+        $this->command->info('  Posts:             ' . Post::count());
     }
 
     // =========================================================
@@ -72,7 +83,9 @@ class DemoSeeder extends Seeder
         }
 
         $registrar = User::factory()->registrar()->create();
-        UserProfile::factory()->create(['user_id' => $registrar->id]);
+
+        // Staff profiles are approved by default — they're not in the review pipeline.
+        UserProfile::factory()->approved()->create(['user_id' => $registrar->id]);
 
         $this->command->info('→ Registrar: created (was missing)');
     }
@@ -93,7 +106,9 @@ class DemoSeeder extends Seeder
             }
 
             $user = User::factory()->programHead()->create();
-            UserProfile::factory()->create(['user_id' => $user->id]);
+
+            // Staff profiles are approved — they don't go through the alumni review.
+            UserProfile::factory()->approved()->create(['user_id' => $user->id]);
 
             $dept->update(['program_head_id' => $user->id]);
         }
@@ -105,8 +120,8 @@ class DemoSeeder extends Seeder
 
     protected function seedAlumni(): void
     {
-        $courses = Course::query()->where('is_active', true)->get();
-        $batches = Batch::query()->pluck('id');
+        $courses   = Course::query()->where('is_active', true)->get();
+        $batches   = Batch::query()->pluck('id');
         $companies = Company::query()->pluck('id');
 
         if ($companies->isEmpty()) {
@@ -115,6 +130,7 @@ class DemoSeeder extends Seeder
         }
 
         $this->command->info("→ Alumni: {$this->alumniPerCourse} per course, {$courses->count()} courses");
+        $this->command->info("  Approval mix: {$this->approvedPercent}% approved · {$this->pendingPercent}% pending · " . (100 - $this->approvedPercent - $this->pendingPercent) . '% rejected');
 
         $bar = $this->command->getOutput()->createProgressBar($courses->count() * $this->alumniPerCourse);
         $bar->start();
@@ -124,14 +140,24 @@ class DemoSeeder extends Seeder
                 DB::transaction(function () use ($course, $batches, $companies) {
                     $user = User::factory()->alumni()->create();
 
-                    // Profile factory — add board exam fields for board courses
-                    $profileFactory = UserProfile::factory();
+                    // ── Approval state (weighted random) ────────────────
+                    $roll = fake()->numberBetween(1, 100);
 
-                    if ($course->course_type === 'board') {
-                        // Not every board-course alumni has taken the exam yet (~20% pending)
-                        if (fake()->boolean(80)) {
-                            $profileFactory = $profileFactory->withBoardExam();
-                        }
+                    $profileFactory = match (true) {
+                        $roll <= $this->approvedPercent
+                            => UserProfile::factory()->approved(),
+
+                        $roll <= $this->approvedPercent + $this->pendingPercent
+                            => UserProfile::factory()->pending(),
+
+                        default
+                            => UserProfile::factory()->rejected(),
+                    };
+                    // ────────────────────────────────────────────────────
+
+                    // Board exam — only for board courses, ~80% have taken it
+                    if ($course->course_type === 'board' && fake()->boolean(80)) {
+                        $profileFactory = $profileFactory->withBoardExam();
                     }
 
                     $profile = $profileFactory->create([
@@ -141,9 +167,9 @@ class DemoSeeder extends Seeder
 
                     $profile->courses()->attach($course->id);
 
-                    // ── EVERY alumni gets a tracer study ─────────────
+                    // ── EVERY alumni gets a tracer study ────────────────
                     $this->attachEmploymentData($user, $companies);
-                    // ─────────────────────────────────────────────────
+                    // ────────────────────────────────────────────────────
                 });
 
                 $bar->advance();
@@ -184,14 +210,14 @@ class DemoSeeder extends Seeder
         ]);
 
         $pursued = fake()->boolean(25);
+
         FurtherStudy::create([
-            'tracer_study_id'             => $tracer->id,
-            'is_pursued_further_studies'  => $pursued,
-            'level_of_study'              => $pursued ? fake()->randomElement(['Bachelor', 'Master', 'Certificate', 'Post Doctorate']) : null,
+            'tracer_study_id'            => $tracer->id,
+            'is_pursued_further_studies' => $pursued,
+            'level_of_study'             => $pursued ? fake()->randomElement(['Bachelor', 'Master', 'Certificate', 'Post Doctorate']) : null,
         ]);
 
         // Work history only for those who are employed AND get a "full profile"
-        // (this is where the 70% comes in — not everyone has a current job)
         if ($isEmployed && fake()->boolean($this->employedPercent) && $companies->isNotEmpty()) {
             WorkHistory::create([
                 'user_id'        => $user->id,
@@ -209,7 +235,6 @@ class DemoSeeder extends Seeder
 
     protected function seedEventsAndRsvps(): void
     {
-        // Registrar OR program head can author events.
         $authors = User::role(['registrar', 'program head'])->get();
         $alumni  = User::role('alumni')->get();
 

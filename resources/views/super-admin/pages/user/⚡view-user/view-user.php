@@ -21,6 +21,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     #[Url] public string $courseFilter = '';
     #[Url] public string $batchFilter = '';
 
+    /** '' | 'approved' | 'pending' | 'rejected' — only used on the Alumni tab */
+    #[Url] public string $statusFilter = '';
+
     public array $selectedUsers = [];
     public bool $selectAll = false;
     public bool $selectAllFiltered = false;
@@ -55,6 +58,11 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     {
         $this->roleFilter = $role;
 
+        // Status filter is alumni-only — reset when leaving the alumni tab.
+        if ($role !== 'alumni') {
+            $this->statusFilter = '';
+        }
+
         if (! in_array($role, ['all', 'alumni', 'pending'], true)) {
             $this->courseFilter = '';
             $this->departmentFilter = '';
@@ -64,18 +72,29 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $this->invalidateFilterCache();
     }
 
+    public function setStatusFilter(string $status): void
+    {
+        if (! in_array($status, ['', 'approved', 'pending', 'rejected'], true)) {
+            return;
+        }
+
+        $this->statusFilter = $status;
+        $this->invalidateFilterCache();
+    }
+
     public function clearCourseFilters(): void
     {
         $this->courseFilter = '';
         $this->departmentFilter = '';
         $this->batchFilter = '';
+        $this->statusFilter = '';
         $this->invalidateFilterCache();
     }
 
     protected function invalidateFilterCache(): void
     {
         $this->filteredQueryCache = null;
-        unset($this->totalUsersCount);
+        unset($this->totalUsersCount, $this->statusCounts);
 
         $this->resetPage();
 
@@ -94,7 +113,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             return $this->filteredQueryCache;
         }
 
-        return $this->filteredQueryCache = User::role(['alumni', 'registrar', 'program head'])
+        $query = User::role(['alumni', 'registrar', 'program head'])
             ->when($this->roleFilter === 'pending', function ($q) {
                 $q->role('alumni')->whereDoesntHave('tracerStudy');
             })
@@ -124,6 +143,25 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                     $p->where('batch_id', (int) $this->batchFilter);
                 });
             });
+
+        // ---- Approval status filter (only when on the Alumni tab) ----
+        if ($this->roleFilter === 'alumni') {
+            $query->when($this->statusFilter === 'approved', function ($q) {
+                $q->whereHas('userProfile', fn ($p) => $p->where('is_approved', true));
+            })
+            ->when($this->statusFilter === 'rejected', function ($q) {
+                $q->whereHas('userProfile', fn ($p) =>
+                    $p->where('is_approved', false)->whereNotNull('last_rejection_reason')
+                );
+            })
+            ->when($this->statusFilter === 'pending', function ($q) {
+                $q->whereHas('userProfile', fn ($p) =>
+                    $p->where('is_approved', false)->whereNull('last_rejection_reason')
+                );
+            });
+        }
+
+        return $this->filteredQueryCache = $query;
     }
 
     protected function selectedUsersQuery()
@@ -144,6 +182,56 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         $this->selectAll = ! empty($pageIds)
             && empty(array_diff($pageIds, $this->selectedUsers));
+    }
+
+    // =========================================================
+    //  STATUS COUNTS (for filter tabs)
+    // =========================================================
+
+    protected function countsBaseQuery()
+    {
+        return User::role('alumni')
+            ->when($this->search !== '', function ($q) {
+                $q->where(function ($q) {
+                    $q->where('name', 'like', "%{$this->search}%")
+                        ->orWhere('email', 'like', "%{$this->search}%")
+                        ->orWhere('school_id', 'like', "%{$this->search}%");
+                });
+            })
+            ->when($this->departmentFilter !== '', function ($q) {
+                $q->whereHas('userProfile.courses', fn ($c) =>
+                    $c->where('courses.department_id', (int) $this->departmentFilter)
+                );
+            })
+            ->when($this->courseFilter !== '', function ($q) {
+                $q->whereHas('userProfile.courses', fn ($c) =>
+                    $c->where('courses.id', (int) $this->courseFilter)
+                );
+            })
+            ->when($this->batchFilter !== '', function ($q) {
+                $q->whereHas('userProfile', fn ($p) => $p->where('batch_id', (int) $this->batchFilter));
+            });
+    }
+
+    #[Computed]
+    public function statusCounts(): array
+    {
+        if ($this->roleFilter !== 'alumni') {
+            return ['all' => 0, 'approved' => 0, 'pending' => 0, 'rejected' => 0];
+        }
+
+        $base = $this->countsBaseQuery();
+
+        return [
+            'all'      => (clone $base)->count(),
+            'approved' => (clone $base)->whereHas('userProfile', fn ($p) => $p->where('is_approved', true))->count(),
+            'pending'  => (clone $base)->whereHas('userProfile', fn ($p) =>
+                $p->where('is_approved', false)->whereNull('last_rejection_reason')
+            )->count(),
+            'rejected' => (clone $base)->whereHas('userProfile', fn ($p) =>
+                $p->where('is_approved', false)->whereNotNull('last_rejection_reason')
+            )->count(),
+        ];
     }
 
     // =========================================================
@@ -324,11 +412,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         session()->flash('success', "{$count} user(s) deleted successfully.");
     }
 
-    /**
-     * Delegates the label to UserProfile::approvalLabel() so there's
-     * one single source of truth. Returns null for non-alumni, and
-     * "Not Submitted" when the alumni has no profile row yet.
-     */
     protected function approvalStatusFor(User $user): ?string
     {
         if (! $user->hasRole('alumni')) {

@@ -91,6 +91,12 @@
             <!-- ===================== MOBILE CARD LIST ===================== -->
             <div class="sm:hidden divide-y divide-black/5 dark:divide-white/5">
                 @forelse ($this->emails as $email)
+                    @php
+                        $tpl     = is_array($email->template) ? $email->template : [];
+                        $subject = $tpl['subject'] ?? 'Untitled template';
+                        $slug    = $tpl['slug']    ?? '';
+                    @endphp
+
                     <div wire:key="mobile-email-{{ $email->id }}" class="p-4 flex items-start gap-3">
                         <input type="checkbox"
                             wire:key="mobile-email-cb-{{ $email->id }}-{{ in_array($email->id, $selectedEmails, true) ? '1' : '0' }}"
@@ -99,9 +105,16 @@
 
                         <div class="flex-1 min-w-0">
                             <div class="flex items-start justify-between gap-2">
-                                <p class="font-mono text-xs text-black/80 dark:text-white/80 line-clamp-2 break-all">
-                                    {{ Str::limit(json_encode($email->template), 100) }}
-                                </p>
+                                <div class="min-w-0 flex-1">
+                                    <p class="font-semibold text-sm text-[#123524] dark:text-white leading-snug line-clamp-2">
+                                        {{ $subject }}
+                                    </p>
+                                    @if ($slug)
+                                        <p class="mt-0.5 text-[11px] font-mono text-black/40 dark:text-white/40 truncate">
+                                            {{ $slug }}
+                                        </p>
+                                    @endif
+                                </div>
                                 <a href="{{ route('super-admin.email.update', $email->id) }}"
                                     class="shrink-0 text-xs font-semibold text-[#123524] dark:text-[#D4A537] hover:underline">
                                     Edit
@@ -164,6 +177,12 @@
 
                     <tbody class="divide-y divide-black/5 dark:divide-white/5">
                         @forelse ($this->emails as $email)
+                            @php
+                                $tpl     = is_array($email->template) ? $email->template : [];
+                                $subject = $tpl['subject'] ?? 'Untitled template';
+                                $slug    = $tpl['slug']    ?? '';
+                            @endphp
+
                             <tr wire:key="row-email-{{ $email->id }}"
                                 class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
                                 <td class="w-4 ps-4 sm:ps-6 py-3 text-center align-middle">
@@ -174,9 +193,14 @@
                                         class="rounded border-black/20 dark:border-white/20 text-[#123524] dark:text-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] dark:bg-[#3A3B3C] align-middle">
                                 </td>
                                 <td class="px-3 lg:px-6 py-3 max-w-md">
-                                    <span class="block font-mono text-xs text-black/70 dark:text-white/70 truncate">
-                                        {{ Str::limit(json_encode($email->template), 80) }}
+                                    <span class="block font-semibold text-sm text-[#123524] dark:text-white truncate">
+                                        {{ $subject }}
                                     </span>
+                                    @if ($slug)
+                                        <span class="block mt-0.5 text-[11px] font-mono text-black/40 dark:text-white/40 truncate">
+                                            {{ $slug }}
+                                        </span>
+                                    @endif
                                     <span class="lg:hidden block mt-1 text-[11px] text-black/40 dark:text-white/40">
                                         {{ $email->created_at->diffForHumans() }}
                                     </span>

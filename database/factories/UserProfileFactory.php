@@ -14,24 +14,70 @@ class UserProfileFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id'          => User::factory(),
-            'avatar'           => null,
-            'gender'           => fake()->randomElement(['male', 'female', 'other']),
-            'contact_number_1' => fake()->unique()->numerify('09#########'),
-            'contact_number_2' => null,
-            'location'         => $this->sampleLocation(),
-            'batch_id'         => Batch::query()->inRandomOrder()->value('id') ?? Batch::factory(),
-            'is_private'       => false,
-            'is_verified'      => fake()->boolean(70),
-            'board_taken'      => null,
-            'board_rate'       => null,
+            'user_id'               => User::factory(),
+            'avatar'                => null,
+            'gender'                => fake()->randomElement(['male', 'female', 'other']),
+            'contact_number_1'      => fake()->unique()->numerify('09#########'),
+            'contact_number_2'      => null,
+            'location'              => $this->sampleLocation(),
+            'batch_id'              => Batch::query()->inRandomOrder()->value('id') ?? Batch::factory(),
+            'is_private'            => false,
+            'is_verified'           => fake()->boolean(70),
+
+            // Approval workflow — default is pending (matches migration default).
+            'is_approved'           => false,
+            'last_rejection_reason' => null,
+
+            'board_taken'           => null,
+            'board_rate'            => null,
         ];
     }
+
+    // =========================================================
+    //  APPROVAL STATES
+    // =========================================================
+
+    /** Approved alumni — the "good to go" state. */
+    public function approved(): static
+    {
+        return $this->state(fn () => [
+            'is_approved'           => true,
+            'is_verified'           => true,
+            'last_rejection_reason' => null,
+        ]);
+    }
+
+    /** Awaiting review — no reason set, still pending. */
+    public function pending(): static
+    {
+        return $this->state(fn () => [
+            'is_approved'           => false,
+            'last_rejection_reason' => null,
+        ]);
+    }
+
+    /** Rejected — always includes a reason, since the reason is what the UI shows. */
+    public function rejected(?string $reason = null): static
+    {
+        return $this->state(fn () => [
+            'is_approved'           => false,
+            'is_verified'           => false,
+            'last_rejection_reason' => $reason ?? fake()->randomElement([
+                'Board rating doesn\'t match the official PRC records. Please update and resubmit.',
+                'School ID appears incorrect. Please double-check and resubmit.',
+                'Name in the profile does not match our records. Please correct it.',
+                'Contact number appears invalid. Please provide a reachable number.',
+            ]),
+        ]);
+    }
+
+    // =========================================================
+    //  BOARD EXAM
+    // =========================================================
 
     public function withBoardExam(): static
     {
         return $this->state(function () {
-            // Most alumni passed. A few didn't.
             $passed = fake()->boolean(85);
 
             $rate = $passed
@@ -44,6 +90,10 @@ class UserProfileFactory extends Factory
             ];
         });
     }
+
+    // =========================================================
+    //  LOCATION
+    // =========================================================
 
     /** Philippines location shape that matches the profile form. */
     protected function sampleLocation(): array
