@@ -54,7 +54,7 @@ class ReportsAnalytics
 
         return $q->get(['departments.id', 'departments.dept_name', 'departments.dept_code'])
             ->map(fn ($d) => [
-                'id'        => (int) $d->id,
+                'id' => (int) $d->id,
                 'dept_name' => (string) $d->dept_name,
                 'dept_code' => (string) $d->dept_code,
             ])
@@ -73,9 +73,9 @@ class ReportsAnalytics
 
         return $q->get(['courses.id', 'courses.course_title', 'courses.course_code', 'courses.department_id'])
             ->map(fn ($c) => [
-                'id'            => (int) $c->id,
-                'course_title'  => (string) $c->course_title,
-                'course_code'   => (string) $c->course_code,
+                'id' => (int) $c->id,
+                'course_title' => (string) $c->course_title,
+                'course_code' => (string) $c->course_code,
                 'department_id' => (int) $c->department_id,
             ])
             ->toArray();
@@ -151,30 +151,30 @@ class ReportsAnalytics
         $this->scopeByProfile($q);
 
         $rows = $q->select(
-                'batches.id as batch_id',
-                'batches.batch_name',
-                DB::raw('COUNT(DISTINCT user_profiles.user_id) as total'),
-                DB::raw("COUNT(DISTINCT CASE WHEN civil_status_employments.employment_status = 'employed' THEN user_profiles.user_id END) as employed"),
-                DB::raw("COUNT(DISTINCT CASE WHEN civil_status_employments.employment_status = 'unemployed' THEN user_profiles.user_id END) as unemployed"),
-                DB::raw("COUNT(DISTINCT CASE WHEN civil_status_employments.employment_status = 'self-employed' THEN user_profiles.user_id END) as self_employed"),
-                DB::raw("COUNT(DISTINCT CASE WHEN civil_status_employments.employment_status = 'other' THEN user_profiles.user_id END) as other_status")
-            )
+            'batches.id as batch_id',
+            'batches.batch_name',
+            DB::raw('COUNT(DISTINCT user_profiles.user_id) as total'),
+            DB::raw("COUNT(DISTINCT CASE WHEN civil_status_employments.employment_status = 'employed' THEN user_profiles.user_id END) as employed"),
+            DB::raw("COUNT(DISTINCT CASE WHEN civil_status_employments.employment_status = 'unemployed' THEN user_profiles.user_id END) as unemployed"),
+            DB::raw("COUNT(DISTINCT CASE WHEN civil_status_employments.employment_status = 'self-employed' THEN user_profiles.user_id END) as self_employed"),
+            DB::raw("COUNT(DISTINCT CASE WHEN civil_status_employments.employment_status = 'other' THEN user_profiles.user_id END) as other_status")
+        )
             ->groupBy('batches.id', 'batches.batch_name')
             ->orderByDesc('batches.batch_name')
             ->get();
 
         return $rows->map(function ($r) {
-            $total    = (int) $r->total;
+            $total = (int) $r->total;
             $employed = (int) $r->employed;
-            $rate     = $total > 0 ? round(($employed / $total) * 100, 1) : 0.0;
+            $rate = $total > 0 ? round(($employed / $total) * 100, 1) : 0.0;
 
             return [
-                'batch_name'      => $r->batch_name,
-                'total'           => $total,
-                'employed'        => $employed,
-                'unemployed'      => (int) $r->unemployed,
-                'self_employed'   => (int) $r->self_employed,
-                'other'           => (int) $r->other_status,
+                'batch_name' => $r->batch_name,
+                'total' => $total,
+                'employed' => $employed,
+                'unemployed' => (int) $r->unemployed,
+                'self_employed' => (int) $r->self_employed,
+                'other' => (int) $r->other_status,
                 'employment_rate' => $rate,
             ];
         })->all();
@@ -188,11 +188,11 @@ class ReportsAnalytics
         ];
 
         foreach ($rows as $row) {
-            $totals['total']         += $row['total'];
-            $totals['employed']      += $row['employed'];
-            $totals['unemployed']    += $row['unemployed'];
+            $totals['total'] += $row['total'];
+            $totals['employed'] += $row['employed'];
+            $totals['unemployed'] += $row['unemployed'];
             $totals['self_employed'] += $row['self_employed'];
-            $totals['other']         += $row['other'];
+            $totals['other'] += $row['other'];
         }
 
         $totals['employment_rate'] = $totals['total'] > 0
@@ -207,38 +207,38 @@ class ReportsAnalytics
     // =========================================================
 
     public function topEmployers(int $limit = 15): array
-{
-    $q = DB::table('work_histories')
-        ->join('companies', 'work_histories.company_id', '=', 'companies.id')
-        ->join('user_profiles', 'work_histories.user_id', '=', 'user_profiles.user_id')
-        ->join('model_has_roles', function ($join) {
-            $join->on('model_has_roles.model_id', '=', 'user_profiles.user_id')
-                ->where('model_has_roles.model_type', '=', User::class);
-        })
-        ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
-        ->where('roles.name', '=', 'alumni')
-        ->whereNotNull('work_histories.company_id')
-        ->where('work_histories.is_current_job', true);   // ← NEW: only current jobs
+    {
+        $q = DB::table('work_histories')
+            ->join('companies', 'work_histories.company_id', '=', 'companies.id')
+            ->join('user_profiles', 'work_histories.user_id', '=', 'user_profiles.user_id')
+            ->join('model_has_roles', function ($join) {
+                $join->on('model_has_roles.model_id', '=', 'user_profiles.user_id')
+                    ->where('model_has_roles.model_type', '=', User::class);
+            })
+            ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+            ->where('roles.name', '=', 'alumni')
+            ->whereNotNull('work_histories.company_id')
+            ->where('work_histories.is_current_job', true);   // ← NEW: only current jobs
 
-    $this->scopeByProfile($q);
+        $this->scopeByProfile($q);
 
-    return $q->select(
+        return $q->select(
             'companies.id as company_id',
             'companies.company_name',
             'companies.company_address',
             DB::raw('COUNT(DISTINCT work_histories.user_id) as total')
         )
-        ->groupBy('companies.id', 'companies.company_name', 'companies.company_address')
-        ->orderByDesc('total')
-        ->limit($limit)
-        ->get()
-        ->map(fn ($r) => [
-            'company_name'    => $r->company_name,
+            ->groupBy('companies.id', 'companies.company_name', 'companies.company_address')
+            ->orderByDesc('total')
+            ->limit($limit)
+            ->get()
+            ->map(fn ($r) => [
+            'company_name' => $r->company_name,
             'company_address' => $r->company_address,
-            'total'           => (int) $r->total,
+            'total' => (int) $r->total,
         ])
-        ->all();
-}
+            ->all();
+    }
 
     public function industryDistribution(): array
     {
@@ -297,42 +297,42 @@ class ReportsAnalytics
         }
 
         match ($dateRange) {
-            '30'  => $q->where('events.starts_at', '>=', now()->subDays(30)),
-            '90'  => $q->where('events.starts_at', '>=', now()->subDays(90)),
+            '30' => $q->where('events.starts_at', '>=', now()->subDays(30)),
+            '90' => $q->where('events.starts_at', '>=', now()->subDays(90)),
             '180' => $q->where('events.starts_at', '>=', now()->subDays(180)),
             '365' => $q->where('events.starts_at', '>=', now()->subDays(365)),
             default => null,
         };
 
         $rows = $q->select(
-                'events.id',
-                'events.title',
-                'events.starts_at',
-                'events.capacity',
-                DB::raw("COUNT(DISTINCT CASE WHEN event_rsvps.response = 'yes' THEN event_rsvps.user_id END) as yes_count"),
-                DB::raw("COUNT(DISTINCT CASE WHEN event_rsvps.response = 'maybe' THEN event_rsvps.user_id END) as maybe_count"),
-                DB::raw("COUNT(DISTINCT CASE WHEN event_rsvps.response = 'no' THEN event_rsvps.user_id END) as no_count")
-            )
+            'events.id',
+            'events.title',
+            'events.starts_at',
+            'events.capacity',
+            DB::raw("COUNT(DISTINCT CASE WHEN event_rsvps.response = 'yes' THEN event_rsvps.user_id END) as yes_count"),
+            DB::raw("COUNT(DISTINCT CASE WHEN event_rsvps.response = 'maybe' THEN event_rsvps.user_id END) as maybe_count"),
+            DB::raw("COUNT(DISTINCT CASE WHEN event_rsvps.response = 'no' THEN event_rsvps.user_id END) as no_count")
+        )
             ->groupBy('events.id', 'events.title', 'events.starts_at', 'events.capacity')
             ->orderByDesc('events.starts_at')
             ->get();
 
         return $rows->map(function ($r) use ($totalAlumni) {
-            $yes       = (int) $r->yes_count;
-            $maybe     = (int) $r->maybe_count;
-            $no        = (int) $r->no_count;
+            $yes = (int) $r->yes_count;
+            $maybe = (int) $r->maybe_count;
+            $no = (int) $r->no_count;
             $responded = $yes + $maybe + $no;
-            $pending   = max(0, $totalAlumni - $responded);
+            $pending = max(0, $totalAlumni - $responded);
 
             return [
-                'title'         => $r->title,
-                'starts_at'     => $r->starts_at,
-                'capacity'      => $r->capacity,
-                'invited'       => $totalAlumni,
-                'yes'           => $yes,
-                'maybe'         => $maybe,
-                'no'            => $no,
-                'pending'       => $pending,
+                'title' => $r->title,
+                'starts_at' => $r->starts_at,
+                'capacity' => $r->capacity,
+                'invited' => $totalAlumni,
+                'yes' => $yes,
+                'maybe' => $maybe,
+                'no' => $no,
+                'pending' => $pending,
                 'participation' => $totalAlumni > 0 ? round(($yes / $totalAlumni) * 100, 1) : 0.0,
             ];
         })->all();
@@ -355,7 +355,7 @@ class ReportsAnalytics
             ->leftJoin('departments', 'departments.id', '=', 'courses.department_id')
             ->leftJoin('work_histories', function ($join) {
                 $join->on('work_histories.user_id', '=', 'user_profiles.user_id')
-                     ->where('work_histories.is_current_job', '=', true);
+                    ->where('work_histories.is_current_job', '=', true);
             })
             ->leftJoin('companies', 'companies.id', '=', 'work_histories.company_id');
 
@@ -370,30 +370,30 @@ class ReportsAnalytics
         }
 
         return $q->select(
-                'users.first_name',
-                'users.middle_name',
-                'users.last_name',
-                'users.email',
-                'batches.batch_name',
-                'courses.course_code',
-                'courses.course_title',
-                'departments.dept_name',
-                'civil_status_employments.civil_status',
-                'civil_status_employments.employment_status',
-                'civil_status_employments.current_job_position',
-                'companies.company_name',
-                'civil_status_employments.employment_type',
-                'civil_status_employments.organization_type',
-                'civil_status_employments.employment_area',
-                'civil_status_employments.abroad_country',
-                'civil_status_employments.months_to_first_job',
-                'civil_status_employments.employed_related_to_degree',
-                'further_studies.is_pursued_further_studies',
-                'further_studies.level_of_study',
-                'user_profiles.board_taken',
-                'user_profiles.board_rate',
-                'tracer_studies.updated_at as submitted_at'
-            )
+            'users.first_name',
+            'users.middle_name',
+            'users.last_name',
+            'users.email',
+            'batches.batch_name',
+            'courses.course_code',
+            'courses.course_title',
+            'departments.dept_name',
+            'civil_status_employments.civil_status',
+            'civil_status_employments.employment_status',
+            'civil_status_employments.current_job_position',
+            'companies.company_name',
+            'civil_status_employments.employment_type',
+            'civil_status_employments.organization_type',
+            'civil_status_employments.employment_area',
+            'civil_status_employments.abroad_country',
+            'civil_status_employments.months_to_first_job',
+            'civil_status_employments.employed_related_to_degree',
+            'further_studies.is_pursued_further_studies',
+            'further_studies.level_of_study',
+            'user_profiles.board_taken',
+            'user_profiles.board_rate',
+            'tracer_studies.updated_at as submitted_at'
+        )
             ->orderBy('users.name')
             ->get()
             ->map(fn ($r) => (array) $r)
@@ -432,20 +432,20 @@ class ReportsAnalytics
         }
 
         return $q->select(
-                'events.title as event_title',
-                'events.starts_at as event_date',
-                'events.location as event_location',
-                'events.capacity as event_capacity',
-                'users.first_name as attendee_first_name',
-                'users.middle_name as attendee_middle_name',
-                'users.last_name as attendee_last_name',
-                'users.email as attendee_email',
-                'batches.batch_name',
-                'event_rsvps.response',
-                'event_rsvps.responded_at',
-                'event_rsvps.attended_at',
-                'event_rsvps.notes'
-            )
+            'events.title as event_title',
+            'events.starts_at as event_date',
+            'events.location as event_location',
+            'events.capacity as event_capacity',
+            'users.first_name as attendee_first_name',
+            'users.middle_name as attendee_middle_name',
+            'users.last_name as attendee_last_name',
+            'users.email as attendee_email',
+            'batches.batch_name',
+            'event_rsvps.response',
+            'event_rsvps.responded_at',
+            'event_rsvps.attended_at',
+            'event_rsvps.notes'
+        )
             ->orderBy('events.starts_at', 'desc')
             ->orderBy('users.name')
             ->get()
