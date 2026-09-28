@@ -207,37 +207,38 @@ class ReportsAnalytics
     // =========================================================
 
     public function topEmployers(int $limit = 15): array
-    {
-        $q = DB::table('work_histories')
-            ->join('companies', 'work_histories.company_id', '=', 'companies.id')
-            ->join('user_profiles', 'work_histories.user_id', '=', 'user_profiles.user_id')
-            ->join('model_has_roles', function ($join) {
-                $join->on('model_has_roles.model_id', '=', 'user_profiles.user_id')
-                    ->where('model_has_roles.model_type', '=', User::class);
-            })
-            ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
-            ->where('roles.name', '=', 'alumni')
-            ->whereNotNull('work_histories.company_id');
+{
+    $q = DB::table('work_histories')
+        ->join('companies', 'work_histories.company_id', '=', 'companies.id')
+        ->join('user_profiles', 'work_histories.user_id', '=', 'user_profiles.user_id')
+        ->join('model_has_roles', function ($join) {
+            $join->on('model_has_roles.model_id', '=', 'user_profiles.user_id')
+                ->where('model_has_roles.model_type', '=', User::class);
+        })
+        ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+        ->where('roles.name', '=', 'alumni')
+        ->whereNotNull('work_histories.company_id')
+        ->where('work_histories.is_current_job', true);   // ← NEW: only current jobs
 
-        $this->scopeByProfile($q);
+    $this->scopeByProfile($q);
 
-        return $q->select(
-                'companies.id as company_id',
-                'companies.company_name',
-                'companies.company_address',
-                DB::raw('COUNT(DISTINCT work_histories.user_id) as total')
-            )
-            ->groupBy('companies.id', 'companies.company_name', 'companies.company_address')
-            ->orderByDesc('total')
-            ->limit($limit)
-            ->get()
-            ->map(fn ($r) => [
-                'company_name'    => $r->company_name,
-                'company_address' => $r->company_address,
-                'total'           => (int) $r->total,
-            ])
-            ->all();
-    }
+    return $q->select(
+            'companies.id as company_id',
+            'companies.company_name',
+            'companies.company_address',
+            DB::raw('COUNT(DISTINCT work_histories.user_id) as total')
+        )
+        ->groupBy('companies.id', 'companies.company_name', 'companies.company_address')
+        ->orderByDesc('total')
+        ->limit($limit)
+        ->get()
+        ->map(fn ($r) => [
+            'company_name'    => $r->company_name,
+            'company_address' => $r->company_address,
+            'total'           => (int) $r->total,
+        ])
+        ->all();
+}
 
     public function industryDistribution(): array
     {
