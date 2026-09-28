@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\User;
+use App\Services\EmailTemplateService;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -9,17 +11,121 @@ new #[Layout('layouts::app-admin')] class extends Component
 {
     public User $user;
 
-    public function mount(User $user)
+    public bool $showRejectModal = false;
+    public string $rejectionReason = '';
+
+    public function mount(User $user): void
     {
         $this->user = $user->load([
             'roles',
-            'userProfile.batch',
+
+            'userProfile:id,user_id,batch_id,avatar,is_verified,is_private,is_approved,last_rejection_reason,gender,contact_number_1,contact_number_2,location,board_taken,board_rate',
+            'userProfile.batch:id,batch_name',
             'userProfile.courses.department',
+
             'workHistories.company',
+            'workHistories:id,user_id,work_name,date_hired,is_current_job,company_id',
+
             'tracerStudy.furtherStudy',
             'tracerStudy.civilStatusEmployment',
         ]);
     }
+
+    // =========================================================
+    //  APPROVAL WORKFLOW
+    // =========================================================
+
+    public function approve(): void
+    {
+        $profile = $this->user->userProfile;
+
+        if (! $profile) {
+            session()->flash('error', 'This alumni has no profile to approve.');
+            return;
+        }
+
+        $profile->update([
+            'is_approved'           => true,
+            'last_rejection_reason' => null,
+        ]);
+
+        $this->refreshProfile();
+
+        try {
+            EmailTemplateService::send('profile-approved', $this->user->email, [
+                'name'        => $this->user->name,
+                'approved_at' => now()->format('F j, Y · g:i A'),
+                'approved_by' => Auth::user()?->name ?? 'the registrar',
+                'login_url'   => route('login'),
+            ]);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        session()->flash('success', 'Profile approved. An email has been sent to the alumni.');
+    }
+
+    public function openRejectModal(): void
+    {
+        $this->rejectionReason = '';
+        $this->resetErrorBag('rejectionReason');
+        $this->showRejectModal = true;
+    }
+
+    public function closeRejectModal(): void
+    {
+        $this->showRejectModal = false;
+        $this->rejectionReason = '';
+        $this->resetErrorBag('rejectionReason');
+    }
+
+    public function reject(): void
+    {
+        $this->validate([
+            'rejectionReason' => 'required|string|min:5|max:1000',
+        ], [
+            'rejectionReason.required' => 'Please explain why this profile is being rejected.',
+            'rejectionReason.min'      => 'Please provide a more detailed reason (at least 5 characters).',
+            'rejectionReason.max'      => 'The reason cannot exceed 1000 characters.',
+        ]);
+
+        $profile = $this->user->userProfile;
+
+        if (! $profile) {
+            session()->flash('error', 'This alumni has no profile to reject.');
+            return;
+        }
+
+        $reason = trim(strip_tags($this->rejectionReason));
+
+        $profile->update([
+            'is_approved'           => false,
+            'last_rejection_reason' => $reason,
+        ]);
+
+        $this->refreshProfile();
+
+        try {
+            EmailTemplateService::send('profile-rejected', $this->user->email, [
+                'name'        => $this->user->name,
+                'reason'      => $reason,
+                'rejected_at' => now()->format('F j, Y · g:i A'),
+                'rejected_by' => Auth::user()?->name ?? 'the registrar',
+                'login_url'   => route('login'),
+            ]);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        $this->showRejectModal = false;
+        $this->rejectionReason = '';
+
+        session()->flash('success', 'Profile rejected. The alumni has been notified by email.');
+    }
+
+    // =========================================================
+    //  HELPERS
+    // =========================================================
 
     public function monthsToFirstJobLabel(): string
     {
@@ -36,5 +142,13 @@ new #[Layout('layouts::app-admin')] class extends Component
             'more-than-1-year'   => 'More than 1 Year',
             'not-yet-employed'   => 'Not yet employed',
         ][$value] ?? Str::headline($value);
+    }
+
+    protected function refreshProfile(): void
+    {
+        $this->user->refresh();
+        $this->user->load([
+            'userProfile:id,user_id,batch_id,avatar,is_verified,is_private,is_approved,last_rejection_reason,gender,contact_number_1,contact_number_2,location,board_taken,board_rate',
+        ]);
     }
 };

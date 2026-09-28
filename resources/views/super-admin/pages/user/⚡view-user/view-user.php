@@ -15,49 +15,29 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 {
     use WithPagination;
 
-    #[Url]
-    public string $roleFilter = 'all';
-
-    #[Url]
-    public string $search = '';
-
-    #[Url]
-    public string $departmentFilter = '';
-
-    #[Url]
-    public string $courseFilter = '';
-
-    #[Url]
-    public string $batchFilter = '';
+    #[Url] public string $roleFilter = 'all';
+    #[Url] public string $search = '';
+    #[Url] public string $departmentFilter = '';
+    #[Url] public string $courseFilter = '';
+    #[Url] public string $batchFilter = '';
 
     public array $selectedUsers = [];
-
     public bool $selectAll = false;
-
     public bool $selectAllFiltered = false;
 
-    /** Memoized filtered query for the current request. */
     protected $filteredQueryCache = null;
 
     // =========================================================
     //  FILTER UPDATES
     // =========================================================
 
-    public function updatedRoleFilter(): void
-    {
-        $this->invalidateFilterCache();
-    }
-
-    public function updatedSearch(): void
-    {
-        $this->invalidateFilterCache();
-    }
+    public function updatedRoleFilter(): void       { $this->invalidateFilterCache(); }
+    public function updatedSearch(): void           { $this->invalidateFilterCache(); }
+    public function updatedCourseFilter(): void     { $this->invalidateFilterCache(); }
+    public function updatedBatchFilter(): void      { $this->invalidateFilterCache(); }
 
     public function updatedDepartmentFilter(): void
     {
-        // If the currently selected course doesn't belong to the new
-        // department, drop it so we never end up in an impossible state
-        // (department X, course from department Y).
         if ($this->courseFilter !== '' && $this->departmentFilter !== '') {
             $belongs = Course::where('id', (int) $this->courseFilter)
                 ->where('department_id', (int) $this->departmentFilter)
@@ -71,22 +51,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $this->invalidateFilterCache();
     }
 
-    public function updatedCourseFilter(): void
-    {
-        $this->invalidateFilterCache();
-    }
-
-    public function updatedBatchFilter(): void
-    {
-        $this->invalidateFilterCache();
-    }
-
     public function setRoleFilter(string $role): void
     {
         $this->roleFilter = $role;
 
-        // Course / department / batch filters only make sense on alumni
-        // and "pending tracer" views (pending = alumni without a tracer).
         if (! in_array($role, ['all', 'alumni', 'pending'], true)) {
             $this->courseFilter = '';
             $this->departmentFilter = '';
@@ -127,11 +95,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         }
 
         return $this->filteredQueryCache = User::role(['alumni', 'registrar', 'program head'])
-            // "Pending Tracer" = alumni without a tracer study submission.
             ->when($this->roleFilter === 'pending', function ($q) {
                 $q->role('alumni')->whereDoesntHave('tracerStudy');
             })
-            // Regular role filter for everything else (skips 'all' and 'pending').
             ->when(! in_array($this->roleFilter, ['all', 'pending'], true), function ($q) {
                 $q->role($this->roleFilter);
             })
@@ -174,7 +140,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     {
         unset($this->pageUserIds);
 
-        // Recompute the header checkbox state for the new page.
         $pageIds = $this->pageUserIds;
 
         $this->selectAll = ! empty($pageIds)
@@ -204,10 +169,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             ->get(['id', 'course_title', 'course_code', 'department_id']);
     }
 
-    /**
-     * Batches that actually contain alumni in the current scope.
-     * If a department filter is active, only batches with alumni in that dept.
-     */
     #[Computed]
     public function batchesList()
     {
@@ -225,7 +186,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             ->get(['id', 'batch_name']);
     }
 
-    /** Badge count for the "Pending Tracer" tab. */
     #[Computed]
     public function pendingTracerCount(): int
     {
@@ -233,7 +193,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     }
 
     // =========================================================
-    //  SHARED EXPORT EAGER-LOAD
+    //  EXPORT EAGER-LOAD
     // =========================================================
 
     protected function exportQuery()
@@ -242,7 +202,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             ->with([
                 'roles:id,name',
                 'tracerStudy:id,user_id',
-                'userProfile:id,user_id,avatar,batch_id',
+                'userProfile:id,user_id,avatar,batch_id,is_approved,last_rejection_reason',
                 'userProfile.batch:id,batch_name',
                 'userProfile.courses:id,course_title,course_code,department_id',
                 'userProfile.courses.department:id,dept_name,dept_code',
@@ -268,7 +228,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             ->with([
                 'roles:id,name',
                 'tracerStudy:id,user_id',
-                'userProfile:id,user_id,avatar',
+                'userProfile:id,user_id,avatar,is_approved,last_rejection_reason',
             ])
             ->select('id', 'name', 'email', 'created_at')
             ->latest()
@@ -314,7 +274,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function toggleSelectAll(): void
     {
-        // Everything is already selected → clear it.
         if ($this->selectAllFiltered) {
             $this->selectedUsers = [];
             $this->selectAll = false;
@@ -323,8 +282,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             return;
         }
 
-        // Otherwise: select EVERY user matching the current filters,
-        // across every page — not just the current page.
         $this->selectedUsers = $this->filteredQuery()
             ->pluck('id')
             ->map(fn ($id) => (int) $id)
@@ -367,13 +324,18 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         session()->flash('success', "{$count} user(s) deleted successfully.");
     }
 
-    protected function tracerStatusFor(User $user): ?string
+    /**
+     * Delegates the label to UserProfile::approvalLabel() so there's
+     * one single source of truth. Returns null for non-alumni, and
+     * "Not Submitted" when the alumni has no profile row yet.
+     */
+    protected function approvalStatusFor(User $user): ?string
     {
         if (! $user->hasRole('alumni')) {
             return null;
         }
 
-        return $user->tracerStudy ? 'Completed' : 'Pending';
+        return $user->userProfile?->approvalLabel() ?? 'Not Submitted';
     }
 
     // =========================================================
@@ -393,7 +355,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             ->with([
                 'roles:id,name',
                 'tracerStudy:id,user_id',
-                'userProfile:id,user_id,avatar,batch_id',
+                'userProfile:id,user_id,avatar,batch_id,is_approved,last_rejection_reason',
                 'userProfile.batch:id,batch_name',
                 'userProfile.courses:id,course_title,course_code,department_id',
                 'userProfile.courses.department:id,dept_name,dept_code',
@@ -424,7 +386,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                 'Course(s)',
                 'Department(s)',
                 'Batch',
-                'Tracer Study',
+                'Approval Status',
                 'Created At',
             ]);
 
@@ -442,7 +404,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                     $courses->pluck('course_title')->filter()->join(', ') ?: 'N/A',
                     $departments->pluck('dept_name')->filter()->join(', ') ?: 'N/A',
                     $user->userProfile?->batch?->batch_name ?? 'N/A',
-                    $this->tracerStatusFor($user) ?? 'N/A',
+                    $this->approvalStatusFor($user) ?? 'N/A',
                     $user->created_at?->format('Y-m-d H:i:s'),
                 ]);
             }

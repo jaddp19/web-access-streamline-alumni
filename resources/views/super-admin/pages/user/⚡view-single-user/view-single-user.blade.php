@@ -1,6 +1,27 @@
 <div>
     <div class="max-w-4xl w-full px-3 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-14 mx-auto">
 
+        {{-- Flash messages --}}
+        @if (session('success'))
+            <div class="mb-4 flex items-start gap-2.5 px-4 py-3 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl text-emerald-700 dark:text-emerald-400 text-sm font-medium">
+                <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{{ session('success') }}</span>
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="mb-4 flex items-start gap-2.5 px-4 py-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl text-red-700 dark:text-red-400 text-sm font-medium">
+                <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                </svg>
+                <span>{{ session('error') }}</span>
+            </div>
+        @endif
+
         <!-- Back Button -->
         <div class="mb-4 sm:mb-5">
             <a href="{{ route('super-admin.user.view') }}"
@@ -68,10 +89,119 @@
                                 Private profile
                             </span>
                         @endif
+
+                        @php $p = $user->userProfile; @endphp
+                        @if ($p)
+                            @if ($p->is_approved)
+                                <span class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold bg-emerald-400/20 text-emerald-300">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    Approved
+                                </span>
+                            @elseif (filled($p->last_rejection_reason))
+                                <span class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold bg-red-400/20 text-red-300">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                                    </svg>
+                                    Rejected
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold bg-amber-400/20 text-amber-300">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    Awaiting Approval
+                                </span>
+                            @endif
+                        @endif
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- ===================== APPROVAL ACTIONS ===================== -->
+        @if ($user->userProfile)
+            @php $p = $user->userProfile; @endphp
+
+            <div class="bg-white dark:bg-[#242526] border border-black/10 dark:border-white/5 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 mb-4 sm:mb-5">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+
+                    {{-- Status block --}}
+                    <div class="min-w-0">
+                        <h2 class="text-xs sm:text-sm font-bold text-[#123524] dark:text-white uppercase tracking-wide mb-1">
+                            Profile Approval
+                        </h2>
+
+                        @if ($p->is_approved)
+                            <p class="text-sm text-black/60 dark:text-white/60">
+                                <span class="inline-flex items-center gap-1.5 font-semibold text-emerald-700 dark:text-emerald-400">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    This profile is approved
+                                </span>
+                                <span class="block mt-0.5 text-xs">
+                                    The alumni's data is verified and their tracer submission is final.
+                                </span>
+                            </p>
+                        @elseif (filled($p->last_rejection_reason))
+                            <p class="text-sm text-black/60 dark:text-white/60">
+                                <span class="inline-flex items-center gap-1.5 font-semibold text-red-700 dark:text-red-400">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                                    </svg>
+                                    This profile was rejected
+                                </span>
+                            </p>
+                            <div class="mt-2 p-3 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20">
+                                <p class="text-[10px] uppercase tracking-wide font-semibold text-red-700 dark:text-red-400 mb-1">
+                                    Reason sent to the alumni
+                                </p>
+                                <p class="text-sm text-red-800 dark:text-red-300 whitespace-pre-line">
+                                    {{ $p->last_rejection_reason }}
+                                </p>
+                            </div>
+                        @else
+                            <p class="text-sm text-black/60 dark:text-white/60">
+                                <span class="inline-flex items-center gap-1.5 font-semibold text-amber-700 dark:text-amber-400">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    Awaiting your review
+                                </span>
+                                <span class="block mt-0.5 text-xs">
+                                    Approve to finalize, or reject with a reason.
+                                </span>
+                            </p>
+                        @endif
+                    </div>
+
+                    {{-- Buttons --}}
+                    <div class="flex flex-col xs:flex-row gap-2 shrink-0">
+                        @if (! $p->is_approved)
+                            <button type="button" wire:click="approve"
+                                wire:loading.attr="disabled" wire:target="approve"
+                                class="inline-flex items-center justify-center gap-x-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition disabled:opacity-50">
+                                <span wire:loading.remove wire:target="approve">Approve</span>
+                                <span wire:loading wire:target="approve">Approving…</span>
+                            </button>
+                        @endif
+
+                        <button type="button" wire:click="openRejectModal"
+                            class="inline-flex items-center justify-center gap-x-2 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition">
+                            {{ $p->is_approved ? 'Revoke / Reject' : 'Reject' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        @endif
 
         <div class="grid gap-4 sm:gap-5">
 
@@ -340,5 +470,69 @@
             </div>
 
         </div>
+
+        {{-- ===================== REJECTION MODAL ===================== --}}
+        @if ($showRejectModal)
+            <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+                wire:click.self="closeRejectModal">
+                <div class="bg-white dark:bg-[#242526] border border-black/10 dark:border-white/10 rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+
+                    {{-- Modal header --}}
+                    <div class="px-5 sm:px-6 pt-5 sm:pt-6 pb-4 border-b border-black/5 dark:border-white/10">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-500/15 flex items-center justify-center text-red-600 dark:text-red-400 shrink-0">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                                </svg>
+                            </div>
+                            <div class="min-w-0">
+                                <h3 class="text-base font-bold text-[#123524] dark:text-white">
+                                    Reject {{ $user->name }}'s profile
+                                </h3>
+                                <p class="text-xs text-black/60 dark:text-white/60 mt-1">
+                                    The alumni will receive this reason by email and their profile will show as "Rejected" until they resubmit.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Modal body --}}
+                    <div class="px-5 sm:px-6 py-5 space-y-3">
+                        <label class="block text-xs font-semibold text-[#123524] dark:text-white uppercase tracking-wide">
+                            Reason for rejection <span class="text-red-500">*</span>
+                        </label>
+
+                        <textarea wire:model="rejectionReason" rows="5" maxlength="1000"
+                            placeholder="e.g. Board rating doesn't match the official PRC records. Please update your board exam details and resubmit."
+                            class="w-full px-3 py-2.5 text-sm rounded-xl border bg-[#F7F5EF] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:ring-1 transition resize-none
+                            @error('rejectionReason') border-red-400 dark:border-red-500/50 @else border-black/10 dark:border-white/10 focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] @enderror"></textarea>
+
+                        @error('rejectionReason')
+                            <p class="text-xs text-red-500 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+
+                        <p class="text-[11px] text-black/40 dark:text-white/40">
+                            {{ strlen($rejectionReason) }} / 1000 characters
+                        </p>
+                    </div>
+
+                    {{-- Modal footer --}}
+                    <div class="px-5 sm:px-6 py-4 border-t border-black/5 dark:border-white/10 flex flex-col xs:flex-row gap-2 justify-end">
+                        <button type="button" wire:click="closeRejectModal"
+                            class="w-full xs:w-auto px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 text-sm font-semibold text-black/70 dark:text-white/70 hover:bg-black/5 dark:hover:bg-white/5 transition">
+                            Cancel
+                        </button>
+                        <button type="button" wire:click="reject"
+                            wire:loading.attr="disabled" wire:target="reject"
+                            class="w-full xs:w-auto px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition disabled:opacity-50">
+                            <span wire:loading.remove wire:target="reject">Reject &amp; Notify Alumni</span>
+                            <span wire:loading wire:target="reject">Sending…</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        @endif
+
     </div>
 </div>

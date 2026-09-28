@@ -10,6 +10,15 @@ use App\Models\UserProfile;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Analytics are scoped to APPROVED alumni only (user_profiles.is_approved = true).
+ * Pending / rejected profiles are excluded from stats, charts, and drill-downs
+ * so the dashboard always reflects reviewed, official data.
+ *
+ * Two intentional exceptions:
+ *   • pendingVerifications() — counts alumni still awaiting review (workflow counter)
+ *   • users() / courses() / programHeads() — system-wide metrics, not alumni data
+ */
 class DashboardAnalytics
 {
     public function __construct(
@@ -28,9 +37,13 @@ class DashboardAnalytics
 
         if ($this->departmentId) {
             $query->whereHas('userProfiles', function ($p) {
-                $p->whereHas('user', fn ($u) => $u->role('alumni'))
+                $p->where('is_approved', true)
+                    ->whereHas('user', fn ($u) => $u->role('alumni'))
                     ->whereHas('courses', fn ($c) => $c->where('department_id', $this->departmentId));
             });
+        } else {
+            // Only show batches that contain at least one approved alumni profile
+            $query->whereHas('userProfiles', fn ($p) => $p->where('is_approved', true));
         }
 
         return $query
@@ -43,6 +56,10 @@ class DashboardAnalytics
     //  STAT CARDS
     // =========================================================
 
+    /**
+     * System-wide user count — intentionally NOT filtered by approval
+     * so admins can still see how many accounts exist in total.
+     */
     public function users(): int
     {
         return User::query()
@@ -60,21 +77,34 @@ class DashboardAnalytics
 
     public function boardPassers(): int
     {
-        // Delegate to the chart's breakdown so the stat card and the
-        // Board Exam Performance chart always show the same number.
         return $this->boardExamBreakdown()['Passed'];
     }
 
+    /**
+     * Alumni who have submitted board data but haven't been verified yet.
+     * This is a WORKFLOW counter — it deliberately excludes the
+     * is_approved filter because pending items are, by definition,
+     * not yet approved.
+     */
     public function pendingVerifications(): int
     {
-        return $this->profileBaseQuery()
+        return UserProfile::query()
+            ->where('is_approved', false)
             ->where('is_verified', false)
             ->whereNotNull('board_taken')
             ->whereNotNull('board_rate')
             ->whereHas('courses', fn ($c) => $c->where('course_type', 'board'))
+            ->when($this->departmentId, fn ($q) => $q->whereHas(
+                'courses',
+                fn ($c) => $c->where('department_id', $this->departmentId)
+            ))
+            ->when($this->batchId, fn ($q) => $q->where('batch_id', $this->batchId))
             ->count();
     }
 
+    /**
+     * Active course catalog — system metric, not alumni data.
+     */
     public function courses(): int
     {
         return Course::query()
@@ -83,6 +113,9 @@ class DashboardAnalytics
             ->count();
     }
 
+    /**
+     * Program head staff count — system metric, not alumni data.
+     */
     public function programHeads(): int
     {
         return User::role('program head')
@@ -94,12 +127,13 @@ class DashboardAnalytics
     }
 
     // =========================================================
-    //  BASE QUERIES (with dept + batch scope)
+    //  BASE QUERIES (with dept + batch + approval scope)
     // =========================================================
 
     protected function alumniBaseQuery()
     {
         return User::role('alumni')
+            ->whereHas('userProfile', fn ($p) => $p->where('is_approved', true))
             ->when($this->departmentId, fn ($q) => $q->whereHas(
                 'userProfile.courses',
                 fn ($c) => $c->where('department_id', $this->departmentId)
@@ -113,6 +147,7 @@ class DashboardAnalytics
     protected function profileBaseQuery()
     {
         return UserProfile::query()
+            ->where('is_approved', true)
             ->when($this->departmentId, fn ($q) => $q->whereHas(
                 'courses',
                 fn ($c) => $c->where('department_id', $this->departmentId)
@@ -136,6 +171,7 @@ class DashboardAnalytics
             })
             ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
             ->where('roles.name', '=', 'alumni')
+            ->where('user_profiles.is_approved', true)
             ->where('departments.is_active', true)
             ->where('courses.is_active', true)
             ->when($this->departmentId, fn ($q) => $q->where('departments.id', $this->departmentId))
@@ -174,6 +210,7 @@ class DashboardAnalytics
             })
             ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
             ->where('roles.name', '=', 'alumni')
+            ->where('user_profiles.is_approved', true)
             ->where('departments.is_active', true)
             ->where('courses.is_active', true)
             ->when($this->departmentId, fn ($q) => $q->where('departments.id', $this->departmentId))
@@ -239,6 +276,7 @@ class DashboardAnalytics
             })
             ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
             ->where('roles.name', '=', 'alumni')
+            ->where('user_profiles.is_approved', true)
             ->when($this->departmentId, fn ($q) => $q->whereExists(function ($sub) {
                 $sub->select(DB::raw(1))
                     ->from('student_course')
@@ -279,6 +317,7 @@ class DashboardAnalytics
             })
             ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
             ->where('roles.name', '=', 'alumni')
+            ->where('user_profiles.is_approved', true)
             ->where('courses.is_active', true)
             ->when($this->departmentId, fn ($q) => $q->where('courses.department_id', $this->departmentId))
             ->when($this->batchId, fn ($q) => $q->where('user_profiles.batch_id', $this->batchId))
@@ -333,9 +372,6 @@ class DashboardAnalytics
 
     public function alumniByBatchAndDepartment(): array
     {
-        // Single aggregated query — no PHP-side filtering of rows.
-        // Result rows are bounded by batches × departments × courses (small),
-        // even when user_profiles has hundreds of thousands of rows.
         $rows = DB::table('batches')
             ->join('user_profiles', 'user_profiles.batch_id', '=', 'batches.id')
             ->join('student_course', 'user_profiles.id', '=', 'student_course.user_profile_id')
@@ -347,6 +383,7 @@ class DashboardAnalytics
             })
             ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
             ->where('roles.name', '=', 'alumni')
+            ->where('user_profiles.is_approved', true)
             ->where('departments.is_active', true)
             ->where('courses.is_active', true)
             ->when($this->departmentId, fn ($q) => $q->where('departments.id', $this->departmentId))
@@ -424,6 +461,7 @@ class DashboardAnalytics
             ->join('user_profiles', 'student_course.user_profile_id', '=', 'user_profiles.id')
             ->join('tracer_studies', 'tracer_studies.user_id', '=', 'user_profiles.user_id')
             ->join('civil_status_employments', 'civil_status_employments.tracer_study_id', '=', 'tracer_studies.id')
+            ->where('user_profiles.is_approved', true)
             ->where('courses.is_active', true)
             ->where('civil_status_employments.employment_status', 'employed')
             ->when($this->departmentId, fn ($q) => $q->where('courses.department_id', $this->departmentId))
@@ -454,6 +492,7 @@ class DashboardAnalytics
             ->join('user_profiles', 'student_course.user_profile_id', '=', 'user_profiles.id')
             ->join('tracer_studies', 'tracer_studies.user_id', '=', 'user_profiles.user_id')
             ->join('civil_status_employments', 'civil_status_employments.tracer_study_id', '=', 'tracer_studies.id')
+            ->where('user_profiles.is_approved', true)
             ->where('departments.is_active', true)
             ->where('courses.is_active', true)
             ->where('civil_status_employments.employment_status', 'employed')
@@ -513,7 +552,6 @@ class DashboardAnalytics
             $result[$deptKey]['related_count'] += $related;
         }
 
-        // Compute aggregate alignment rate per department
         foreach ($result as &$dept) {
             $dept['related_rate'] = $dept['total'] > 0
                 ? round(($dept['related_count'] / $dept['total']) * 100, 2)
@@ -545,7 +583,8 @@ class DashboardAnalytics
     {
         $q = DB::table('civil_status_employments')
             ->join('tracer_studies', 'civil_status_employments.tracer_study_id', '=', 'tracer_studies.id')
-            ->join('user_profiles', 'tracer_studies.user_id', '=', 'user_profiles.user_id');
+            ->join('user_profiles', 'tracer_studies.user_id', '=', 'user_profiles.user_id')
+            ->where('user_profiles.is_approved', true);
 
         if ($this->departmentId) {
             $q->whereExists(function ($sub) {
@@ -624,7 +663,8 @@ class DashboardAnalytics
     {
         $q = DB::table('further_studies')
             ->join('tracer_studies', 'further_studies.tracer_study_id', '=', 'tracer_studies.id')
-            ->join('user_profiles', 'tracer_studies.user_id', '=', 'user_profiles.user_id');
+            ->join('user_profiles', 'tracer_studies.user_id', '=', 'user_profiles.user_id')
+            ->where('user_profiles.is_approved', true);
 
         if ($this->departmentId) {
             $q->whereExists(function ($sub) {
@@ -708,8 +748,9 @@ class DashboardAnalytics
             })
             ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
             ->where('roles.name', '=', 'alumni')
+            ->where('user_profiles.is_approved', true)
             ->whereNotNull('work_histories.company_id')
-            ->where('work_histories.is_current_job', true);   // ← only CURRENT jobs count
+            ->where('work_histories.is_current_job', true);
 
         if ($this->departmentId) {
             $q->whereExists(function ($sub) {

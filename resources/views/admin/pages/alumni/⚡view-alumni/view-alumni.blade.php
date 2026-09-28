@@ -5,7 +5,7 @@
 
             <!-- Loading overlay -->
             <div wire:loading.flex
-                wire:target="search,courseFilter,batchFilter,clearCourseFilter,clearBatchFilter,clearAllFilters,nextPage,previousPage,gotoPage,exportCsv"
+                wire:target="search,courseFilter,batchFilter,statusFilter,clearCourseFilter,clearBatchFilter,clearAllFilters,nextPage,previousPage,gotoPage,exportCsv"
                 class="absolute inset-0 z-20 hidden items-start justify-center bg-white/70 dark:bg-[#242526]/70 pt-24 pointer-events-none">
                 <svg class="w-6 h-6 animate-spin text-[#123524] dark:text-[#D4A537]" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
@@ -129,7 +129,7 @@
                         </div>
 
                         {{-- Clear filters --}}
-                        @if ($courseFilter !== '' || $batchFilter !== '')
+                        @if ($courseFilter !== '' || $batchFilter !== '' || $statusFilter !== '')
                             <button type="button" wire:click="clearAllFilters"
                                 class="shrink-0 px-3 py-2 text-xs font-semibold rounded-lg border border-black/10 dark:border-white/10 text-[#123524] dark:text-[#D4A537] hover:bg-black/5 dark:hover:bg-white/5 transition whitespace-nowrap">
                                 Clear filters
@@ -138,23 +138,54 @@
                     </div>
                 </div>
 
+                {{-- ===================== STATUS FILTER TABS ===================== --}}
+                <div class="flex items-center gap-1 overflow-x-auto pb-1 [&::-webkit-scrollbar]:h-0 [scrollbar-width:none]">
+                    @php
+                        $statusTabs = [
+                            ''         => ['label' => 'All',             'count' => $this->statusCounts['all'],      'accent' => 'bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524]'],
+                            'approved' => ['label' => 'Approved',        'count' => $this->statusCounts['approved'], 'accent' => 'bg-emerald-600 text-white'],
+                            'pending'  => ['label' => 'Awaiting Review', 'count' => $this->statusCounts['pending'],  'accent' => 'bg-amber-600 text-white'],
+                            'rejected' => ['label' => 'Rejected',        'count' => $this->statusCounts['rejected'], 'accent' => 'bg-red-600 text-white'],
+                        ];
+                    @endphp
+
+                    @foreach ($statusTabs as $value => $tab)
+                        @php $isActive = $statusFilter === $value; @endphp
+                        <button type="button" wire:click="$set('statusFilter', '{{ $value }}')"
+                            class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition
+                                {{ $isActive
+                                    ? $tab['accent'] . ' border-transparent'
+                                    : 'bg-white dark:bg-[#3A3B3C] border-black/10 dark:border-white/10 text-black/60 dark:text-white/60 hover:bg-black/5 dark:hover:bg-white/5' }}">
+                            {{ $tab['label'] }}
+                            @if ($tab['count'] > 0)
+                                <span class="text-[10px] px-1.5 py-0.5 rounded-full font-bold
+                                    {{ $isActive
+                                        ? 'bg-white/25'
+                                        : 'bg-black/5 dark:bg-white/10' }}">
+                                    {{ $tab['count'] }}
+                                </span>
+                            @endif
+                        </button>
+                    @endforeach
+                </div>
+
                 {{-- Result text --}}
-                @if ($search !== '' || $courseFilter !== '' || $batchFilter !== '')
+                @if ($search !== '' || $courseFilter !== '' || $batchFilter !== '' || $statusFilter !== '')
                     <p class="text-xs text-black/50 dark:text-white/50 truncate">
                         <span class="font-semibold text-[#123524] dark:text-white">{{ $this->alumni->total() }}</span>
                         result(s)
                         @if ($search !== '')
                             for "<span class="font-semibold">{{ $search }}</span>"
                         @endif
-                        @if ($courseFilter !== '' || $batchFilter !== '')
+                        @if ($courseFilter !== '' || $batchFilter !== '' || $statusFilter !== '')
                             <span class="text-black/40 dark:text-white/40">
-                                @if ($courseFilter !== '' && $batchFilter !== '')
-                                    (filtered by course &amp; batch)
-                                @elseif ($courseFilter !== '')
-                                    (filtered by course)
-                                @else
-                                    (filtered by batch)
-                                @endif
+                                @php
+                                    $active = [];
+                                    if ($courseFilter !== '') $active[] = 'course';
+                                    if ($batchFilter !== '')  $active[] = 'batch';
+                                    if ($statusFilter !== '') $active[] = 'status';
+                                @endphp
+                                (filtered by {{ implode(' / ', $active) }})
                             </span>
                         @endif
                     </p>
@@ -236,6 +267,12 @@
                                         Batch {{ $profile->batch->batch_name }}
                                     </span>
                                 @endif
+
+                                {{-- Approval badge --}}
+                                <span class="inline-flex items-center text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wide {{ $profile->approvalBadgeClasses() }}"
+                                    @if (filled($profile->last_rejection_reason)) title="{{ $profile->last_rejection_reason }}" @endif>
+                                    {{ $profile->approvalLabel() }}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -275,7 +312,7 @@
 
             <!-- ===================== TABLE (sm+) ===================== -->
             <div class="hidden sm:block overflow-x-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-md [&::-webkit-scrollbar-thumb]:bg-black/10 dark:[&::-webkit-scrollbar-thumb]:bg-white/10"
-                wire:loading.class="opacity-50" wire:target="search,courseFilter,batchFilter">
+                wire:loading.class="opacity-50" wire:target="search,courseFilter,batchFilter,statusFilter">
                 <table class="min-w-full text-xs sm:text-sm">
                     <thead class="bg-[#F7F5EF] dark:bg-[#3A3B3C] border-b border-black/5 dark:border-white/5">
                         <tr>
@@ -291,6 +328,9 @@
                             <th
                                 class="hidden lg:table-cell px-3 lg:px-6 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">
                                 Batch Year</th>
+                            <th
+                                class="px-3 lg:px-6 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">
+                                Status</th>
                             <th class="px-3 lg:px-6 py-3 text-end"></th>
                         </tr>
                     </thead>
@@ -363,6 +403,12 @@
                                         {{ $profile->batch->batch_name ?? 'N/A' }}
                                     </span>
                                 </td>
+                                <td class="px-3 lg:px-6 py-3">
+                                    <span class="inline-flex items-center text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wide whitespace-nowrap {{ $profile->approvalBadgeClasses() }}"
+                                        @if (filled($profile->last_rejection_reason)) title="{{ $profile->last_rejection_reason }}" @endif>
+                                        {{ $profile->approvalLabel() }}
+                                    </span>
+                                </td>
                                 <td class="px-3 lg:px-6 py-3 text-end">
                                     <div class="flex items-center justify-end gap-3">
                                         <a href="{{ route('admin.alumni.view-single', $profile->user_id) }}"
@@ -378,7 +424,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="px-6 py-12 text-center">
+                                <td colspan="6" class="px-6 py-12 text-center">
                                     <div
                                         class="w-12 h-12 mx-auto mb-3 rounded-full bg-[#123524]/5 dark:bg-white/5 flex items-center justify-center">
                                         <svg class="w-6 h-6 text-[#123524]/30 dark:text-white/30" fill="none"

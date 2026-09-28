@@ -24,7 +24,14 @@ return new class extends Migration
             $table->date('board_taken')->nullable();
             $table->decimal('board_rate', 5, 2)->nullable();
             $table->boolean('is_verified')->default(false);
+
+            // Registrar approval workflow — order matters here, not AFTER
+            $table->boolean('is_approved')->default(false);
+            $table->text('last_rejection_reason')->nullable();
+
             $table->timestamps();
+
+            $table->index('is_approved');
         });
     }
 

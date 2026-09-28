@@ -25,6 +25,9 @@ new #[Layout('layouts.app-admin')] class extends Component
     #[Url]
     public string $batchFilter = '';
 
+    #[Url]
+    public string $statusFilter = '';   // '' | 'approved' | 'pending' | 'rejected'
+
     protected int $perPage = 10;
 
     /** Memoized filtered query for the current request. */
@@ -43,6 +46,12 @@ new #[Layout('layouts.app-admin')] class extends Component
     }
 
     public function updatingBatchFilter(): void
+    {
+        $this->filteredQueryCache = null;
+        $this->resetPage();
+    }
+
+    public function updatingStatusFilter(): void
     {
         $this->filteredQueryCache = null;
         $this->resetPage();
@@ -67,6 +76,7 @@ new #[Layout('layouts.app-admin')] class extends Component
         $this->search = '';
         $this->courseFilter = '';
         $this->batchFilter = '';
+        $this->statusFilter = '';
         $this->filteredQueryCache = null;
         $this->resetPage();
     }
@@ -123,11 +133,6 @@ new #[Layout('layouts.app-admin')] class extends Component
             ->get(['id', 'course_title', 'course_code', 'department_id']);
     }
 
-    /**
-     * Batches that actually contain alumni in the current user's scope.
-     * Program head → only batches with alumni in their dept(s).
-     * Registrar    → only batches with any alumni.
-     */
     #[Computed]
     public function batchesList()
     {
@@ -145,6 +150,81 @@ new #[Layout('layouts.app-admin')] class extends Component
     }
 
     // =========================================================
+    //  STATUS COUNTS (for filter tab badges)
+    // =========================================================
+
+    /**
+     * Base query for counting — respects scope + active search/course/batch
+     * filters, but ignores statusFilter (so each tab shows its own total).
+     */
+    protected function countsBaseQuery()
+    {
+        $q = UserProfile::query()
+            ->whereHas('user', fn ($uq) => $uq->role('alumni'));
+
+        if ($this->isProgramHead && ! empty($this->departmentIds)) {
+            $deptIds = $this->departmentIds;
+            $q->whereHas('courses', fn ($c) => $c->whereIn('department_id', $deptIds));
+        }
+
+        if ($this->courseFilter !== '') {
+            $q->whereHas('courses', fn ($c) => $c->where('courses.id', (int) $this->courseFilter));
+        }
+
+        if ($this->batchFilter !== '') {
+            $q->where('batch_id', (int) $this->batchFilter);
+        }
+
+        if ($this->search !== '') {
+            $term = '%' . trim($this->search) . '%';
+            $q->where(function ($q) use ($term) {
+                $q->whereHas('user', function ($u) use ($term) {
+                    $u->where(function ($inner) use ($term) {
+                        $inner->where('name', 'like', $term)
+                              ->orWhere('email', 'like', $term)
+                              ->orWhere('school_id', 'like', $term);
+                    });
+                })
+                ->orWhereHas('batch', fn ($b) => $b->where('batch_name', 'like', $term))
+                ->orWhereHas('courses', function ($c) use ($term) {
+                    $c->where('course_title', 'like', $term)
+                      ->orWhere('course_code', 'like', $term);
+                });
+            });
+        }
+
+        return $q;
+    }
+
+    #[Computed]
+    public function statusCounts(): array
+    {
+        if (! $this->hasAccess) {
+            return ['all' => 0, 'approved' => 0, 'pending' => 0, 'rejected' => 0];
+        }
+
+        $base = $this->countsBaseQuery();
+
+        $all      = (clone $base)->count();
+        $approved = (clone $base)->where('is_approved', true)->count();
+        $rejected = (clone $base)
+            ->where('is_approved', false)
+            ->whereNotNull('last_rejection_reason')
+            ->count();
+        $pending  = (clone $base)
+            ->where('is_approved', false)
+            ->whereNull('last_rejection_reason')
+            ->count();
+
+        return [
+            'all'      => $all,
+            'approved' => $approved,
+            'pending'  => $pending,
+            'rejected' => $rejected,
+        ];
+    }
+
+    // =========================================================
     //  QUERY
     // =========================================================
 
@@ -159,7 +239,7 @@ new #[Layout('layouts.app-admin')] class extends Component
         }
 
         $query = UserProfile::query()
-            ->select('id', 'user_id', 'avatar', 'batch_id', 'created_at')
+            ->select('id', 'user_id', 'avatar', 'batch_id', 'is_approved', 'last_rejection_reason', 'created_at')
             ->whereHas('user', fn ($q) => $q->role('alumni'));
 
         if ($this->isProgramHead && ! empty($this->departmentIds)) {
@@ -177,6 +257,15 @@ new #[Layout('layouts.app-admin')] class extends Component
         if ($this->batchFilter !== '') {
             $batchId = (int) $this->batchFilter;
             $query->where('batch_id', $batchId);
+        }
+
+        // ---- Approval status filter ----
+        if ($this->statusFilter === 'approved') {
+            $query->where('is_approved', true);
+        } elseif ($this->statusFilter === 'rejected') {
+            $query->where('is_approved', false)->whereNotNull('last_rejection_reason');
+        } elseif ($this->statusFilter === 'pending') {
+            $query->where('is_approved', false)->whereNull('last_rejection_reason');
         }
 
         if ($this->search !== '') {
@@ -248,6 +337,7 @@ new #[Layout('layouts.app-admin')] class extends Component
                 'Course(s)',
                 'Department(s)',
                 'Batch',
+                'Approval Status',
                 'Registered',
             ]);
 
@@ -262,6 +352,7 @@ new #[Layout('layouts.app-admin')] class extends Component
                         $profile->courses->pluck('course_title')->filter()->join(', ') ?: 'N/A',
                         $profile->courses->pluck('department.dept_name')->filter()->unique()->join(', ') ?: 'N/A',
                         $profile->batch?->batch_name ?? 'N/A',
+                        $profile->approvalLabel(),
                         $profile->created_at?->format('Y-m-d H:i'),
                     ]);
                 }

@@ -107,7 +107,7 @@ class EmailSeeder extends Seeder
                     ."Congratulations, and welcome to the alumni community!\n\n"
                     .'— Colegio de Sta. Ana de Victorias',
             ],
-            
+
             [
                 'slug' => 'your-alumni-verification-status-was-updated',
                 'subject' => 'Your alumni verification status was updated',
@@ -246,6 +246,37 @@ class EmailSeeder extends Seeder
                     ."Please log in at {{login_url}} and change it immediately.\n\n"
                     ."If you did not request this change, contact the CSAV Alumni Office right away.\n\n"
                     .'— Colegio de Sta. Ana de Victorias',
+            ],
+
+            // ---------- Profile approval workflow ----------
+            [
+                'slug' => 'profile-approved',
+                'subject' => 'Your CSAV alumni profile has been approved, {{name}}',
+                'message' => "Hi {{name}},\n\n"
+                    ."Good news — your alumni profile has been reviewed and approved.\n\n"
+                    ."Approved on: {{approved_at}}\n"
+                    ."Reviewed by: {{approved_by}}\n\n"
+                    ."Your tracer study submission is now final and will be included in the university's "
+                    ."alumni reports. You can view your profile anytime by logging in:\n"
+                    ."{{login_url}}\n\n"
+                    ."Thank you for keeping your information up to date.\n\n"
+                    .'— CSAV Alumni Office',
+            ],
+
+            [
+                'slug' => 'profile-rejected',
+                'subject' => 'Your CSAV alumni profile needs a few changes, {{name}}',
+                'message' => "Hi {{name}},\n\n"
+                    ."Thank you for submitting your alumni profile. After reviewing it, we were unable "
+                    ."to approve it at this time for the following reason:\n\n"
+                    ."{{reason}}\n\n"
+                    ."Please log in, update the affected details, and resubmit your profile:\n"
+                    ."{{login_url}}\n\n"
+                    ."Once you've made the changes, our team will review your submission again.\n\n"
+                    ."If you believe this was a mistake or need help, please contact the CSAV Alumni Office.\n\n"
+                    ."Reviewed on: {{rejected_at}}\n"
+                    ."Reviewed by: {{rejected_by}}\n\n"
+                    .'— CSAV Alumni Office',
             ],
         ];
 
