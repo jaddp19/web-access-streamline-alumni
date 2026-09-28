@@ -162,20 +162,6 @@ class DashboardAnalytics
     //  ALUMNI BY DEPARTMENT → COURSES (drill-down)
     // =========================================================
 
-    /**
-     * Nested: department → courses, with totals at both levels.
-     * Shape:
-     *   [
-     *     'IT' => [
-     *       'name'    => 'Information Technology',
-     *       'total'   => 75,
-     *       'courses' => [
-     *         'BSIT' => ['name' => 'BS Information Technology', 'total' => 50],
-     *         'BSCS' => ['name' => 'BS Computer Science',       'total' => 25],
-     *       ],
-     *     ],
-     *   ]
-     */
     public function alumniByDeptAndCourse(): array
     {
         $rows = DB::table('departments')
@@ -281,20 +267,6 @@ class DashboardAnalytics
     //  ALUMNI BY BATCH → COURSES (drill-down)
     // =========================================================
 
-    /**
-     * Nested: batch → courses, with totals at both levels.
-     * Shape:
-     *   [
-     *     '1' => [
-     *       'batch_name' => '2020',
-     *       'total'      => 45,
-     *       'courses'    => [
-     *         'BSIT' => ['name' => 'BS Information Technology', 'total' => 25],
-     *         'BSCS' => ['name' => 'BS Computer Science',       'total' => 20],
-     *       ],
-     *     ],
-     *   ]
-     */
     public function alumniByBatchAndCourse(): array
     {
         $rows = DB::table('batches')
@@ -729,14 +701,15 @@ class DashboardAnalytics
     {
         $q = DB::table('work_histories')
             ->join('companies', 'work_histories.company_id', '=', 'companies.id')
-            ->join('user_profiles', 'work_histories.user_id', '=', 'user_profiles.id')
+            ->join('user_profiles', 'work_histories.user_id', '=', 'user_profiles.user_id')
             ->join('model_has_roles', function ($join) {
                 $join->on('model_has_roles.model_id', '=', 'user_profiles.user_id')
                     ->where('model_has_roles.model_type', '=', User::class);
             })
             ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
             ->where('roles.name', '=', 'alumni')
-            ->whereNotNull('work_histories.company_id');
+            ->whereNotNull('work_histories.company_id')
+            ->where('work_histories.is_current_job', true);   // ← only CURRENT jobs count
 
         if ($this->departmentId) {
             $q->whereExists(function ($sub) {
@@ -757,7 +730,7 @@ class DashboardAnalytics
             ->orderByDesc('total')
             ->limit(8)
             ->pluck('total', 'company_name')
-            ->map(fn ($v) => (int) $v)
+            ->map(fn (int|string $v) => (int) $v)
             ->toArray();
     }
 
