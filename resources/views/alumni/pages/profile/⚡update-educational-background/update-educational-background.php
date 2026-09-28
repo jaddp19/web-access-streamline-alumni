@@ -43,7 +43,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
                 'date',
                 'after_or_equal:' . self::BOARD_EXAM_MIN_DATE,
                 'before_or_equal:today',
-                // If board_rate is filled, board_taken becomes required
                 Rule::requiredIf(fn () => filled($this->board_rate)),
             ],
 
@@ -52,7 +51,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
                 'numeric',
                 'min:0',
                 'max:100',
-                // If board_taken is filled, board_rate becomes required
                 Rule::requiredIf(fn () => filled($this->board_taken)),
             ],
         ];
@@ -129,10 +127,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
         }
     }
 
-    /**
-     * Live-clear the "the other field is required" error as soon as the user
-     * fixes it, so the form feels responsive.
-     */
     public function updatedBoardTaken(): void
     {
         if (filled($this->board_taken)) {
@@ -172,9 +166,9 @@ new #[Layout('layouts.app-alumni')] class extends Component
         $isBoardCourse = $this->selectedCourse?->course_type === 'board';
 
         // Was the *previous* course also a board course?
-        // Used to decide whether a course change means "needs verification".
+        // Query directly so deactivated courses still resolve correctly.
         $wasBoardCourse = $this->original_course_id
-            ? ($this->courses->firstWhere('id', (int) $this->original_course_id)?->course_type === 'board')
+            ? (Course::whereKey($this->original_course_id)->value('course_type') === 'board')
             : false;
 
         // ===== Detect changes =====
@@ -200,24 +194,15 @@ new #[Layout('layouts.app-alumni')] class extends Component
         }
 
         // ===== Verification flag =====
-        //   non-board course                          → is_verified = true   (nothing to verify)
-        //   non-board → board                         → is_verified = false  (needs verification)
-        //   board → another board                     → is_verified = false  (needs re-verification)
-        //   board data (board_taken / board_rate) changed → is_verified = false  (needs re-verification)
-        //   board → non-board                         → is_verified = true   (nothing to verify)
-        //   same board, no changes                    → leave as-is
         $mustResetVerification = false;
 
         if (! $isBoardCourse) {
-            // Non-board course → always treated as "verified" because
-            // there is no board exam to verify.
             $profileData['is_verified'] = true;
         } elseif (! $wasBoardCourse || $courseChanged || $boardChanged) {
-            // Board course that is new, changed, or has changed board data.
             $profileData['is_verified'] = false;
             $mustResetVerification = true;
         }
-        // else: still the same board course with no changes → keep current value
+        // else: same board course, no changes → keep current value
 
         try {
             DB::transaction(function () use ($profile, $profileData, $validated) {
@@ -230,12 +215,12 @@ new #[Layout('layouts.app-alumni')] class extends Component
             return;
         }
 
-        // Refresh snapshots so a second save has correct baseline
+        // Refresh snapshots
         $this->original_board_taken = $this->board_taken;
         $this->original_board_rate  = $this->board_rate;
         $this->original_course_id   = (int) $this->course_id;
 
-        unset($this->selectedCourse);
+        unset($this->selectedCourse, $this->courses);
 
         session()->flash('success', match (true) {
             ! $isBoardCourse
@@ -278,13 +263,12 @@ new #[Layout('layouts.app-alumni')] class extends Component
             ->get();
     }
 
-    #[Computed]
-    public function recentYears(): array
-    {
-        $current = (int) date('Y');
-        return range($current, $current - 4);
-    }
-
+    /**
+     * The course the user currently has selected.
+     * Loaded directly — NOT filtered by is_active — so that a user
+     * assigned to a since-deactivated course still resolves to the
+     * right `course_type` (board vs non-board).
+     */
     #[Computed]
     public function selectedCourse(): ?Course
     {
@@ -292,6 +276,9 @@ new #[Layout('layouts.app-alumni')] class extends Component
             return null;
         }
 
-        return $this->courses->firstWhere('id', (int) $this->course_id);
+        return Course::query()
+            ->select('id', 'course_title', 'course_type', 'department_id')
+            ->with('department:id,dept_name')
+            ->find($this->course_id);
     }
 };

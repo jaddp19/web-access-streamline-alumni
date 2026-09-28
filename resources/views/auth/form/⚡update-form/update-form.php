@@ -348,6 +348,28 @@ new #[Layout('layouts.app-form')] class extends Component
         }
     }
 
+    public function updatedNewCompanyLogo(): void
+{
+    if (! $this->new_company_logo) {
+        return;
+    }
+
+    $mime = (string) $this->new_company_logo->getMimeType();
+
+    if (! str_starts_with($mime, 'image/')) {
+        $this->reset('new_company_logo');
+        $this->addError('new_company_logo', 'The logo must be an image file (JPG, PNG, or WebP).');
+        return;
+    }
+
+    try {
+        $this->validateOnly('new_company_logo');
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        $this->reset('new_company_logo');
+        throw $e;
+    }
+}
+
     public function updatedEmploymentStatus(): void
     {
         if ($this->employment_status !== 'employed') {
@@ -390,7 +412,7 @@ new #[Layout('layouts.app-form')] class extends Component
     {
         $this->validate([
             'new_company_name'    => 'required|string|max:255|unique:companies,company_name',
-            'new_company_logo'    => 'nullable|image|max:2048',
+            'new_company_logo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'new_company_desc'    => 'nullable|string|max:2000',
 
             'new_company_address_type' => 'required|in:philippines,abroad',
@@ -406,6 +428,9 @@ new #[Layout('layouts.app-form')] class extends Component
         ], [
             'new_company_name.required'    => 'Company name is required.',
             'new_company_name.unique'      => 'A company with this name already exists.',
+            'new_company_logo.image'       => 'The logo must be an image file.',
+            'new_company_logo.mimes'       => 'Logo must be JPG, PNG, or WebP.',
+            'new_company_logo.max'         => 'The logo cannot exceed 2MB.',
             'new_company_region_code.required_if'   => 'Please select a region.',
             'new_company_province_code.required_if' => 'Please select a province.',
             'new_company_city_code.required_if'     => 'Please select a city / municipality.',

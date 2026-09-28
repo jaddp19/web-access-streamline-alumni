@@ -35,7 +35,7 @@
     {{-- ========== FORM CARD ========== --}}
     <div class="bg-white dark:bg-[#242526] border border-black/10 dark:border-white/10 rounded-3xl p-8">
 
-        {{-- Success flash — top of card --}}
+        {{-- Success flash --}}
         @if (session('success'))
             <div class="mb-5 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-semibold rounded-xl p-4 text-sm flex items-start gap-2">
                 <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -70,12 +70,10 @@
                     <span class="block mt-1 text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
                 @enderror
 
-                {{-- Quick-pick year chips — match against the numeric year in batch_name --}}
                 @php
                     $currentYear = (int) date('Y');
                     $recentYears = range($currentYear, $currentYear - 4);
 
-                    // Precompute a map of year => batch id once.
                     $yearToBatch = [];
                     foreach ($this->batches as $batch) {
                         if (preg_match('/(\d{4})/', (string) $batch->batch_name, $m)) {

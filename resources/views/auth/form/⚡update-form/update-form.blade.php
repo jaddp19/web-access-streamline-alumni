@@ -479,7 +479,7 @@
                                     <div class="flex items-center gap-3">
                                         <div
                                             class="w-14 h-14 rounded-lg bg-white border border-[#123524]/10 flex items-center justify-center shrink-0 overflow-hidden">
-                                            @if ($new_company_logo)
+                                            @if ($new_company_logo && str_starts_with($new_company_logo->getMimeType() ?? '', 'image/'))
                                                 <img src="{{ $new_company_logo->temporaryUrl() }}"
                                                     class="w-full h-full object-cover">
                                             @else
@@ -491,7 +491,7 @@
                                             @endif
                                         </div>
                                         <div class="flex-1">
-                                            <input type="file" wire:model="new_company_logo" accept="image/*"
+                                            <input type="file" wire:model="new_company_logo" accept="image/png,image/jpeg,image/webp"
                                                 class="block w-full text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#123524] file:text-white hover:file:bg-[#0d2819] cursor-pointer">
                                             <p class="text-[10px] text-[#123524]/40 mt-1">JPG, PNG. Max 2MB.</p>
                                         </div>

@@ -164,6 +164,46 @@ new #[Layout('layouts.app-form')] class extends Component
         $this->resetErrorBag('new_company_city_code');
     }
 
+    /**
+     * Reject non-image uploads the moment they hit the temp folder,
+     * before any Blade tries to call ->temporaryUrl() on them.
+     */
+    public function updatedNewCompanyLogo(): void
+    {
+        if (! $this->new_company_logo) {
+            return;
+        }
+
+        try {
+            $mime = (string) $this->new_company_logo->getMimeType();
+        } catch (\Throwable $e) {
+            $this->reset('new_company_logo');
+            $this->addError('new_company_logo', 'Could not read the uploaded file. Please try another image.');
+            return;
+        }
+
+        if (! str_starts_with($mime, 'image/')) {
+            $this->reset('new_company_logo');
+            $this->addError('new_company_logo', 'The logo must be an image file (JPG, PNG, or WebP).');
+            return;
+        }
+
+        try {
+            // Pass rules inline — this component has no rules() method,
+            // so validateOnly needs the rule set explicitly.
+            $this->validateOnly('new_company_logo', [
+                'new_company_logo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            ], [
+                'new_company_logo.image' => 'The logo must be an image file.',
+                'new_company_logo.mimes' => 'Logo must be JPG, PNG, or WebP.',
+                'new_company_logo.max'   => 'The logo cannot exceed 2MB.',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->reset('new_company_logo');
+            throw $e;
+        }
+    }
+
     // ===== Computed =====
 
     #[Computed]
@@ -256,16 +296,20 @@ new #[Layout('layouts.app-form')] class extends Component
     public function createCompany(): void
     {
         $this->validate([
-            'new_company_name'    => 'required|string|max:255|unique:companies,company_name',
-            'new_company_logo'    => 'nullable|image|max:2048',
-            'new_company_desc'    => 'nullable|string|max:2000',
+            'new_company_name' => 'required|string|max:255|unique:companies,company_name',
+
+            // Strictly image-only. `image` sniffs the real MIME,
+            // `mimes` whitelists the exact formats we support.
+            'new_company_logo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+
+            'new_company_desc' => 'nullable|string|max:2000',
 
             'new_company_address_type' => 'required|in:philippines,abroad',
 
-            'new_company_region_code'     => 'required_if:new_company_address_type,philippines|nullable|string',
-            'new_company_province_code'   => 'required_if:new_company_address_type,philippines|nullable|string',
-            'new_company_city_code'       => 'required_if:new_company_address_type,philippines|nullable|string',
-            'new_company_street_address'  => 'nullable|string|max:500',
+            'new_company_region_code'    => 'required_if:new_company_address_type,philippines|nullable|string',
+            'new_company_province_code'  => 'required_if:new_company_address_type,philippines|nullable|string',
+            'new_company_city_code'      => 'required_if:new_company_address_type,philippines|nullable|string',
+            'new_company_street_address' => 'nullable|string|max:500',
 
             'new_company_intl_country' => 'required_if:new_company_address_type,abroad|nullable|string|max:255',
             'new_company_intl_state'   => 'nullable|string|max:255',
@@ -273,12 +317,30 @@ new #[Layout('layouts.app-form')] class extends Component
         ], [
             'new_company_name.required'    => 'Company name is required.',
             'new_company_name.unique'      => 'A company with this name already exists.',
+            'new_company_logo.image'       => 'The logo must be an image file.',
+            'new_company_logo.mimes'       => 'Logo must be JPG, PNG, or WebP.',
+            'new_company_logo.max'         => 'The logo cannot exceed 2MB.',
             'new_company_region_code.required_if'   => 'Please select a region.',
             'new_company_province_code.required_if' => 'Please select a province.',
             'new_company_city_code.required_if'     => 'Please select a city / municipality.',
             'new_company_intl_country.required_if'  => 'Please enter the country.',
             'new_company_intl_city.required_if'     => 'Please enter the city.',
         ]);
+
+        // ---- Defense in depth: reject non-images before touching disk ----
+        if ($this->new_company_logo) {
+            try {
+                $mime = (string) $this->new_company_logo->getMimeType();
+            } catch (\Throwable $e) {
+                $this->addError('new_company_logo', 'Could not read the uploaded file. Please try another image.');
+                return;
+            }
+
+            if (! str_starts_with($mime, 'image/')) {
+                $this->addError('new_company_logo', 'The logo must be an image file (JPG, PNG, or WebP).');
+                return;
+            }
+        }
 
         $service = app(PhAddressService::class);
 
@@ -308,10 +370,10 @@ new #[Layout('layouts.app-form')] class extends Component
                 : null;
 
             $company = Company::create([
-                'company_name'    => trim($this->new_company_name),
+                'company_name'    => trim(strip_tags($this->new_company_name)),
                 'company_address' => $companyAddress ?: null,
                 'company_logo'    => $logoPath,
-                'company_desc'    => trim($this->new_company_desc) ?: null,
+                'company_desc'    => trim(strip_tags($this->new_company_desc)) ?: null,
             ]);
 
             $this->company_id         = $company->id;
@@ -325,12 +387,23 @@ new #[Layout('layouts.app-form')] class extends Component
             ]);
             $this->new_company_address_type = 'philippines';
 
+            $this->resetErrorBag([
+                'new_company_logo', 'new_company_name', 'new_company_desc',
+                'new_company_region_code', 'new_company_province_code', 'new_company_city_code',
+                'new_company_street_address',
+                'new_company_intl_country', 'new_company_intl_state', 'new_company_intl_city',
+            ]);
+
             unset($this->companies);
 
             session()->flash('company_created', 'Company "' . $company->company_name . '" created and selected.');
         } catch (\Throwable $e) {
+            if ($logoPath ?? null) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($logoPath);
+            }
+
             logger()->error('Company creation failed: ' . $e->getMessage());
-            session()->flash('error', 'Failed to create company: ' . $e->getMessage());
+            session()->flash('error', 'Failed to create company. Please try again.');
         }
     }
 
