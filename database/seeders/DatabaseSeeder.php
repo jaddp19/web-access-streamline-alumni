@@ -32,7 +32,7 @@ class DatabaseSeeder extends Seeder
             DepartmentSeeder::class,
             CourseSeeder::class,
             PhAddressSeeder::class,
-            DemoSeeder::class
+            //DemoSeeder::class
         ]);
 
         // Seed the three default accounts. Roles are already created
@@ -48,7 +48,7 @@ class DatabaseSeeder extends Seeder
         $this->seedDefaultAccount(
             email:      'program-head@csav.edu.ph',
             firstName:  'Program Head',
-            lastName:   'User',
+            lastName:   'CSAV',
             schoolId:   '0001-0002',
             role:       'program head',
         );
@@ -56,7 +56,7 @@ class DatabaseSeeder extends Seeder
         $this->seedDefaultAccount(
             email:      'alumni@csav.edu.ph',
             firstName:  'Alumni',
-            lastName:   'User',
+            lastName:   'CSAV',
             schoolId:   '0001-0003',
             role:       'alumni',
         );

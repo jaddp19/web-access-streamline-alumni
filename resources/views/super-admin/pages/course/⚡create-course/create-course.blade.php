@@ -54,7 +54,7 @@
                             class="block text-[11px] sm:text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
                             Course Name
                         </label>
-                        <input type="text" wire:model="course_title" id="course_title"
+                        <input type="text" wire:model="course_title" id="course_title" placeholder="e.g. Bachelor of Science in Information Systems"
                             class="w-full px-3 sm:px-4 py-2.5 rounded-xl border bg-[#F7F5EF] dark:bg-[#3A3B3C] text-sm text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:ring-1 transition
                             @error('course_title')
                                 border-red-400 dark:border-red-500/50
@@ -73,7 +73,7 @@
                             Course Code
                         </label>
                         <input type="text" wire:model="course_code" id="course_code"
-                            placeholder="e.g. BSIT, BSCS"
+                            placeholder="e.g. BSIS, BSCS"
                             class="w-full px-3 sm:px-4 py-2.5 rounded-xl border bg-[#F7F5EF] dark:bg-[#3A3B3C] text-sm text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:ring-1 transition
                             @error('course_code')
                                 border-red-400 dark:border-red-500/50
@@ -91,7 +91,7 @@
                             class="block text-[11px] sm:text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
                             Description
                         </label>
-                        <textarea wire:model="course_desc" id="course_desc" rows="3"
+                        <textarea wire:model="course_desc" id="course_desc" rows="3" placeholder="Describe the course...."
                             class="w-full px-3 sm:px-4 py-2.5 rounded-xl border bg-[#F7F5EF] dark:bg-[#3A3B3C] text-sm text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:ring-1 transition
                             @error('course_desc')
                                 border-red-400 dark:border-red-500/50

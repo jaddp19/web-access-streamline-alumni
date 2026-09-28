@@ -54,7 +54,7 @@
                             class="block text-[11px] sm:text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
                             Department Name
                         </label>
-                        <input wire:model="dept_name" type="text" id="dept_name"
+                        <input wire:model="dept_name" type="text" id="dept_name" placeholder="e.g. Department of Computer Studies"
                             class="w-full px-3 sm:px-4 py-2.5 rounded-xl border bg-[#F7F5EF] dark:bg-[#3A3B3C] text-sm text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:ring-1 transition
                             @error('dept_name')
                                 border-red-400 dark:border-red-500/50
@@ -72,7 +72,7 @@
                             class="block text-[11px] sm:text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
                             Department Code
                         </label>
-                        <input wire:model="dept_code" type="text" id="dept_code" placeholder="e.g. CS, BSIT"
+                        <input wire:model="dept_code" type="text" id="dept_code" placeholder="e.g. DOCS, BMAD"
                             class="w-full px-3 sm:px-4 py-2.5 rounded-xl border bg-[#F7F5EF] dark:bg-[#3A3B3C] text-sm text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:ring-1 transition
                             @error('dept_code')
                                 border-red-400 dark:border-red-500/50
@@ -90,7 +90,7 @@
                             class="block text-[11px] sm:text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
                             Description
                         </label>
-                        <textarea wire:model="dept_desc" id="dept_desc" rows="3"
+                        <textarea wire:model="dept_desc" id="dept_desc" rows="3"  placeholder="Describe the department..."
                             class="w-full px-3 sm:px-4 py-2.5 rounded-xl border bg-[#F7F5EF] dark:bg-[#3A3B3C] text-sm text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:ring-1 transition
                             @error('dept_desc')
                                 border-red-400 dark:border-red-500/50
