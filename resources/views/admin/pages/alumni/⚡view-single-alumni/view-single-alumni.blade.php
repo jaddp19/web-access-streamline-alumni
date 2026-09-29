@@ -469,10 +469,17 @@
                             <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Civil Status</dt>
                             <dd class="text-black dark:text-white mt-1">{{ Str::headline($cse->civil_status) }}</dd>
                         </div>
-                        <div>
-                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Employment Status
-                            </dt>
-                            <dd class="text-black dark:text-white mt-1">{{ Str::headline($cse->employment_status) }}</dd>
+                        <div class="min-w-0">
+                            <dt
+                                class="text-[10px] sm:text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">
+                                Employment Status</dt>
+                            <dd class="text-sm sm:text-base text-black dark:text-white mt-1">
+                                @if ($cse->employment_status === 'other' && filled($cse->employment_status_other))
+                                    Other ({{ $cse->employment_status_other }})
+                                @else
+                                    {{ \Illuminate\Support\Str::headline($cse->employment_status) }}
+                                @endif
+                            </dd>
                         </div>
                         <div>
                             <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Current Job Position

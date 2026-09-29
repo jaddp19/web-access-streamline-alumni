@@ -57,6 +57,7 @@ new #[Layout('layouts.app-form')] class extends Component
 
     // Step 3
     public string $employment_status = '';
+    public string $employment_status_other = '';
     public string $current_job_position = '';
     public string $employed_related_to_degree = '';
     public string $employment_type = '';
@@ -393,6 +394,53 @@ new #[Layout('layouts.app-form')] class extends Component
         }
     }
 
+    // ===== Employment Status =====
+
+    public function updatedEmploymentStatus(): void
+    {
+        // Leaving "other" — clear the "please specify" text
+        if ($this->employment_status !== 'other') {
+            $this->employment_status_other = '';
+            $this->resetErrorBag('employment_status_other');
+        }
+
+        // Leaving "employed" — clear all the employed-only fields
+        if ($this->employment_status !== 'employed') {
+            $this->reset([
+                'current_job_position',
+                'company_id',
+                'date_hired',
+                'employed_related_to_degree',
+                'employment_type',
+                'organization_type',
+                'employment_area',
+                'abroad_country',
+            ]);
+
+            $this->resetErrorBag([
+                'current_job_position',
+                'company_id',
+                'date_hired',
+                'employed_related_to_degree',
+                'employment_type',
+                'organization_type',
+                'employment_area',
+                'abroad_country',
+            ]);
+
+            if ($this->showNewCompanyForm) {
+                $this->showNewCompanyForm = false;
+                $this->reset([
+                    'new_company_logo', 'new_company_name', 'new_company_desc',
+                    'new_company_region_code', 'new_company_province_code', 'new_company_city_code',
+                    'new_company_street_address',
+                    'new_company_intl_country', 'new_company_intl_state', 'new_company_intl_city',
+                ]);
+                $this->new_company_address_type = 'philippines';
+            }
+        }
+    }
+
     // ===== Navigation =====
 
     public function nextStep(): void
@@ -504,7 +552,6 @@ new #[Layout('layouts.app-form')] class extends Component
             $boardRate = trim((string) $this->board_rate);
 
             // Non-board course starts verified; board course starts unverified
-            // (recordBoardAttempt + syncBoardMirrors confirms this below).
             $profile = UserProfile::updateOrCreate(
                 ['user_id' => $user->id],
                 [
@@ -523,18 +570,13 @@ new #[Layout('layouts.app-form')] class extends Component
                 ]
             );
 
-            // ── Create the first board_exams attempt (unverified) so the
-            // alumni appears in the registrar's verification queue. ──
             if ($isBoardCourse) {
                 $profile->recordBoardAttempt(
                     $this->board_taken ?: null,
                     $this->board_rate  ?: null,
                     $examName
                 );
-                // recordBoardAttempt() internally calls syncBoardMirrors(),
-                // keeping is_verified / board_taken / board_rate in sync.
             }
-            // ─────────────────────────────────────────────────────────────
 
             $profile->courses()->sync([$this->course_id]);
 
@@ -545,6 +587,9 @@ new #[Layout('layouts.app-form')] class extends Component
                 [
                     'civil_status'               => $this->civil_status,
                     'employment_status'          => $this->employment_status,
+                    'employment_status_other'    => $this->employment_status === 'other'
+                        ? ($this->employment_status_other ?: null)
+                        : null,
                     'current_job_position'       => $this->current_job_position ?: null,
                     'employed_related_to_degree' => $this->employed_related_to_degree ?: null,
                     'employment_type'            => $this->employment_type ?: null,

@@ -259,12 +259,26 @@ class DemoSeeder extends Seeder
 
         $isEmployed = in_array($employmentStatus, ['employed', 'self-employed'], true);
 
+        // ── "Other" — pick a realistic free-text reason ────────────
+        $employmentStatusOther = $employmentStatus === 'other'
+            ? fake()->randomElement([
+                'Retired',
+                'Studying full-time',
+                'Caregiver',
+                'Homemaker',
+                'On a career break',
+                'Volunteering abroad',
+            ])
+            : null;
+        // ────────────────────────────────────────────────────────────
+
         $tracer = TracerStudy::create(['user_id' => $user->id]);
 
         CivilStatusEmployment::create([
             'tracer_study_id' => $tracer->id,
             'civil_status' => fake()->randomElement(['single', 'married', 'widowed', 'separated', 'single-parent']),
             'employment_status' => $employmentStatus,
+            'employment_status_other' => $employmentStatusOther,
             'current_job_position' => $isEmployed ? fake()->jobTitle() : null,
             'employed_related_to_degree' => $isEmployed ? fake()->randomElement(['yes', 'no', 'partially-related']) : null,
             'employment_type' => $isEmployed ? fake()->randomElement(['full-time', 'part-time', 'contractual-project-based', 'freelance', 'other']) : null,

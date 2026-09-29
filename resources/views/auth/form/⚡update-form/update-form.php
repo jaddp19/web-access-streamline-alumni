@@ -60,6 +60,7 @@ new #[Layout('layouts.app-form')] class extends Component
 
     // Step 3
     public string $employment_status = '';
+    public string $employment_status_other = '';
     public string $current_job_position = '';
     public string $employed_related_to_degree = '';
     public string $employment_type = '';
@@ -148,6 +149,7 @@ new #[Layout('layouts.app-form')] class extends Component
             if ($employment) {
                 $this->civil_status               = $employment->civil_status ?? '';
                 $this->employment_status          = $employment->employment_status ?? '';
+                $this->employment_status_other    = $employment->employment_status_other ?? '';
                 $this->current_job_position       = $employment->current_job_position ?? '';
                 $this->employed_related_to_degree = $employment->employed_related_to_degree ?? '';
                 $this->employment_type            = $employment->employment_type ?? '';
@@ -378,6 +380,11 @@ new #[Layout('layouts.app-form')] class extends Component
 
     public function updatedEmploymentStatus(): void
     {
+        if ($this->employment_status !== 'other') {
+            $this->employment_status_other = '';
+            $this->resetErrorBag('employment_status_other');
+        }
+
         if ($this->employment_status !== 'employed') {
             $this->reset([
                 'current_job_position',
@@ -665,11 +672,6 @@ new #[Layout('layouts.app-form')] class extends Component
             );
 
             // ── Board exam history handling ──────────────────────────────
-            // Non-board course → wipe history (claim is gone).
-            // Board course      → record the attempt. recordBoardAttempt()
-            //                     dedupes identical submissions, preserves
-            //                     verification of previously verified rows,
-            //                     and calls syncBoardMirrors() internally.
             if (! $isBoardCourse) {
                 $profile->boardExams()->delete();
             } else {
@@ -691,6 +693,9 @@ new #[Layout('layouts.app-form')] class extends Component
                 [
                     'civil_status'      => $this->civil_status,
                     'employment_status' => $this->employment_status,
+                    'employment_status_other' => $this->employment_status === 'other'
+                        ? ($this->employment_status_other ?: null)
+                        : null,
 
                     'current_job_position'       => $isEmployed ? ($this->current_job_position ?: null) : null,
                     'employed_related_to_degree' => $isEmployed ? ($this->employed_related_to_degree ?: null) : null,

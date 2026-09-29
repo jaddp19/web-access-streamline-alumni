@@ -455,6 +455,25 @@
                         @error('employment_status')
                             <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
                         @enderror
+
+                        {{-- "Other" — please specify --}}
+                        @if ($employment_status === 'other')
+                            <div class="mt-3">
+                                <label for="employment_status_other"
+                                    class="block text-sm font-semibold text-[#123524] mb-2">
+                                    Please specify <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text"
+                                    id="employment_status_other"
+                                    wire:model.blur="employment_status_other"
+                                    maxlength="255"
+                                    placeholder="e.g. Retired, Studying full-time, Caregiver, etc."
+                                    class="w-full px-4 py-3 rounded-xl border border-[#123524]/15 text-[#123524] text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
+                                @error('employment_status_other')
+                                    <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        @endif
                     </div>
 
                     @if ($employment_status === 'employed')

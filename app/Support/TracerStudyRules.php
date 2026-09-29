@@ -23,7 +23,7 @@ class TracerStudyRules
         return match ($step) {
             1 => self::stepOne(),
             2 => self::stepTwo($ctx),
-            3 => self::stepThree($ctx),   // ← now receives ctx
+            3 => self::stepThree($ctx),
             4 => self::stepFour(),
             default => [],
         };
@@ -39,7 +39,7 @@ class TracerStudyRules
         return array_merge(
             self::stepOne(),
             self::stepTwo($ctx),
-            self::stepThree($ctx),        // ← now receives ctx
+            self::stepThree($ctx),
             self::stepFour(),
         );
     }
@@ -79,7 +79,9 @@ class TracerStudyRules
             'board_rate.required'                    => 'Please provide the board rating — a date was entered.',
             'board_rate.required_with'               => 'Please provide the board rating — a date was entered.',
 
+            // Employment
             'employment_status.required'             => 'Please select your employment status.',
+            'employment_status_other.required_if'    => 'Please specify your employment status.',
             'current_job_position.required_if'       => 'Job position is required.',
             'company_id.required_if'                 => 'Please select a company.',
             'date_hired.required_if'                 => 'Please enter the date you were hired.',
@@ -188,7 +190,9 @@ class TracerStudyRules
         $batchYear = $minDate ? (int) substr($minDate, 0, 4) : null;
 
         return [
-            'employment_status'    => 'required|in:employed,unemployed,self-employed,other',
+            'employment_status'       => 'required|in:employed,unemployed,self-employed,other',
+            'employment_status_other' => 'required_if:employment_status,other|nullable|string|max:255',
+
             'current_job_position' => 'required_if:employment_status,employed|nullable|string|max:255',
             'company_id'           => 'required_if:employment_status,employed|nullable|exists:companies,id',
 
@@ -235,11 +239,6 @@ class TracerStudyRules
 
     /**
      * Resolve the earliest allowed date from the alumni's batch year.
-     * Used as the floor for both `board_taken` and `date_hired`.
-     *
-     * Batch 2026 → "2026-01-01"
-     * Batch 2020 → "2020-01-01"
-     * No batch / non-numeric batch → BOARD_EXAM_MIN_DATE
      */
     protected static function resolveGraduationMinDate(int|string|null $batchId): string
     {

@@ -901,6 +901,7 @@ class DashboardAnalytics
                 'departments.dept_code',
             )
             ->orderBy('board_exams.top_notcher_rank')
+            ->orderByDesc('board_exams.rate')
             ->orderByDesc('board_exams.date_taken')
             ->first();
 

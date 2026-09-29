@@ -507,6 +507,35 @@
                                             </div>
                                         </div>
                                     </label>
+
+                                    {{-- Profile visibility --}}
+                                    <label
+                                        class="flex items-center justify-between bg-[#F8FAFC] dark:bg-[#3A3B3C] border rounded-xl px-4 py-4 cursor-pointer hover:bg-white dark:hover:bg-white/5 transition group
+                                        @error('profileVisible') border-red-400 dark:border-red-500/40 @else border-black/5 dark:border-white/10 @enderror">
+                                        <div class="flex flex-col pr-3">
+                                            <p
+                                                class="font-semibold text-sm text-black dark:text-white group-hover:text-[#1C6B45] dark:group-hover:text-[#D4A537] transition">
+                                                Show my profile to other alumni</p>
+                                            <p class="text-xs text-black/60 dark:text-white/60 mt-0.5">
+                                                When turned off, your profile stays visible to the registrar, but
+                                                other alumni won't see your details.
+                                            </p>
+                                            @error('profileVisible')
+                                                <span
+                                                    class="text-red-500 dark:text-red-400 text-xs font-medium mt-1">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                        <div class="relative inline-flex items-center shrink-0 ml-3">
+                                            <input type="checkbox" wire:model.defer="profileVisible"
+                                                class="sr-only peer">
+                                            <div
+                                                class="w-11 h-6 bg-black/20 dark:bg-white/20 rounded-full peer peer-checked:bg-[#1C6B45] dark:peer-checked:bg-[#D4A537] transition-colors">
+                                            </div>
+                                            <div
+                                                class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5 shadow-sm">
+                                            </div>
+                                        </div>
+                                    </label>
                                 </div>
 
                                 <div class="flex items-center justify-end pt-4">

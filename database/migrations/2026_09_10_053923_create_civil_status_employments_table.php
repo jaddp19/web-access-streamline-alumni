@@ -17,6 +17,7 @@ return new class extends Migration
 
             $table->enum('civil_status', ['single', 'married', 'widowed', 'separated', 'single-parent']);
             $table->enum('employment_status', ['employed', 'unemployed', 'self-employed', 'other']);
+            $table->string('employment_status_other')->nullable();
             $table->string('current_job_position')->nullable();
             $table->enum('employed_related_to_degree', ['yes', 'no', 'partially-related'])->nullable();
             $table->enum('employment_type', ['full-time', 'part-time', 'contractual-project-based', 'freelance', 'other'])->nullable();

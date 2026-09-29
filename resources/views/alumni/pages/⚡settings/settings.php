@@ -47,9 +47,13 @@ new #[Layout('layouts.app-settings')] class extends Component
 
         $this->email = $user->email;
 
-        $this->profileVisible = ! ($this->userProfile?->is_private ?? false);
-        $this->emailNotifications = $profile?->email_notifications ?? true; 
+        // Load preference values from the user's profile via the
+        // computed property. (Previously referenced an undefined
+        // `$profile` variable which silently fell back to defaults.)
+        $profile = $this->userProfile;
 
+        $this->profileVisible     = ! ($profile?->is_private ?? false);
+        $this->emailNotifications = $profile?->email_notifications ?? true;
     }
 
     // ===== Computed =====
@@ -151,7 +155,7 @@ new #[Layout('layouts.app-settings')] class extends Component
 
         if ($profile = $this->userProfile) {
             $profile->update([
-                'is_private' => ! $validated['profileVisible'],
+                'is_private'          => ! $validated['profileVisible'],
                 'email_notifications' => $validated['emailNotifications'],
             ]);
 
