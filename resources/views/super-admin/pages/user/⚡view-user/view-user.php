@@ -403,7 +403,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function deleteSelected(): void
     {
-        $count = $this->selectedUsersQuery()->delete();
+        $count = User::deleteWithAudit(
+            $this->selectedUsersQuery()->where('id', '!=', Auth::id())
+        );
 
         $this->selectedUsers = [];
         $this->selectAll = false;

@@ -68,9 +68,8 @@ class SettingsRules
     public static function preferences(): array
     {
         return [
-            'emailNotifications' => 'required|boolean',
-            'eventNotifications' => 'required|boolean',
-            'profileVisible'     => 'required|boolean',
+            'profileVisible'     => ['boolean'],
+            'emailNotifications' => ['boolean'],
         ];
     }
 
@@ -131,11 +130,7 @@ class SettingsRules
             'new_password.symbols'      => 'Your new password must contain at least one symbol (e.g. !@#$%).',
 
             // ---- Preferences ----
-            'emailNotifications.required' => 'Email notifications setting is required.',
-            'emailNotifications.boolean'  => 'Email notifications must be on or off.',
-            'eventNotifications.required' => 'Event alerts setting is required.',
-            'eventNotifications.boolean'  => 'Event alerts must be on or off.',
-            'profileVisible.required'     => 'Profile visibility setting is required.',
+            'emailNotifications.boolean'  => 'The email notification preference must be true or false.',
             'profileVisible.boolean'      => 'Profile visibility must be on or off.',
         ];
     }

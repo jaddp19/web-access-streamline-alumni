@@ -27,6 +27,8 @@ Route::middleware('guest')->group(function (){
 Route::middleware('auth')->group(function () {
     Route::livewire('/form', 'auth::form.form-answer')->name('form');
     Route::livewire('/update-form', 'auth::form.update-form')->name('update-form');
+
+    Route::livewire('/change-password', 'auth::change-password')->name('password.change');
 });
 
 Route::middleware(['auth', 'role:registrar'])->prefix('super-admin')->group(function () {

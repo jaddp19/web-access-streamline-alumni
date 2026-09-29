@@ -178,8 +178,25 @@
                                 Board Rating (%)
                                 <span class="text-black/40 dark:text-white/40 text-[10px] font-normal normal-case">(optional)</span>
                             </label>
-                            <input type="number" id="board_rate" wire:model="board_rate"
-                                min="0" max="100" step="0.01" placeholder="e.g. 85.50"
+                            <input type="text"
+                                id="board_rate"
+                                wire:model.blur="board_rate"
+                                inputmode="decimal"
+                                maxlength="5"
+                                placeholder="e.g. 85.50"
+                                pattern="^\d{1,2}(\.\d{1,2})?$"
+                                title="Up to 2 digits before the decimal and 2 decimal places (e.g. 85.50)"
+                                x-data
+                                x-on:input="
+                                    let v = $event.target.value.replace(/[^0-9.]/g, '');
+                                    const parts = v.split('.');
+                                    if (parts.length > 2) v = parts[0] + '.' + parts.slice(1).join('');
+                                    const [int, dec] = v.split('.');
+                                    let clean = int.slice(0, 2);
+                                    if (dec !== undefined) clean += '.' + dec.slice(0, 2);
+                                    if (clean !== $event.target.value) $event.target.value = clean;
+                                    $wire.set('board_rate', clean);
+                                "
                                 class="w-full px-4 py-2.5 rounded-xl border bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:ring-1 transition
                                 @error('board_rate') border-red-400 dark:border-red-500/50 @else border-black/10 dark:border-white/10 focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] @enderror">
                             @error('board_rate')

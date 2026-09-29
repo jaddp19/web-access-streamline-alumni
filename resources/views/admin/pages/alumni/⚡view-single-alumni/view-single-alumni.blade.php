@@ -228,7 +228,7 @@
                         $profile = $user->userProfile;
                         $location = $profile->location ?? [];
 
-                        // Gender: column first, JSON fallback (case-insensitive format fix)
+                        // Gender: column first, JSON fallback
                         $rawGender = $profile->gender ?? ($location['gender'] ?? null);
                         $gender = $rawGender ? \Illuminate\Support\Str::headline(strtolower($rawGender)) : '—';
 
@@ -249,7 +249,7 @@
                                 $rawPhone2;
                         }
 
-                        // Full address: stored string first, else build from parts
+                        // Full address
                         $fullAddress =
                             $location['address'] ??
                             collect([
@@ -279,36 +279,142 @@
                                     —
                                 @endif
                             </dd>
-                            @if ($displayPhone2)
-                                <div>
-                                    <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Alternate
-                                        Number</dt>
-                                    <dd class="text-black dark:text-white mt-1 font-medium">
-                                        <a href="tel:{{ $rawPhone2 }}" class="hover:text-[#123524] dark:hover:text-[#D4A537] transition">
-                                            {{ $displayPhone2 }}
-                                        </a>
-                                    </dd>
-                                </div>
-                            @endif
                         </div>
+                        @if ($displayPhone2)
+                            <div>
+                                <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Alternate Number</dt>
+                                <dd class="text-black dark:text-white mt-1 font-medium">
+                                    <a href="tel:{{ $rawPhone2 }}" class="hover:text-[#123524] dark:hover:text-[#D4A537] transition">
+                                        {{ $displayPhone2 }}
+                                    </a>
+                                </dd>
+                            </div>
+                        @endif
                         <div class="sm:col-span-2">
                             <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Address</dt>
                             <dd class="text-black dark:text-white mt-1">{{ $fullAddress ?: '—' }}</dd>
                         </div>
-                        <div>
-                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Board Exam Taken
-                            </dt>
-                            <dd class="text-black dark:text-white mt-1">{{ $user->userProfile->board_taken ?? '—' }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Board Rating</dt>
-                            <dd class="text-black dark:text-white mt-1">{{ $user->userProfile->board_rate ?? '—' }}</dd>
-                        </div>
+
+                        @if ($profile->is_verified)
+                            {{-- Verified board data → show normally --}}
+                            <div>
+                                <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Featured Board Date</dt>
+                                <dd class="text-black dark:text-white mt-1">
+                                    {{ $profile->board_taken?->format('M d, Y') ?? '—' }}
+                                </dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Featured Board Rating</dt>
+                                <dd class="text-black dark:text-white mt-1">
+                                    {{ $profile->board_rate !== null ? number_format((float) $profile->board_rate, 2) . '%' : '—' }}
+                                </dd>
+                            </div>
+                        @elseif ($profile->board_taken || $profile->board_rate !== null)
+                            {{-- Unverified board data → hidden until verified --}}
+                            <div class="sm:col-span-2">
+                                <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Board Details</dt>
+                                <dd class="mt-1 flex items-start gap-2 text-sm text-amber-700 dark:text-amber-400">
+                                    <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                                    </svg>
+                                    <span>
+                                        <span class="font-semibold">Awaiting verification</span>
+                                        &mdash; submitted board details are hidden from public view until you approve this profile.
+                                    </span>
+                                </dd>
+                            </div>
+                        @endif
                     </dl>
                 @else
                     <p class="text-black/50 dark:text-white/50 text-sm">This alumni hasn't completed their profile yet.</p>
                 @endif
             </div>
+
+            <!-- Board Examinations (verified only) -->
+            @php
+                $boardExams = $user->userProfile?->boardExams ?? collect();
+            @endphp
+
+            @if ($boardExams->isNotEmpty())
+                <div class="bg-white dark:bg-[#242526] border border-black/10 dark:border-white/5 rounded-3xl p-8">
+                    <div class="flex items-center justify-between gap-3 mb-4 flex-wrap">
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-sm font-bold text-[#123524] dark:text-white uppercase tracking-wide">
+                                Board Examinations
+                            </h2>
+
+                            <span class="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Verified
+                            </span>
+                        </div>
+
+                        <span class="text-xs px-2 py-0.5 rounded-full font-semibold bg-[#123524]/5 dark:bg-white/10 text-[#123524]/60 dark:text-white/60">
+                            {{ $boardExams->count() }} {{ \Illuminate\Support\Str::plural('attempt', $boardExams->count()) }}
+                        </span>
+                    </div>
+
+                    @foreach ($boardExams as $exam)
+                        @php
+                            $rate   = (float) $exam->rate;
+                            $passed = (bool) $exam->passed;
+                        @endphp
+
+                        <div wire:key="board-exam-{{ $exam->id }}"
+                            class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 p-3 rounded-xl bg-[#F1EFE7] dark:bg-[#3A3B3C] mb-2 last:mb-0">
+
+                            {{-- Left: attempt details --}}
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide bg-[#123524] text-white">
+                                        {{ $exam->attempt_label }}
+                                    </span>
+
+                                    @if ($exam->exam_name)
+                                        <span class="text-xs font-semibold text-black/70 dark:text-white/70">
+                                            {{ $exam->exam_name }}
+                                        </span>
+                                    @endif
+
+                                    @if ($exam->is_top_notcher)
+                                        <span class="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide bg-[#D4A537] text-[#123524]">
+                                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4-6.2-4.5-6.2 4.5 2.4-7.4L2 9.4h7.6z" />
+                                            </svg>
+                                            {{ $exam->top_notcher_label }}
+                                        </span>
+                                    @endif
+                                </div>
+
+                                <p class="text-xs text-black/60 dark:text-white/60 mt-1.5">
+                                    Taken {{ $exam->date_taken?->format('M d, Y') ?? '—' }}
+                                    @if ($exam->rate !== null)
+                                        &middot; Rating: <span class="font-semibold">{{ number_format($rate, 2) }}%</span>
+                                    @endif
+                                </p>
+
+                                @if ($exam->remarks)
+                                    <p class="text-[11px] text-black/40 dark:text-white/40 mt-1 italic">
+                                        {{ $exam->remarks }}
+                                    </p>
+                                @endif
+                            </div>
+
+                            {{-- Right: pass/fail badge --}}
+                            <span class="self-start sm:self-center shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap
+                                {{ $passed
+                                    ? 'text-green-700 dark:text-emerald-400 bg-green-100 dark:bg-emerald-500/15'
+                                    : 'text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-500/15' }}">
+                                {{ $passed ? 'Passed' : 'Failed' }}
+                            </span>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
 
             <!-- Education -->
             <div class="bg-white dark:bg-[#242526] border border-black/10 dark:border-white/5 rounded-3xl p-8">
@@ -345,11 +451,6 @@
                                     class="text-xs font-semibold text-[#123524] dark:text-[#D4A537] bg-[#D4A537]/20 dark:bg-[#D4A537]/20 px-2.5 py-1 rounded-full">
                                     Currently Employed
                                 </span>
-                            @endif
-                            @if ($work->is_current_employed)
-                                <span
-                                    class="text-xs font-semibold text-green-700 dark:text-emerald-400 bg-green-100 dark:bg-emerald-500/15 px-2.5 py-1 rounded-full">Currently
-                                    Employed</span>
                             @endif
                         </div>
                     </div>

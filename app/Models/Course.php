@@ -4,12 +4,15 @@ namespace App\Models;
 
 use App\Models\Department;
 use App\Models\UserProfile;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Course extends Model
 {
+    use LogsActivity;
+    protected array $auditExclude = ['id', 'course_slug', 'course_desc'];
     protected $fillable = [
         'course_title',
         'course_slug',

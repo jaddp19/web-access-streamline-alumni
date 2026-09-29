@@ -44,17 +44,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     }
 
     // =========================================================
-    //  ADDRESS HYDRATION (reverse-parse from the saved string)
+    //  ADDRESS HYDRATION
     // =========================================================
 
-    /**
-     * Best-effort parse of the composed `company_address` string back into
-     * the structured fields.
-     *
-     * If a segment matches a PH region name, we treat it as a PH address and
-     * try to match province + city by name. Otherwise we assume abroad and
-     * split from the end: last = country, second-last = state, rest = city.
-     */
     protected function hydrateAddress(?string $address): void
     {
         if (blank($address)) {
@@ -73,7 +65,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $service     = app(PhAddressService::class);
         $usedIndexes = [];
 
-        // ---- Try to find a region name in the segments ----
         $matchedRegion = null;
         foreach ($service->regions() as $region) {
             $idx = array_search($region->name, $segments, true);
@@ -85,7 +76,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         }
 
         if (! $matchedRegion) {
-            // Not obviously PH — treat as abroad and split from the end.
             $this->address_type = 'abroad';
 
             $count = count($segments);
@@ -106,7 +96,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $this->address_type = 'philippines';
         $this->regionCode   = $matchedRegion->code;
 
-        // ---- Province ----
         $matchedProvince = null;
         foreach ($service->provinces($matchedRegion->code) as $province) {
             $idx = array_search($province->name, $segments, true);
@@ -120,7 +109,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         if ($matchedProvince) {
             $this->provinceCode = $matchedProvince->code;
 
-            // ---- City ----
             $matchedCity = null;
             foreach ($service->cities($matchedProvince->code) as $city) {
                 $idx = array_search($city->name, $segments, true);
@@ -136,7 +124,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             }
         }
 
-        // ---- Whatever's left becomes the street address ----
         $streetParts = [];
         foreach ($segments as $i => $segment) {
             if (! in_array($i, $usedIndexes, true)) {
@@ -206,9 +193,36 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     //  HOOKS
     // =========================================================
 
+    /**
+     * Reject non-image uploads the moment they hit the temp folder,
+     * BEFORE the Blade gets a chance to call ->temporaryUrl().
+     */
     public function updatedCompanyLogo(): void
     {
-        $this->validateOnly('company_logo');
+        if (! $this->company_logo) {
+            return;
+        }
+
+        try {
+            $mime = (string) $this->company_logo->getMimeType();
+        } catch (\Throwable $e) {
+            $this->reset('company_logo');
+            $this->addError('company_logo', 'Could not read the uploaded file. Please try another image.');
+            return;
+        }
+
+        if (! str_starts_with($mime, 'image/')) {
+            $this->reset('company_logo');
+            $this->addError('company_logo', 'The logo must be an image file (JPG, PNG, WebP, or SVG).');
+            return;
+        }
+
+        try {
+            $this->validateOnly('company_logo');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->reset('company_logo');
+            throw $e;
+        }
     }
 
     public function updatedRemoveLogo(): void
@@ -274,7 +288,21 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     {
         $validated = $this->validate();
 
-        // ---- Compose address string ----
+        // Defense in depth: reject non-images before touching disk.
+        if ($this->company_logo) {
+            try {
+                $mime = (string) $this->company_logo->getMimeType();
+            } catch (\Throwable $e) {
+                $this->addError('company_logo', 'Could not read the uploaded file. Please try another image.');
+                return;
+            }
+
+            if (! str_starts_with($mime, 'image/')) {
+                $this->addError('company_logo', 'The logo must be an image file (JPG, PNG, WebP, or SVG).');
+                return;
+            }
+        }
+
         $service = app(PhAddressService::class);
 
         if ($this->address_type === 'philippines') {
@@ -301,7 +329,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $clearLogo   = false;
 
         try {
-            // ---- 1. Decide logo action ----
             if ($this->company_logo) {
                 $newLogoPath = $this->company_logo->store('company-logos', 'public');
                 $finalLogo   = $newLogoPath;
@@ -312,7 +339,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                 $finalLogo = $oldLogoPath;
             }
 
-            // ---- 2. Update DB in transaction ----
             DB::transaction(function () use ($validated, $finalLogo, $companyAddress) {
                 $this->company->update([
                     'company_name'    => trim(strip_tags($validated['company_name'])),
@@ -346,7 +372,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             return;
         }
 
-        // ---- 3. Cleanup OLD logo AFTER commit ----
         if ($oldLogoPath && ($newLogoPath || $clearLogo)) {
             $this->deleteLogoFile($oldLogoPath, $this->company->id);
         }

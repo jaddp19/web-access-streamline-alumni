@@ -218,7 +218,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                 // Collect logos first for cleanup.
                 $logos = (clone $query)->pluck('dept_logo', 'id')->all();
 
-                $count = $query->delete();
+                $count = Department::deleteWithAudit($query);
 
                 return ['count' => $count, 'logos' => $logos];
             });

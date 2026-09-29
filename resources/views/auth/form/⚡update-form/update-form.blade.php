@@ -401,8 +401,24 @@
                                         Rating (%) <span
                                             class="text-[#123524]/40 text-xs font-normal">(optional)</span>
                                     </label>
-                                    <input type="number" wire:model="board_rate" min="0" max="100"
-                                        step="0.01" placeholder="e.g. 85.50"
+                                    <input type="text"
+                                        wire:model.blur="board_rate"
+                                        inputmode="decimal"
+                                        maxlength="5"
+                                        placeholder="e.g. 85.50"
+                                        pattern="^\d{1,2}(\.\d{1,2})?$"
+                                        title="Up to 2 digits before the decimal and 2 decimal places (e.g. 85.50)"
+                                        x-data
+                                        x-on:input="
+                                            let v = $event.target.value.replace(/[^0-9.]/g, '');
+                                            const parts = v.split('.');
+                                            if (parts.length > 2) v = parts[0] + '.' + parts.slice(1).join('');
+                                            const [int, dec] = v.split('.');
+                                            let clean = int.slice(0, 2);
+                                            if (dec !== undefined) clean += '.' + dec.slice(0, 2);
+                                            if (clean !== $event.target.value) $event.target.value = clean;
+                                            $wire.set('board_rate', clean);
+                                        "
                                         class="w-full px-4 py-3 rounded-xl border border-[#123524]/15 text-[#123524] text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
                                     @error('board_rate')
                                         <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>

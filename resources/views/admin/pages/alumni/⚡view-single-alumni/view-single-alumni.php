@@ -23,6 +23,10 @@ new #[Layout('layouts::app-admin')] class extends Component
             'userProfile.batch:id,batch_name',
             'userProfile.courses.department',
 
+            // ── Board exam attempts — only VERIFIED ones ──
+            'userProfile.boardExams' => fn ($q) => $q->where('is_verified', true)
+                                                      ->orderByDesc('date_taken'),
+
             'workHistories.company',
             'workHistories:id,user_id,work_name,date_hired,is_current_job,company_id',
 
@@ -46,6 +50,7 @@ new #[Layout('layouts::app-admin')] class extends Component
 
         $profile->update([
             'is_approved'           => true,
+            'is_verified'           => true,
             'last_rejection_reason' => null,
         ]);
 
@@ -100,6 +105,7 @@ new #[Layout('layouts::app-admin')] class extends Component
 
         $profile->update([
             'is_approved'           => false,
+            'is_verified'           => false,
             'last_rejection_reason' => $reason,
         ]);
 
@@ -149,6 +155,10 @@ new #[Layout('layouts::app-admin')] class extends Component
         $this->user->refresh();
         $this->user->load([
             'userProfile:id,user_id,batch_id,avatar,is_verified,is_private,is_approved,last_rejection_reason,gender,contact_number_1,contact_number_2,location,board_taken,board_rate',
+
+            // Only verified attempts after reload too.
+            'userProfile.boardExams' => fn ($q) => $q->where('is_verified', true)
+                                                      ->orderByDesc('date_taken'),
         ]);
     }
 };

@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Storage;
 class Event extends Model
 {
     use HasFactory, LogsActivity;
-
+    protected array $auditExclude = ['id', 'slug'];
     protected $fillable = [
         'title',
         'slug',
@@ -33,8 +33,6 @@ class Event extends Model
         'registration_deadline' => 'datetime',
         'capacity'              => 'integer',
     ];
-
-    protected array $auditExclude = ['updated_at'];
 
     // =========================================================
     //  RELATIONSHIPS

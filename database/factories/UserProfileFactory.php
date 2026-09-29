@@ -22,12 +22,16 @@ class UserProfileFactory extends Factory
             'location'              => $this->sampleLocation(),
             'batch_id'              => Batch::query()->inRandomOrder()->value('id') ?? Batch::factory(),
             'is_private'            => false,
-            'is_verified'           => fake()->boolean(70),
+
+            // Cached mirror — kept in sync by syncBoardMirrors().
+            // Default false; real value is derived from board_exams by the seeder.
+            'is_verified'           => false,
 
             // Approval workflow — default is pending (matches migration default).
             'is_approved'           => false,
             'last_rejection_reason' => null,
 
+            // Mirror columns — filled by syncBoardMirrors() after attempts exist.
             'board_taken'           => null,
             'board_rate'            => null,
         ];
@@ -42,8 +46,8 @@ class UserProfileFactory extends Factory
     {
         return $this->state(fn () => [
             'is_approved'           => true,
-            'is_verified'           => true,
             'last_rejection_reason' => null,
+            // is_verified is left to the seeder to derive from board_exams.
         ]);
     }
 
@@ -56,7 +60,7 @@ class UserProfileFactory extends Factory
         ]);
     }
 
-    /** Rejected — always includes a reason, since the reason is what the UI shows. */
+    /** Rejected — always includes a reason. */
     public function rejected(?string $reason = null): static
     {
         return $this->state(fn () => [
@@ -72,30 +76,9 @@ class UserProfileFactory extends Factory
     }
 
     // =========================================================
-    //  BOARD EXAM
-    // =========================================================
-
-    public function withBoardExam(): static
-    {
-        return $this->state(function () {
-            $passed = fake()->boolean(85);
-
-            $rate = $passed
-                ? fake()->randomFloat(2, 75, 99)
-                : fake()->randomFloat(2, 60, 74.99);
-
-            return [
-                'board_taken' => fake()->dateTimeBetween('-6 years', 'now'),
-                'board_rate'  => $rate,
-            ];
-        });
-    }
-
-    // =========================================================
     //  LOCATION
     // =========================================================
 
-    /** Philippines location shape that matches the profile form. */
     protected function sampleLocation(): array
     {
         $street = fake()->streetAddress();

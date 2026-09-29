@@ -48,6 +48,8 @@ new #[Layout('layouts.app-settings')] class extends Component
         $this->email = $user->email;
 
         $this->profileVisible = ! ($this->userProfile?->is_private ?? false);
+        $this->emailNotifications = $profile?->email_notifications ?? true; 
+
     }
 
     // ===== Computed =====
@@ -150,6 +152,7 @@ new #[Layout('layouts.app-settings')] class extends Component
         if ($profile = $this->userProfile) {
             $profile->update([
                 'is_private' => ! $validated['profileVisible'],
+                'email_notifications' => $validated['emailNotifications'],
             ]);
 
             unset($this->userProfile);

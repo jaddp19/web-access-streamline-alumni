@@ -22,6 +22,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             'userProfile:id,user_id,batch_id,avatar,is_verified,is_private,is_approved,last_rejection_reason,gender,contact_number_1,contact_number_2,location,board_taken,board_rate',
             'userProfile.batch:id,batch_name',
 
+            // ── Board exam attempts — only VERIFIED ones ──
+            'userProfile.boardExams' => fn ($q) => $q->where('is_verified', true)
+                                                      ->orderByDesc('date_taken'),
+
             'userProfile.courses' => fn ($q) => $q->orderBy('course_title'),
             'userProfile.courses:id,course_title,course_code,course_type,department_id',
             'userProfile.courses.department:id,dept_name',
@@ -150,6 +154,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $this->user->refresh();
         $this->user->load([
             'userProfile:id,user_id,batch_id,avatar,is_verified,is_private,is_approved,last_rejection_reason,gender,contact_number_1,contact_number_2,location,board_taken,board_rate',
+
+            // ── Only verified attempts after reload too ──
+            'userProfile.boardExams' => fn ($q) => $q->where('is_verified', true)
+                                                      ->orderByDesc('date_taken'),
         ]);
     }
 };

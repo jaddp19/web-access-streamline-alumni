@@ -44,6 +44,13 @@
                                     : 'text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white' }}">
                             Engagement
                         </button>
+                        <button type="button" wire:click="setTab('board_passers')"
+                            class="shrink-0 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition whitespace-nowrap
+                                {{ $tab === 'board_passers'
+                                    ? 'bg-white dark:bg-[#242526] text-[#123524] dark:text-white shadow-sm'
+                                    : 'text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white' }}">
+                            Board Passers
+                        </button>
                     </div>
 
                     <button type="button" onclick="window.print()"
@@ -530,6 +537,197 @@
                         </div>
                     @endif
                 @endif
+
+                {{-- ============ TAB 4 — BOARD PASSERS & TOP NOTCHERS ============ --}}
+                @if ($tab === 'board_passers')
+                    @php $summary = $this->boardPasserSummary; @endphp
+
+                    <div
+                        class="px-4 sm:px-6 py-4 border-b border-black/5 dark:border-white/5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div class="min-w-0">
+                            <h2 class="text-sm sm:text-base font-bold text-[#0f2b1c] dark:text-white"
+                                style="font-family: 'Fraunces', serif;">
+                                Alumni Board Passers & Top Notchers
+                            </h2>
+                            <p class="text-xs text-black/50 dark:text-white/50 mt-0.5">
+                                Verified board passers · top notchers listed first
+                            </p>
+                        </div>
+
+                        <button type="button" wire:click="exportBoardPassersCsv" wire:loading.attr="disabled"
+                            wire:target="exportBoardPassersCsv"
+                            class="no-print shrink-0 inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 rounded-xl
+                                   bg-white dark:bg-[#3A3B3C]
+                                   border border-black/10 dark:border-white/10
+                                   text-[#123524] dark:text-white
+                                   text-xs sm:text-sm font-semibold
+                                   hover:bg-black/5 dark:hover:bg-white/5
+                                   transition disabled:opacity-50 disabled:cursor-wait">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                            </svg>
+                            <span wire:loading.remove wire:target="exportBoardPassersCsv">Export CSV</span>
+                            <span wire:loading wire:target="exportBoardPassersCsv">Exporting…</span>
+                        </button>
+                    </div>
+
+                    {{-- Summary stats --}}
+                    <div class="px-4 sm:px-6 pt-5 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                        <div class="rounded-xl bg-[#123524]/5 dark:bg-white/5 border border-[#123524]/10 dark:border-white/10 p-3">
+                            <p class="text-[10px] uppercase tracking-wide text-[#123524]/60 dark:text-white/60 font-bold">
+                                Verified Alumni</p>
+                            <p class="text-2xl font-bold text-[#0f2b1c] dark:text-white mt-0.5">
+                                {{ $summary['verified_alumni'] }}</p>
+                        </div>
+
+                        <div class="rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 p-3">
+                            <p class="text-[10px] uppercase tracking-wide text-emerald-700 dark:text-emerald-400 font-bold">
+                                Board Passers</p>
+                            <p class="text-2xl font-bold text-[#0f2b1c] dark:text-white mt-0.5">
+                                {{ $summary['passed_alumni'] }}</p>
+                        </div>
+
+                        <div class="rounded-xl bg-[#D4A537]/10 border border-[#D4A537]/20 p-3">
+                            <p class="text-[10px] uppercase tracking-wide text-[#a97f1f] dark:text-[#E5B94A] font-bold">
+                                Top Notchers</p>
+                            <p class="text-2xl font-bold text-[#0f2b1c] dark:text-white mt-0.5">
+                                {{ $summary['top_notcher_alumni'] }}</p>
+                        </div>
+
+                        <div class="rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 p-3">
+                            <p class="text-[10px] uppercase tracking-wide text-blue-700 dark:text-blue-400 font-bold">
+                                Pass Rate</p>
+                            <p class="text-2xl font-bold text-[#0f2b1c] dark:text-white mt-0.5">
+                                {{ number_format($summary['pass_rate'], 1) }}%</p>
+                        </div>
+                    </div>
+
+                    @if (empty($this->boardPassers))
+                        <div class="px-6 py-16 text-center">
+                            <p class="text-sm text-black/40 dark:text-white/40">
+                                No verified board passers found for the selected filters.
+                            </p>
+                        </div>
+                    @else
+                        <div class="px-4 sm:px-6 py-5">
+                            <div class="overflow-x-auto border border-black/5 dark:border-white/5 rounded-xl">
+                                <table class="min-w-full text-xs sm:text-sm">
+                                    <thead class="bg-[#F7F5EF] dark:bg-[#3A3B3C]">
+                                        <tr>
+                                            <th
+                                                class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px] w-12">
+                                                #</th>
+                                            <th
+                                                class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">
+                                                Name</th>
+                                            <th
+                                                class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px] hidden sm:table-cell">
+                                                Batch</th>
+                                            <th
+                                                class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px] hidden md:table-cell">
+                                                Course</th>
+                                            <th
+                                                class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">
+                                                Rating</th>
+                                            <th
+                                                class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px] hidden sm:table-cell">
+                                                Attempt</th>
+                                            <th
+                                                class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px] hidden lg:table-cell">
+                                                Date Taken</th>
+                                            <th
+                                                class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">
+                                                Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-black/5 dark:divide-white/5">
+                                        @foreach ($this->boardPassers as $i => $row)
+                                            @php
+                                                $fullName = trim(
+                                                    ($row['first_name'] ?? '') . ' ' .
+                                                    ($row['middle_name'] ?? '') . ' ' .
+                                                    ($row['last_name'] ?? '')
+                                                );
+                                                $isTop = ! empty($row['is_top_notcher']);
+                                            @endphp
+                                            <tr
+                                                class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors
+                                                    {{ $isTop ? 'bg-[#D4A537]/5 dark:bg-[#D4A537]/10' : '' }}">
+                                                <td class="px-4 py-3">
+                                                    @if ($isTop)
+                                                        <span
+                                                            class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#D4A537] text-[#123524] font-bold text-[10px]">
+                                                            {{ $row['top_notcher_rank'] ?? '★' }}
+                                                        </span>
+                                                    @else
+                                                        <span class="text-[#123524]/40 dark:text-white/40 font-bold">
+                                                            {{ $i + 1 }}
+                                                        </span>
+                                                    @endif
+                                                </td>
+                                                <td class="px-4 py-3">
+                                                    <p class="font-semibold text-[#123524] dark:text-white truncate max-w-[220px]">
+                                                        {{ $fullName }}
+                                                    </p>
+                                                    <p class="text-[11px] text-black/40 dark:text-white/40 truncate max-w-[220px]">
+                                                        {{ $row['email'] ?? '' }}
+                                                    </p>
+                                                    <p class="text-[11px] text-black/40 dark:text-white/40 sm:hidden">
+                                                        {{ $row['batch_name'] ?? '—' }}
+                                                    </p>
+                                                </td>
+                                                <td
+                                                    class="px-4 py-3 text-black/70 dark:text-white/70 hidden sm:table-cell whitespace-nowrap">
+                                                    {{ $row['batch_name'] ?? '—' }}</td>
+                                                <td
+                                                    class="px-4 py-3 text-black/70 dark:text-white/70 hidden md:table-cell">
+                                                    <p class="font-semibold text-[#123524] dark:text-white truncate max-w-[200px]">
+                                                        {{ $row['course_code'] ?? '—' }}
+                                                    </p>
+                                                    <p class="text-[11px] text-black/40 dark:text-white/40 truncate max-w-[200px]">
+                                                        {{ $row['dept_name'] ?? '' }}
+                                                    </p>
+                                                </td>
+                                                <td
+                                                    class="px-4 py-3 text-end font-semibold text-[#123524] dark:text-white whitespace-nowrap">
+                                                    {{ $row['rate'] !== null ? number_format((float) $row['rate'], 2) . '%' : '—' }}
+                                                </td>
+                                                <td
+                                                    class="px-4 py-3 text-end text-black/70 dark:text-white/70 hidden sm:table-cell">
+                                                    {{ $row['attempt_number'] ?? '—' }}
+                                                </td>
+                                                <td
+                                                    class="px-4 py-3 text-black/60 dark:text-white/60 hidden lg:table-cell whitespace-nowrap">
+                                                    {{ $row['date_taken'] ? \Carbon\Carbon::parse($row['date_taken'])->format('M j, Y') : '—' }}
+                                                </td>
+                                                <td class="px-4 py-3 text-end">
+                                                    @if ($isTop)
+                                                        <span
+                                                            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#D4A537] text-[#123524]">
+                                                            <svg class="w-3 h-3" fill="currentColor"
+                                                                viewBox="0 0 24 24">
+                                                                <path
+                                                                    d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4-6.2-4.5-6.2 4.5 2.4-7.4L2 9.4h7.6z" />
+                                                            </svg>
+                                                            Top {{ $row['top_notcher_rank'] ?? '' }}
+                                                        </span>
+                                                    @else
+                                                        <span
+                                                            class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">
+                                                            Passed
+                                                        </span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    @endif
+                @endif
             </div>
         </div>
     </div>
@@ -571,7 +769,6 @@
             display: block !important;
         }
 
-        /* ============ NEW — kill the height traps ============ */
         html,
         body {
             height: auto !important;
@@ -581,8 +778,6 @@
             overflow: visible !important;
         }
 
-        /* The app layout's main wrapper usually has min-h-screen,
-           which forces a full page even when the content is short. */
         body > *,
         body > * > *,
         main,
@@ -595,14 +790,12 @@
             overflow: visible !important;
         }
 
-        /* Wrappers around the report itself */
         .w-full.p-4,
         .space-y-6 {
             padding: 0 !important;
             margin: 0 !important;
             gap: 0 !important;
         }
-        /* =================================================== */
 
         table {
             font-size: 11px !important;

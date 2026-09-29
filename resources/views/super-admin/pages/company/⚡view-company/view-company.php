@@ -170,7 +170,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
                 // Capture logos + ids BEFORE delete for post-commit file cleanup.
                 $logos = (clone $query)->pluck('company_logo', 'id')->all();
-                $count = $query->delete();
+                $count = Company::deleteWithAudit($query);
 
                 return ['count' => $count, 'logos' => $logos];
             });

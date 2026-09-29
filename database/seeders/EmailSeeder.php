@@ -37,7 +37,7 @@ class EmailSeeder extends Seeder
                     ."Login details:\n"
                     ."• Email: {{school_email}}\n"
                     ."• Temporary password: {{temp_password}}\n\n"
-                    ."Please log in at {{login_url}} and change your password immediately.\n\n"
+                    ."Please log in at https://web-access-streamline-alumni.test/login and change your password immediately.\n\n"
                     ."Welcome to the community!\n\n"
                     .'— Colegio de Sta. Ana de Victorias',
             ],
@@ -51,7 +51,7 @@ class EmailSeeder extends Seeder
                     ."Reason:\n"
                     ."{{reason}}\n\n"
                     ."You may log back in, update your board exam details, and resubmit for verification:\n"
-                    ."{{login_url}}\n\n"
+                    ."https://web-access-streamline-alumni.test/login\n\n"
                     ."If you believe this decision was made in error, please contact the CSAV Alumni Office.\n\n"
                     .'— Colegio de Sta. Ana de Victorias',
             ],
@@ -67,7 +67,7 @@ class EmailSeeder extends Seeder
                     ."• Temporary password: {{temp_password}}\n\n"
                     .'As a Program Head, you have access to alumni records for your assigned department — '
                     ."including employment trends, tracer submissions, and engagement analytics.\n\n"
-                    ."Please log in at {{login_url}} and change your password immediately.\n\n"
+                    ."Please log in at https://web-access-streamline-alumni.test/login and change your password immediately.\n\n"
                     .'— Colegio de Sta. Ana de Victorias',
             ],
 
@@ -82,7 +82,7 @@ class EmailSeeder extends Seeder
                     ."• Temporary password: {{temp_password}}\n\n"
                     .'As a Registrar, you have institution-wide access to all alumni records, '
                     ."tracer study submissions, and reporting tools.\n\n"
-                    ."Please log in at {{login_url}} and change your password immediately.\n\n"
+                    ."Please log in at https://web-access-streamline-alumni.test/login and change your password immediately.\n\n"
                     .'— Colegio de Sta. Ana de Victorias',
             ],
 
@@ -93,9 +93,10 @@ class EmailSeeder extends Seeder
                 'message' => "Hi {{name}},\n\n"
                     ."An account has been created for you on the CSAV Alumni Network using this login email: {{school_email}}.\n\n"
                     .'Please contact the registrar office to receive your login password, '
-                    ."then log in here: {{login_url}}.\n\n"
+                    ."then log in here: https://web-access-streamline-alumni.test/login.\n\n"
                     .'— Colegio de Sta. Ana de Victorias',
             ],
+
             // ---------- Profile verification ----------
             [
                 'slug' => 'your-alumni-profile-has-been-verified',
@@ -103,9 +104,27 @@ class EmailSeeder extends Seeder
                 'message' => "Hi {{name}},\n\n"
                     ."After reviewing your board exam details, we've confirmed that you're a board passer — "
                     ."your alumni profile has been verified!\n\n"
-                    ."Log in here: {{login_url}}\n\n"
+                    ."Log in here: https://web-access-streamline-alumni.test/login\n\n"
                     ."Congratulations, and welcome to the alumni community!\n\n"
                     .'— Colegio de Sta. Ana de Victorias',
+            ],
+
+            // ---------- Verified, but NOT a board passer ----------
+            [
+                'slug' => 'profile-verified-not-passer',
+                'subject' => 'Update on your CSAV alumni profile, {{name}}',
+                'message' => "Hi {{name}},\n\n"
+                    ."Thank you for submitting your board exam details. We've reviewed them against the "
+                    ."official PRC records and confirmed that the information matches our system.\n\n"
+                    .'However, the board rating we have on file does not meet the passing threshold, so your '
+                    ."alumni profile will not carry the \"Verified Board Passer\" badge at this time.\n\n"
+                    ."Reviewed on: {{verified_at}}\n"
+                    ."Reviewed by: {{verified_by}}\n\n"
+                    .'If you retake the board exam, you can submit your new rating from your profile — '
+                    ."we'll re-verify it and update your status accordingly:\n"
+                    ."https://web-access-streamline-alumni.test/login\n\n"
+                    ."If you believe this was a mistake or need help, please contact the CSAV Alumni Office.\n\n"
+                    .'— CSAV Alumni Office',
             ],
 
             [
@@ -115,7 +134,7 @@ class EmailSeeder extends Seeder
                     .'Your alumni verification status has changed to unverified. '
                     ."This usually means some details need to be reviewed.\n\n"
                     ."Please log in and check your profile, or contact the alumni office.\n\n"
-                    ."Log in here: {{login_url}}\n\n"
+                    ."Log in here: https://web-access-streamline-alumni.test/login\n\n"
                     .'— Colegio de Sta. Ana de Victorias',
             ],
 
@@ -127,7 +146,7 @@ class EmailSeeder extends Seeder
                     ."Your alumni profile was updated by an administrator.\n\n"
                     ."Fields changed: {{changes}}\n\n"
                     ."If you did not expect this change, please contact the alumni office immediately.\n\n"
-                    ."Log in to review: {{login_url}}\n\n"
+                    ."Log in to review: https://web-access-streamline-alumni.test/login\n\n"
                     .'— Colegio de Sta. Ana de Victorias',
             ],
 
@@ -140,8 +159,7 @@ class EmailSeeder extends Seeder
                     ."{{post_title}}\n"
                     ."Category: {{category}}\n\n"
                     ."{{post_excerpt}}\n\n"
-                    ."Read the full post: {{post_url}}\n\n"
-                    ."Or log in here: {{login_url}}\n\n"
+                    ."Log in here: https://web-access-streamline-alumni.test/login\n\n"
                     .'— Colegio de Sta. Ana de Victorias',
             ],
             // ---------- Event invitation ----------
@@ -230,7 +248,7 @@ class EmailSeeder extends Seeder
                     ."Your CSAV Alumni profile has been updated successfully.\n\n"
                     ."When: {{updated_at}}\n\n"
                     ."If you made this change — great! No action needed.\n\n"
-                    ."If you did not make this change, please contact the CSAV Alumni Office immediately "
+                    .'If you did not make this change, please contact the CSAV Alumni Office immediately '
                     ."so we can secure your account.\n\n"
                     ."Warm regards,\n"
                     .'— CSAV Alumni Office',
@@ -241,7 +259,7 @@ class EmailSeeder extends Seeder
                 'subject' => 'Your CSAV Alumni password has been reset',
                 'message' => "Hi {{name}},\n\n"
                     ."Your CSAV Alumni Network password has been reset by the registrar.\n\n"
-                    ."Your new temporary password: "
+                    .'Your new temporary password: '
                     ."{{temp_password}}\n\n"
                     ."Please log in at {{login_url}} and change it immediately.\n\n"
                     ."If you did not request this change, contact the CSAV Alumni Office right away.\n\n"
@@ -251,15 +269,32 @@ class EmailSeeder extends Seeder
             // ---------- Profile approval workflow ----------
             [
                 'slug' => 'profile-approved',
-                'subject' => 'Your CSAV alumni profile has been approved, {{name}}',
+                'subject' => 'You\'re a board passer, {{name}} — your CSAV alumni profile is verified!',
                 'message' => "Hi {{name}},\n\n"
-                    ."Good news — your alumni profile has been reviewed and approved.\n\n"
+                    .'Great news! After reviewing your board exam details against the official PRC records, '
+                    ."we've confirmed that you're a board passer — your alumni profile is now verified.\n\n"
                     ."Approved on: {{approved_at}}\n"
                     ."Reviewed by: {{approved_by}}\n\n"
                     ."Your tracer study submission is now final and will be included in the university's "
-                    ."alumni reports. You can view your profile anytime by logging in:\n"
-                    ."{{login_url}}\n\n"
-                    ."Thank you for keeping your information up to date.\n\n"
+                    .'alumni reports. You can view your profile anytime by logging in:'
+                    ." https://web-access-streamline-alumni.test/login\n\n"
+                    ."Congratulations, and thank you for keeping your information up to date.\n\n"
+                    .'— CSAV Alumni Office',
+            ],
+            [
+                'slug' => 'profile-verified-not-passer',
+                'subject' => 'Update on your CSAV alumni profile, {{name}}',
+                'message' => "Hi {{name}},\n\n"
+                    ."Thank you for submitting your board exam details. We've reviewed them against the "
+                    ."official PRC records and confirmed that the information matches our system.\n\n"
+                    .'However, the board rating we have on file does not meet the passing threshold, so your '
+                    ."alumni profile will not carry the \"Verified Board Passer\" badge at this time.\n\n"
+                    ."Reviewed on: {{verified_at}}\n"
+                    ."Reviewed by: {{verified_by}}\n\n"
+                    .'If you retake the board exam, you can submit your new rating from your profile — '
+                    ."we'll re-verify it and update your status accordingly:\n"
+                    ."https://web-access-streamline-alumni.test/login\n\n"
+                    ."If you believe this was a mistake or need help, please contact the CSAV Alumni Office.\n\n"
                     .'— CSAV Alumni Office',
             ],
 
@@ -267,11 +302,11 @@ class EmailSeeder extends Seeder
                 'slug' => 'profile-rejected',
                 'subject' => 'Your CSAV alumni profile needs a few changes, {{name}}',
                 'message' => "Hi {{name}},\n\n"
-                    ."Thank you for submitting your alumni profile. After reviewing it, we were unable "
+                    .'Thank you for submitting your alumni profile. After reviewing it, we were unable '
                     ."to approve it at this time for the following reason:\n\n"
                     ."{{reason}}\n\n"
-                    ."Please log in, update the affected details, and resubmit your profile:\n"
-                    ."{{login_url}}\n\n"
+                    .'Please log in, update the affected details, and resubmit your profile:'
+                    ." https://web-access-streamline-alumni.test/login\n\n"
                     ."Once you've made the changes, our team will review your submission again.\n\n"
                     ."If you believe this was a mistake or need help, please contact the CSAV Alumni Office.\n\n"
                     ."Reviewed on: {{rejected_at}}\n"

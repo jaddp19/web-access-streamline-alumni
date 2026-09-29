@@ -20,6 +20,12 @@ new #[Layout('layouts.app-admin')] class extends Component
     public string $rejectReasonInput = '';
     public ?int $rejectingUserId = null;
 
+    /**
+     * Registrar-entered top notcher ranks, keyed by board_exam id.
+     * e.g. [12 => 3, 15 => null] means attempt #12 is Top 3, #15 is not a top notcher.
+     */
+    public array $topNotcherRank = [];
+
     public function updatingSearch(): void
     {
         $this->resetPage();
@@ -29,11 +35,6 @@ new #[Layout('layouts.app-admin')] class extends Component
     //  SCOPE
     // =========================================================
 
-    /**
-     * null   → registrar (global)
-     * int    → program head with a dept (scoped)
-     * false  → program head with NO dept (sees nothing)
-     */
     #[Computed]
     public function scope(): int|false|null
     {
@@ -73,9 +74,8 @@ new #[Layout('layouts.app-admin')] class extends Component
 
         return User::role('alumni')
             ->whereHas('userProfile', function ($q) use ($scope) {
-                $q->where('is_verified', false)
-                  ->whereNotNull('board_taken')
-                  ->whereNotNull('board_rate')
+                // Only alumni with at least one UNVERIFIED board attempt.
+                $q->whereHas('boardExams', fn ($b) => $b->where('is_verified', false))
                   ->whereHas('courses', function ($c) use ($scope) {
                       $c->where('course_type', 'board');
 
@@ -96,6 +96,7 @@ new #[Layout('layouts.app-admin')] class extends Component
                 'userProfile.batch:id,batch_name',
                 'userProfile.courses:id,course_title,course_type,department_id',
                 'userProfile.courses.department:id,dept_name',
+                'userProfile.boardExams' => fn ($q) => $q->orderByDesc('date_taken'),
             ])
             ->select('id', 'name', 'email', 'school_id', 'created_at')
             ->latest()
@@ -122,7 +123,17 @@ new #[Layout('layouts.app-admin')] class extends Component
             abort(403, 'You do not have a department assigned.');
         }
 
-        $user = User::with('userProfile.courses:id,course_type,department_id')->find($userId);
+        // Validate any top notcher ranks the registrar typed in.
+        $this->validate([
+            'topNotcherRank'   => 'array',
+            'topNotcherRank.*' => 'nullable|integer|min:1|max:100',
+        ], [
+            'topNotcherRank.*.integer' => 'Top notcher rank must be a whole number.',
+            'topNotcherRank.*.min'     => 'Top notcher rank must be at least 1.',
+            'topNotcherRank.*.max'     => 'Top notcher rank cannot exceed 100.',
+        ]);
+
+        $user = User::with('userProfile.courses:id,course_title,course_type,department_id')->find($userId);
 
         if (! $user) {
             session()->flash('status', 'User not found.');
@@ -139,33 +150,61 @@ new #[Layout('layouts.app-admin')] class extends Component
 
         $profile = $user->userProfile;
 
-        if (
-            ! $profile
-            || ! $profile->board_taken
-            || $profile->board_rate === null
-            || ! $profile->courses->contains(fn ($c) => $c->course_type === 'board')
-        ) {
-            session()->flash(
-                'status',
-                "{$user->name} is not eligible for verification (missing board exam details or non-board program)."
-            );
+        if (! $profile) {
+            session()->flash('status', 'This alumni has no profile.');
             return;
         }
 
+        // Snapshot the ranks the registrar entered (keyed by board_exam id).
+        $rankInput = $this->topNotcherRank;
+
         try {
-            DB::transaction(function () use ($user, $profile) {
+            DB::transaction(function () use ($user, $profile, $rankInput) {
                 // Lock the profile row to prevent double-approve race.
                 $lockedProfile = $profile->newQuery()->whereKey($profile->id)->lockForUpdate()->first();
 
-                if ($lockedProfile && $lockedProfile->is_verified) {
-                    return; // already approved by another admin
+                if (! $lockedProfile) {
+                    return;
                 }
 
                 // Ensure alumni role.
                 $user->syncRoles(['alumni']);
 
-                // Mark verified — this is what removes them from the queue.
-                $lockedProfile?->update(['is_verified' => true]);
+                // Legacy fallback: profile has board data but no attempt row.
+                if (
+                    $lockedProfile->board_taken
+                    && $lockedProfile->board_rate !== null
+                    && $lockedProfile->boardExams()->count() === 0
+                ) {
+                    $lockedProfile->loadMissing('courses:id,course_title,course_type,department_id');
+
+                    $lockedProfile->recordBoardAttempt(
+                        $lockedProfile->board_taken->format('Y-m-d'),
+                        (float) $lockedProfile->board_rate,
+                        $lockedProfile->courses->firstWhere('course_type', 'board')?->course_title
+                    );
+                }
+
+                // Apply per-attempt verification + top notcher rank.
+                $pendingAttempts = $lockedProfile->boardExams()
+                    ->where('is_verified', false)
+                    ->get();
+
+                foreach ($pendingAttempts as $attempt) {
+                    $rawRank = $rankInput[$attempt->id] ?? null;
+                    $rank    = is_numeric($rawRank) ? (int) $rawRank : null;
+                    $isTop   = $rank !== null && $rank > 0;
+
+                    $attempt->update([
+                        'is_verified'      => true,
+                        'verified_at'      => now(),
+                        'is_top_notcher'   => $isTop,
+                        'top_notcher_rank' => $isTop ? $rank : null,
+                    ]);
+                }
+
+                // Sync the profile's cached mirror (is_verified = has verified+passing attempt).
+                $lockedProfile->syncBoardMirrors();
             });
         } catch (\Throwable $e) {
             report($e);
@@ -173,9 +212,47 @@ new #[Layout('layouts.app-admin')] class extends Component
             return;
         }
 
+        // Reload so we read the fresh is_verified flag after syncBoardMirrors().
+        $profile->refresh();
+
+        // ─── Conditional email ─────────────────────────────────────
+        // is_verified === true  → real board passer → congrats email
+        // is_verified === false → data verified but failed → neutral email
+        try {
+            if ($profile->is_verified) {
+                EmailTemplateService::send('profile-approved', $user->email, [
+                    'name'        => $user->name,
+                    'approved_at' => now()->format('F j, Y · g:i A'),
+                    'approved_by' => Auth::user()?->name ?? 'the registrar',
+                    'login_url'   => route('login'),
+                ]);
+            } else {
+                EmailTemplateService::send('profile-verified-not-passer', $user->email, [
+                    'name'        => $user->name,
+                    'verified_at' => now()->format('F j, Y · g:i A'),
+                    'verified_by' => Auth::user()?->name ?? 'the registrar',
+                    'login_url'   => route('login'),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Approval email failed', [
+                'user_id' => $user->id,
+                'error'   => $e->getMessage(),
+            ]);
+        }
+        // ────────────────────────────────────────────────────────────
+
+        // Clear the input state so the next alumni starts fresh.
+        $this->topNotcherRank = [];
+
         Cache::forget('verification:pending-count');
 
-        session()->flash('status', "{$user->name} has been approved as a verified alumni.");
+        session()->flash('status', match (true) {
+            $profile->is_verified
+                => "{$user->name} has been verified as a board passer.",
+            default
+                => "{$user->name}'s board records were verified, but no passing attempt was found — the profile stays unverified publicly.",
+        });
     }
 
     // =========================================================
@@ -240,11 +317,12 @@ new #[Layout('layouts.app-admin')] class extends Component
 
         try {
             DB::transaction(function () use ($profile) {
-                $profile->update([
-                    'is_verified' => false,
-                    'board_taken' => null,
-                    'board_rate'  => null,
-                ]);
+                // Drop only the unverified attempts (the new submission).
+                $profile->boardExams()->where('is_verified', false)->delete();
+
+                // Recompute the mirrors — if verified history remains, the
+                // profile stays verified and the best verified attempt wins.
+                $profile->syncBoardMirrors();
             });
         } catch (\Throwable $e) {
             report($e);

@@ -487,4 +487,93 @@ class ReportsAnalytics
             ->map(fn ($r) => (array) $r)
             ->all();
     }
+
+    // =========================================================
+    //  REPORT 4 — BOARD PASSERS & TOP NOTCHERS
+    // =========================================================
+
+    /**
+     * Verified board passers, sorted top notchers first (rank asc),
+     * then by rating desc. Scoped by department/course/batch filters.
+     */
+    public function boardPassers(int $limit = 500): array
+    {
+        $q = DB::table('board_exams')
+            ->join('user_profiles', 'board_exams.user_profile_id', '=', 'user_profiles.id')
+            ->join('users', 'user_profiles.user_id', '=', 'users.id')
+            ->join('model_has_roles', function ($join) {
+                $join->on('model_has_roles.model_id', '=', 'user_profiles.user_id')
+                    ->where('model_has_roles.model_type', '=', User::class);
+            })
+            ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+            ->leftJoin('batches', 'user_profiles.batch_id', '=', 'batches.id')
+            ->leftJoin('student_course', 'student_course.user_profile_id', '=', 'user_profiles.id')
+            ->leftJoin('courses', 'courses.id', '=', 'student_course.course_id')
+            ->leftJoin('departments', 'departments.id', '=', 'courses.department_id')
+            ->where('roles.name', '=', 'alumni')
+            ->where('board_exams.is_verified', true)
+            ->where('board_exams.passed', true);
+
+        $this->scopeByProfile($q);
+
+        return $q->select(
+            'users.first_name',
+            'users.middle_name',
+            'users.last_name',
+            'users.email',
+            'batches.batch_name',
+            'courses.course_code',
+            'courses.course_title',
+            'departments.dept_name',
+            'board_exams.attempt_number',
+            'board_exams.date_taken',
+            'board_exams.rate',
+            'board_exams.is_top_notcher',
+            'board_exams.top_notcher_rank',
+            'board_exams.verified_at',
+        )
+            ->orderByDesc('board_exams.is_top_notcher')
+            ->orderBy('board_exams.top_notcher_rank')
+            ->orderByDesc('board_exams.rate')
+            ->limit($limit)
+            ->get()
+            ->map(fn ($r) => (array) $r)
+            ->all();
+    }
+
+    /**
+     * Summary counts for the Board Passers tab.
+     * Counts UNIQUE alumni per category.
+     */
+    public function boardPasserSummary(): array
+    {
+        $q = DB::table('board_exams')
+            ->join('user_profiles', 'board_exams.user_profile_id', '=', 'user_profiles.id')
+            ->join('model_has_roles', function ($join) {
+                $join->on('model_has_roles.model_id', '=', 'user_profiles.user_id')
+                    ->where('model_has_roles.model_type', '=', User::class);
+            })
+            ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+            ->where('roles.name', '=', 'alumni')
+            ->where('board_exams.is_verified', true);
+
+        $this->scopeByProfile($q);
+
+        $row = $q->selectRaw('
+            COUNT(DISTINCT user_profiles.user_id) as verified_alumni,
+            COUNT(DISTINCT CASE WHEN board_exams.passed = 1 THEN user_profiles.user_id END) as passed_alumni,
+            COUNT(DISTINCT CASE WHEN board_exams.is_top_notcher = 1 THEN user_profiles.user_id END) as top_notcher_alumni
+        ')->first();
+
+        $verified     = (int) ($row->verified_alumni ?? 0);
+        $passed       = (int) ($row->passed_alumni ?? 0);
+        $topNotchers  = (int) ($row->top_notcher_alumni ?? 0);
+
+        return [
+            'verified_alumni'    => $verified,
+            'passed_alumni'      => $passed,
+            'top_notcher_alumni' => $topNotchers,
+            'pass_rate'          => $verified > 0 ? round(($passed / $verified) * 100, 1) : 0.0,
+        ];
+    }
 }

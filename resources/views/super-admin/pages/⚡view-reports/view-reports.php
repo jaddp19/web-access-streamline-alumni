@@ -30,7 +30,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function setTab(string $tab): void
     {
-        if (! in_array($tab, ['employment', 'industry', 'engagement'], true)) {
+        if (! in_array($tab, ['employment', 'industry', 'engagement', 'board_passers'], true)) {
             return;
         }
 
@@ -154,6 +154,49 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         ]);
     }
 
+    public function exportBoardPassersCsv(): StreamedResponse
+    {
+        $rows = $this->report()->boardPassers();
+
+        $filename = 'board-passers-'.now()->format('Y-m-d_His').'.csv';
+
+        return response()->streamDownload(function () use ($rows) {
+            $handle = fopen('php://output', 'w');
+
+            fwrite($handle, "\xEF\xBB\xBF");
+
+            fputcsv($handle, [
+                'First Name', 'Middle Name', 'Last Name', 'Email',
+                'Batch', 'Course Code', 'Course', 'Department',
+                'Attempt', 'Date Taken', 'Rating',
+                'Top Notcher', 'Top Notcher Rank', 'Verified At',
+            ]);
+
+            foreach ($rows as $r) {
+                fputcsv($handle, [
+                    $r['first_name'] ?? '',
+                    $r['middle_name'] ?? '',
+                    $r['last_name'] ?? '',
+                    $r['email'] ?? '',
+                    $r['batch_name'] ?? '',
+                    $r['course_code'] ?? '',
+                    $r['course_title'] ?? '',
+                    $r['dept_name'] ?? '',
+                    $r['attempt_number'] ?? '',
+                    $r['date_taken'] ?? '',
+                    $r['rate'] ?? '',
+                    ! empty($r['is_top_notcher']) ? 'Yes' : 'No',
+                    $r['top_notcher_rank'] ?? '',
+                    $r['verified_at'] ?? '',
+                ]);
+            }
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv',
+        ]);
+    }
+
     public function updatedSelectedDepartmentId(): void
     {
         $this->selectedCourseId = '';   // reset course when dept changes
@@ -249,16 +292,31 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         return $t;
     }
 
+    // ===== Report 4 — Board Passers & Top Notchers =====
+
+    #[Computed]
+    public function boardPassers(): array
+    {
+        return $this->report()->boardPassers();
+    }
+
+    #[Computed]
+    public function boardPasserSummary(): array
+    {
+        return $this->report()->boardPasserSummary();
+    }
+
     // ===== Print header label =====
 
     #[Computed]
     public function reportLabel(): string
     {
         return match ($this->tab) {
-            'employment' => 'Yearly Alumni Employment Statistics',
-            'industry' => 'Top Industries & Employers of Alumni',
-            'engagement' => 'Alumni Engagement Participation Rates',
-            default => 'Report',
+            'employment'    => 'Yearly Alumni Employment Statistics',
+            'industry'      => 'Top Industries & Employers of Alumni',
+            'engagement'    => 'Alumni Engagement Participation Rates',
+            'board_passers' => 'Alumni Board Passers & Top Notchers',
+            default         => 'Report',
         };
     }
 

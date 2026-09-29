@@ -2,13 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\AuditLog;
-use App\Models\Department;
-use App\Models\EventRsvp;
-use App\Models\Post;
-use App\Models\TracerStudy;
-use App\Models\UserProfile;
-use App\Models\WorkHistory;
 use App\Traits\LogsActivity;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -18,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Traits\HasRoles;
 
 #[Fillable(['first_name', 'middle_name', 'last_name', 'email', 'password', 'school_id', 'last_seen_posts_at'])]
@@ -25,7 +20,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, HasRoles, LogsActivity;
+    use HasFactory, HasRoles, LogsActivity, Notifiable;
 
     /** Fields to exclude from audit logs. */
     protected array $auditExclude = ['password', 'remember_token'];
@@ -34,7 +29,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password'          => 'hashed',
+            'password' => 'hashed',
         ];
     }
 
@@ -67,6 +62,50 @@ class User extends Authenticatable
         ]);
 
         return $parts ? implode(' ', $parts) : ($this->name ?? '');
+    }
+
+    public const DEFAULT_PASSWORDS = [
+        'csav.alumni',
+        'csav.program-head',
+        'csav.registrar',
+    ];
+
+    public function usesDefaultPassword(): bool
+    {
+        if (! $this->password) {
+            return false;
+        }
+
+        // Hash::check is slow by design, and this runs on every page request,
+        // so cache the result per password hash. A new password means a new
+        // hash, so it gets rechecked automatically.
+        return Cache::remember(
+            'default-pw:'.sha1($this->password),
+            now()->addHour(),
+            function () {
+                foreach (self::DEFAULT_PASSWORDS as $default) {
+                    if (Hash::check($default, $this->password)) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        );
+    }
+
+    public function needsForcedPasswordChange(): bool
+    {
+        // Any role still using a default password
+        if ($this->usesDefaultPassword()) {
+            return true;
+        }
+
+        // Alumni first-time login (account never updated since creation)
+        return $this->hasRole('alumni')
+            && $this->created_at
+            && $this->updated_at
+            && $this->created_at->eq($this->updated_at);
     }
 
     // ===== Relations =====

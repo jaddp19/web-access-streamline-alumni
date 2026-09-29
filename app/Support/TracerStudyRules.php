@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\Batch;
 use App\Models\UserProfile;
 use Closure;
 use Illuminate\Support\Facades\Auth;
@@ -9,20 +10,20 @@ use Propaganistas\LaravelPhone\Rules\Phone;
 
 class TracerStudyRules
 {
-    /** Earliest allowed board exam date — CSAV's founding batch. */
+    /** Fallback earliest date when no batch is selected. */
     public const BOARD_EXAM_MIN_DATE = '2015-01-01';
 
     /**
      * Rules for a single step.
      *
-     * @param  array{taken?:?string, rate?:string}  $ctx  Extra context (board exam state)
+     * @param  array{taken?:?string, rate?:string, batch_id?:int|string|null}  $ctx
      */
     public static function step(int $step, array $ctx = []): array
     {
         return match ($step) {
             1 => self::stepOne(),
             2 => self::stepTwo($ctx),
-            3 => self::stepThree(),
+            3 => self::stepThree($ctx),   // ← now receives ctx
             4 => self::stepFour(),
             default => [],
         };
@@ -31,14 +32,14 @@ class TracerStudyRules
     /**
      * Merged rules for the final submit.
      *
-     * @param  array{taken?:?string, rate?:string}  $ctx
+     * @param  array{taken?:?string, rate?:string, batch_id?:int|string|null}  $ctx
      */
     public static function all(array $ctx = []): array
     {
         return array_merge(
             self::stepOne(),
             self::stepTwo($ctx),
-            self::stepThree(),
+            self::stepThree($ctx),        // ← now receives ctx
             self::stepFour(),
         );
     }
@@ -68,7 +69,6 @@ class TracerStudyRules
 
             // Board exam
             'board_taken.date'                       => 'Board exam date must be a valid date.',
-            'board_taken.after_or_equal'             => 'Board exam date cannot be earlier than Jan 1, 2015.',
             'board_taken.before_or_equal'            => 'Board exam date cannot be in the future.',
             'board_taken.required'                   => 'Please provide the board exam date — a rating was entered.',
             'board_taken.required_with'              => 'Please provide the board exam date — a rating was entered.',
@@ -83,6 +83,8 @@ class TracerStudyRules
             'current_job_position.required_if'       => 'Job position is required.',
             'company_id.required_if'                 => 'Please select a company.',
             'date_hired.required_if'                 => 'Please enter the date you were hired.',
+            'date_hired.before_or_equal'             => 'The hire date cannot be in the future.',
+            'date_hired.date'                        => 'The hire date must be a valid date.',
             'employed_related_to_degree.required_if' => 'Please answer if your job is related to your degree.',
             'employment_type.required_if'            => 'Please select type of employment.',
             'organization_type.required_if'          => 'Please select type of organization.',
@@ -120,13 +122,11 @@ class TracerStudyRules
             'street_address' => 'required|string|max:500',
             'address_type'   => 'required|in:philippines,abroad',
 
-            // PH-only
             'regionCode'   => 'required_if:address_type,philippines|nullable|string',
             'provinceCode' => 'required_if:address_type,philippines|nullable|string',
             'cityCode'     => 'required_if:address_type,philippines|nullable|string',
             'barangayCode' => 'required_if:address_type,philippines|nullable|string',
 
-            // Abroad-only
             'intl_country' => 'required_if:address_type,abroad|nullable|string|max:255',
             'intl_state'   => 'nullable|string|max:255',
             'intl_city'    => 'required_if:address_type,abroad|nullable|string|max:255',
@@ -136,16 +136,14 @@ class TracerStudyRules
     }
 
     /**
-     * Board fields are mutually required:
-     * fill one → the other becomes required.
-     *
-     * Uses `required_with` (native Laravel rule) rather than `Rule::requiredIf()`
-     * because the closure form was not reliably re-evaluated per request.
-     *
-     * @param  array{taken?:?string, rate?:string}  $ctx  (kept for API compatibility; unused)
+     * @param  array{taken?:?string, rate?:string, batch_id?:int|string|null}  $ctx
      */
     protected static function stepTwo(array $ctx = []): array
     {
+        $batchId   = $ctx['batch_id'] ?? null;
+        $minDate   = self::resolveGraduationMinDate($batchId);
+        $batchYear = $minDate ? (int) substr($minDate, 0, 4) : null;
+
         return [
             'civil_status' => 'required|in:single,married,widowed,separated,single-parent',
             'course_id'    => 'required|exists:courses,id',
@@ -154,9 +152,21 @@ class TracerStudyRules
             'board_taken' => [
                 'nullable',
                 'date',
-                'after_or_equal:' . self::BOARD_EXAM_MIN_DATE,
                 'before_or_equal:today',
                 'required_with:board_rate',
+                function ($attribute, $value, $fail) use ($minDate, $batchYear) {
+                    if (! $value || ! $minDate) {
+                        return;
+                    }
+
+                    if ($value < $minDate) {
+                        $message = $batchYear
+                            ? "Board exam date cannot be earlier than your graduation year ({$batchYear})."
+                            : 'Board exam date is out of the allowed range.';
+
+                        $fail($message);
+                    }
+                },
             ],
             'board_rate' => [
                 'nullable',
@@ -168,13 +178,40 @@ class TracerStudyRules
         ];
     }
 
-    protected static function stepThree(): array
+    /**
+     * @param  array{taken?:?string, rate?:string, batch_id?:int|string|null}  $ctx
+     */
+    protected static function stepThree(array $ctx = []): array
     {
+        $batchId   = $ctx['batch_id'] ?? null;
+        $minDate   = self::resolveGraduationMinDate($batchId);
+        $batchYear = $minDate ? (int) substr($minDate, 0, 4) : null;
+
         return [
-            'employment_status'          => 'required|in:employed,unemployed,self-employed,other',
-            'current_job_position'       => 'required_if:employment_status,employed|nullable|string|max:255',
-            'company_id'                 => 'required_if:employment_status,employed|nullable|exists:companies,id',
-            'date_hired'                 => 'required_if:employment_status,employed|nullable|date|before_or_equal:today',
+            'employment_status'    => 'required|in:employed,unemployed,self-employed,other',
+            'current_job_position' => 'required_if:employment_status,employed|nullable|string|max:255',
+            'company_id'           => 'required_if:employment_status,employed|nullable|exists:companies,id',
+
+            'date_hired' => [
+                'required_if:employment_status,employed',
+                'nullable',
+                'date',
+                'before_or_equal:today',
+                function ($attribute, $value, $fail) use ($minDate, $batchYear) {
+                    if (! $value || ! $minDate) {
+                        return;
+                    }
+
+                    if ($value < $minDate) {
+                        $message = $batchYear
+                            ? "The hire date cannot be earlier than your graduation year ({$batchYear})."
+                            : 'The hire date is out of the allowed range.';
+
+                        $fail($message);
+                    }
+                },
+            ],
+
             'employed_related_to_degree' => 'required_if:employment_status,employed|nullable|in:yes,no,partially-related',
             'employment_type'            => 'required_if:employment_status,employed|nullable|in:full-time,part-time,contractual-project-based,freelance,other',
             'organization_type'          => 'required_if:employment_status,employed|nullable|in:private-company,government-agency,non-government-organization,educational-institution,self-employed-business,other',
@@ -195,6 +232,29 @@ class TracerStudyRules
     // =========================================================
     //  HELPERS
     // =========================================================
+
+    /**
+     * Resolve the earliest allowed date from the alumni's batch year.
+     * Used as the floor for both `board_taken` and `date_hired`.
+     *
+     * Batch 2026 → "2026-01-01"
+     * Batch 2020 → "2020-01-01"
+     * No batch / non-numeric batch → BOARD_EXAM_MIN_DATE
+     */
+    protected static function resolveGraduationMinDate(int|string|null $batchId): string
+    {
+        if (! $batchId) {
+            return self::BOARD_EXAM_MIN_DATE;
+        }
+
+        $batchName = Batch::whereKey($batchId)->value('batch_name');
+
+        if (! $batchName || ! is_numeric($batchName)) {
+            return self::BOARD_EXAM_MIN_DATE;
+        }
+
+        return ((int) $batchName) . '-01-01';
+    }
 
     /**
      * Cross-column phone uniqueness (checks both contact_number_1 and _2).

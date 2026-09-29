@@ -154,7 +154,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function deleteSelected(): void
     {
-        $count = $this->selectedEmailsQuery()->delete();
+        $count = EmailTemplate::deleteWithAudit($this->selectedEmailsQuery());
 
         Cache::forget('email-templates:count');
 

@@ -5,7 +5,8 @@
             {{-- Header --}}
             <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                 <div>
-                    <h1 class="text-xl sm:text-2xl font-bold text-[#0f2b1c] dark:text-white" style="font-family: 'Fraunces', serif;">
+                    <h1 class="text-xl sm:text-2xl font-bold text-[#0f2b1c] dark:text-white"
+                        style="font-family: 'Fraunces', serif;">
                         Overview
                     </h1>
                     <p class="text-sm text-black/50 dark:text-white/50 mt-0.5">
@@ -24,7 +25,8 @@
 
                 @unless ($this->hasNoDepartment)
                     <div class="shrink-0 flex items-center gap-2">
-                        <label for="batch-filter" class="text-[11px] font-bold text-black/50 dark:text-white/50 uppercase tracking-wide whitespace-nowrap">Batch</label>
+                        <label for="batch-filter"
+                            class="text-[11px] font-bold text-black/50 dark:text-white/50 uppercase tracking-wide whitespace-nowrap">Batch</label>
                         <div class="relative">
                             <select id="batch-filter" wire:model.live.debounce.500ms="selectedBatchId"
                                 wire:loading.attr="disabled" wire:target="selectedBatchId"
@@ -34,10 +36,13 @@
                                     <option value="{{ $batch['id'] }}">{{ $batch['batch_name'] }}</option>
                                 @endforeach
                             </select>
-                            <div wire:loading wire:target="selectedBatchId" class="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+                            <div wire:loading wire:target="selectedBatchId"
+                                class="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
                                 <svg class="w-4 h-4 animate-spin text-[#D4A537]" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                        stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z">
+                                    </path>
                                 </svg>
                             </div>
                         </div>
@@ -46,13 +51,18 @@
             </div>
 
             @if ($this->hasNoDepartment)
-                <div class="rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 p-6 sm:p-8 text-center">
-                    <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-amber-100 dark:bg-amber-500/15 flex items-center justify-center text-amber-700 dark:text-amber-400">
-                        <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                <div
+                    class="rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 p-6 sm:p-8 text-center">
+                    <div
+                        class="w-14 h-14 mx-auto mb-4 rounded-full bg-amber-100 dark:bg-amber-500/15 flex items-center justify-center text-amber-700 dark:text-amber-400">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="1.5"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
                         </svg>
                     </div>
-                    <h2 class="text-lg font-bold text-amber-900 dark:text-amber-300" style="font-family: 'Fraunces', serif;">No department assigned yet</h2>
+                    <h2 class="text-lg font-bold text-amber-900 dark:text-amber-300"
+                        style="font-family: 'Fraunces', serif;">No department assigned yet</h2>
                     <p class="text-sm text-amber-800/80 dark:text-amber-200/70 mt-2 max-w-md mx-auto">
                         You don't have access to any alumni data until the registrar assigns you to a department.
                     </p>
@@ -63,52 +73,86 @@
 
                     {{-- Stat cards --}}
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5">
-                        <div class="relative overflow-hidden bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                        <div
+                            class="relative overflow-hidden bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                             <div class="relative flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl bg-green-700/10 dark:bg-emerald-500/15 flex items-center justify-center text-green-700 dark:text-emerald-400 shrink-0">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" /></svg>
-                                </div>
-                                <div class="min-w-0">
-                                    <p class="text-[10px] sm:text-xs uppercase tracking-wide text-black/50 dark:text-white/50 font-semibold truncate">Board Passers</p>
-                                    <h3 class="text-xl sm:text-2xl font-bold text-[#0f2b1c] dark:text-white mt-0.5">{{ $this->boardPassers }}</h3>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="relative overflow-hidden bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
-                            <div class="relative flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-green-700/10 dark:bg-emerald-500/15 flex items-center justify-center text-green-700 dark:text-emerald-400 shrink-0">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
                                     </svg>
                                 </div>
                                 <div class="min-w-0">
-                                    <p class="text-[10px] sm:text-xs uppercase tracking-wide text-black/50 dark:text-white/50 font-semibold truncate">Courses</p>
-                                    <h3 class="text-xl sm:text-2xl font-bold text-[#0f2b1c] dark:text-white mt-0.5">{{ $this->courses }}</h3>
+                                    <p
+                                        class="text-[10px] sm:text-xs uppercase tracking-wide text-black/50 dark:text-white/50 font-semibold truncate">
+                                        Board Passers</p>
+                                    <h3 class="text-xl sm:text-2xl font-bold text-[#0f2b1c] dark:text-white mt-0.5">
+                                        {{ $this->boardPassers }}</h3>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="relative overflow-hidden bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                        <div
+                            class="relative overflow-hidden bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                             <div class="relative flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl bg-[#D4A537]/15 dark:bg-[#D4A537]/20 flex items-center justify-center text-[#a97f1f] dark:text-[#E5B94A] shrink-0">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.62 48.62 0 0112 20.904a48.62 48.62 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342" /></svg>
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                                    </svg>
                                 </div>
                                 <div class="min-w-0">
-                                    <p class="text-[10px] sm:text-xs uppercase tracking-wide text-black/50 dark:text-white/50 font-semibold truncate">Total Alumni</p>
-                                    <h3 class="text-xl sm:text-2xl font-bold text-[#0f2b1c] dark:text-white mt-0.5">{{ $this->alumni }}</h3>
+                                    <p
+                                        class="text-[10px] sm:text-xs uppercase tracking-wide text-black/50 dark:text-white/50 font-semibold truncate">
+                                        Courses</p>
+                                    <h3 class="text-xl sm:text-2xl font-bold text-[#0f2b1c] dark:text-white mt-0.5">
+                                        {{ $this->courses }}</h3>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="relative overflow-hidden bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                        <div
+                            class="relative overflow-hidden bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                             <div class="relative flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl bg-blue-500/10 dark:bg-blue-500/15 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-[#D4A537]/15 dark:bg-[#D4A537]/20 flex items-center justify-center text-[#a97f1f] dark:text-[#E5B94A] shrink-0">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.62 48.62 0 0112 20.904a48.62 48.62 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342" />
+                                    </svg>
                                 </div>
                                 <div class="min-w-0">
-                                    <p class="text-[10px] sm:text-xs uppercase tracking-wide text-black/50 dark:text-white/50 font-semibold truncate">Pending Verifications</p>
-                                    <h3 class="text-xl sm:text-2xl font-bold text-[#0f2b1c] dark:text-white mt-0.5">{{ $this->pendingVerification }}</h3>
+                                    <p
+                                        class="text-[10px] sm:text-xs uppercase tracking-wide text-black/50 dark:text-white/50 font-semibold truncate">
+                                        Total Alumni</p>
+                                    <h3 class="text-xl sm:text-2xl font-bold text-[#0f2b1c] dark:text-white mt-0.5">
+                                        {{ $this->alumni }}</h3>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div
+                            class="relative overflow-hidden bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                            <div class="relative flex items-center gap-3">
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-blue-500/10 dark:bg-blue-500/15 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                                    </svg>
+                                </div>
+                                <div class="min-w-0">
+                                    <p
+                                        class="text-[10px] sm:text-xs uppercase tracking-wide text-black/50 dark:text-white/50 font-semibold truncate">
+                                        Pending Verifications</p>
+                                    <h3 class="text-xl sm:text-2xl font-bold text-[#0f2b1c] dark:text-white mt-0.5">
+                                        {{ $this->pendingVerification }}</h3>
                                 </div>
                             </div>
                         </div>
@@ -118,7 +162,8 @@
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
                         {{-- Alumni Graduates (drill-down aware) --}}
-                        <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                        <div
+                            class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                             <div class="flex items-start justify-between gap-3 mb-3">
                                 <div class="min-w-0">
                                     <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white">Alumni Graduates</h2>
@@ -132,26 +177,34 @@
                                 </div>
                                 <button type="button" id="dept-back-btn"
                                     class="hidden shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold text-[#1877F2] hover:underline">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
                                     </svg>
                                     Back to departments
                                 </button>
                             </div>
                             @if (empty($this->alumniByDept))
-                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No alumni-to-department records yet.</p>
+                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No
+                                    alumni-to-department records yet.</p>
                             @else
-                                <div class="w-full h-64 sm:h-72 md:h-80"><canvas id="alumniDynamicChart"></canvas></div>
+                                <div class="w-full h-64 sm:h-72 md:h-80"><canvas id="alumniDynamicChart"></canvas>
+                                </div>
                             @endif
                         </div>
 
                         {{-- Comparative Analysis --}}
-                        <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                        <div
+                            class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                             <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white">Comparative Analysis</h2>
-                            <p class="text-xs text-black/40 dark:text-white/40 mt-0.5 mb-1">Course alignment with current work</p>
-                            <p class="text-xs text-black/50 dark:text-white/50 mb-3">{{ $this->furtherStudiesRate }}% pursued further studies</p>
+                            <p class="text-xs text-black/40 dark:text-white/40 mt-0.5 mb-1">Course alignment with
+                                current work</p>
+                            <p class="text-xs text-black/50 dark:text-white/50 mb-3">{{ $this->furtherStudiesRate }}%
+                                pursued further studies</p>
                             @if (empty($this->courseAnalytics))
-                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No course analytics yet.</p>
+                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No course
+                                    analytics yet.</p>
                             @else
                                 <div class="w-full h-64 sm:h-72 md:h-80"><canvas id="comparativeChart"></canvas></div>
                             @endif
@@ -159,51 +212,168 @@
                     </div>
 
                     {{-- Alumni by Year (drill-down aware) --}}
-                    <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                    <div
+                        class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                         <div class="flex items-start justify-between gap-3 mb-3">
                             <div class="min-w-0">
-                                <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white">Alumni Graduates by Year</h2>
+                                <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white">Alumni Graduates by Year
+                                </h2>
                                 <p id="batch-subtitle" class="text-xs text-black/40 dark:text-white/40 mt-0.5">
                                     Total graduates per batch · click a bar to see courses
                                 </p>
                             </div>
                             <button type="button" id="batch-back-btn"
                                 class="hidden shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold text-[#1877F2] hover:underline">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
                                 </svg>
                                 Back to batches
                             </button>
                         </div>
                         @if (empty($this->alumniByBatch))
-                            <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No batch records yet.</p>
+                            <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No batch records yet.
+                            </p>
                         @else
                             <div class="w-full h-72"><canvas id="alumniByBatchChart"></canvas></div>
                         @endif
                     </div>
 
+                    {{-- Top Notchers (drill-down aware) --}}
+                    @if ($this->topNotcherTotal > 0)
+                        @php
+                            // Champion card resolution:
+                            //  • Registrar   → top DEPARTMENT (unchanged, uses dept_code)
+                            //  • Program Head → top COURSE within their own department (uses course_code)
+                            $championCard = $this->topNotcherChampion;
+                            if ($championCard && !$this->isRegistrar) {
+                                $deptData = $this->topNotchersByDeptAndCourse[$championCard['code']] ?? null;
+                                $courses = collect($deptData['courses'] ?? [])->sortByDesc('total');
+
+                                $topCode = $courses->keys()->first(); // ← course_code
+                                $topCourse = $courses->first(); // ← ['name' => ..., 'total' => ..., 'best_rank' => ...]
+
+                                if ($topCode && $topCourse) {
+                                    $championCard['name'] = $topCode;
+                                    $championCard['total'] = $topCourse['total'];
+                                    $championCard['best_rank'] = $topCourse['best_rank'] ?? null;
+                                }
+                            }
+                        @endphp
+                        <div
+                            class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                            <div class="flex items-start justify-between gap-3 mb-4">
+                                <div class="min-w-0">
+                                    <h2
+                                        class="text-sm font-bold text-[#0f2b1c] dark:text-white flex items-center gap-2">
+                                        Top Notchers
+                                    </h2>
+                                    <p id="topnotcher-subtitle"
+                                        class="text-xs text-black/40 dark:text-white/40 mt-0.5">
+                                        @if ($this->isRegistrar)
+                                            Top-notcher attempts by department · click a bar to see courses
+                                        @else
+                                            Top-notcher attempts by course
+                                        @endif
+                                    </p>
+                                </div>
+                                <button type="button" id="topnotcher-back-btn"
+                                    class="hidden shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold text-[#1877F2] hover:underline">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                                    </svg>
+                                    Back to departments
+                                </button>
+                            </div>
+
+                            {{-- Highlight cards --}}
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+                                <div class="rounded-xl bg-[#D4A537]/10 border border-[#D4A537]/20 p-3">
+                                    <p
+                                        class="text-[10px] uppercase tracking-wide text-[#a97f1f] dark:text-[#E5B94A] font-bold">
+                                        Total Top Notchers</p>
+                                    <p class="text-2xl font-bold text-[#0f2b1c] dark:text-white mt-0.5">
+                                        {{ $this->topNotcherTotal }}</p>
+                                </div>
+
+                                @if ($championCard)
+                                    <div data-dept-card="{{ $championCard['code'] }}"
+                                        class="rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 p-3 transition-colors">
+                                        <p data-dept-accent
+                                            class="text-[10px] uppercase tracking-wide font-bold text-emerald-700 dark:text-emerald-400">
+                                            {{ $this->isRegistrar ? 'Top Department' : 'Top Course' }}</p>
+                                        <p class="text-sm font-bold text-[#0f2b1c] dark:text-white mt-0.5 truncate">
+                                            {{ $championCard['name'] }}</p>
+                                        <p data-dept-accent
+                                            class="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
+                                            {{ $championCard['total'] }}
+                                            {{ \Illuminate\Support\Str::plural('top notcher', $championCard['total']) }}
+                                            @if ($championCard['best_rank'])
+                                                · Best rank #{{ $championCard['best_rank'] }}
+                                            @endif
+                                        </p>
+                                    </div>
+                                @endif
+
+                                @if ($this->highestTopNotcher)
+                                    <div data-dept-card="{{ $this->highestTopNotcher['dept_code'] ?? '' }}"
+                                        class="rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 p-3 col-span-2 transition-colors">
+                                        <p data-dept-accent
+                                            class="text-[10px] uppercase tracking-wide font-bold text-blue-700 dark:text-blue-400">
+                                            Highest Rank in Scope</p>
+                                        <p class="text-sm font-bold text-[#0f2b1c] dark:text-white mt-0.5 truncate">
+                                            #{{ $this->highestTopNotcher['rank'] }} —
+                                            {{ $this->highestTopNotcher['name'] }}
+                                        </p>
+                                        <p data-dept-accent
+                                            class="text-[11px] font-semibold text-blue-700 dark:text-blue-400 truncate">
+                                            {{ $this->highestTopNotcher['course'] ?? '—' }}
+                                            @if ($this->highestTopNotcher['dept'])
+                                                · {{ $this->highestTopNotcher['dept'] }}
+                                            @endif
+                                            · {{ number_format($this->highestTopNotcher['rate'], 2) }}%
+                                        </p>
+                                    </div>
+                                @endif
+                            </div>
+
+                            <div class="w-full h-72"><canvas id="topNotchersChart"></canvas></div>
+                        </div>
+                    @endif
+
                     {{-- Analytics section --}}
                     <div>
-                        <h2 class="text-lg sm:text-xl font-bold text-[#0f2b1c] dark:text-white" style="font-family: 'Fraunces', serif;">Analytics</h2>
-                        <p class="text-sm text-black/50 dark:text-white/50 mt-0.5">Deeper breakdown from the tracer study.</p>
+                        <h2 class="text-lg sm:text-xl font-bold text-[#0f2b1c] dark:text-white"
+                            style="font-family: 'Fraunces', serif;">Analytics</h2>
+                        <p class="text-sm text-black/50 dark:text-white/50 mt-0.5">Deeper breakdown from the tracer
+                            study.</p>
                     </div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                        <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                        <div
+                            class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                             <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Employment Status</h2>
-                            <p class="text-xs text-black/40 dark:text-white/40 mb-3">Employed, unemployed, self-employed</p>
+                            <p class="text-xs text-black/40 dark:text-white/40 mb-3">Employed, unemployed,
+                                self-employed</p>
                             @if (empty($this->employmentStatusBreakdown))
-                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No tracer employment data yet.</p>
+                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No tracer
+                                    employment data yet.</p>
                             @else
                                 <div class="w-full h-64"><canvas id="employmentStatusChart"></canvas></div>
                             @endif
                         </div>
 
-                        <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                        <div
+                            class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                             <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Employment Type</h2>
-                            <p class="text-xs text-black/40 dark:text-white/40 mb-3">Full-time, part-time, freelance, etc.</p>
+                            <p class="text-xs text-black/40 dark:text-white/40 mb-3">Full-time, part-time, freelance,
+                                etc.</p>
                             @if (empty($this->employmentTypeBreakdown))
-                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No employment type yet.</p>
+                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No employment
+                                    type yet.</p>
                             @else
                                 <div class="w-full h-64"><canvas id="employmentTypeChart"></canvas></div>
                             @endif
@@ -211,58 +381,71 @@
                     </div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                        <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                        <div
+                            class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                             <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Organization Type</h2>
                             <p class="text-xs text-black/40 dark:text-white/40 mb-3">Where alumni currently work</p>
                             @if (empty($this->organizationTypeBreakdown))
-                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No organization type yet.</p>
+                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No organization
+                                    type yet.</p>
                             @else
                                 <div class="w-full h-64"><canvas id="organizationTypeChart"></canvas></div>
                             @endif
                         </div>
 
-                        <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                        <div
+                            class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                             <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Employment Area</h2>
                             <p class="text-xs text-black/40 dark:text-white/40 mb-3">Philippines vs. abroad</p>
                             @if (empty($this->employmentAreaBreakdown))
-                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No employment area yet.</p>
+                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No employment
+                                    area yet.</p>
                             @else
                                 <div class="w-full h-64"><canvas id="employmentAreaChart"></canvas></div>
                             @endif
                         </div>
                     </div>
 
-                    <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                    <div
+                        class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                         <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Time to First Job</h2>
-                        <p class="text-xs text-black/40 dark:text-white/40 mb-3">How long after graduation alumni got employed</p>
+                        <p class="text-xs text-black/40 dark:text-white/40 mb-3">How long after graduation alumni got
+                            employed</p>
                         @if (collect($this->monthsToFirstJobBreakdown)->sum() === 0)
-                            <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No time-to-first-job data yet.</p>
+                            <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No time-to-first-job
+                                data yet.</p>
                         @else
                             <div class="w-full h-64"><canvas id="monthsToFirstJobChart"></canvas></div>
                         @endif
                     </div>
 
                     <div class="pt-2">
-                        <h2 class="text-lg sm:text-xl font-bold text-[#0f2b1c] dark:text-white" style="font-family: 'Fraunces', serif;">Demographics & Outcomes</h2>
-                        <p class="text-sm text-black/50 dark:text-white/50 mt-0.5">Additional insights from profiles and work history.</p>
+                        <h2 class="text-lg sm:text-xl font-bold text-[#0f2b1c] dark:text-white"
+                            style="font-family: 'Fraunces', serif;">Demographics & Outcomes</h2>
+                        <p class="text-sm text-black/50 dark:text-white/50 mt-0.5">Additional insights from profiles
+                            and work history.</p>
                     </div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                        <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                        <div
+                            class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                             <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Gender Distribution</h2>
                             <p class="text-xs text-black/40 dark:text-white/40 mb-3">Male vs. female alumni</p>
                             @if (empty($this->genderBreakdown))
-                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No gender data yet.</p>
+                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No gender data
+                                    yet.</p>
                             @else
                                 <div class="w-full h-64"><canvas id="genderChart"></canvas></div>
                             @endif
                         </div>
 
-                        <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                        <div
+                            class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                             <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Civil Status</h2>
                             <p class="text-xs text-black/40 dark:text-white/40 mb-3">Single, married, widowed, etc.</p>
                             @if (empty($this->civilStatusBreakdown))
-                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No civil status data yet.</p>
+                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No civil status
+                                    data yet.</p>
                             @else
                                 <div class="w-full h-64"><canvas id="civilStatusChart"></canvas></div>
                             @endif
@@ -270,21 +453,29 @@
                     </div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                        <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
-                            <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Further Studies Level</h2>
-                            <p class="text-xs text-black/40 dark:text-white/40 mb-3">Certificate, Bachelor, Master, Doctorate</p>
+                        <div
+                            class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                            <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Further Studies Level
+                            </h2>
+                            <p class="text-xs text-black/40 dark:text-white/40 mb-3">Certificate, Bachelor, Master,
+                                Doctorate</p>
                             @if (empty($this->furtherStudiesLevelBreakdown))
-                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No further studies data yet.</p>
+                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No further
+                                    studies data yet.</p>
                             @else
                                 <div class="w-full h-64"><canvas id="furtherStudiesChart"></canvas></div>
                             @endif
                         </div>
 
-                        <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
-                            <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Job Alignment to Degree</h2>
-                            <p class="text-xs text-black/40 dark:text-white/40 mb-3">Related, partially related, not related</p>
+                        <div
+                            class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                            <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Job Alignment to Degree
+                            </h2>
+                            <p class="text-xs text-black/40 dark:text-white/40 mb-3">Related, partially related, not
+                                related</p>
                             @if (empty($this->jobAlignmentBreakdown))
-                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No job alignment data yet.</p>
+                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No job alignment
+                                    data yet.</p>
                             @else
                                 <div class="w-full h-64"><canvas id="jobAlignmentChart"></canvas></div>
                             @endif
@@ -292,32 +483,42 @@
                     </div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                        <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                        <div
+                            class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                             <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Top Employers</h2>
-                            <p class="text-xs text-black/40 dark:text-white/40 mb-3">Most common companies among alumni</p>
+                            <p class="text-xs text-black/40 dark:text-white/40 mb-3">Most common companies among alumni
+                            </p>
                             @if (empty($this->topEmployers))
-                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No employer data yet.</p>
+                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No employer data
+                                    yet.</p>
                             @else
                                 <div class="w-full h-72"><canvas id="topEmployersChart"></canvas></div>
                             @endif
                         </div>
 
-                        <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
-                            <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Board Exam Performance</h2>
-                            <p class="text-xs text-black/40 dark:text-white/40 mb-3">Passed vs. failed (75%+ = passed)</p>
+                        <div
+                            class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                            <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Board Exam Performance
+                            </h2>
+                            <p class="text-xs text-black/40 dark:text-white/40 mb-3">Passed vs. failed (75%+ = passed)
+                            </p>
                             @if (collect($this->boardExamBreakdown)->sum() === 0)
-                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No board exam data yet.</p>
+                                <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No board exam
+                                    data yet.</p>
                             @else
                                 <div class="w-full h-64"><canvas id="boardExamChart"></canvas></div>
                             @endif
                         </div>
                     </div>
 
-                    <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                    <div
+                        class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                         <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Alumni by Region</h2>
-                        <p class="text-xs text-black/40 dark:text-white/40 mb-3">Geographic distribution (top regions)</p>
+                        <p class="text-xs text-black/40 dark:text-white/40 mb-3">Geographic distribution (top regions)
+                        </p>
                         @if (empty($this->alumniByRegion))
-                            <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No region data yet.</p>
+                            <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No region data yet.
+                            </p>
                         @else
                             <div class="w-full h-72"><canvas id="alumniByRegionChart"></canvas></div>
                         @endif
@@ -349,6 +550,7 @@
                 'jobAlignment'            => $this->jobAlignmentBreakdown,
                 'boardExam'               => $this->boardExamBreakdown,
                 'alumniByRegion'          => $this->alumniByRegion,
+                'topNotchers'             => $this->topNotchersByDeptAndCourse,
             ]) !!}
         </script>
     @endunless
@@ -360,728 +562,1117 @@
     @endassets
 
     @script
-    <script>
-        // =====================================================================
-        // Palette
-        // =====================================================================
-        const PALETTE = {
-            greenDark:   '#0f2b1c',
-            greenMid:    '#1C6B45',
-            greenBright: '#16a34a',
-            greenLight:  '#10b981',
-            goldDeep:    '#a97f1f',
-            gold:        '#D4A537',
-            goldLight:   '#E5B94A',
-            goldSoft:    '#FCD34D',
-        };
-
-        const PIE_PALETTE = [
-            PALETTE.greenBright, PALETTE.gold,
-            PALETTE.greenMid,    PALETTE.goldLight,
-            PALETTE.greenLight,  PALETTE.goldSoft,
-            PALETTE.greenDark,   PALETTE.goldDeep,
-        ];
-
-        // =====================================================================
-        // Per-department bar colors
-        // =====================================================================
-        const DEPT_COLOR_MAP = {
-            'EDUC': '#2563eb', // Blue
-            'DOCS': '#6b7280', // Gray
-            'CRIM': '#7f1d1d', // Maroon
-            'BMAD': '#eab308', // Yellow
-            'ENGR': '#ea580c', // Orange
-            'ARTS': '#111827', // Black
-        };
-
-        const DEPT_COLORS = [
-            '#16a34a', '#D4A537', '#1C6B45', '#E5B94A',
-            '#10b981', '#a97f1f', '#0f2b1c', '#FCD34D',
-            '#2563eb', '#9333ea', '#dc2626', '#0891b2',
-        ];
-
-        // Course code → parent department code, built from payload.
-        let COURSE_TO_DEPT = {};
-
-        const buildCourseDeptMap = () => {
-            COURSE_TO_DEPT = {};
-            const byDept = window.__payload?.alumniByDeptAndCourse || {};
-
-            Object.entries(byDept).forEach(([deptCode, info]) => {
-                Object.keys(info?.courses || {}).forEach((courseCode) => {
-                    COURSE_TO_DEPT[courseCode] = deptCode;
-                });
-            });
-        };
-
-        const deptColor = (key, index = 0) => {
-            if (! key) return DEPT_COLORS[index % DEPT_COLORS.length];
-
-            if (DEPT_COLOR_MAP[key]) return DEPT_COLOR_MAP[key];
-
-            const parent = COURSE_TO_DEPT[key];
-            if (parent && DEPT_COLOR_MAP[parent]) return DEPT_COLOR_MAP[parent];
-
-            return DEPT_COLORS[index % DEPT_COLORS.length];
-        };
-
-        const darken = (hex, factor = 0.2) => {
-            const h = hex.replace('#', '');
-            const r = Math.round(parseInt(h.substring(0, 2), 16) * (1 - factor));
-            const g = Math.round(parseInt(h.substring(2, 4), 16) * (1 - factor));
-            const b = Math.round(parseInt(h.substring(4, 6), 16) * (1 - factor));
-            return `#${[r, g, b].map(v => v.toString(16).padStart(2, '0')).join('')}`;
-        };
-
-        // =====================================================================
-        // Smart Y-axis — nice round steps based on data max.
-        // =====================================================================
-        const niceStep = (max) => {
-            if (! Number.isFinite(max) || max <= 0) return 1;
-            if (max <= 10)    return 1;
-            if (max <= 30)    return 5;
-            if (max <= 80)    return 10;
-            if (max <= 200)   return 20;
-            if (max <= 500)   return 50;
-            if (max <= 1000)  return 100;
-            if (max <= 2500)  return 200;
-            if (max <= 5000)  return 500;
-            if (max <= 10000) return 1000;
-            const pow = Math.pow(10, Math.max(0, Math.floor(Math.log10(max)) - 1));
-            return pow;
-        };
-
-        // =====================================================================
-        // Drill state (client-side, per chart)
-        // =====================================================================
-        const drillState = {
-            dept:  { view: 'departments', selected: null },
-            batch: { view: 'batches',     selected: null },
-        };
-
-        // =====================================================================
-        // Helpers
-        // =====================================================================
-        const isDark = () => document.documentElement.classList.contains('dark');
-
-        const theme = () => ({
-            mutedText:   isDark() ? 'rgba(229,231,235,0.6)' : 'rgba(55,65,81,0.6)',
-            gridColor:   isDark() ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
-            borderColor: isDark() ? '#242526' : '#fff',
-            tooltipBg:   '#0f2b1c',
-            pieLabel:    '#fff',
-            fontFamily:  "'Inter', 'Segoe UI', system-ui, sans-serif",
-        });
-
-        const pretty = (label) => {
-            const str = String(label).toLowerCase();
-            if (str === 'not-yet-employed') return 'Not yet Employed';
-            if (str === 'more-than-6-months') return 'More than 6 Months';
-            if (str === 'more-than-1-year') return 'More than 1 Year';
-            if (str === 'single-parent') return 'Single Parent';
-            if (str === 'partially-related') return 'Partially Related';
-            const rangeMatch = str.match(/^(\d+)-(\d+)-months$/);
-            if (rangeMatch) return `${rangeMatch[1]} - ${rangeMatch[2]} Months`;
-            return str.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-        };
-
-        const waitForChart = () => new Promise((resolve) => {
-            if (window.Chart) return resolve(window.Chart);
-            const t = setInterval(() => {
-                if (window.Chart) { clearInterval(t); resolve(window.Chart); }
-            }, 40);
-            setTimeout(() => { clearInterval(t); resolve(window.Chart || null); }, 4000);
-        });
-
-        const getPayload = () => {
-            try {
-                const el = document.getElementById('analytics-payload');
-                return el ? JSON.parse(el.textContent) : {};
-            } catch (e) { console.warn('Payload parse failed', e); return {}; }
-        };
-
-        const destroyChart = (id) => {
-            const el = document.getElementById(id);
-            if (!el) return;
-            const existing = window.Chart.getChart(el);
-            if (existing) existing.destroy();
-        };
-
-        const barGradient = (ctx, chartArea, baseColor) => {
-            if (!chartArea) return baseColor;
-            const g = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-            g.addColorStop(0, baseColor);
-            g.addColorStop(1, baseColor + 'cc');
-            return g;
-        };
-
-        const makeChart = (ChartLib, id, config) => {
-            const el = document.getElementById(id);
-            if (!el || !ChartLib) return;
-            destroyChart(id);
-            new ChartLib(el, config);
-        };
-
-        // Nice-step integer tick helper. Pass max value to control density.
-        const integerTicks = (dataMax = 0) => {
-            const t = theme();
-            return {
-                beginAtZero: true,
-                grid: { color: t.gridColor, drawBorder: false },
-                border: { display: false },
-                ticks: {
-                    stepSize: dataMax > 0 ? niceStep(dataMax) : undefined,
-                    precision: 0,
-                    autoSkip: true,
-                    maxTicksLimit: 10,
-                    color: t.mutedText,
-                    callback: (v) => Number.isInteger(v) ? v : '',
-                },
+        <script>
+            // =====================================================================
+            // Palette
+            // =====================================================================
+            const PALETTE = {
+                greenDark: '#0f2b1c',
+                greenMid: '#1C6B45',
+                greenBright: '#16a34a',
+                greenLight: '#10b981',
+                goldDeep: '#a97f1f',
+                gold: '#D4A537',
+                goldLight: '#E5B94A',
+                goldSoft: '#FCD34D',
             };
-        };
 
-        // =====================================================================
-        // Universal bar-value label plugin
-        //   Draws the raw value above each vertical bar (or to the right of
-        //   each horizontal bar). Skips zero values to reduce clutter.
-        // =====================================================================
-        const barValueLabelPlugin = {
-            id: 'barValueLabels',
-            afterDatasetsDraw(chart) {
-                const { ctx } = chart;
-                const t = theme();
-                const isHorizontal = chart.options.indexAxis === 'y';
+            const PIE_PALETTE = [
+                PALETTE.greenBright, PALETTE.gold,
+                PALETTE.greenMid, PALETTE.goldLight,
+                PALETTE.greenLight, PALETTE.goldSoft,
+                PALETTE.greenDark, PALETTE.goldDeep,
+            ];
 
-                ctx.save();
-                ctx.font = '600 10px ' + t.fontFamily;
-                ctx.fillStyle = t.mutedText;
-                ctx.textAlign = isHorizontal ? 'left' : 'center';
-                ctx.textBaseline = isHorizontal ? 'middle' : 'bottom';
+            // =====================================================================
+            // Per-department bar colors
+            // =====================================================================
+            const DEPT_COLOR_MAP = {
+                'EDUC': '#2563eb', // Blue
+                'DOCS': '#6b7280', // Gray
+                'CRIM': '#7f1d1d', // Maroon
+                'BMAD': '#eab308', // Yellow
+                'ENGR': '#ea580c', // Orange
+                'ARTS': '#111827', // Black
+            };
 
-                chart.data.datasets.forEach((dataset, di) => {
-                    chart.getDatasetMeta(di).data.forEach((bar, i) => {
-                        const v = dataset.data[i];
-                        if (v == null || v === 0) return;
+            const DEPT_COLORS = [
+                '#16a34a', '#D4A537', '#1C6B45', '#E5B94A',
+                '#10b981', '#a97f1f', '#0f2b1c', '#FCD34D',
+                '#2563eb', '#9333ea', '#dc2626', '#0891b2',
+            ];
 
-                        const text = String(v);
+            // Course code → parent department code, built from payload.
+            let COURSE_TO_DEPT = {};
 
-                        if (isHorizontal) {
-                            ctx.fillText(text, bar.x + 6, bar.y);
-                        } else {
-                            ctx.fillText(text, bar.x, bar.y - 4);
+            const buildCourseDeptMap = () => {
+                COURSE_TO_DEPT = {};
+
+                // Source 1: regular alumni-by-dept tree
+                const byDept = window.__payload?.alumniByDeptAndCourse || {};
+                Object.entries(byDept).forEach(([deptCode, info]) => {
+                    Object.keys(info?.courses || {}).forEach((courseCode) => {
+                        COURSE_TO_DEPT[courseCode] = deptCode;
+                    });
+                });
+
+                // Source 2: top notcher tree — fills any courses missing above
+                const top = window.__payload?.topNotchers || {};
+                Object.entries(top).forEach(([deptCode, info]) => {
+                    Object.keys(info?.courses || {}).forEach((courseCode) => {
+                        if (!COURSE_TO_DEPT[courseCode]) {
+                            COURSE_TO_DEPT[courseCode] = deptCode;
                         }
                     });
                 });
+            };
 
-                ctx.restore();
-            },
-        };
+            const deptColor = (key, index = 0) => {
+                if (!key) return DEPT_COLORS[index % DEPT_COLORS.length];
 
-        let ChartLibRef = null;
+                if (DEPT_COLOR_MAP[key]) return DEPT_COLOR_MAP[key];
 
-        // =====================================================================
-        // Renderers for drill-down charts
-        // =====================================================================
-        const renderDeptChart = (ChartLib) => {
-            const p = window.__payload;
-            const state = drillState.dept;
-            const drillable = p.isRegistrar;   // only registrar has multiple departments
+                const parent = COURSE_TO_DEPT[key];
+                if (parent && DEPT_COLOR_MAP[parent]) return DEPT_COLOR_MAP[parent];
 
-            let labels = [], totals = [], names = [];
-            let clickable = false;
-            let subtitleText = '';
-            let backBtnVisible = false;
+                return DEPT_COLORS[index % DEPT_COLORS.length];
+            };
 
-            if (state.view === 'departments') {
-                const map = p.alumniByDept || {};
-                const codes = Object.keys(map);
-                labels = codes;
-                names  = codes.map(c => map[c]?.name || c);
-                totals = codes.map(c => map[c]?.total || 0);
-                clickable = drillable;
-                subtitleText = 'Breakdown by department' + (drillable ? ' · click a bar to see courses' : '');
-                backBtnVisible = false;
-            } else {
-                const map = p.alumniByDeptAndCourse || {};
-                const deptKey = state.selected || Object.keys(map)[0];
-                const dept = map[deptKey] || { courses: {}, name: deptKey };
-                const codes = Object.keys(dept.courses || {});
-                labels = codes;
-                names  = codes.map(c => dept.courses[c]?.name || c);
-                totals = codes.map(c => dept.courses[c]?.total || 0);
-                clickable = false;
-                subtitleText = p.isRegistrar
-                    ? `${dept.name} · breakdown by course`
-                    : `Breakdown by course within ${dept.name}`;
-                backBtnVisible = p.isRegistrar;
-            }
+            const darken = (hex, factor = 0.2) => {
+                const h = hex.replace('#', '');
+                const r = Math.round(parseInt(h.substring(0, 2), 16) * (1 - factor));
+                const g = Math.round(parseInt(h.substring(2, 4), 16) * (1 - factor));
+                const b = Math.round(parseInt(h.substring(4, 6), 16) * (1 - factor));
+                return `#${[r, g, b].map(v => v.toString(16).padStart(2, '0')).join('')}`;
+            };
 
-            const subEl = document.getElementById('dept-subtitle');
-            if (subEl) subEl.textContent = subtitleText;
+            const hexToRgba = (hex, alpha = 1) => {
+                const h = hex.replace('#', '');
+                const r = parseInt(h.substring(0, 2), 16);
+                const g = parseInt(h.substring(2, 4), 16);
+                const b = parseInt(h.substring(4, 6), 16);
+                return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+            };
 
-            const backBtn = document.getElementById('dept-back-btn');
-            if (backBtn) {
-                backBtn.classList.toggle('hidden', ! backBtnVisible);
-                backBtn.classList.toggle('inline-flex', backBtnVisible);
-            }
+            // Recolors the top-notcher highlight cards to match the department color.
+            const paintTopNotcherCards = () => {
+                document.querySelectorAll('[data-dept-card]').forEach((el) => {
+                    const code = el.dataset.deptCard;
+                    if (!code) return;
 
-            if (labels.length === 0) return;
+                    const color = DEPT_COLOR_MAP[code] || '#6b7280';
+                    const dark = isDark();
 
-            const t = theme();
+                    el.style.backgroundColor = hexToRgba(color, dark ? 0.15 : 0.08);
+                    el.style.borderColor = hexToRgba(color, dark ? 0.35 : 0.30);
 
-            makeChart(ChartLib, 'alumniDynamicChart', {
-                type: 'bar',
-                data: {
-                    labels,
-                    datasets: [{
-                        data: totals,
-                        // Department colors — courses inherit their parent dept's color.
-                        backgroundColor: (ctx) => deptColor(labels[ctx.dataIndex], ctx.dataIndex),
-                        hoverBackgroundColor: (ctx) => darken(deptColor(labels[ctx.dataIndex], ctx.dataIndex), 0.2),
-                        borderRadius: 8,
-                        borderSkipped: false,
-                        maxBarThickness: 48,
-                    }],
+                    el.querySelectorAll('[data-dept-accent]').forEach((a) => {
+                        a.style.color = dark ? color : darken(color, 0.25);
+                    });
+                });
+            };
+
+            // =====================================================================
+            // Smart Y-axis — nice round steps based on data max.
+            // =====================================================================
+            const niceStep = (max) => {
+                if (!Number.isFinite(max) || max <= 0) return 1;
+                if (max <= 10) return 1;
+                if (max <= 30) return 5;
+                if (max <= 80) return 10;
+                if (max <= 200) return 20;
+                if (max <= 500) return 50;
+                if (max <= 1000) return 100;
+                if (max <= 2500) return 200;
+                if (max <= 5000) return 500;
+                if (max <= 10000) return 1000;
+                const pow = Math.pow(10, Math.max(0, Math.floor(Math.log10(max)) - 1));
+                return pow;
+            };
+
+            // =====================================================================
+            // Drill state (client-side, per chart)
+            // =====================================================================
+            const drillState = {
+                dept: {
+                    view: 'departments',
+                    selected: null
                 },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    layout: { padding: { top: 18 } },
-                    onHover: (event, els) => {
-                        if (! clickable) return;
-                        event.native.target.style.cursor = els.length > 0 ? 'pointer' : 'default';
-                    },
-                    onClick: (event, els) => {
-                        if (! clickable || els.length === 0) return;
-                        drillState.dept.view = 'courses';
-                        drillState.dept.selected = labels[els[0].index];
-                        renderDeptChart(ChartLib);
-                    },
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            backgroundColor: t.tooltipBg, padding: 10, cornerRadius: 8,
-                            titleFont: { size: 12, weight: '600' }, bodyFont: { size: 12 },
-                            displayColors: false,
-                            callbacks: {
-                                title: (items) => names[items[0]?.dataIndex] || labels[items[0]?.dataIndex],
-                                label: (ctx) => `${ctx.raw} alumni`,
-                                afterLabel: () => clickable ? 'Click to see courses' : '',
-                            },
-                        },
-                    },
-                    scales: {
-                        y: integerTicks(Math.max(0, ...totals)),
-                        x: {
-                            ticks: { color: t.mutedText, font: { weight: '600' }, autoSkip: true, maxRotation: 45 },
-                            grid: { display: false }, border: { display: false },
-                        },
-                    },
+                batch: {
+                    view: 'batches',
+                    selected: null
                 },
-                plugins: [barValueLabelPlugin],
+                topNotcher: {
+                    view: 'departments',
+                    selected: null
+                },
+            };
+
+            // =====================================================================
+            // Helpers
+            // =====================================================================
+            const isDark = () => document.documentElement.classList.contains('dark');
+
+            const theme = () => ({
+                mutedText: isDark() ? 'rgba(229,231,235,0.6)' : 'rgba(55,65,81,0.6)',
+                gridColor: isDark() ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+                borderColor: isDark() ? '#242526' : '#fff',
+                tooltipBg: '#0f2b1c',
+                pieLabel: '#fff',
+                fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif",
             });
-        };
 
-        const renderBatchChart = (ChartLib) => {
-            const p = window.__payload;
-            const state = drillState.batch;
-            const t = theme();
+            const pretty = (label) => {
+                const str = String(label).toLowerCase();
+                if (str === 'not-yet-employed') return 'Not yet Employed';
+                if (str === 'more-than-6-months') return 'More than 6 Months';
+                if (str === 'more-than-1-year') return 'More than 1 Year';
+                if (str === 'single-parent') return 'Single Parent';
+                if (str === 'partially-related') return 'Partially Related';
+                const rangeMatch = str.match(/^(\d+)-(\d+)-months$/);
+                if (rangeMatch) return `${rangeMatch[1]} - ${rangeMatch[2]} Months`;
+                return str.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+            };
 
-            let labels = [], totals = [], names = [];
-            let clickable = false;
-            let subtitleText = '';
-            let backBtnVisible = false;
+            const waitForChart = () => new Promise((resolve) => {
+                if (window.Chart) return resolve(window.Chart);
+                const t = setInterval(() => {
+                    if (window.Chart) {
+                        clearInterval(t);
+                        resolve(window.Chart);
+                    }
+                }, 40);
+                setTimeout(() => {
+                    clearInterval(t);
+                    resolve(window.Chart || null);
+                }, 4000);
+            });
 
-            if (state.view === 'batches') {
-                const map = p.alumniByBatch || {};
-                const ids = Object.keys(map);
-                labels = ids.map(id => map[id].batch_name);
-                names  = labels.slice();
-                totals = ids.map(id => map[id].total);
-                clickable = true;
-                subtitleText = 'Total graduates per batch · click a bar to see courses';
-                backBtnVisible = false;
-            } else {
-                const map = p.alumniByBatchAndCourse || {};
-                const batch = map[state.selected] || { courses: {}, batch_name: state.selected };
-                const codes = Object.keys(batch.courses || {});
-                labels = codes;
-                names  = codes.map(c => batch.courses[c]?.name || c);
-                totals = codes.map(c => batch.courses[c]?.total || 0);
-                clickable = false;
-                subtitleText = `Batch ${batch.batch_name} · breakdown by course`;
-                backBtnVisible = true;
-            }
+            const getPayload = () => {
+                try {
+                    const el = document.getElementById('analytics-payload');
+                    return el ? JSON.parse(el.textContent) : {};
+                } catch (e) {
+                    console.warn('Payload parse failed', e);
+                    return {};
+                }
+            };
 
-            const subEl = document.getElementById('batch-subtitle');
-            if (subEl) subEl.textContent = subtitleText;
+            const destroyChart = (id) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const existing = window.Chart.getChart(el);
+                if (existing) existing.destroy();
+            };
 
-            const backBtn = document.getElementById('batch-back-btn');
-            if (backBtn) {
-                backBtn.classList.toggle('hidden', ! backBtnVisible);
-                backBtn.classList.toggle('inline-flex', backBtnVisible);
-            }
+            const barGradient = (ctx, chartArea, baseColor) => {
+                if (!chartArea) return baseColor;
+                const g = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                g.addColorStop(0, baseColor);
+                g.addColorStop(1, baseColor + 'cc');
+                return g;
+            };
 
-            if (labels.length === 0) return;
+            const makeChart = (ChartLib, id, config) => {
+                const el = document.getElementById(id);
+                if (!el || !ChartLib) return;
+                destroyChart(id);
+                new ChartLib(el, config);
+            };
 
-            makeChart(ChartLib, 'alumniByBatchChart', {
-                type: 'bar',
-                data: {
-                    labels,
-                    datasets: [{
-                        data: totals,
-                        backgroundColor: (ctx) => {
-                            // Level 1 (batches) → uniform green gradient
-                            if (state.view === 'batches') {
-                                const { ctx: c, chartArea } = ctx.chart;
-                                return barGradient(c, chartArea, PALETTE.greenBright);
+            const integerTicks = (dataMax = 0) => {
+                const t = theme();
+                return {
+                    beginAtZero: true,
+                    grid: {
+                        color: t.gridColor,
+                        drawBorder: false
+                    },
+                    border: {
+                        display: false
+                    },
+                    ticks: {
+                        stepSize: dataMax > 0 ? niceStep(dataMax) : undefined,
+                        precision: 0,
+                        autoSkip: true,
+                        maxTicksLimit: 10,
+                        color: t.mutedText,
+                        callback: (v) => Number.isInteger(v) ? v : '',
+                    },
+                };
+            };
+
+            // =====================================================================
+            // Universal bar-value label plugin
+            // =====================================================================
+            const barValueLabelPlugin = {
+                id: 'barValueLabels',
+                afterDatasetsDraw(chart) {
+                    const {
+                        ctx
+                    } = chart;
+                    const t = theme();
+                    const isHorizontal = chart.options.indexAxis === 'y';
+
+                    ctx.save();
+                    ctx.font = '600 10px ' + t.fontFamily;
+                    ctx.fillStyle = t.mutedText;
+                    ctx.textAlign = isHorizontal ? 'left' : 'center';
+                    ctx.textBaseline = isHorizontal ? 'middle' : 'bottom';
+
+                    chart.data.datasets.forEach((dataset, di) => {
+                        chart.getDatasetMeta(di).data.forEach((bar, i) => {
+                            const v = dataset.data[i];
+                            if (v == null || v === 0) return;
+
+                            const text = String(v);
+
+                            if (isHorizontal) {
+                                ctx.fillText(text, bar.x + 6, bar.y);
+                            } else {
+                                ctx.fillText(text, bar.x, bar.y - 4);
                             }
-                            // Level 2 (courses) → courses inherit their parent dept color
-                            return deptColor(labels[ctx.dataIndex], ctx.dataIndex);
-                        },
-                        hoverBackgroundColor: (ctx) => {
-                            if (state.view === 'batches') return PALETTE.greenMid;
-                            return darken(deptColor(labels[ctx.dataIndex], ctx.dataIndex), 0.2);
-                        },
-                        borderRadius: 8,
-                        borderSkipped: false,
-                        maxBarThickness: 52,
-                    }],
+                        });
+                    });
+
+                    ctx.restore();
                 },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    layout: { padding: { top: 18 } },
-                    onHover: (event, els) => {
-                        if (! clickable) return;
-                        event.native.target.style.cursor = els.length > 0 ? 'pointer' : 'default';
-                    },
-                    onClick: (event, els) => {
-                        if (! clickable || els.length === 0) return;
-                        const idx = els[0].index;
-                        const map = p.alumniByBatch || {};
-                        const ids = Object.keys(map);
-                        const found = ids.find(id => map[id].batch_name === labels[idx]);
-                        if (! found) return;
-                        drillState.batch.view = 'courses';
-                        drillState.batch.selected = found;
-                        renderBatchChart(ChartLib);
-                    },
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            backgroundColor: t.tooltipBg, padding: 10, cornerRadius: 8,
-                            titleFont: { size: 12, weight: '600' }, bodyFont: { size: 12 },
-                            displayColors: false,
-                            callbacks: {
-                                title: (items) => names[items[0]?.dataIndex] || labels[items[0]?.dataIndex],
-                                label: (ctx) => `${ctx.raw} graduate${ctx.raw === 1 ? '' : 's'}`,
-                                afterLabel: () => clickable ? 'Click to see courses' : '',
-                            },
-                        },
-                    },
-                    scales: {
-                        y: integerTicks(Math.max(0, ...totals)),
-                        x: {
-                            ticks: { color: t.mutedText, font: { weight: '600' }, autoSkip: true, maxRotation: 45 },
-                            grid: { display: false }, border: { display: false },
-                        },
-                    },
-                },
-                plugins: [barValueLabelPlugin],
-            });
-        };
+            };
 
-        // =====================================================================
-        // Back-button handlers
-        // =====================================================================
-        if (! window.__adminDeptBack) {
-            window.__adminDeptBack = true;
-            document.addEventListener('click', (e) => {
-                const btn = e.target.closest('#dept-back-btn');
-                if (! btn || ! ChartLibRef) return;
-                drillState.dept.view = 'departments';
-                drillState.dept.selected = null;
-                renderDeptChart(ChartLibRef);
-            });
-        }
+            let ChartLibRef = null;
 
-        if (! window.__adminBatchBack) {
-            window.__adminBatchBack = true;
-            document.addEventListener('click', (e) => {
-                const btn = e.target.closest('#batch-back-btn');
-                if (! btn || ! ChartLibRef) return;
-                drillState.batch.view = 'batches';
-                drillState.batch.selected = null;
-                renderBatchChart(ChartLibRef);
-            });
-        }
+            // =====================================================================
+            // Renderers for drill-down charts
+            // =====================================================================
+            const renderDeptChart = (ChartLib) => {
+                const p = window.__payload;
+                const state = drillState.dept;
+                const drillable = p.isRegistrar;
 
-        // =====================================================================
-        // Init
-        // =====================================================================
-        const initCharts = async () => {
-            const ChartLib = await waitForChart();
-            if (!ChartLib) return;
-            ChartLibRef = ChartLib;
+                let labels = [],
+                    totals = [],
+                    names = [];
+                let clickable = false;
+                let subtitleText = '';
+                let backBtnVisible = false;
 
-            const p = getPayload();
-            window.__payload = p;
+                if (state.view === 'departments') {
+                    const map = p.alumniByDept || {};
+                    const codes = Object.keys(map);
+                    labels = codes;
+                    names = codes.map(c => map[c]?.name || c);
+                    totals = codes.map(c => map[c]?.total || 0);
+                    clickable = drillable;
+                    subtitleText = 'Breakdown by department' + (drillable ? ' · click a bar to see courses' : '');
+                    backBtnVisible = false;
+                } else {
+                    const map = p.alumniByDeptAndCourse || {};
+                    const deptKey = state.selected || Object.keys(map)[0];
+                    const dept = map[deptKey] || {
+                        courses: {},
+                        name: deptKey
+                    };
+                    const codes = Object.keys(dept.courses || {});
+                    labels = codes;
+                    names = codes.map(c => dept.courses[c]?.name || c);
+                    totals = codes.map(c => dept.courses[c]?.total || 0);
+                    clickable = false;
+                    subtitleText = p.isRegistrar ?
+                        `${dept.name} · breakdown by course` :
+                        `Breakdown by course within ${dept.name}`;
+                    backBtnVisible = p.isRegistrar;
+                }
 
-            const t = theme();
+                const subEl = document.getElementById('dept-subtitle');
+                if (subEl) subEl.textContent = subtitleText;
 
-            ChartLib.defaults.font.family = t.fontFamily;
-            ChartLib.defaults.font.size   = 11;
-            ChartLib.defaults.animation.duration = 500;
-            ChartLib.defaults.animation.easing   = 'easeOutQuart';
+                const backBtn = document.getElementById('dept-back-btn');
+                if (backBtn) {
+                    backBtn.classList.toggle('hidden', !backBtnVisible);
+                    backBtn.classList.toggle('inline-flex', backBtnVisible);
+                }
 
-            // Build the course→dept lookup so course bars get their dept's color.
-            buildCourseDeptMap();
+                if (labels.length === 0) return;
 
-            // Reset drill state on every init.
-            drillState.dept  = p.isRegistrar
-                ? { view: 'departments', selected: null }
-                : { view: 'courses',     selected: null };
-            drillState.batch = { view: 'batches', selected: null };
+                const t = theme();
 
-            // 1. Alumni by Dept / Courses (drill-down aware)
-            renderDeptChart(ChartLib);
-
-            // 2. Comparative Analysis
-            const ca = p.courseAnalytics || [];
-            if (ca.length > 0) {
-                makeChart(ChartLib, 'comparativeChart', {
+                makeChart(ChartLib, 'alumniDynamicChart', {
                     type: 'bar',
                     data: {
-                        labels: ca.map(i => i.course_code),
-                        datasets: [
-                            {
-                                label: 'Aligned',
-                                data: ca.map(i => i.related_rate),
-                                backgroundColor: PALETTE.greenBright,
-                                hoverBackgroundColor: PALETTE.greenMid,
-                                borderRadius: 6, borderSkipped: false, maxBarThickness: 28,
-                            },
-                            {
-                                label: 'Not Aligned',
-                                data: ca.map(i => 100 - i.related_rate),
-                                backgroundColor: PALETTE.gold,
-                                hoverBackgroundColor: PALETTE.goldDeep,
-                                borderRadius: 6, borderSkipped: false, maxBarThickness: 28,
-                            },
-                        ],
+                        labels,
+                        datasets: [{
+                            data: totals,
+                            backgroundColor: (ctx) => deptColor(labels[ctx.dataIndex], ctx.dataIndex),
+                            hoverBackgroundColor: (ctx) => darken(deptColor(labels[ctx.dataIndex], ctx
+                                .dataIndex), 0.2),
+                            borderRadius: 8,
+                            borderSkipped: false,
+                            maxBarThickness: 48,
+                        }],
                     },
                     options: {
-                        responsive: true, maintainAspectRatio: false,
-                        layout: { padding: { top: 16 } },
-                        scales: {
-                            y: {
-                                beginAtZero: true, max: 110,
-                                grid: { color: t.gridColor, drawBorder: false },
-                                border: { display: false },
-                                ticks: { stepSize: 25, color: t.mutedText, callback: v => v > 100 ? '' : v + '%' },
-                            },
-                            x: {
-                                ticks: { color: t.mutedText, font: { weight: '600' }, autoSkip: true, maxRotation: 45 },
-                                grid: { display: false }, border: { display: false },
-                            },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        layout: {
+                            padding: {
+                                top: 18
+                            }
+                        },
+                        onHover: (event, els) => {
+                            if (!clickable) return;
+                            event.native.target.style.cursor = els.length > 0 ? 'pointer' : 'default';
+                        },
+                        onClick: (event, els) => {
+                            if (!clickable || els.length === 0) return;
+                            drillState.dept.view = 'courses';
+                            drillState.dept.selected = labels[els[0].index];
+                            renderDeptChart(ChartLib);
                         },
                         plugins: {
                             legend: {
-                                position: 'top', align: 'end',
-                                labels: {
-                                    color: t.mutedText, boxWidth: 10, boxHeight: 10,
-                                    usePointStyle: true, pointStyle: 'rectRounded',
-                                    padding: 14, font: { size: 11, weight: '600' },
-                                },
+                                display: false
                             },
                             tooltip: {
-                                backgroundColor: t.tooltipBg, padding: 10, cornerRadius: 8,
-                                callbacks: { label: ctx => ` ${ctx.dataset.label}: ${Number(ctx.raw).toFixed(2)}%` },
-                            },
-                        },
-                    },
-                    plugins: [{
-                        id: 'barPercentLabels',
-                        afterDatasetsDraw(chart) {
-                            const { ctx } = chart;
-                            ctx.save();
-                            ctx.font = '600 10px ' + t.fontFamily;
-                            ctx.fillStyle = t.mutedText;
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'bottom';
-                            chart.data.datasets.forEach((dataset, di) => {
-                                chart.getDatasetMeta(di).data.forEach((bar, i) => {
-                                    const v = dataset.data[i];
-                                    if (v == null) return;
-                                    ctx.fillText(Number(v).toFixed(2) + '%', bar.x, bar.y - 4);
-                                });
-                            });
-                            ctx.restore();
-                        },
-                    }],
-                });
-            }
-
-            // 3. Alumni by Batch (drill-down aware)
-            renderBatchChart(ChartLib);
-
-            // ===== Pie helpers =====
-            const pieLabelPlugin = {
-                id: 'piePercentLabels',
-                afterDatasetsDraw(chart) {
-                    const { ctx } = chart;
-                    const dataset = chart.data.datasets[0];
-                    const total = dataset.data.reduce((a, b) => a + b, 0);
-                    if (!total) return;
-                    chart.getDatasetMeta(0).data.forEach((arc, i) => {
-                        const v = dataset.data[i];
-                        if (!v) return;
-                        const pct = ((v / total) * 100).toFixed(0) + '%';
-                        const pos = arc.tooltipPosition();
-                        ctx.save();
-                        ctx.fillStyle = t.pieLabel;
-                        ctx.font = '700 12px ' + t.fontFamily;
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        ctx.fillText(pct, pos.x, pos.y);
-                        ctx.restore();
-                    });
-                },
-            };
-
-            const pieTooltip = {
-                backgroundColor: t.tooltipBg, padding: 10, cornerRadius: 8,
-                callbacks: {
-                    label: (ctx) => {
-                        const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                        const pct = total > 0 ? ((ctx.raw / total) * 100).toFixed(1) + '%' : '0%';
-                        return ` ${ctx.raw} (${pct})`;
-                    },
-                },
-            };
-
-            const pieLegend = {
-                position: 'bottom',
-                labels: {
-                    color: t.mutedText, boxWidth: 10, boxHeight: 10,
-                    usePointStyle: true, pointStyle: 'circle',
-                    padding: 12, font: { size: 11, weight: '600' },
-                },
-            };
-
-            // Accepts an array OR a function (key, index) => color
-            const pieConfig = (id, dataMap, colorsOrFn) => {
-                const keys = Object.keys(dataMap || {});
-                if (keys.length === 0) return;
-
-                let colors;
-                if (typeof colorsOrFn === 'function') {
-                    colors = keys.map((k, i) => colorsOrFn(k, i));
-                } else if (Array.isArray(colorsOrFn)) {
-                    colors = colorsOrFn;
-                } else {
-                    colors = PIE_PALETTE;
-                }
-
-                makeChart(ChartLib, id, {
-                    type: 'doughnut',
-                    data: {
-                        labels: keys.map(pretty),
-                        datasets: [{
-                            data: keys.map(k => dataMap[k]),
-                            backgroundColor: colors,
-                            borderWidth: 3,
-                            borderColor: t.borderColor,
-                            hoverOffset: 6,
-                        }],
-                    },
-                    options: {
-                        responsive: true, maintainAspectRatio: false, cutout: '60%',
-                        plugins: { legend: pieLegend, tooltip: pieTooltip },
-                    },
-                    plugins: [pieLabelPlugin],
-                });
-            };
-
-            // Job alignment — Yes green, No red, Partially Related yellow
-            const jobAlignColorFn = (key) => {
-                const k = String(key).toLowerCase();
-                if (k === 'yes')               return PALETTE.greenBright;
-                if (k === 'no')                return '#ef4444';
-                if (k === 'partially-related') return PALETTE.gold;
-                return PALETTE.greenMid;
-            };
-
-            pieConfig('employmentStatusChart', p.employmentStatus);
-            pieConfig('employmentAreaChart', p.employmentArea, [PALETTE.greenBright, PALETTE.gold]);
-            pieConfig('genderChart', p.gender, [PALETTE.greenMid, PALETTE.gold]);
-            pieConfig('civilStatusChart', p.civilStatus);
-            pieConfig('jobAlignmentChart', p.jobAlignment, jobAlignColorFn);
-            pieConfig('boardExamChart', p.boardExam, [PALETTE.greenBright, '#ef4444']);
-
-            // ===== Bar configs =====
-            const barConfig = (id, dataMap, color, horizontal = false) => {
-                const keys = Object.keys(dataMap || {});
-                if (keys.length === 0) return;
-
-                const values = keys.map(k => dataMap[k]);
-                const dataMax = Math.max(0, ...values);
-
-                makeChart(ChartLib, id, {
-                    type: 'bar',
-                    data: {
-                        labels: keys.map(pretty),
-                        datasets: [{
-                            data: values,
-                            backgroundColor: color,
-                            borderRadius: 8,
-                            borderSkipped: false,
-                            maxBarThickness: 45,
-                        }],
-                    },
-                    options: {
-                        responsive: true, maintainAspectRatio: false,
-                        indexAxis: horizontal ? 'y' : 'x',
-                        layout: { padding: horizontal ? { right: 24 } : { top: 18 } },
-                        plugins: { legend: { display: false } },
-                        scales: horizontal
-                            ? {
-                                x: integerTicks(dataMax),
-                                y: { grid: { display: false }, ticks: { color: t.mutedText, font: { weight: '600' } } },
-                            }
-                            : {
-                                y: integerTicks(dataMax),
-                                x: {
-                                    grid: { display: false },
-                                    ticks: { color: t.mutedText, font: { weight: '600' }, autoSkip: true, maxRotation: 45 },
+                                backgroundColor: t.tooltipBg,
+                                padding: 10,
+                                cornerRadius: 8,
+                                titleFont: {
+                                    size: 12,
+                                    weight: '600'
+                                },
+                                bodyFont: {
+                                    size: 12
+                                },
+                                displayColors: false,
+                                callbacks: {
+                                    title: (items) => names[items[0]?.dataIndex] || labels[items[0]?.dataIndex],
+                                    label: (ctx) => `${ctx.raw} alumni`,
+                                    afterLabel: () => clickable ? 'Click to see courses' : '',
                                 },
                             },
+                        },
+                        scales: {
+                            y: integerTicks(Math.max(0, ...totals)),
+                            x: {
+                                ticks: {
+                                    color: t.mutedText,
+                                    font: {
+                                        weight: '600'
+                                    },
+                                    autoSkip: true,
+                                    maxRotation: 45
+                                },
+                                grid: {
+                                    display: false
+                                },
+                                border: {
+                                    display: false
+                                },
+                            },
+                        },
                     },
                     plugins: [barValueLabelPlugin],
                 });
             };
 
-            barConfig('employmentTypeChart', p.employmentType, PALETTE.greenMid);
-            barConfig('organizationTypeChart', p.organizationType, PALETTE.gold, true);
-            barConfig('monthsToFirstJobChart', p.monthsToFirstJob, PALETTE.greenBright);
-            barConfig('furtherStudiesChart', p.furtherStudies, PALETTE.goldLight);
-            barConfig('topEmployersChart', p.topEmployers, PALETTE.goldDeep, true);
-            barConfig('alumniByRegionChart', p.alumniByRegion, PALETTE.greenMid, true);
-        };
+            const renderBatchChart = (ChartLib) => {
+                const p = window.__payload;
+                const state = drillState.batch;
+                const t = theme();
 
-        initCharts();
+                let labels = [],
+                    totals = [],
+                    names = [];
+                let clickable = false;
+                let subtitleText = '';
+                let backBtnVisible = false;
 
-        if (! window.__adminBatchChanged) {
-            window.__adminBatchChanged = true;
-            $wire.on('batch-changed', () => requestAnimationFrame(() => initCharts()));
-            $wire.on('analytics-refreshed', () => requestAnimationFrame(() => initCharts()));
-        }
+                if (state.view === 'batches') {
+                    const map = p.alumniByBatch || {};
+                    const ids = Object.keys(map);
+                    labels = ids.map(id => map[id].batch_name);
+                    names = labels.slice();
+                    totals = ids.map(id => map[id].total);
+                    clickable = true;
+                    subtitleText = 'Total graduates per batch · click a bar to see courses';
+                    backBtnVisible = false;
+                } else {
+                    const map = p.alumniByBatchAndCourse || {};
+                    const batch = map[state.selected] || {
+                        courses: {},
+                        batch_name: state.selected
+                    };
+                    const codes = Object.keys(batch.courses || {});
+                    labels = codes;
+                    names = codes.map(c => batch.courses[c]?.name || c);
+                    totals = codes.map(c => batch.courses[c]?.total || 0);
+                    clickable = false;
+                    subtitleText = `Batch ${batch.batch_name} · breakdown by course`;
+                    backBtnVisible = true;
+                }
 
-        if (! window.__adminThemeObserver) {
-            window.__adminThemeObserver = new MutationObserver(() => requestAnimationFrame(() => initCharts()));
-            window.__adminThemeObserver.observe(document.documentElement, {
-                attributes: true, attributeFilter: ['class'],
-            });
-        }
-    </script>
+                const subEl = document.getElementById('batch-subtitle');
+                if (subEl) subEl.textContent = subtitleText;
+
+                const backBtn = document.getElementById('batch-back-btn');
+                if (backBtn) {
+                    backBtn.classList.toggle('hidden', !backBtnVisible);
+                    backBtn.classList.toggle('inline-flex', backBtnVisible);
+                }
+
+                if (labels.length === 0) return;
+
+                makeChart(ChartLib, 'alumniByBatchChart', {
+                    type: 'bar',
+                    data: {
+                        labels,
+                        datasets: [{
+                            data: totals,
+                            backgroundColor: (ctx) => {
+                                if (state.view === 'batches') {
+                                    const {
+                                        ctx: c,
+                                        chartArea
+                                    } = ctx.chart;
+                                    return barGradient(c, chartArea, PALETTE.greenBright);
+                                }
+                                return deptColor(labels[ctx.dataIndex], ctx.dataIndex);
+                            },
+                            hoverBackgroundColor: (ctx) => {
+                                if (state.view === 'batches') return PALETTE.greenMid;
+                                return darken(deptColor(labels[ctx.dataIndex], ctx.dataIndex), 0.2);
+                            },
+                            borderRadius: 8,
+                            borderSkipped: false,
+                            maxBarThickness: 52,
+                        }],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        layout: {
+                            padding: {
+                                top: 18
+                            }
+                        },
+                        onHover: (event, els) => {
+                            if (!clickable) return;
+                            event.native.target.style.cursor = els.length > 0 ? 'pointer' : 'default';
+                        },
+                        onClick: (event, els) => {
+                            if (!clickable || els.length === 0) return;
+                            const idx = els[0].index;
+                            const map = p.alumniByBatch || {};
+                            const ids = Object.keys(map);
+                            const found = ids.find(id => map[id].batch_name === labels[idx]);
+                            if (!found) return;
+                            drillState.batch.view = 'courses';
+                            drillState.batch.selected = found;
+                            renderBatchChart(ChartLib);
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                backgroundColor: t.tooltipBg,
+                                padding: 10,
+                                cornerRadius: 8,
+                                titleFont: {
+                                    size: 12,
+                                    weight: '600'
+                                },
+                                bodyFont: {
+                                    size: 12
+                                },
+                                displayColors: false,
+                                callbacks: {
+                                    title: (items) => names[items[0]?.dataIndex] || labels[items[0]?.dataIndex],
+                                    label: (ctx) => `${ctx.raw} graduate${ctx.raw === 1 ? '' : 's'}`,
+                                    afterLabel: () => clickable ? 'Click to see courses' : '',
+                                },
+                            },
+                        },
+                        scales: {
+                            y: integerTicks(Math.max(0, ...totals)),
+                            x: {
+                                ticks: {
+                                    color: t.mutedText,
+                                    font: {
+                                        weight: '600'
+                                    },
+                                    autoSkip: true,
+                                    maxRotation: 45
+                                },
+                                grid: {
+                                    display: false
+                                },
+                                border: {
+                                    display: false
+                                },
+                            },
+                        },
+                    },
+                    plugins: [barValueLabelPlugin],
+                });
+            };
+
+            // =====================================================================
+            // Top Notcher chart renderer  (dept → course, or direct courses)
+            // =====================================================================
+            const renderTopNotcherChart = (ChartLib) => {
+                const p = window.__payload;
+                const t = theme();
+                const state = drillState.topNotcher;
+                const source = p.topNotchers || {};
+                const drillable = p.isRegistrar;
+
+                let labels = [],
+                    totals = [],
+                    names = [],
+                    ranks = [];
+                let clickable = false;
+                let subtitleText = '';
+                let backBtnVisible = false;
+
+                if (drillable && state.view === 'departments') {
+                    const codes = Object.keys(source);
+                    labels = codes;
+                    names = codes.map(c => source[c]?.name || c);
+                    totals = codes.map(c => source[c]?.total || 0);
+                    ranks = codes.map(c => source[c]?.best_rank || null);
+                    clickable = true;
+                    subtitleText = 'Top-notcher attempts by department · click a bar to see courses';
+                    backBtnVisible = false;
+                } else {
+                    const deptKey = state.selected || Object.keys(source)[0];
+                    const dept = source[deptKey] || {
+                        courses: {},
+                        name: deptKey
+                    };
+
+                    const codes = Object.keys(dept.courses || {});
+                    labels = codes;
+                    names = codes.map(c => dept.courses[c]?.name || c);
+                    totals = codes.map(c => dept.courses[c]?.total || 0);
+                    ranks = codes.map(c => dept.courses[c]?.best_rank || null);
+                    clickable = false;
+                    subtitleText = drillable ?
+                        `${dept.name} · top notchers by course` :
+                        `Top-notcher attempts by course within ${dept.name}`;
+                    backBtnVisible = drillable;
+                }
+
+                const subEl = document.getElementById('topnotcher-subtitle');
+                if (subEl) subEl.textContent = subtitleText;
+
+                const backBtn = document.getElementById('topnotcher-back-btn');
+                if (backBtn) {
+                    backBtn.classList.toggle('hidden', !backBtnVisible);
+                    backBtn.classList.toggle('inline-flex', backBtnVisible);
+                }
+
+                if (labels.length === 0) return;
+
+                makeChart(ChartLib, 'topNotchersChart', {
+                    type: 'bar',
+                    data: {
+                        labels,
+                        datasets: [{
+                            data: totals,
+                            backgroundColor: (ctx) => deptColor(labels[ctx.dataIndex], ctx.dataIndex),
+                            hoverBackgroundColor: (ctx) => darken(deptColor(labels[ctx.dataIndex], ctx
+                                .dataIndex), 0.2),
+                            borderRadius: 8,
+                            borderSkipped: false,
+                            maxBarThickness: 48,
+                        }],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        layout: {
+                            padding: {
+                                top: 18
+                            }
+                        },
+                        onHover: (event, els) => {
+                            if (!clickable) return;
+                            event.native.target.style.cursor = els.length > 0 ? 'pointer' : 'default';
+                        },
+                        onClick: (event, els) => {
+                            if (!clickable || els.length === 0) return;
+                            drillState.topNotcher.view = 'courses';
+                            drillState.topNotcher.selected = labels[els[0].index];
+                            renderTopNotcherChart(ChartLib);
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                backgroundColor: t.tooltipBg,
+                                padding: 10,
+                                cornerRadius: 8,
+                                titleFont: {
+                                    size: 12,
+                                    weight: '600'
+                                },
+                                bodyFont: {
+                                    size: 12
+                                },
+                                displayColors: false,
+                                callbacks: {
+                                    title: (items) => names[items[0]?.dataIndex] || labels[items[0]?.dataIndex],
+                                    label: (ctx) => `${ctx.raw} top notcher${ctx.raw === 1 ? '' : 's'}`,
+                                    afterLabel: (ctx) => {
+                                        const r = ranks[ctx.dataIndex];
+                                        const rankLine = r ? `Best rank: #${r}` : '';
+                                        const clickLine = clickable ? 'Click to see courses' : '';
+                                        return [rankLine, clickLine].filter(Boolean).join('\n');
+                                    },
+                                },
+                            },
+                        },
+                        scales: {
+                            y: integerTicks(Math.max(0, ...totals)),
+                            x: {
+                                ticks: {
+                                    color: t.mutedText,
+                                    font: {
+                                        weight: '600'
+                                    },
+                                    autoSkip: true,
+                                    maxRotation: 45
+                                },
+                                grid: {
+                                    display: false
+                                },
+                                border: {
+                                    display: false
+                                },
+                            },
+                        },
+                    },
+                    plugins: [barValueLabelPlugin],
+                });
+            };
+
+            // =====================================================================
+            // Back-button handlers
+            // =====================================================================
+            if (!window.__adminDeptBack) {
+                window.__adminDeptBack = true;
+                document.addEventListener('click', (e) => {
+                    const btn = e.target.closest('#dept-back-btn');
+                    if (!btn || !ChartLibRef) return;
+                    drillState.dept.view = 'departments';
+                    drillState.dept.selected = null;
+                    renderDeptChart(ChartLibRef);
+                });
+            }
+
+            if (!window.__adminBatchBack) {
+                window.__adminBatchBack = true;
+                document.addEventListener('click', (e) => {
+                    const btn = e.target.closest('#batch-back-btn');
+                    if (!btn || !ChartLibRef) return;
+                    drillState.batch.view = 'batches';
+                    drillState.batch.selected = null;
+                    renderBatchChart(ChartLibRef);
+                });
+            }
+
+            if (!window.__adminTopNotcherBack) {
+                window.__adminTopNotcherBack = true;
+                document.addEventListener('click', (e) => {
+                    const btn = e.target.closest('#topnotcher-back-btn');
+                    if (!btn || !ChartLibRef) return;
+                    drillState.topNotcher.view = 'departments';
+                    drillState.topNotcher.selected = null;
+                    renderTopNotcherChart(ChartLibRef);
+                });
+            }
+
+            // =====================================================================
+            // Init
+            // =====================================================================
+            const initCharts = async () => {
+                const ChartLib = await waitForChart();
+                if (!ChartLib) return;
+                ChartLibRef = ChartLib;
+
+                const p = getPayload();
+                window.__payload = p;
+
+                const t = theme();
+
+                ChartLib.defaults.font.family = t.fontFamily;
+                ChartLib.defaults.font.size = 11;
+                ChartLib.defaults.animation.duration = 500;
+                ChartLib.defaults.animation.easing = 'easeOutQuart';
+
+                buildCourseDeptMap();
+                paintTopNotcherCards();
+
+                drillState.dept = p.isRegistrar ?
+                    {
+                        view: 'departments',
+                        selected: null
+                    } :
+                    {
+                        view: 'courses',
+                        selected: null
+                    };
+                drillState.batch = {
+                    view: 'batches',
+                    selected: null
+                };
+                drillState.topNotcher = p.isRegistrar ?
+                    {
+                        view: 'departments',
+                        selected: null
+                    } :
+                    {
+                        view: 'courses',
+                        selected: null
+                    };
+
+                // 1. Alumni by Dept / Courses
+                renderDeptChart(ChartLib);
+
+                // 2. Comparative Analysis
+                const ca = p.courseAnalytics || [];
+                if (ca.length > 0) {
+                    makeChart(ChartLib, 'comparativeChart', {
+                        type: 'bar',
+                        data: {
+                            labels: ca.map(i => i.course_code),
+                            datasets: [{
+                                    label: 'Aligned',
+                                    data: ca.map(i => i.related_rate),
+                                    backgroundColor: PALETTE.greenBright,
+                                    hoverBackgroundColor: PALETTE.greenMid,
+                                    borderRadius: 6,
+                                    borderSkipped: false,
+                                    maxBarThickness: 28,
+                                },
+                                {
+                                    label: 'Not Aligned',
+                                    data: ca.map(i => 100 - i.related_rate),
+                                    backgroundColor: PALETTE.gold,
+                                    hoverBackgroundColor: PALETTE.goldDeep,
+                                    borderRadius: 6,
+                                    borderSkipped: false,
+                                    maxBarThickness: 28,
+                                },
+                            ],
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            layout: {
+                                padding: {
+                                    top: 16
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 110,
+                                    grid: {
+                                        color: t.gridColor,
+                                        drawBorder: false
+                                    },
+                                    border: {
+                                        display: false
+                                    },
+                                    ticks: {
+                                        stepSize: 25,
+                                        color: t.mutedText,
+                                        callback: v => v > 100 ? '' : v + '%'
+                                    },
+                                },
+                                x: {
+                                    ticks: {
+                                        color: t.mutedText,
+                                        font: {
+                                            weight: '600'
+                                        },
+                                        autoSkip: true,
+                                        maxRotation: 45
+                                    },
+                                    grid: {
+                                        display: false
+                                    },
+                                    border: {
+                                        display: false
+                                    },
+                                },
+                            },
+                            plugins: {
+                                legend: {
+                                    position: 'top',
+                                    align: 'end',
+                                    labels: {
+                                        color: t.mutedText,
+                                        boxWidth: 10,
+                                        boxHeight: 10,
+                                        usePointStyle: true,
+                                        pointStyle: 'rectRounded',
+                                        padding: 14,
+                                        font: {
+                                            size: 11,
+                                            weight: '600'
+                                        },
+                                    },
+                                },
+                                tooltip: {
+                                    backgroundColor: t.tooltipBg,
+                                    padding: 10,
+                                    cornerRadius: 8,
+                                    callbacks: {
+                                        label: ctx => ` ${ctx.dataset.label}: ${Number(ctx.raw).toFixed(2)}%`
+                                    },
+                                },
+                            },
+                        },
+                        plugins: [{
+                            id: 'barPercentLabels',
+                            afterDatasetsDraw(chart) {
+                                const {
+                                    ctx
+                                } = chart;
+                                ctx.save();
+                                ctx.font = '600 10px ' + t.fontFamily;
+                                ctx.fillStyle = t.mutedText;
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'bottom';
+                                chart.data.datasets.forEach((dataset, di) => {
+                                    chart.getDatasetMeta(di).data.forEach((bar, i) => {
+                                        const v = dataset.data[i];
+                                        if (v == null) return;
+                                        ctx.fillText(Number(v).toFixed(2) + '%', bar.x,
+                                            bar.y - 4);
+                                    });
+                                });
+                                ctx.restore();
+                            },
+                        }],
+                    });
+                }
+
+                // 3. Alumni by Batch
+                renderBatchChart(ChartLib);
+
+                // 4. Top Notchers
+                if (Object.keys(p.topNotchers || {}).length > 0) {
+                    renderTopNotcherChart(ChartLib);
+                }
+
+                // ===== Pie helpers =====
+                const pieLabelPlugin = {
+                    id: 'piePercentLabels',
+                    afterDatasetsDraw(chart) {
+                        const {
+                            ctx
+                        } = chart;
+                        const dataset = chart.data.datasets[0];
+                        const total = dataset.data.reduce((a, b) => a + b, 0);
+                        if (!total) return;
+                        chart.getDatasetMeta(0).data.forEach((arc, i) => {
+                            const v = dataset.data[i];
+                            if (!v) return;
+                            const pct = ((v / total) * 100).toFixed(0) + '%';
+                            const pos = arc.tooltipPosition();
+                            ctx.save();
+                            ctx.fillStyle = t.pieLabel;
+                            ctx.font = '700 12px ' + t.fontFamily;
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(pct, pos.x, pos.y);
+                            ctx.restore();
+                        });
+                    },
+                };
+
+                const pieTooltip = {
+                    backgroundColor: t.tooltipBg,
+                    padding: 10,
+                    cornerRadius: 8,
+                    callbacks: {
+                        label: (ctx) => {
+                            const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                            const pct = total > 0 ? ((ctx.raw / total) * 100).toFixed(1) + '%' : '0%';
+                            return ` ${ctx.raw} (${pct})`;
+                        },
+                    },
+                };
+
+                const pieLegend = {
+                    position: 'bottom',
+                    labels: {
+                        color: t.mutedText,
+                        boxWidth: 10,
+                        boxHeight: 10,
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        padding: 12,
+                        font: {
+                            size: 11,
+                            weight: '600'
+                        },
+                    },
+                };
+
+                const pieConfig = (id, dataMap, colorsOrFn) => {
+                    const keys = Object.keys(dataMap || {});
+                    if (keys.length === 0) return;
+
+                    let colors;
+                    if (typeof colorsOrFn === 'function') {
+                        colors = keys.map((k, i) => colorsOrFn(k, i));
+                    } else if (Array.isArray(colorsOrFn)) {
+                        colors = colorsOrFn;
+                    } else {
+                        colors = PIE_PALETTE;
+                    }
+
+                    makeChart(ChartLib, id, {
+                        type: 'doughnut',
+                        data: {
+                            labels: keys.map(pretty),
+                            datasets: [{
+                                data: keys.map(k => dataMap[k]),
+                                backgroundColor: colors,
+                                borderWidth: 3,
+                                borderColor: t.borderColor,
+                                hoverOffset: 6,
+                            }],
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            cutout: '60%',
+                            plugins: {
+                                legend: pieLegend,
+                                tooltip: pieTooltip
+                            },
+                        },
+                        plugins: [pieLabelPlugin],
+                    });
+                };
+
+                const jobAlignColorFn = (key) => {
+                    const k = String(key).toLowerCase();
+                    if (k === 'yes') return PALETTE.greenBright;
+                    if (k === 'no') return '#ef4444';
+                    if (k === 'partially-related') return PALETTE.gold;
+                    return PALETTE.greenMid;
+                };
+
+                pieConfig('employmentStatusChart', p.employmentStatus);
+                pieConfig('employmentAreaChart', p.employmentArea, [PALETTE.greenBright, PALETTE.gold]);
+                pieConfig('genderChart', p.gender, [PALETTE.greenMid, PALETTE.gold]);
+                pieConfig('civilStatusChart', p.civilStatus);
+                pieConfig('jobAlignmentChart', p.jobAlignment, jobAlignColorFn);
+                pieConfig('boardExamChart', p.boardExam, [PALETTE.greenBright, '#ef4444']);
+
+                // ===== Bar configs =====
+                const barConfig = (id, dataMap, color, horizontal = false) => {
+                    const keys = Object.keys(dataMap || {});
+                    if (keys.length === 0) return;
+
+                    const values = keys.map(k => dataMap[k]);
+                    const dataMax = Math.max(0, ...values);
+
+                    makeChart(ChartLib, id, {
+                        type: 'bar',
+                        data: {
+                            labels: keys.map(pretty),
+                            datasets: [{
+                                data: values,
+                                backgroundColor: color,
+                                borderRadius: 8,
+                                borderSkipped: false,
+                                maxBarThickness: 45,
+                            }],
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            indexAxis: horizontal ? 'y' : 'x',
+                            layout: {
+                                padding: horizontal ? {
+                                    right: 24
+                                } : {
+                                    top: 18
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            },
+                            scales: horizontal ?
+                                {
+                                    x: integerTicks(dataMax),
+                                    y: {
+                                        grid: {
+                                            display: false
+                                        },
+                                        ticks: {
+                                            color: t.mutedText,
+                                            font: {
+                                                weight: '600'
+                                            }
+                                        }
+                                    },
+                                } :
+                                {
+                                    y: integerTicks(dataMax),
+                                    x: {
+                                        grid: {
+                                            display: false
+                                        },
+                                        ticks: {
+                                            color: t.mutedText,
+                                            font: {
+                                                weight: '600'
+                                            },
+                                            autoSkip: true,
+                                            maxRotation: 45
+                                        },
+                                    },
+                                },
+                        },
+                        plugins: [barValueLabelPlugin],
+                    });
+                };
+
+                barConfig('employmentTypeChart', p.employmentType, PALETTE.greenMid);
+                barConfig('organizationTypeChart', p.organizationType, PALETTE.gold, true);
+                barConfig('monthsToFirstJobChart', p.monthsToFirstJob, PALETTE.greenBright);
+                barConfig('furtherStudiesChart', p.furtherStudies, PALETTE.goldLight);
+                barConfig('topEmployersChart', p.topEmployers, PALETTE.goldDeep, true);
+                barConfig('alumniByRegionChart', p.alumniByRegion, PALETTE.greenMid, true);
+            };
+
+            initCharts();
+
+            if (!window.__adminBatchChanged) {
+                window.__adminBatchChanged = true;
+                $wire.on('batch-changed', () => requestAnimationFrame(() => initCharts()));
+                $wire.on('analytics-refreshed', () => requestAnimationFrame(() => initCharts()));
+            }
+
+            if (!window.__adminThemeObserver) {
+                window.__adminThemeObserver = new MutationObserver(() => requestAnimationFrame(() => initCharts()));
+                window.__adminThemeObserver.observe(document.documentElement, {
+                    attributes: true,
+                    attributeFilter: ['class'],
+                });
+            }
+        </script>
     @endscript
 @endunless

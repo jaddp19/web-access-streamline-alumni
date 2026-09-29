@@ -219,7 +219,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                         ->delete();
                 }
 
-                return Course::whereIn('id', $targetIds)->delete();
+                return Course::deleteWithAudit(
+                    Course::whereIn('id', $targetIds)
+                );
             });
         } catch (\Throwable $e) {
             report($e);

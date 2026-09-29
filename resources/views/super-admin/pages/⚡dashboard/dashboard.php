@@ -151,6 +151,46 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         return $this->tracerBreakdowns['months_to_first_job'];
     }
 
+        // ===== Top Notchers =====
+
+    #[Computed]
+    public function topNotchersByDeptAndCourse(): array
+    {
+        return $this->analytics()->topNotchersByDeptAndCourse();
+    }
+
+    #[Computed]
+    public function topNotcherTotal(): int
+    {
+        return array_sum(array_column($this->topNotchersByDeptAndCourse, 'total'));
+    }
+
+    #[Computed]
+    public function topNotcherChampion(): ?array
+    {
+        $items = $this->topNotchersByDeptAndCourse;
+
+        if (empty($items)) {
+            return null;
+        }
+
+        // Already sorted DESC by total.
+        $key = array_key_first($items);
+
+        return [
+            'code'      => $key,
+            'name'      => $items[$key]['name'],
+            'total'     => $items[$key]['total'],
+            'best_rank' => $items[$key]['best_rank'] ?? null,
+        ];
+    }
+
+    #[Computed]
+    public function highestTopNotcher(): ?array
+    {
+        return $this->analytics()->highestTopNotcher();
+    }
+
     // ===== Manual refresh =====
 
     public function refreshAnalytics(): void

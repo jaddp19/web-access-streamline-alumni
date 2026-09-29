@@ -110,10 +110,8 @@ new #[Layout('layouts.app-form')] class extends Component
 
             $this->course_id = $profile->courses()->value('courses.id') ?? '';
 
-            // ── Snapshots for change detection ──
             $this->original_course_id = $this->course_id ? (int) $this->course_id : null;
 
-            // Hydrate board fields
             $this->board_taken = $profile->board_taken
                 ? \Carbon\Carbon::parse($profile->board_taken)->format('Y-m-d')
                 : null;
@@ -128,7 +126,6 @@ new #[Layout('layouts.app-form')] class extends Component
 
             $this->street_address = $location['street_address'] ?? '';
 
-            // Detect address type from saved data (with PH fallback for legacy rows)
             $this->address_type = $location['address_type']
                 ?? (!empty($location['region_code']) ? 'philippines' : (empty($location['intl_country']) ? 'philippines' : 'abroad'));
 
@@ -214,7 +211,6 @@ new #[Layout('layouts.app-form')] class extends Component
         }
     }
 
-    /** Clear the "other field is required" error as soon as the user fills its pair. */
     public function updatedBoardTaken(): void
     {
         if (filled($this->board_taken)) {
@@ -257,6 +253,40 @@ new #[Layout('layouts.app-form')] class extends Component
     {
         $this->new_company_city_code = '';
         $this->resetErrorBag('new_company_city_code');
+    }
+
+    public function updatedNewCompanyLogo(): void
+    {
+        if (! $this->new_company_logo) {
+            return;
+        }
+
+        try {
+            $mime = (string) $this->new_company_logo->getMimeType();
+        } catch (\Throwable $e) {
+            $this->reset('new_company_logo');
+            $this->addError('new_company_logo', 'Could not read the uploaded file. Please try another image.');
+            return;
+        }
+
+        if (! str_starts_with($mime, 'image/')) {
+            $this->reset('new_company_logo');
+            $this->addError('new_company_logo', 'The logo must be an image file (JPG, PNG, or WebP).');
+            return;
+        }
+
+        try {
+            $this->validateOnly('new_company_logo', [
+                'new_company_logo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            ], [
+                'new_company_logo.image' => 'The logo must be an image file.',
+                'new_company_logo.mimes' => 'Logo must be JPG, PNG, or WebP.',
+                'new_company_logo.max'   => 'The logo cannot exceed 2MB.',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->reset('new_company_logo');
+            throw $e;
+        }
     }
 
     // ===== Computed =====
@@ -304,8 +334,6 @@ new #[Layout('layouts.app-form')] class extends Component
         return $this->course_id ? Course::find($this->course_id) : null;
     }
 
-    // ---- New-company address cascades ----
-
     #[Computed]
     public function newCompanyProvinces()
     {
@@ -348,28 +376,6 @@ new #[Layout('layouts.app-form')] class extends Component
         }
     }
 
-    public function updatedNewCompanyLogo(): void
-{
-    if (! $this->new_company_logo) {
-        return;
-    }
-
-    $mime = (string) $this->new_company_logo->getMimeType();
-
-    if (! str_starts_with($mime, 'image/')) {
-        $this->reset('new_company_logo');
-        $this->addError('new_company_logo', 'The logo must be an image file (JPG, PNG, or WebP).');
-        return;
-    }
-
-    try {
-        $this->validateOnly('new_company_logo');
-    } catch (\Illuminate\Validation\ValidationException $e) {
-        $this->reset('new_company_logo');
-        throw $e;
-    }
-}
-
     public function updatedEmploymentStatus(): void
     {
         if ($this->employment_status !== 'employed') {
@@ -411,16 +417,16 @@ new #[Layout('layouts.app-form')] class extends Component
     public function createCompany(): void
     {
         $this->validate([
-            'new_company_name'    => 'required|string|max:255|unique:companies,company_name',
+            'new_company_name' => 'required|string|max:255|unique:companies,company_name',
             'new_company_logo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'new_company_desc'    => 'nullable|string|max:2000',
+            'new_company_desc' => 'nullable|string|max:2000',
 
             'new_company_address_type' => 'required|in:philippines,abroad',
 
-            'new_company_region_code'     => 'required_if:new_company_address_type,philippines|nullable|string',
-            'new_company_province_code'   => 'required_if:new_company_address_type,philippines|nullable|string',
-            'new_company_city_code'       => 'required_if:new_company_address_type,philippines|nullable|string',
-            'new_company_street_address'  => 'nullable|string|max:500',
+            'new_company_region_code'    => 'required_if:new_company_address_type,philippines|nullable|string',
+            'new_company_province_code'  => 'required_if:new_company_address_type,philippines|nullable|string',
+            'new_company_city_code'      => 'required_if:new_company_address_type,philippines|nullable|string',
+            'new_company_street_address' => 'nullable|string|max:500',
 
             'new_company_intl_country' => 'required_if:new_company_address_type,abroad|nullable|string|max:255',
             'new_company_intl_state'   => 'nullable|string|max:255',
@@ -438,9 +444,22 @@ new #[Layout('layouts.app-form')] class extends Component
             'new_company_intl_city.required_if'     => 'Please enter the city.',
         ]);
 
+        if ($this->new_company_logo) {
+            try {
+                $mime = (string) $this->new_company_logo->getMimeType();
+            } catch (\Throwable $e) {
+                $this->addError('new_company_logo', 'Could not read the uploaded file. Please try another image.');
+                return;
+            }
+
+            if (! str_starts_with($mime, 'image/')) {
+                $this->addError('new_company_logo', 'The logo must be an image file (JPG, PNG, or WebP).');
+                return;
+            }
+        }
+
         $service = app(PhAddressService::class);
 
-        // ---- Compose address string ----
         if ($this->new_company_address_type === 'philippines') {
             $region   = $service->findByCode($this->new_company_region_code);
             $province = $service->findByCode($this->new_company_province_code);
@@ -466,10 +485,10 @@ new #[Layout('layouts.app-form')] class extends Component
                 : null;
 
             $company = Company::create([
-                'company_name'    => trim($this->new_company_name),
+                'company_name'    => trim(strip_tags($this->new_company_name)),
                 'company_address' => $companyAddress ?: null,
                 'company_logo'    => $logoPath,
-                'company_desc'    => trim($this->new_company_desc) ?: null,
+                'company_desc'    => trim(strip_tags($this->new_company_desc)) ?: null,
             ]);
 
             $this->company_id         = $company->id;
@@ -483,50 +502,23 @@ new #[Layout('layouts.app-form')] class extends Component
             ]);
             $this->new_company_address_type = 'philippines';
 
+            $this->resetErrorBag([
+                'new_company_logo', 'new_company_name', 'new_company_desc',
+                'new_company_region_code', 'new_company_province_code', 'new_company_city_code',
+                'new_company_street_address',
+                'new_company_intl_country', 'new_company_intl_state', 'new_company_intl_city',
+            ]);
+
             unset($this->companies);
 
             session()->flash('company_created', 'Company "' . $company->company_name . '" created and selected.');
         } catch (\Throwable $e) {
+            if ($logoPath ?? null) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($logoPath);
+            }
+
             logger()->error('Company creation failed: ' . $e->getMessage());
-            session()->flash('error', 'Failed to create company: ' . $e->getMessage());
-        }
-    }
-
-    // ===== Hire-date validation =====
-
-    /**
-     * Earliest allowed hire date = Jan 1 of the alumni's batch year.
-     * Returns null when no batch is set (then we skip the check).
-     */
-    protected function graduateMinDate(): ?string
-    {
-        if (! $this->batch_id) {
-            return null;
-        }
-
-        $batchName = Batch::whereKey($this->batch_id)->value('batch_name');
-
-        if (! $batchName || ! is_numeric($batchName)) {
-            return null;
-        }
-
-        return ((int) $batchName) . '-01-01';
-    }
-
-    protected function validateHireDate(): void
-    {
-        if (blank($this->date_hired)) {
-            return;
-        }
-
-        $minDate = $this->graduateMinDate();
-
-        if ($minDate && $this->date_hired < $minDate) {
-            $year = (int) substr($minDate, 0, 4);
-
-            throw \Illuminate\Validation\ValidationException::withMessages([
-                'date_hired' => "The hire date cannot be earlier than your graduation year ({$year}).",
-            ]);
+            session()->flash('error', 'Failed to create company. Please try again.');
         }
     }
 
@@ -536,17 +528,12 @@ new #[Layout('layouts.app-form')] class extends Component
     {
         $this->validate(
             TracerStudyRules::step($this->step, [
-                'taken' => $this->board_taken,
-                'rate'  => $this->board_rate,
+                'taken'    => $this->board_taken,
+                'rate'     => $this->board_rate,
+                'batch_id' => $this->batch_id,
             ]),
             TracerStudyRules::messages()
         );
-
-        // Only check the hire date when leaving step 3 (Employment Data),
-        // since that's the only step where date_hired is visible/editable.
-        if ($this->step === 3) {
-            $this->validateHireDate();
-        }
 
         if ($this->step < $this->totalSteps) {
             $this->step++;
@@ -569,13 +556,12 @@ new #[Layout('layouts.app-form')] class extends Component
     {
         $this->validate(
             TracerStudyRules::all([
-                'taken' => $this->board_taken,
-                'rate'  => $this->board_rate,
+                'taken'    => $this->board_taken,
+                'rate'     => $this->board_rate,
+                'batch_id' => $this->batch_id,
             ]),
             TracerStudyRules::messages()
         );
-
-        $this->validateHireDate();
 
         $user    = Auth::user();
         $service = app(PhAddressService::class);
@@ -604,6 +590,7 @@ new #[Layout('layouts.app-form')] class extends Component
 
         // ===== Determine verification outcome BEFORE the transaction =====
         $isBoardCourse = $this->selectedCourse?->course_type === 'board';
+        $examName      = $this->selectedCourse?->course_title;
 
         $wasBoardCourse = $this->original_course_id
             ? (Course::whereKey($this->original_course_id)->value('course_type') === 'board')
@@ -616,7 +603,7 @@ new #[Layout('layouts.app-form')] class extends Component
 
         DB::transaction(function () use (
             $user, $region, $province, $city, $barangay, $fullAddress,
-            $isBoardCourse, $wasBoardCourse, $boardChanged, $courseChanged
+            $isBoardCourse, $wasBoardCourse, $boardChanged, $courseChanged, $examName
         ) {
             $existingProfile = UserProfile::where('user_id', $user->id)->first();
 
@@ -656,14 +643,8 @@ new #[Layout('layouts.app-form')] class extends Component
 
             $boardRate = trim((string) $this->board_rate);
 
-            // ===== Verification flag =====
-            $isVerified = $existingProfile->is_verified ?? false;
-
-            if (! $isBoardCourse) {
-                $isVerified = true;
-            } elseif (! $wasBoardCourse || $courseChanged || $boardChanged) {
-                $isVerified = false;
-            }
+            // Temporary value; syncBoardMirrors() finalizes it from board_exams.
+            $isVerified = ! $isBoardCourse;
 
             $profile = UserProfile::updateOrCreate(
                 ['user_id' => $user->id],
@@ -682,6 +663,23 @@ new #[Layout('layouts.app-form')] class extends Component
                         : null,
                 ]
             );
+
+            // ── Board exam history handling ──────────────────────────────
+            // Non-board course → wipe history (claim is gone).
+            // Board course      → record the attempt. recordBoardAttempt()
+            //                     dedupes identical submissions, preserves
+            //                     verification of previously verified rows,
+            //                     and calls syncBoardMirrors() internally.
+            if (! $isBoardCourse) {
+                $profile->boardExams()->delete();
+            } else {
+                $profile->recordBoardAttempt(
+                    $this->board_taken ?: null,
+                    $this->board_rate  ?: null,
+                    $examName
+                );
+            }
+            // ────────────────────────────────────────────────────────────
 
             $profile->courses()->sync([$this->course_id]);
 
@@ -714,7 +712,6 @@ new #[Layout('layouts.app-form')] class extends Component
                 ]
             );
 
-            // ===== Work history =====
             if ($this->employment_status === 'employed' && $this->company_id && $this->date_hired) {
                 $existingCurrent = WorkHistory::where('user_id', $user->id)
                     ->where('is_current_job', true)

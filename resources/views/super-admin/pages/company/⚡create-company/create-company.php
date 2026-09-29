@@ -49,13 +49,11 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
             'address_type' => ['required', 'in:philippines,abroad'],
 
-            // Philippines
             'regionCode'     => ['required_if:address_type,philippines', 'nullable', 'string'],
             'provinceCode'   => ['required_if:address_type,philippines', 'nullable', 'string'],
             'cityCode'       => ['required_if:address_type,philippines', 'nullable', 'string'],
             'street_address' => ['nullable', 'string', 'max:500'],
 
-            // Abroad
             'intl_country' => ['required_if:address_type,abroad', 'nullable', 'string', 'max:255'],
             'intl_state'   => ['nullable', 'string', 'max:255'],
             'intl_city'    => ['required_if:address_type,abroad', 'nullable', 'string', 'max:255'],
@@ -84,9 +82,36 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         ];
     }
 
+    /**
+     * Reject non-image uploads the moment they hit the temp folder,
+     * BEFORE the Blade gets a chance to call ->temporaryUrl().
+     */
     public function updatedCompanyLogo(): void
     {
-        $this->validateOnly('company_logo');
+        if (! $this->company_logo) {
+            return;
+        }
+
+        try {
+            $mime = (string) $this->company_logo->getMimeType();
+        } catch (\Throwable $e) {
+            $this->reset('company_logo');
+            $this->addError('company_logo', 'Could not read the uploaded file. Please try another image.');
+            return;
+        }
+
+        if (! str_starts_with($mime, 'image/')) {
+            $this->reset('company_logo');
+            $this->addError('company_logo', 'The logo must be an image file (JPG, PNG, WebP, or SVG).');
+            return;
+        }
+
+        try {
+            $this->validateOnly('company_logo');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->reset('company_logo');
+            throw $e;
+        }
     }
 
     // =========================================================
@@ -146,10 +171,23 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function save()
     {
-
         $validated = $this->validate();
 
-        // ---- Build the composed address string ----
+        // Defense in depth: reject non-images before touching disk.
+        if ($this->company_logo) {
+            try {
+                $mime = (string) $this->company_logo->getMimeType();
+            } catch (\Throwable $e) {
+                $this->addError('company_logo', 'Could not read the uploaded file. Please try another image.');
+                return;
+            }
+
+            if (! str_starts_with($mime, 'image/')) {
+                $this->addError('company_logo', 'The logo must be an image file (JPG, PNG, WebP, or SVG).');
+                return;
+            }
+        }
+
         $service = app(PhAddressService::class);
 
         if ($this->address_type === 'philippines') {

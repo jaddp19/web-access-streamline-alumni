@@ -244,6 +244,7 @@ class DashboardAnalytics
             if (! isset($result[$deptKey])) {
                 $result[$deptKey] = [
                     'name' => $row->dept_name,
+                    'dept_code' => $row->dept_code ?: $deptKey,
                     'total' => 0,
                     'courses' => [],
                 ];
@@ -773,6 +774,148 @@ class DashboardAnalytics
             ->pluck('total', 'company_name')
             ->map(fn (int|string $v) => (int) $v)
             ->toArray();
+    }
+
+    // =========================================================
+    //  TOP NOTCHERS — which dept/course produces them?
+    // =========================================================
+
+    /**
+     * Nested: department → courses, with top-notcher counts and best rank.
+     * Same shape as alumniByDeptAndCourse() so the JS drill-down
+     * renderer can reuse the same pattern.
+     *
+     * Returns depts already sorted by total DESC (champion first).
+     */
+    public function topNotchersByDeptAndCourse(): array
+    {
+        $rows = DB::table('departments')
+            ->join('courses', 'courses.department_id', '=', 'departments.id')
+            ->join('student_course', 'courses.id', '=', 'student_course.course_id')
+            ->join('user_profiles', 'student_course.user_profile_id', '=', 'user_profiles.id')
+            ->join('board_exams', 'board_exams.user_profile_id', '=', 'user_profiles.id')
+            ->join('model_has_roles', function ($join) {
+                $join->on('model_has_roles.model_id', '=', 'user_profiles.user_id')
+                    ->where('model_has_roles.model_type', '=', User::class);
+            })
+            ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+            ->where('roles.name', '=', 'alumni')
+            ->where('user_profiles.is_approved', true)
+            ->where('board_exams.is_top_notcher', true)
+            ->where('board_exams.is_verified', true)
+            ->where('departments.is_active', true)
+            ->where('courses.is_active', true)
+            ->when($this->departmentId, fn ($q) => $q->where('departments.id', $this->departmentId))
+            ->when($this->batchId, fn ($q) => $q->where('user_profiles.batch_id', $this->batchId))
+            ->select(
+                'departments.id as dept_id',
+                'departments.dept_code',
+                'departments.dept_name',
+                'courses.id as course_id',
+                'courses.course_code',
+                'courses.course_title',
+                DB::raw('COUNT(DISTINCT board_exams.id) as total'),
+                DB::raw('MIN(board_exams.top_notcher_rank) as best_rank'),
+            )
+            ->groupBy(
+                'departments.id',
+                'departments.dept_code',
+                'departments.dept_name',
+                'courses.id',
+                'courses.course_code',
+                'courses.course_title'
+            )
+            ->orderBy('departments.dept_name')
+            ->orderBy('courses.course_code')
+            ->get();
+
+        $result = [];
+
+        foreach ($rows as $row) {
+            $deptKey   = $row->dept_code ?: "DEPT-{$row->dept_id}";
+            $courseKey = $row->course_code ?: "COURSE-{$row->course_id}";
+            $count     = (int) $row->total;
+            $bestRank  = $row->best_rank !== null ? (int) $row->best_rank : null;
+
+            if (! isset($result[$deptKey])) {
+                $result[$deptKey] = [
+                    'name'      => $row->dept_name,
+                    'total'     => 0,
+                    'best_rank' => null,
+                    'courses'   => [],
+                ];
+            }
+
+            $result[$deptKey]['courses'][$courseKey] = [
+                'name'      => $row->course_title,
+                'total'     => $count,
+                'best_rank' => $bestRank,
+            ];
+
+            $result[$deptKey]['total'] += $count;
+
+            if ($bestRank !== null) {
+                $existing = $result[$deptKey]['best_rank'];
+                if ($existing === null || $bestRank < $existing) {
+                    $result[$deptKey]['best_rank'] = $bestRank;
+                }
+            }
+        }
+
+        // Sort departments by total DESC (champion first).
+        uasort($result, fn ($a, $b) => $b['total'] <=> $a['total']);
+
+        return $result;
+    }
+
+    /**
+     * Single highest-ranked top notcher in the current scope.
+     * Rank 1 = best. Returns null when no verified top notchers exist.
+     */
+    public function highestTopNotcher(): ?array
+    {
+        $row = DB::table('board_exams')
+            ->join('user_profiles', 'board_exams.user_profile_id', '=', 'user_profiles.id')
+            ->join('users', 'user_profiles.user_id', '=', 'users.id')
+            ->join('model_has_roles', function ($join) {
+                $join->on('model_has_roles.model_id', '=', 'user_profiles.user_id')
+                    ->where('model_has_roles.model_type', '=', User::class);
+            })
+            ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+            ->leftJoin('student_course', 'user_profiles.id', '=', 'student_course.user_profile_id')
+            ->leftJoin('courses', 'courses.id', '=', 'student_course.course_id')
+            ->leftJoin('departments', 'departments.id', '=', 'courses.department_id')
+            ->where('roles.name', '=', 'alumni')
+            ->where('user_profiles.is_approved', true)
+            ->where('board_exams.is_top_notcher', true)
+            ->where('board_exams.is_verified', true)
+            ->whereNotNull('board_exams.top_notcher_rank')
+            ->when($this->departmentId, fn ($q) => $q->where('departments.id', $this->departmentId))
+            ->when($this->batchId, fn ($q) => $q->where('user_profiles.batch_id', $this->batchId))
+            ->select(
+                'users.name as user_name',
+                'board_exams.top_notcher_rank',
+                'board_exams.rate',
+                'courses.course_title',
+                'departments.dept_name',
+                'departments.dept_code',
+            )
+            ->orderBy('board_exams.top_notcher_rank')
+            ->orderByDesc('board_exams.date_taken')
+            ->first();
+
+        if (! $row) {
+            return null;
+        }
+
+        return [
+            'name'   => $row->user_name,
+            'rank'   => (int) $row->top_notcher_rank,
+            'rate'   => (float) $row->rate,
+            'course' => $row->course_title,
+            'dept'   => $row->dept_name,
+            'dept_code' => $row->dept_code,
+        ];
     }
 
     // =========================================================

@@ -231,6 +231,79 @@
                     @endif
                 </div>
 
+                {{-- ===== Top Notchers (DRILLABLE) ===== --}}
+                @if ($this->topNotcherTotal > 0)
+                    <div
+                        class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                        <div class="flex items-start justify-between gap-3 mb-4">
+                            <div class="min-w-0">
+                                <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white flex items-center gap-2">
+                                    Top Notchers
+                                </h2>
+                                <p id="topnotcher-subtitle" class="text-xs text-black/40 dark:text-white/40 mt-0.5">
+                                    Top-notcher attempts by department · click a bar to see courses
+                                </p>
+                            </div>
+                            <button type="button" id="topnotcher-back-btn"
+                                class="hidden shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold text-[#1877F2] hover:underline">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                                </svg>
+                                Back to departments
+                            </button>
+                        </div>
+
+                        {{-- Highlight cards --}}
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+                            <div class="rounded-xl bg-[#D4A537]/10 border border-[#D4A537]/20 p-3">
+                                <p class="text-[10px] uppercase tracking-wide text-[#a97f1f] dark:text-[#E5B94A] font-bold">
+                                    Total Top Notchers</p>
+                                <p class="text-2xl font-bold text-[#0f2b1c] dark:text-white mt-0.5">
+                                    {{ $this->topNotcherTotal }}</p>
+                            </div>
+
+                            @if ($this->topNotcherChampion)
+                                <div data-dept-card="{{ $this->topNotcherChampion['code'] }}"
+                                    class="rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 p-3 transition-colors">
+                                    <p data-dept-accent class="text-[10px] uppercase tracking-wide font-bold text-emerald-700 dark:text-emerald-400">
+                                        Top Department</p>
+                                    <p class="text-sm font-bold text-[#0f2b1c] dark:text-white mt-0.5 truncate">
+                                        {{ $this->topNotcherChampion['name'] }}</p>
+                                    <p data-dept-accent class="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
+                                        {{ $this->topNotcherChampion['total'] }}
+                                        {{ \Illuminate\Support\Str::plural('top notcher', $this->topNotcherChampion['total']) }}
+                                        @if ($this->topNotcherChampion['best_rank'])
+                                            · Best rank #{{ $this->topNotcherChampion['best_rank'] }}
+                                        @endif
+                                    </p>
+                                </div>
+                            @endif
+
+                            @if ($this->highestTopNotcher)
+                                <div data-dept-card="{{ $this->highestTopNotcher['dept_code'] ?? '' }}"
+                                    class="rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 p-3 col-span-2 transition-colors">
+                                    <p data-dept-accent class="text-[10px] uppercase tracking-wide font-bold text-blue-700 dark:text-blue-400">
+                                        Highest Rank in Scope</p>
+                                    <p class="text-sm font-bold text-[#0f2b1c] dark:text-white mt-0.5 truncate">
+                                        #{{ $this->highestTopNotcher['rank'] }} — {{ $this->highestTopNotcher['name'] }}
+                                    </p>
+                                    <p data-dept-accent class="text-[11px] font-semibold text-blue-700 dark:text-blue-400 truncate">
+                                        {{ $this->highestTopNotcher['course'] ?? '—' }}
+                                        @if ($this->highestTopNotcher['dept'])
+                                            · {{ $this->highestTopNotcher['dept'] }}
+                                        @endif
+                                        · {{ number_format($this->highestTopNotcher['rate'], 2) }}%
+                                    </p>
+                                </div>
+                            @endif
+                        </div>
+
+                        <div class="w-full h-72"><canvas id="topNotchersChart"></canvas></div>
+                    </div>
+                @endif
+
                 <div>
                     <h2 class="text-lg sm:text-xl font-bold text-[#0f2b1c] dark:text-white"
                         style="font-family: 'Fraunces', serif;">
@@ -325,6 +398,7 @@
             'organizationType'           => $this->organizationTypeBreakdown,
             'employmentArea'             => $this->employmentAreaBreakdown,
             'monthsToFirstJob'           => $this->monthsToFirstJobBreakdown,
+            'topNotchers'                => $this->topNotchersByDeptAndCourse,
         ]) !!}
     </script>
 </div>
@@ -382,11 +456,22 @@
 
         const buildCourseDeptMap = () => {
             COURSE_TO_DEPT = {};
-            const byDept = window.__analyticsData?.alumniByDeptCourse || {};
 
+            // Source 1: regular alumni-by-dept tree
+            const byDept = window.__analyticsData?.alumniByDeptCourse || {};
             Object.entries(byDept).forEach(([deptCode, info]) => {
                 Object.keys(info?.courses || {}).forEach((courseCode) => {
                     COURSE_TO_DEPT[courseCode] = deptCode;
+                });
+            });
+
+            // Source 2: top notcher tree — fills any courses missing above
+            const top = window.__analyticsData?.topNotchers || {};
+            Object.entries(top).forEach(([deptCode, info]) => {
+                Object.keys(info?.courses || {}).forEach((courseCode) => {
+                    if (!COURSE_TO_DEPT[courseCode]) {
+                        COURSE_TO_DEPT[courseCode] = deptCode;
+                    }
                 });
             });
         };
@@ -414,6 +499,32 @@
             return `#${[r, g, b].map(v => v.toString(16).padStart(2, '0')).join('')}`;
         };
 
+        const hexToRgba = (hex, alpha = 1) => {
+            const h = hex.replace('#', '');
+            const r = parseInt(h.substring(0, 2), 16);
+            const g = parseInt(h.substring(2, 4), 16);
+            const b = parseInt(h.substring(4, 6), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        };
+
+        // Recolors the highlight cards to match the department color.
+        const paintTopNotcherCards = () => {
+            document.querySelectorAll('[data-dept-card]').forEach((el) => {
+                const code = el.dataset.deptCard;
+                if (!code) return;
+
+                const color = DEPT_COLOR_MAP[code] || '#6b7280';
+                const dark = isDark();
+
+                el.style.backgroundColor = hexToRgba(color, dark ? 0.15 : 0.08);
+                el.style.borderColor     = hexToRgba(color, dark ? 0.35 : 0.30);
+
+                el.querySelectorAll('[data-dept-accent]').forEach((a) => {
+                    a.style.color = dark ? color : darken(color, 0.25);
+                });
+            });
+        };
+
         // =====================================================================
         // Drill-down state (per chart, client-side only)
         // =====================================================================
@@ -428,6 +539,10 @@
                 selectedDept: null
             },
             comparative: {
+                view: 'departments',
+                selected: null
+            },
+            topNotcher: {
                 view: 'departments',
                 selected: null
             },
@@ -541,9 +656,6 @@
 
         // =====================================================================
         // Minimum y-axis width enforcement for horizontal bar charts
-        //   Chart.js measures tick-label width using only the first label,
-        //   which clips the longest ones (e.g. "Non Government Organization").
-        //   afterFit overrides the computed width with a safe minimum.
         // =====================================================================
         const horizontalYAxis = (minWidth = 170) => {
             const t = chartTheme();
@@ -559,9 +671,6 @@
 
         // =====================================================================
         // Universal bar-value label plugin
-        //   Vertical bars → value drawn above each bar.
-        //   Horizontal bars → value drawn to the right of each bar.
-        //   Zero values are skipped to reduce clutter.
         // =====================================================================
         const barValueLabelPlugin = {
             id: 'barValueLabels',
@@ -624,6 +733,7 @@
             const orgData = payload.organizationType || {};
             const areaData = payload.employmentArea || {};
             const monthsData = payload.monthsToFirstJob || {};
+            const topNotchers = payload.topNotchers || {};
 
             window.__analyticsData = {
                 alumniByDept,
@@ -632,10 +742,15 @@
                 alumniByBatchCourse,
                 alumniByBatchDept,
                 analyticsByDept,
+                topNotchers,
                 theme,
             };
 
+            // Build the course → dept lookup AFTER the data is in place.
             buildCourseDeptMap();
+
+            // Repaint the top-notcher highlight cards (dept-colored).
+            paintTopNotcherCards();
 
             // 1. Alumni by Department (drillable)
             renderDeptChart(ChartLib);
@@ -645,6 +760,11 @@
 
             // 3. Alumni by Year (drillable: batch → department → course)
             renderBatchChart(ChartLib);
+
+            // 4. Top Notchers (drillable: department → course)
+            if (Object.keys(topNotchers).length > 0) {
+                renderTopNotcherChart(ChartLib);
+            }
 
             // ===== Pie helpers =====
             const pieLabelPlugin = {
@@ -699,7 +819,7 @@
                 },
             };
 
-            // 4. Employment Status
+            // 5. Employment Status
             if (Object.keys(statusData).length > 0) {
                 makeChart(ChartLib, 'employmentStatusChart', {
                     type: 'doughnut',
@@ -723,7 +843,7 @@
                 });
             }
 
-            // 5. Employment Type
+            // 6. Employment Type
             if (Object.keys(typeData).length > 0) {
                 const typeValues = Object.values(typeData);
                 makeChart(ChartLib, 'employmentTypeChart', {
@@ -768,7 +888,7 @@
                 });
             }
 
-            // 6. Organization Type
+            // 7. Organization Type
             if (Object.keys(orgData).length > 0) {
                 const orgValues = Object.values(orgData);
                 makeChart(ChartLib, 'organizationTypeChart', {
@@ -814,7 +934,7 @@
                 });
             }
 
-            // 7. Employment Area
+            // 8. Employment Area
             if (Object.keys(areaData).length > 0) {
                 makeChart(ChartLib, 'employmentAreaChart', {
                     type: 'doughnut',
@@ -838,7 +958,7 @@
                 });
             }
 
-            // 8. Months to First Job
+            // 9. Months to First Job
             if (Object.keys(monthsData).length > 0) {
                 const monthValues = Object.values(monthsData);
                 makeChart(ChartLib, 'monthsToFirstJobChart', {
@@ -1302,6 +1422,117 @@
         };
 
         // =====================================================================
+        // Top Notcher chart renderer  (department → course)
+        // =====================================================================
+        const renderTopNotcherChart = (ChartLib) => {
+            const data = window.__analyticsData;
+            const theme = data.theme;
+            const state = drillState.topNotcher;
+            const source = data.topNotchers || {};
+
+            let labels = [];
+            let totals = [];
+            let names = [];
+            let ranks = [];
+            let clickable = false;
+            let subtitleText = '';
+            let backBtnVisible = false;
+
+            if (state.view === 'departments') {
+                const codes = Object.keys(source);
+                labels = codes;
+                names = codes.map(c => source[c]?.name || c);
+                totals = codes.map(c => source[c]?.total || 0);
+                ranks = codes.map(c => source[c]?.best_rank || null);
+                clickable = true;
+                subtitleText = 'Top-notcher attempts by department · click a bar to see courses';
+                backBtnVisible = false;
+            } else {
+                const dept = source[state.selected] || { courses: {}, name: state.selected };
+                const codes = Object.keys(dept.courses || {});
+                labels = codes;
+                names = codes.map(c => dept.courses[c]?.name || c);
+                totals = codes.map(c => dept.courses[c]?.total || 0);
+                ranks = codes.map(c => dept.courses[c]?.best_rank || null);
+                clickable = false;
+                subtitleText = `${dept.name} · top notchers by course`;
+                backBtnVisible = true;
+            }
+
+            const subEl = document.getElementById('topnotcher-subtitle');
+            if (subEl) subEl.textContent = subtitleText;
+
+            const backBtn = document.getElementById('topnotcher-back-btn');
+            if (backBtn) {
+                backBtn.classList.toggle('hidden', !backBtnVisible);
+                backBtn.classList.toggle('inline-flex', backBtnVisible);
+            }
+
+            if (labels.length === 0) return;
+
+            makeChart(ChartLib, 'topNotchersChart', {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        data: totals,
+                        backgroundColor: (ctx) => deptColor(labels[ctx.dataIndex], ctx.dataIndex),
+                        hoverBackgroundColor: (ctx) => darken(deptColor(labels[ctx.dataIndex], ctx.dataIndex), 0.2),
+                        borderRadius: 8,
+                        borderSkipped: false,
+                        maxBarThickness: 48,
+                    }],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: { padding: { top: 18 } },
+                    onHover: (event, els) => {
+                        if (!clickable) return;
+                        event.native.target.style.cursor = els.length > 0 ? 'pointer' : 'default';
+                    },
+                    onClick: (event, els) => {
+                        if (!clickable || els.length === 0) return;
+                        const idx = els[0].index;
+                        drillState.topNotcher.view = 'courses';
+                        drillState.topNotcher.selected = labels[idx];
+                        renderTopNotcherChart(ChartLib);
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: theme.tooltipBg,
+                            padding: 10,
+                            cornerRadius: 8,
+                            titleFont: { size: 12, weight: '600' },
+                            bodyFont: { size: 12 },
+                            displayColors: false,
+                            callbacks: {
+                                title: (items) => names[items[0]?.dataIndex] || labels[items[0]?.dataIndex],
+                                label: (ctx) => `${ctx.raw} top notcher${ctx.raw === 1 ? '' : 's'}`,
+                                afterLabel: (ctx) => {
+                                    const r = ranks[ctx.dataIndex];
+                                    const rankLine = r ? `Best rank: #${r}` : '';
+                                    const clickLine = clickable ? 'Click to see courses' : '';
+                                    return [rankLine, clickLine].filter(Boolean).join('\n');
+                                },
+                            },
+                        },
+                    },
+                    scales: {
+                        y: integerTicks(Math.max(0, ...totals), theme),
+                        x: {
+                            ticks: { color: theme.mutedText, font: { weight: '600' }, autoSkip: true, maxRotation: 45 },
+                            grid: { display: false },
+                            border: { display: false },
+                        },
+                    },
+                },
+                plugins: [barValueLabelPlugin],
+            });
+        };
+
+        // =====================================================================
         // Back-button handlers
         // =====================================================================
         if (!window.__analyticsDeptBack) {
@@ -1345,6 +1576,17 @@
             });
         }
 
+        if (!window.__analyticsTopNotcherBack) {
+            window.__analyticsTopNotcherBack = true;
+            document.addEventListener('click', (e) => {
+                const btn = e.target.closest('#topnotcher-back-btn');
+                if (!btn || !ChartLibRef) return;
+                drillState.topNotcher.view = 'departments';
+                drillState.topNotcher.selected = null;
+                renderTopNotcherChart(ChartLibRef);
+            });
+        }
+
         // =====================================================================
         // Debounced init
         // =====================================================================
@@ -1364,6 +1606,10 @@
                     selectedDept: null
                 };
                 drillState.comparative = {
+                    view: 'departments',
+                    selected: null
+                };
+                drillState.topNotcher = {
                     view: 'departments',
                     selected: null
                 };

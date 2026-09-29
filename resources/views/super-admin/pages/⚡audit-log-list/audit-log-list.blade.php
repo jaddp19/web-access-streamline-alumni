@@ -128,9 +128,24 @@
                             </span>
                         </div>
 
-                        <p class="text-xs text-black/60 dark:text-white/60">
-                            {{ class_basename($log->auditable_type) }} #{{ $log->auditable_id }}
-                        </p>
+                        <div class="min-w-0">
+                            @if ($log->subject_label)
+                                <p class="text-sm font-semibold text-[#123524] dark:text-white truncate">
+                                    {{ $log->subject_label }}
+                                </p>
+                                <p class="text-[11px] text-black/40 dark:text-white/40">
+                                    {{ class_basename($log->auditable_type) }}
+                                    <span class="font-mono">#{{ $log->auditable_id }}</span>
+                                </p>
+                            @else
+                                <p class="text-xs text-black/60 dark:text-white/60">
+                                    {{ class_basename($log->auditable_type) }}
+                                    <span class="font-mono text-[11px] text-black/40 dark:text-white/40">
+                                        #{{ $log->auditable_id }}
+                                    </span>
+                                </p>
+                            @endif
+                        </div>
 
                         @if ($log->changes)
                             <div class="mt-2 rounded-lg bg-[#F7F5EF] dark:bg-[#3A3B3C] p-2 text-[11px] text-black/70 dark:text-white/70 space-y-1">
@@ -216,12 +231,24 @@
                                 </td>
 
                                 <td class="px-3 py-3">
-                                    <span class="text-black/70 dark:text-white/70">
-                                        {{ class_basename($log->auditable_type) }}
-                                        <span class="font-mono text-[11px] text-black/40 dark:text-white/40">
-                                            #{{ $log->auditable_id }}
-                                        </span>
-                                    </span>
+                                    <div class="min-w-0">
+                                        @if ($log->subject_label)
+                                            <span class="font-semibold text-[#123524] dark:text-white block truncate max-w-[180px]">
+                                                {{ $log->subject_label }}
+                                            </span>
+                                            <span class="text-[11px] text-black/40 dark:text-white/40">
+                                                {{ class_basename($log->auditable_type) }}
+                                                <span class="font-mono">#{{ $log->auditable_id }}</span>
+                                            </span>
+                                        @else
+                                            <span class="text-black/70 dark:text-white/70">
+                                                {{ class_basename($log->auditable_type) }}
+                                                <span class="font-mono text-[11px] text-black/40 dark:text-white/40">
+                                                    #{{ $log->auditable_id }}
+                                                </span>
+                                            </span>
+                                        @endif
+                                    </div>
                                 </td>
 
                                 <td class="hidden lg:table-cell px-3 py-3 max-w-md">

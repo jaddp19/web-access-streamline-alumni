@@ -103,4 +103,5 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             || $this->userFilter !== 'all'
             || $this->dateRange !== '30';
     }
+
 };
