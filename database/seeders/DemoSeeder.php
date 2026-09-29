@@ -201,9 +201,13 @@ class DemoSeeder extends Seeder
      */
     protected function seedBoardAttemptsFor(UserProfile $profile, Course $course, string $approvalState): void
     {
-        $attemptCount = fake()->numberBetween(1, 2);
+        // Top notchers pass on their first (and only) take.
+        $isTopNotcher = $approvalState === 'approved' && fake()->boolean(10);
+        $attemptCount = $isTopNotcher ? 1 : fake()->numberBetween(1, 2);
 
         for ($n = 1; $n <= $attemptCount; $n++) {
+            $isFinalAttempt = ($n === $attemptCount);
+
             $baseState = [
                 'user_profile_id' => $profile->id,
                 'attempt_number' => $n,
@@ -211,34 +215,31 @@ class DemoSeeder extends Seeder
             ];
 
             if ($approvalState === 'approved') {
-                // Verified passing or failing — the factory state sets both
-                // `passed` and `is_verified` + `verified_at`.
-                $factory = fake()->boolean(85)
-                    ? BoardExam::factory()->verifiedPassing()
-                    : BoardExam::factory()->verifiedFailing();
+                // A retaker can't pass twice. Every attempt before the final
+                // one MUST be a fail (rate 60–74.99) — that's why they retook.
+                $factory = match (true) {
+                    $isTopNotcher && $isFinalAttempt => BoardExam::factory()->topNotcher(),
+                    $isFinalAttempt && fake()->boolean(85) => BoardExam::factory()->verifiedPassing(),
+                    default => BoardExam::factory()->verifiedFailing(),
+                };
 
                 $factory->state($baseState)->create();
             } else {
-                // Pending / rejected → attempt exists but unverified.
+                // Pending / rejected → unverified, but the same retake rule
+                // still applies: only the final attempt may pass.
+                $passing = $isFinalAttempt && fake()->boolean(85);
+
                 BoardExam::factory()
                     ->state(array_merge($baseState, [
+                        'rate' => $passing
+                            ? fake()->randomFloat(2, 75, 99)
+                            : fake()->randomFloat(2, 60, 74.99),
+                        'passed' => $passing,
                         'is_verified' => false,
                         'verified_at' => null,
                     ]))
                     ->create();
             }
-        }
-
-        // Occasional top notcher (~10% of approved alumni)
-        if ($approvalState === 'approved' && fake()->boolean(10)) {
-            BoardExam::factory()
-                ->topNotcher()
-                ->state([
-                    'user_profile_id' => $profile->id,
-                    'attempt_number' => $attemptCount + 1,
-                    'exam_name' => $course->course_title,
-                ])
-                ->create();
         }
 
         $profile->refresh();
