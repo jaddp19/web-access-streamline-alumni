@@ -161,6 +161,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
     public function mount(): void
     {
+        Gate::authorize('can_update');
         $user = Auth::user();
 
         $profile = UserProfile::where('user_id', $user->id)->first();
@@ -293,6 +294,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
     public function saveProfile()
     {
+        Gate::authorize('can_update');
         $this->contact_number_2 = $this->contact_number_2 === '' ? null : $this->contact_number_2;
 
         $validated = $this->validate();

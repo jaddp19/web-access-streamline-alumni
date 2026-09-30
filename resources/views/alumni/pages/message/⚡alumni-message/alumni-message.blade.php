@@ -26,7 +26,7 @@
 
     {{-- ========== INBOX LIST ========== --}}
     <div class="max-w-[900px] mx-auto px-4 sm:px-6 py-6 space-y-4">
-
+    @can('can_view')
         {{-- Search --}}
         <div class="relative">
             <input type="text" wire:model.live.debounce.400ms="search"
@@ -321,5 +321,6 @@
                 {{ $this->messages->links() }}
             </div>
         @endif
+    @endcan
     </div>
 </div>

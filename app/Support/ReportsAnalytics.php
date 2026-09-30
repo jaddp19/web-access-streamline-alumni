@@ -10,10 +10,12 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Report analytics are scoped to APPROVED alumni only
- * (user_profiles.is_approved = true). Pending / rejected profiles are
- * excluded from every report, CSV export, and filter dropdown so the
- * numbers always reflect officially reviewed data.
+ * Report analytics are scoped to APPROVED + ACTIVE alumni only
+ * (user_profiles.is_approved = true AND users.is_active = true).
+ *
+ * Pending / rejected / deactivated profiles are excluded from every
+ * report, CSV export, and filter dropdown so the numbers always reflect
+ * officially reviewed, currently-active data.
  */
 class ReportsAnalytics
 {
@@ -34,7 +36,7 @@ class ReportsAnalytics
         if ($this->departmentId || $this->courseId) {
             $q->whereHas('userProfiles', function ($p) {
                 $p->where('is_approved', true)
-                  ->whereHas('user', fn ($u) => $u->role('alumni'));
+                  ->whereHas('user', fn ($u) => $u->role('alumni')->where('is_active', true));
 
                 if ($this->courseId) {
                     $p->whereHas('courses', fn ($c) => $c->where('courses.id', $this->courseId));
@@ -46,8 +48,11 @@ class ReportsAnalytics
             });
         } else {
             // No scope filters → only show batches that contain at least
-            // one approved alumni profile.
-            $q->whereHas('userProfiles', fn ($p) => $p->where('is_approved', true));
+            // one approved + active alumni profile.
+            $q->whereHas('userProfiles', function ($p) {
+                $p->where('is_approved', true)
+                  ->whereHas('user', fn ($u) => $u->where('is_active', true));
+            });
         }
 
         return $q->get(['batches.id', 'batches.batch_name'])
@@ -102,13 +107,21 @@ class ReportsAnalytics
     // =========================================================
 
     /**
-     * Restricts the query to approved alumni profiles only.
+     * Restricts the query to approved + active alumni profiles only.
      * Assumes the query already joins `user_profiles` (or the given alias).
      */
     protected function scopeByProfile($q, string $profileAlias = 'user_profiles'): void
     {
         // Approval gate — applied to every report that uses this helper.
         $q->where("$profileAlias.is_approved", true);
+
+        // Active-user gate — deactivated accounts are excluded from reports.
+        $q->whereExists(function ($sub) use ($profileAlias) {
+            $sub->select(DB::raw(1))
+                ->from('users')
+                ->whereColumn('users.id', "{$profileAlias}.user_id")
+                ->where('users.is_active', true);
+        });
 
         if ($this->departmentId) {
             $q->whereExists(function ($sub) use ($profileAlias) {
@@ -302,27 +315,31 @@ class ReportsAnalytics
         }
 
         if ($this->courseId) {
-            // Only count RSVPs from approved alumni in this course.
+            // Only count RSVPs from approved + active alumni in this course.
             $q->where(function ($w) {
                 $w->whereNull('event_rsvps.id')
                     ->orWhereExists(function ($sub) {
                         $sub->select(DB::raw(1))
                             ->from('user_profiles')
+                            ->join('users', 'users.id', '=', 'user_profiles.user_id')
                             ->join('student_course', 'student_course.user_profile_id', '=', 'user_profiles.id')
                             ->whereColumn('user_profiles.user_id', 'event_rsvps.user_id')
                             ->where('user_profiles.is_approved', true)
+                            ->where('users.is_active', true)
                             ->where('student_course.course_id', $this->courseId);
                     });
             });
         } else {
-            // No course filter → still only count approved alumni RSVPs.
+            // No course filter → still only count approved + active alumni RSVPs.
             $q->where(function ($w) {
                 $w->whereNull('event_rsvps.id')
                     ->orWhereExists(function ($sub) {
                         $sub->select(DB::raw(1))
                             ->from('user_profiles')
+                            ->join('users', 'users.id', '=', 'user_profiles.user_id')
                             ->whereColumn('user_profiles.user_id', 'event_rsvps.user_id')
-                            ->where('user_profiles.is_approved', true);
+                            ->where('user_profiles.is_approved', true)
+                            ->where('users.is_active', true);
                     });
             });
         }
@@ -389,8 +406,9 @@ class ReportsAnalytics
                     ->where('work_histories.is_current_job', '=', true);
             })
             ->leftJoin('companies', 'companies.id', '=', 'work_histories.company_id')
-            // ── Approval gate ──
-            ->where('user_profiles.is_approved', true);
+            // ── Approval + active gate ──
+            ->where('user_profiles.is_approved', true)
+            ->where('users.is_active', true);
 
         if ($this->departmentId) {
             $q->where('departments.id', $this->departmentId);
@@ -438,11 +456,12 @@ class ReportsAnalytics
         $q = DB::table('event_rsvps')
             ->join('events', 'event_rsvps.event_id', '=', 'events.id')
             ->join('users', 'event_rsvps.user_id', '=', 'users.id')
-            ->join('user_profiles', 'user_profiles.user_id', '=', 'users.id')   // ← inner join now
+            ->join('user_profiles', 'user_profiles.user_id', '=', 'users.id')
             ->leftJoin('batches', 'user_profiles.batch_id', '=', 'batches.id')
             ->where('events.status', 'published')
-            // ── Approval gate ──
-            ->where('user_profiles.is_approved', true);
+            // ── Approval + active gate ──
+            ->where('user_profiles.is_approved', true)
+            ->where('users.is_active', true);
 
         if ($this->departmentId) {
             $q->whereIn('events.created_by', function ($sub) {

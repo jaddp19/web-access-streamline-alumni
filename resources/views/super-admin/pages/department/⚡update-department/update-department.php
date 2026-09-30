@@ -23,6 +23,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function mount(Department $department): void
     {
+        Gate::authorize('can_update');
         $this->department = $department;
         $this->dept_name  = $department->dept_name;
         $this->dept_code  = $department->dept_code;
@@ -88,6 +89,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function update()
     {
+        Gate::authorize('can_update');
         $validated = $this->validate();
 
         $deptName = trim(strip_tags($validated['dept_name']));

@@ -32,7 +32,10 @@ new #[Layout('layouts.app-alumni')] class extends Component
             ->first();
     }
 
-    /** Department IDs this alumni belongs to (via student_course → courses). */
+    /**
+     * Department IDs this alumni belongs to (via student_course → courses).
+     * Qualified column to avoid pivot ambiguity.
+     */
     #[Computed]
     public function alumniDepartmentIds(): array
     {
@@ -42,14 +45,17 @@ new #[Layout('layouts.app-alumni')] class extends Component
         }
 
         return $profile->courses()
-            ->pluck('department_id')
+            ->pluck('courses.department_id')
             ->filter()
             ->unique()
             ->values()
             ->all();
     }
 
-    /** Program-head user IDs whose department contains this alumni. */
+    /**
+     * Program-head user IDs whose department contains this alumni.
+     * Same versioned cache pattern as the messages component.
+     */
     #[Computed]
     public function programHeadIdsForMyDepartments(): array
     {
@@ -58,13 +64,21 @@ new #[Layout('layouts.app-alumni')] class extends Component
             return [];
         }
 
-        return Department::query()
-            ->whereIn('id', $deptIds)
-            ->whereNotNull('program_head_id')
-            ->pluck('program_head_id')
-            ->unique()
-            ->values()
-            ->all();
+        sort($deptIds);
+
+        // Global version counter — bumped by DepartmentObserver / UserObserver
+        // whenever a program-head assignment changes. Old keys age out via TTL.
+        $version = Cache::get('program_head_ids_cache_version', 1);
+        $key = "program_head_ids_v{$version}_".implode('_', $deptIds);
+
+        return Cache::remember($key, now()->addMinutes(15), function () use ($deptIds) {
+            return User::query()
+                ->role('program head')
+                ->whereHas('department', fn ($q) => $q->whereIn('id', $deptIds))
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+        });
     }
 
     /** Registrar user IDs — cached (small, stable, role-driven). */
@@ -120,7 +134,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
             return Storage::url($this->userProfile->avatar);
         }
 
-        return 'https://ui-avatars.com/api/?name=' . urlencode($this->alumni->name) . '&background=D4A537&color=123524';
+        return 'https://ui-avatars.com/api/?name='.urlencode($this->alumni->name).'&background=D4A537&color=123524';
     }
 
     #[Computed]
@@ -138,20 +152,20 @@ new #[Layout('layouts.app-alumni')] class extends Component
         $profile = $this->userProfile;
 
         $steps = [
-            'avatar'       => filled($profile?->avatar),
-            'location'     => filled($profile?->location),
-            'batch'        => filled($profile?->batch_id),
+            'avatar' => filled($profile?->avatar),
+            'location' => filled($profile?->location),
+            'batch' => filled($profile?->batch_id),
             'work_history' => $this->workHistories->isNotEmpty(),
         ];
 
         $completed = count(array_filter($steps));
-        $total     = count($steps);
+        $total = count($steps);
 
         return [
-            'steps'     => $steps,
+            'steps' => $steps,
             'completed' => $completed,
-            'total'     => $total,
-            'percent'   => $total > 0 ? (int) round(($completed / $total) * 100) : 0,
+            'total' => $total,
+            'percent' => $total > 0 ? (int) round(($completed / $total) * 100) : 0,
         ];
     }
 

@@ -78,6 +78,7 @@
             </div>
         </aside>
 
+        @can('can_view')
         {{-- ===== MAIN COLUMN — NOTIFICATIONS ===== --}}
         <main class="lg:col-span-9 space-y-4">
 
@@ -279,5 +280,6 @@
             @endif
 
         </main>
+        @endcan
     </div>
 </div>

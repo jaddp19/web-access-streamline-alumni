@@ -55,7 +55,8 @@ new #[Layout('layouts.app-alumni')] class extends Component
     // =========================================================
 
     public function mount(): void
-    {
+    { 
+        Gate::authorize('can_create');
         $tracerStudy = TracerStudy::query()
             ->where('user_id', Auth::id())
             ->first();
@@ -367,6 +368,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
     public function createCompany(): void
     {
+        Gate::authorize('can_create');
         abort_unless(Auth::check(), 403);
 
         $validated = $this->validate($this->companyRules(), $this->messages());

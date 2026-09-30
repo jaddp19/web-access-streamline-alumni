@@ -36,6 +36,10 @@ class CategorySeeder extends Seeder
                 'cat_desc' => 'Delicious recipes and cooking tips for every occasion.',
             ],
             [
+                'cat_name' => 'Announcements',
+                'cat_desc' => 'Institutional announcements of the school.',
+            ],
+            [
                 'cat_name' => 'Business',
                 'cat_desc' => 'News, strategies, and insights for entrepreneurs and businesses.',
             ],

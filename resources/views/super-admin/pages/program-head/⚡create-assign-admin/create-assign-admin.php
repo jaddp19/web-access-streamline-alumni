@@ -40,6 +40,12 @@ new #[Layout('layouts.app-super-admin')] class extends Component
      * the serialization boundary (this is what caused
      * "Attempt to read property 'id' on string").
      */
+
+    public function mount():void
+    {
+        Gate::authorize('can_create');
+    }
+
     #[Computed]
     public function users(): array
     {
@@ -166,6 +172,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function create()
     {
+        Gate::authorize('can_create');
         $validated = $this->validate();
 
         // If we're replacing an existing head, require confirmation.

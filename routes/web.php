@@ -31,7 +31,7 @@ Route::middleware('auth')->group(function () {
     Route::livewire('/change-password', 'auth::change-password')->name('password.change');
 });
 
-Route::middleware(['auth', 'role:registrar'])->prefix('super-admin')->group(function () {
+Route::middleware(['auth', 'role:registrar'])->prefix('registrar')->group(function () {
     Route::livewire('/dashboard', 'super-admin::pages.dashboard')->name('super-admin.dashboard');
     Route::livewire('/settings', 'super-admin::pages.settings')->name('super-admin.settings');
     Route::livewire('view-reports', 'super-admin::pages.view-reports')->name('super-admin.reports');
@@ -62,7 +62,6 @@ Route::middleware(['auth', 'role:registrar'])->prefix('super-admin')->group(func
 
     Route::livewire('/batch/view', 'super-admin::pages.batch.view-batch')->name('super-admin.batch.view');
     Route::livewire('/batch/create', 'super-admin::pages.batch.create-batch')->name('super-admin.batch.create');
-    Route::livewire('/batch/update/{batch}', 'super-admin::pages.batch.update-batch')->name('super-admin.batch.update');
 
     Route::livewire('/email/view', 'super-admin::pages.email.view-email')->name('super-admin.email.view');
     Route::livewire('/email/create', 'super-admin::pages.email.create-email')->name('super-admin.email.create');
@@ -87,7 +86,7 @@ Route::middleware(['auth', 'role:registrar'])->prefix('super-admin')->group(func
 
 });
 
-Route::middleware(['auth', 'role:program head|registrar'])->prefix('admin')->group(function () {
+Route::middleware(['auth', 'role:program head|registrar'])->prefix('program-head')->group(function () {
     Route::livewire('/dashboard', 'admin::pages.dashboard')->name('admin.dashboard');
     Route::livewire('/view-reports', 'admin::pages.view-reports')->name('admin.reports');
     Route::livewire('/settings', 'admin::pages.settings')->name('admin.settings');

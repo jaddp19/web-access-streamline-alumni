@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Support\BadgeCounts;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -21,6 +22,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
     public function mount(Event $event): void
     {
+        Gate::authorize('can_view');
         // Route model binding gives us the event, but we must still verify access
         abort_unless($this->isAuthorizedFor($event), 403);
 

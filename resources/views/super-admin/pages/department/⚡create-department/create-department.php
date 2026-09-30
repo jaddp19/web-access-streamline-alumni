@@ -19,6 +19,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public bool $is_active = true;
     public $dept_logo;
 
+    public function mount(): void
+    {
+        Gate::authorize('can_create');
+    }
     // =========================================================
     //  VALIDATION
     // =========================================================
@@ -72,6 +76,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function create()
     {
+        Gate::authorize('can_create');
         $validated = $this->validate();
 
         $deptName = trim(strip_tags($validated['dept_name']));

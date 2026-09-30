@@ -49,11 +49,8 @@
                 <h2 class="text-sm font-semibold text-black/60 dark:text-white/60 uppercase tracking-wide">
                     Recent posts from CSAV
                 </h2>
-                <a href="{{ route('alumni.message') }}" class="text-xs font-semibold text-[#1877F2] hover:underline">
-                    See all
-                </a>
             </div>
-
+            @can('can_view')
             {{-- ========== UPCOMING EVENTS ========== --}}
             @if ($this->upcomingEvents->isNotEmpty())
                 <div
@@ -119,10 +116,6 @@
                                     <span
                                         class="text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wide shrink-0 {{ $badgeColor }}">
                                         {{ $myResponse }}
-                                    </span>
-                                @else
-                                    <span class="text-[10px] font-semibold text-[#1877F2] shrink-0 whitespace-nowrap">
-                                        RSVP →
                                     </span>
                                 @endif
                             </a>
@@ -253,6 +246,7 @@
                     </p>
                 </div>
             @endforelse
+            @endcan
         </main>
 
         {{-- ===== RIGHT SIDEBAR ===== --}}

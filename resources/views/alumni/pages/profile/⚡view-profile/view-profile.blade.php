@@ -222,10 +222,12 @@
                 <h2 class="text-xl font-bold text-black dark:text-white" style="font-family: 'Fraunces', serif;">
                     Personal Information
                 </h2>
+                @can('can_update')
                 <a href="{{ route('alumni.profile.update', $this->alumni->id) }}"
                     class="text-[#1877F2] text-sm font-semibold hover:underline">
                     Edit
                 </a>
+                @endcan
             </div>
 
             <div class="grid sm:grid-cols-2 gap-x-6 gap-y-4">
@@ -285,12 +287,14 @@
                 <h2 class="text-xl font-bold text-black dark:text-white" style="font-family: 'Fraunces', serif;">
                     Education
                 </h2>
+                @can('can_update')
                 @if ($this->userProfile)
                     <a href="{{ route('alumni.profile.update-educational', $this->userProfile->id) }}"
                         class="text-[#1877F2] text-sm font-semibold hover:underline">
                         Edit
                     </a>
                 @endif
+                @endcan
             </div>
 
             <div class="flex items-start gap-3 mb-4">
@@ -418,11 +422,13 @@
                 <h2 class="text-xl font-bold text-black dark:text-white" style="font-family: 'Fraunces', serif;">
                     Work Experience
                 </h2>
+                @can('can_create')
                 <div class="flex items-center gap-2 text-sm font-semibold">
                     <a href="{{ route('alumni.profile.create-employment') }}" class="text-[#1877F2] hover:underline">
                         Add
                     </a>
                 </div>
+                @endcan
             </div>
 
             @if ($this->workHistories->isEmpty())
@@ -436,10 +442,12 @@
                         </svg>
                     </div>
                     <p class="text-sm text-black/50 dark:text-white/50">No work experience added yet.</p>
+                    @can('can_create')
                     <a href="{{ route('alumni.profile.create-employment') }}"
                         class="inline-block mt-3 text-[#1877F2] text-sm font-semibold hover:underline">
                         Add your first job
                     </a>
+                    @endcan
                 </div>
             @else
                 <div class="space-y-5">
@@ -484,7 +492,7 @@
                                                 Current
                                             </span>
                                         @endif
-
+                                        @can('can_update')
                                         {{-- Edit pencil --}}
                                         <a href="{{ route('alumni.profile.update-employment', ['history' => $history->id]) }}"
                                             class="text-[#1877F2] hover:text-[#166FE5] transition shrink-0"
@@ -495,6 +503,7 @@
                                                     d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
                                             </svg>
                                         </a>
+                                        @endcan
                                     </div>
                                 </div>
 

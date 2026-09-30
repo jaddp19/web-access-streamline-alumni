@@ -20,6 +20,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function mount(int $email): void
     {
+        Gate::authorize('can_update');
         $template = EmailTemplate::findOrFail($email);
 
         $data = is_array($template->template) ? $template->template : [];
@@ -109,6 +110,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function update()
     {
+        Gate::authorize('can_update');
         $validated = $this->validate();
 
         $subject = $this->sanitizeSubject($validated['subject']);

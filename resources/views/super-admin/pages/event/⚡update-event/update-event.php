@@ -34,7 +34,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function mount(Event $event): void
     {
-        abort_unless(Auth::user()?->hasAnyRole(['super admin', 'registrar']), 403);
+        Gate::authorize('can_update');
 
         $this->event = $event;
 
@@ -198,7 +198,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
      */
     public function save()
     {
-        abort_unless(Auth::user()?->hasAnyRole(['super admin', 'registrar']), 403);
+        Gate::authorize('can_update');
 
         $this->validate();
 

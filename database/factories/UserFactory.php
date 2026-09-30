@@ -20,7 +20,32 @@ class UserFactory extends Factory
             'school_id'         => fake()->unique()->numerify('####-####'),
             'email_verified_at' => now(),
             'password'          => 'password123', // auto-hashed by cast
+            'is_active'         => true,          // ← new: default everyone is active
         ];
+    }
+
+    // ===== Account state =====
+
+    /**
+     * Deactivated account — can no longer log in.
+     * Analytics + reports exclude these; the users index still shows them.
+     */
+    public function inactive(): static
+    {
+        return $this->state(fn () => [
+            'is_active' => false,
+        ]);
+    }
+
+    /**
+     * Never-verified email. Useful for testing the verification banner
+     * and any "verify your email" flows.
+     */
+    public function unverified(): static
+    {
+        return $this->state(fn () => [
+            'email_verified_at' => null,
+        ]);
     }
 
     // ===== Role states =====
@@ -39,4 +64,5 @@ class UserFactory extends Factory
     {
         return $this->afterCreating(fn (User $user) => $user->assignRole('alumni'));
     }
+
 }

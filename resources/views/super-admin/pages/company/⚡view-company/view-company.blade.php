@@ -30,6 +30,7 @@
                 </div>
 
                 <div class="flex items-center gap-2">
+                    @can('can_create')
                     <a href="{{ route('super-admin.company.create') }}"
                         class="w-full sm:w-auto justify-center py-2 px-3.5 inline-flex items-center gap-x-2 text-xs sm:text-sm font-semibold rounded-lg bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524] hover:bg-[#0d2819] dark:hover:bg-[#E5B94A] transition">
                         <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -37,6 +38,7 @@
                         </svg>
                         Add Company
                     </a>
+                    @endcan
                 </div>
             </div>
 
@@ -58,14 +60,16 @@
 
             <!-- ===================== MOBILE CARD LIST ===================== -->
             <div class="sm:hidden divide-y divide-black/5 dark:divide-white/5">
+                @can('can_view_any')
                 @forelse ($this->companies as $company)
                     <div wire:key="mobile-company-{{ $company->id }}" class="p-4 flex items-start gap-3">
+                        @can('can_delete')
                         <input type="checkbox"
                             wire:key="mobile-company-cb-{{ $company->id }}-{{ $this->isRowSelected($company->id) ? '1' : '0' }}"
                             wire:click="toggleRowSelection({{ $company->id }})"
                             @checked($this->isRowSelected($company->id))
                             class="mt-1.5 rounded border-black/20 dark:border-white/20 text-[#123524] dark:text-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] dark:bg-[#3A3B3C] shrink-0">
-
+                        @endcan
                         <div class="flex-1 min-w-0">
                             <div class="flex items-start justify-between gap-2">
                                 <div class="flex items-center gap-2 min-w-0">
@@ -82,10 +86,12 @@
                                     </div>
                                     <p class="font-semibold text-[#123524] dark:text-white truncate">{{ $company->company_name }}</p>
                                 </div>
+                                @can('can_update')
                                 <a href="{{ route('super-admin.company.update', $company->id) }}"
                                     class="shrink-0 text-xs font-semibold text-[#123524] dark:text-[#D4A537] hover:underline">
                                     Edit
                                 </a>
+                                @endcan
                             </div>
 
                             @if ($company->company_address)
@@ -109,8 +115,11 @@
                         </div>
                         <p class="text-black/40 dark:text-white/40 text-sm">No companies found.</p>
                     </div>
+                    
                 @endforelse
+                @endcan
 
+                @can('can_delete')
                 @if ($this->companies->count() > 0)
                     <div class="px-4 py-3 flex flex-wrap items-center gap-x-3 gap-y-1">
                         <button type="button" wire:click="toggleSelectAll"
@@ -133,6 +142,7 @@
                         @endif
                     </div>
                 @endif
+                @endcan
             </div>
 
             <!-- ===================== TABLE (sm+) ===================== -->
@@ -141,6 +151,7 @@
                     <thead class="bg-[#F7F5EF] dark:bg-[#3A3B3C] border-b border-black/5 dark:border-white/5">
                         <tr>
                             <th class="ps-4 sm:ps-6 py-3 w-4">
+                                @can('can_delete')
                                 <input type="checkbox"
                                     wire:key="header-company-cb-{{ $this->totalCompaniesCount }}"
                                     wire:click="toggleSelectAll"
@@ -154,6 +165,7 @@
                                     "
                                     title="Select all companies (all pages)"
                                     class="rounded border-black/20 dark:border-white/20 text-[#123524] dark:text-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] dark:bg-[#3A3B3C]">
+                                @endcan
                             </th>
                             <th class="px-3 lg:px-6 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Company Name</th>
                             <th class="hidden md:table-cell px-3 lg:px-6 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Address</th>
@@ -163,14 +175,17 @@
                     </thead>
 
                     <tbody class="divide-y divide-black/5 dark:divide-white/5">
+                        @can('can_view_any')
                         @forelse ($this->companies as $company)
                             <tr wire:key="row-company-{{ $company->id }}" class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
                                 <td class="w-4 ps-4 sm:ps-6 py-3 text-center align-middle">
+                                    @can('can_delete')
                                     <input type="checkbox"
                                         wire:key="row-company-cb-{{ $company->id }}-{{ $this->isRowSelected($company->id) ? '1' : '0' }}"
                                         wire:click="toggleRowSelection({{ $company->id }})"
                                         @checked($this->isRowSelected($company->id))
                                         class="rounded border-black/20 dark:border-white/20 text-[#123524] dark:text-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] dark:bg-[#3A3B3C] align-middle">
+                                    @endcan
                                 </td>
                                 <td class="px-3 lg:px-6 py-3">
                                     <div class="flex items-center gap-3 min-w-0">
@@ -200,10 +215,12 @@
                                     <span class="text-black/50 dark:text-white/50 whitespace-nowrap">{{ $company->created_at->diffForHumans() }}</span>
                                 </td>
                                 <td class="px-3 lg:px-6 py-3 text-end">
+                                    @can('can_update')
                                     <a href="{{ route('super-admin.company.update', $company->id) }}"
                                         class="inline-flex items-center gap-1 text-[#123524] dark:text-[#D4A537] hover:text-[#0d2819] dark:hover:text-[#E5B94A] font-semibold hover:underline whitespace-nowrap">
                                         Edit
                                     </a>
+                                    @endcan
                                 </td>
                             </tr>
                         @empty
@@ -219,12 +236,14 @@
                                 </td>
                             </tr>
                         @endforelse
+                        @endcan
                     </tbody>
                 </table>
             </div>
 
             <!-- ===================== FOOTER ===================== -->
             <div class="px-4 sm:px-6 py-3 sm:py-4 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center border-t border-black/5 dark:border-white/5">
+                @can('can_view_any')
                 <p class="text-xs sm:text-sm text-black/60 dark:text-white/60 text-center sm:text-left">
                     Showing
                     <span class="font-semibold text-[#123524] dark:text-white">{{ $this->companies->firstItem() ?? 0 }}</span>–<span class="font-semibold text-[#123524] dark:text-white">{{ $this->companies->lastItem() ?? 0 }}</span>
@@ -266,6 +285,7 @@
                         </button>
                     @endif
                 </div>
+                @endcan
             </div>
         </div>
     </div>

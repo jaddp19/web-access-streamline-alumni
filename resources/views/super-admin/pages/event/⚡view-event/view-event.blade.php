@@ -23,6 +23,7 @@
                     </div>
                 </div>
 
+                @can('can_create')
                 <a href="{{ route('super-admin.event.create') }}"
                     class="w-full sm:w-auto justify-center inline-flex items-center gap-x-2 text-xs sm:text-sm font-semibold rounded-lg bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524] hover:bg-[#0d2819] dark:hover:bg-[#E5B94A] transition py-2.5 px-4">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -30,6 +31,7 @@
                     </svg>
                     Create Event
                 </a>
+                @endcan
             </div>
 
             {{-- Flashes --}}
@@ -49,6 +51,7 @@
             {{-- Filters --}}
             <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-black/5 dark:border-white/5">
                 <div class="flex flex-col lg:flex-row lg:items-center gap-3">
+                    @can('can_view_any')
                     <div class="relative w-full lg:w-72">
                         <input type="text" wire:model.live.debounce.400ms="search"
                             placeholder="Search title or location…"
@@ -84,6 +87,7 @@
                             Clear filters
                         </button>
                     @endif
+                    @endcan
                 </div>
             </div>
 
@@ -113,6 +117,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-black/5 dark:divide-white/5">
+                        @can('can_view_any')
                         @forelse ($this->events as $event)
                             @php
                                 $statusColor = match ($event->status) {
@@ -190,6 +195,7 @@
                                 </td>
                                 <td class="hidden sm:table-cell px-4 sm:px-6 py-3 text-end">
                                     <div class="inline-flex items-center gap-2 whitespace-nowrap">
+                                        @can('can_update')
                                         <a href="{{ route('super-admin.event.update', $event->id) }}"
                                             class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-black/10 dark:border-white/10 text-[#123524] dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -208,7 +214,9 @@
                                                 Cancel
                                             </button>
                                         @endif
-
+                                        @endcan
+                                        
+                                        @can('can_delete')
                                         <button type="button" wire:click="deleteEvent({{ $event->id }})"
                                             wire:confirm="Delete this event? This cannot be undone."
                                             class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition">
@@ -217,6 +225,7 @@
                                             </svg>
                                             Delete
                                         </button>
+                                        @endcan
                                     </div>
                                 </td>
                             </tr>
@@ -225,6 +234,7 @@
                             <tr wire:key="event-{{ $event->id }}-actions" class="sm:hidden bg-[#F7F5EF]/40 dark:bg-[#3A3B3C]/40">
                                 <td colspan="6" class="px-3 sm:px-6 py-3">
                                     <div class="grid grid-cols-3 gap-2">
+                                        @can('can_update')
                                         <a href="{{ route('super-admin.event.update', $event->id) }}"
                                             class="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-[#242526] text-[#123524] dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -246,7 +256,9 @@
                                             <span class="hidden sm:block"></span>
                                             <span class="sm:hidden"></span>
                                         @endif
-
+                                        @endcan
+                                        
+                                        @can('can_delete')
                                         <button type="button" wire:click="deleteEvent({{ $event->id }})"
                                             wire:confirm="Delete this event? This cannot be undone."
                                             class="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border border-red-200 dark:border-red-500/30 bg-white dark:bg-[#242526] text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition">
@@ -255,6 +267,7 @@
                                             </svg>
                                             Delete
                                         </button>
+                                        @endcan
                                     </div>
                                 </td>
                             </tr>
@@ -275,6 +288,7 @@
                                 </td>
                             </tr>
                         @endforelse
+                        @endcan
                     </tbody>
                 </table>
             </div>
@@ -282,6 +296,7 @@
             {{-- Footer --}}
             <div
                 class="px-4 sm:px-6 py-3 sm:py-4 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center border-t border-black/5 dark:border-white/5">
+                @can('can_view_any')
                 <p class="text-xs sm:text-sm text-black/60 dark:text-white/60 text-center sm:text-left">
                     Showing
                     <span
@@ -312,6 +327,7 @@
                             class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg border border-black/10 text-black/30 cursor-not-allowed">Next</button>
                     @endif
                 </div>
+                @endcan
             </div>
         </div>
     </div>

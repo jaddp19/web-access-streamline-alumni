@@ -30,6 +30,7 @@
                 </div>
 
                 <div class="flex items-center gap-2">
+                    @can('can_create')
                     <a href="{{ route('super-admin.batch.create') }}"
                         class="w-full sm:w-auto justify-center py-2 px-3.5 inline-flex items-center gap-x-2 text-xs sm:text-sm font-semibold rounded-lg bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524] hover:bg-[#0d2819] dark:hover:bg-[#E5B94A] transition">
                         <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -37,11 +38,13 @@
                         </svg>
                         Add Batch
                     </a>
+                    @endcan
                 </div>
             </div>
 
             <!-- ===================== MOBILE CARD LIST ===================== -->
             <div class="sm:hidden divide-y divide-black/5 dark:divide-white/5">
+                @can('can_view_any')
                 @forelse ($this->batches as $batch)
                     <div wire:key="mobile-batch-{{ $batch->id }}" class="p-4 flex items-start gap-3">
                         <div class="w-10 h-10 rounded-lg bg-[#D4A537]/15 flex items-center justify-center text-[#a97f1f] dark:text-[#D4A537] shrink-0">
@@ -54,10 +57,12 @@
                         <div class="flex-1 min-w-0">
                             <div class="flex items-start justify-between gap-2">
                                 <p class="font-semibold text-[#123524] dark:text-white truncate">{{ $batch->batch_name }}</p>
+                                @can('can_update')
                                 <a href="{{ route('super-admin.batch.update', $batch->id) }}"
                                     class="shrink-0 text-xs font-semibold text-[#123524] dark:text-[#D4A537] hover:underline">
                                     Edit
                                 </a>
+                                @endcan
                             </div>
                             <p class="mt-1.5 text-[11px] text-black/40 dark:text-white/40">
                                 Created {{ $batch->created_at->diffForHumans() }}
@@ -75,6 +80,7 @@
                         <p class="text-black/40 dark:text-white/40 text-sm">No batches found.</p>
                     </div>
                 @endforelse
+                @endcan
             </div>
 
             <!-- ===================== TABLE (sm+) ===================== -->
@@ -89,6 +95,7 @@
                     </thead>
 
                     <tbody class="divide-y divide-black/5 dark:divide-white/5">
+                        @can('can_view_any')
                         @forelse ($this->batches as $batch)
                             <tr wire:key="row-batch-{{ $batch->id }}" class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
                                 <td class="px-3 lg:px-6 py-3">
@@ -110,12 +117,6 @@
                                 <td class="hidden md:table-cell px-3 lg:px-6 py-3">
                                     <span class="text-black/50 dark:text-white/50 whitespace-nowrap">{{ $batch->created_at->diffForHumans() }}</span>
                                 </td>
-                                <td class="px-3 lg:px-6 py-3 text-end">
-                                    <a href="{{ route('super-admin.batch.update', $batch->id) }}"
-                                        class="inline-flex items-center gap-1 text-[#123524] dark:text-[#D4A537] hover:text-[#0d2819] dark:hover:text-[#E5B94A] font-semibold hover:underline whitespace-nowrap">
-                                        Edit
-                                    </a>
-                                </td>
                             </tr>
                         @empty
                             <tr>
@@ -130,12 +131,14 @@
                                 </td>
                             </tr>
                         @endforelse
+                        @endcan
                     </tbody>
                 </table>
             </div>
 
             <!-- ===================== FOOTER ===================== -->
             <div class="px-4 sm:px-6 py-3 sm:py-4 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center border-t border-black/5 dark:border-white/5">
+                @can('can_view_any')
                 <p class="text-xs sm:text-sm text-black/60 dark:text-white/60 text-center sm:text-left">
                     Showing
                     <span class="font-semibold text-[#123524] dark:text-white">{{ $this->batches->firstItem() ?? 0 }}</span>–<span class="font-semibold text-[#123524] dark:text-white">{{ $this->batches->lastItem() ?? 0 }}</span>
@@ -143,7 +146,6 @@
                     <span class="font-semibold text-[#123524] dark:text-white">{{ $this->batches->total() }}</span>
                     results
                 </p>
-
                 <div class="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
                     @if ($this->batches->onFirstPage())
                         <button disabled
@@ -177,6 +179,7 @@
                         </button>
                     @endif
                 </div>
+                @endcan
             </div>
         </div>
     </div>

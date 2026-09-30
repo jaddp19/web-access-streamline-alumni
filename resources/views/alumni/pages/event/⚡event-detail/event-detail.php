@@ -5,6 +5,7 @@ namespace App\Livewire\Alumni;
 use App\Models\Event;
 use App\Models\EventRsvp;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -15,6 +16,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
     public function mount(Event $event): void
     {
+        Gate::authorize('can_view');
         abort_unless(
             in_array($event->status, ['published', 'completed'], true),
             404

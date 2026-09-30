@@ -24,6 +24,10 @@ new #[Layout('layouts.app-admin')] class extends Component
     public string $school_year = '';         // dropdown (from batches.batch_name)
     public string $school_id_suffix = '';    // 4-digit input
 
+    public function mount(): void
+    {
+        Gate::authorize('can_create');
+    }
     // =========================================================
     //  COMPUTED
     // =========================================================
@@ -126,7 +130,7 @@ new #[Layout('layouts.app-admin')] class extends Component
 
     public function saveAlumni()
     {
-        abort_unless(Auth::user()?->hasAnyRole(['registrar', 'program head']), 403);
+        Gate::authorize('can_create');
 
         $validated = $this->validate();
 

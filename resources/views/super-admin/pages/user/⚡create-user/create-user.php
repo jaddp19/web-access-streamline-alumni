@@ -24,6 +24,12 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public string $school_id_suffix = '';    // 4-digit input
     public string $selectedRole = '';
 
+
+    public function mount(): void
+    {
+        Gate::authorize('can_create');
+    }
+
     // =========================================================
     //  COMPUTED
     // =========================================================
@@ -173,6 +179,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function create()
     {
+        Gate::authorize('can_create');
         $validated = $this->validate();
 
         // Sanitize once, into locals — no repeated Str::of allocations.

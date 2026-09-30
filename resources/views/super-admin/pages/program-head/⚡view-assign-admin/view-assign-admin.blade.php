@@ -31,6 +31,7 @@
                 </div>
 
                 <div class="flex items-center gap-2">
+                    @can('can_create')
                     <a href="{{ route('super-admin.assign.create') }}"
                         class="w-full sm:w-auto justify-center py-2 px-3.5 inline-flex items-center gap-x-2 text-xs sm:text-sm font-semibold rounded-lg bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524] hover:bg-[#0d2819] dark:hover:bg-[#E5B94A] transition">
                         <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -38,6 +39,7 @@
                         </svg>
                         Assign Department Head
                     </a>
+                    @endcan
                 </div>
             </div>
 
@@ -69,6 +71,7 @@
 
             <!-- ===================== MOBILE CARD LIST (< sm) ===================== -->
             <div class="sm:hidden divide-y divide-black/5 dark:divide-white/5">
+                @can('can_view_any')
                 @forelse ($this->programHeads as $row)
                     @php
                         $rowKey = $row->id . '-' . $row->program_head_id;
@@ -77,21 +80,24 @@
                             : in_array($rowKey, $selectedProgramHeads, true);
                     @endphp
                     <div wire:key="mobile-row-{{ $row->id }}" class="p-4 flex items-start gap-3">
+                        @can('can_delete')
                         <input type="checkbox"
                             wire:key="mobile-ph-cb-{{ $row->id }}-{{ $isSelected ? '1' : '0' }}"
                             wire:click="toggleRowSelection('{{ $rowKey }}')"
                             @checked($isSelected)
                             class="mt-1.5 rounded border-black/20 dark:border-white/20 text-[#123524] dark:text-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] dark:bg-[#3A3B3C] shrink-0">
-
+                        @endcan
                         <div class="flex-1 min-w-0">
                             <div class="flex items-start justify-between gap-2">
                                 <p class="font-semibold text-[#123524] dark:text-white truncate">
                                     {{ $row->programHead?->name ?? '—' }}
                                 </p>
+                                @can('can_update')
                                 <a href="{{ route('super-admin.assign.update', $row->id) }}"
                                     class="shrink-0 text-xs font-semibold text-[#123524] dark:text-[#D4A537] hover:underline">
                                     Edit
                                 </a>
+                                @endcan
                             </div>
 
                             <p class="text-xs text-black/60 dark:text-white/60 mt-0.5 truncate">
@@ -114,6 +120,7 @@
                     </div>
                 @endforelse
 
+                @can('can_delete')
                 @if ($this->programHeads->count() > 0)
                     <div class="px-4 py-3">
                         <button type="button" wire:click="toggleSelectAll"
@@ -122,6 +129,8 @@
                         </button>
                     </div>
                 @endif
+                @endcan
+                @endcan
             </div>
 
             <!-- ===================== TABLE (sm and up) ===================== -->
@@ -130,6 +139,7 @@
                     <thead class="bg-[#F7F5EF] dark:bg-[#3A3B3C] border-b border-black/5 dark:border-white/5">
                         <tr>
                             <th class="ps-4 sm:ps-6 py-3 w-4">
+                                @can('can_delete')
                                 <input type="checkbox"
                                     wire:key="header-ph-cb-{{ $this->totalProgramHeadsCount }}"
                                     wire:click="toggleSelectAll"
@@ -145,6 +155,7 @@
                                     "
                                     title="Select all assignments (all pages)"
                                     class="rounded border-black/20 dark:border-white/20 text-[#123524] dark:text-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] dark:bg-[#3A3B3C]">
+                                @endcan
                             </th>
                             <th class="px-3 lg:px-6 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">
                                 Program Head
@@ -160,6 +171,7 @@
                     </thead>
 
                     <tbody class="divide-y divide-black/5 dark:divide-white/5">
+                        @can('can_view_any')
                         @forelse ($this->programHeads as $row)
                             @php
                                 $rowKey = $row->id . '-' . $row->program_head_id;
@@ -169,11 +181,13 @@
                             @endphp
                             <tr wire:key="row-{{ $row->id }}" class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
                                 <td class="w-4 ps-4 sm:ps-6 py-3 text-center align-middle">
+                                    @can('can_delete')
                                     <input type="checkbox"
                                         wire:key="table-ph-cb-{{ $row->id }}-{{ $isSelected ? '1' : '0' }}"
                                         wire:click="toggleRowSelection('{{ $rowKey }}')"
                                         @checked($isSelected)
                                         class="rounded border-black/20 dark:border-white/20 text-[#123524] dark:text-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] dark:bg-[#3A3B3C] align-middle">
+                                    @endcan
                                 </td>
                                 <td class="px-3 lg:px-6 py-3">
                                     <div class="flex items-center gap-3 min-w-0">
@@ -197,10 +211,12 @@
                                     <span class="text-black/50 dark:text-white/50 whitespace-nowrap">{{ $row->updated_at->diffForHumans() }}</span>
                                 </td>
                                 <td class="px-3 lg:px-6 py-3 text-end">
+                                    @can('can_update')
                                     <a href="{{ route('super-admin.assign.update', $row->id) }}"
                                         class="inline-flex items-center gap-1 text-[#123524] dark:text-[#D4A537] hover:text-[#0d2819] dark:hover:text-[#E5B94A] font-semibold hover:underline whitespace-nowrap">
                                         Edit
                                     </a>
+                                    @endcan
                                 </td>
                             </tr>
                         @empty
@@ -215,12 +231,14 @@
                                 </td>
                             </tr>
                         @endforelse
+                        @endcan
                     </tbody>
                 </table>
             </div>
 
             <!-- ===================== FOOTER ===================== -->
             <div class="px-4 sm:px-6 py-3 sm:py-4 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center border-t border-black/5 dark:border-white/5">
+                @can('can_view_any')
                 <p class="text-xs sm:text-sm text-black/60 dark:text-white/60 text-center sm:text-left">
                     Showing
                     <span class="font-semibold text-[#123524] dark:text-white">{{ $this->firstItem }}</span>–<span class="font-semibold text-[#123524] dark:text-white">{{ $this->lastItem }}</span>
@@ -269,6 +287,7 @@
                             </svg>
                         </button>
                     @endif
+                    @endcan
                 </div>
             </div>
         </div>

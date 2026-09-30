@@ -36,10 +36,7 @@ new #[Layout('layouts.app-admin')] class extends Component
 
     public function mount(Post $post): void
     {
-        abort_unless(
-            $post->user_id === Auth::id() || Auth::user()?->hasRole('registrar'),
-            403
-        );
+        Gate::authorize('can_update');
 
         $this->post = $post;
 
@@ -187,10 +184,7 @@ new #[Layout('layouts.app-admin')] class extends Component
 
     public function save()
     {
-        abort_unless(
-            $this->post->user_id === Auth::id() || Auth::user()?->hasRole('registrar'),
-            403
-        );
+        Gate::authorize('can_update');
 
         $validated = $this->validate();
 

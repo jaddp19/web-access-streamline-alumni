@@ -19,6 +19,7 @@
                     </p>
                 </div>
 
+                @can('can_view_any')
                 <div class="shrink-0 flex items-center gap-2">
                     <label for="batch-filter"
                         class="text-[11px] font-bold text-black/50 dark:text-white/50 uppercase tracking-wide whitespace-nowrap">
@@ -380,6 +381,7 @@
                     @endif
                 </div>
             </div>
+            @endcan
         </div>
     </div>
 

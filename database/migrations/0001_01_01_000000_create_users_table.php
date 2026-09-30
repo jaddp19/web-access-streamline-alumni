@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('school_id')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->boolean('is_active')->default(true);
             $table->rememberToken();
             $table->timestamp('last_seen_posts_at')->nullable();  // ← new
             $table->timestamps();

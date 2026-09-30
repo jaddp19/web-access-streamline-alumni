@@ -4,8 +4,10 @@ namespace App\Livewire\Admin;
 
 use App\Jobs\SendEventInvitationEmail;
 use App\Models\Event;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -39,7 +41,7 @@ new #[Layout('layouts.app-admin')] class extends Component
     {
         $user = Auth::user();
 
-        abort_unless($user?->hasAnyRole(['registrar', 'program head']), 403);
+        Gate::authorize('can_update');
 
         // Program heads can only edit their own events
         if ($user->hasRole('program head') && $event->created_by !== $user->id) {
@@ -216,6 +218,7 @@ new #[Layout('layouts.app-admin')] class extends Component
 
     public function save()
     {
+        Gate::authorize('can_update');
         $user = Auth::user();
 
         abort_unless($user?->hasAnyRole(['registrar', 'program head']), 403);

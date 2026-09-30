@@ -14,6 +14,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public string $message = '';
     public bool $showPreview = false;
 
+    public function mount(): void
+    {
+        Gate::authorize('can_create');
+    }
     // =========================================================
     //  COMPUTED
     // =========================================================
@@ -93,7 +97,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function create()
     {
-
+        Gate::authorize('can_create');
         $validated = $this->validate();
 
         $subject = $this->sanitizeSubject($validated['subject']);

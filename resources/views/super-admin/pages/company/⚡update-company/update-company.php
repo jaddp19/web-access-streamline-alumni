@@ -36,6 +36,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function mount(Company $company): void
     {
+        Gate::authorize('can_update');
         $this->company      = $company;
         $this->company_name = $company->company_name;
         $this->company_desc = $company->company_desc ?? '';
@@ -286,6 +287,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function save()
     {
+        Gate::authorize('can_update');
         $validated = $this->validate();
 
         // Defense in depth: reject non-images before touching disk.

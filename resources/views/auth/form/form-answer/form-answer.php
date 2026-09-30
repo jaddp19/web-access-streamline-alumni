@@ -93,6 +93,7 @@ new #[Layout('layouts.app-form')] class extends Component
 
     public function mount()
     {
+        Gate::authorize('can_create');
         $user = Auth::user();
 
         if (UserProfile::where('user_id', $user->id)->exists()) {

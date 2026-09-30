@@ -34,16 +34,20 @@
                 </div>
             </div>
 
+            @can('can_view')
             <div class="relative w-full lg:w-72 shrink-0">
+            
                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <svg class="w-4 h-4 text-[#123524]/40 dark:text-white/40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                     </svg>
                 </div>
+                
                 <input wire:model.live.debounce.400ms="search" type="text"
                     placeholder="Search name, email, or school ID…"
-                    class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#123524]/15 dark:border-white/10 bg-white dark:bg-[#3A3B3C] text-sm text-[#123524] dark:text-white placeholder-[#123524]/30 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
+                    class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#123524]/15 dark:border-white/10 bg-white dark:bg-[#3A3B3C] text-sm text-[#123524] dark:text-white placeholder-[#123524]/30 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition"> 
             </div>
+            @endcan
         </div>
 
         {{-- ========== NO DEPARTMENT ========== --}}
@@ -64,6 +68,7 @@
         @else
             {{-- ========== QUEUE LIST ========== --}}
             <div class="space-y-3 sm:space-y-4">
+                @can('can_view')
                 @forelse ($this->pendingUsers as $user)
                     @php
                         $profile = $user->userProfile;
@@ -223,6 +228,7 @@
 
                         {{-- Actions --}}
                         <div class="flex flex-row md:flex-col gap-2 shrink-0 w-full md:w-36 pt-3 md:pt-0 border-t md:border-t-0 border-black/5 dark:border-white/5">
+                            @can('can_create')
                             <button wire:click="approve({{ $user->id }})"
                                 wire:confirm="Approve {{ $user->name }} as a verified alumni?"
                                 wire:loading.attr="disabled"
@@ -233,6 +239,8 @@
                                 </svg>
                                 Approve
                             </button>
+                            @endcan
+                            @can('can_delete')
                             <button wire:click="openRejectModal({{ $user->id }})"
                                 class="flex-1 md:flex-none inline-flex items-center justify-center gap-1.5 px-4 sm:px-5 py-2.5 bg-white dark:bg-[#3A3B3C] border border-red-300 dark:border-red-500/40 text-red-600 dark:text-red-400 text-xs sm:text-sm font-semibold rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10 transition whitespace-nowrap">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -240,6 +248,7 @@
                                 </svg>
                                 Reject
                             </button>
+                            @endcan
                         </div>
                     </div>
                 @empty
@@ -254,8 +263,10 @@
                         </p>
                     </div>
                 @endforelse
+                @endcan
             </div>
 
+            @can('can_view')
             {{-- ========== PAGINATION ========== --}}
             @if ($this->pendingUsers->hasPages())
                 <div class="mt-5 sm:mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -302,6 +313,7 @@
                     </div>
                 </div>
             @endif
+            @endcan
         @endif
     </div>
 

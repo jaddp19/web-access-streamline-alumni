@@ -21,6 +21,7 @@
                 </div>
             </div>
 
+            @can('can_view')
             @if ($this->hasNoDepartment)
                 <div
                     class="rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 p-6 sm:p-8 text-center">
@@ -740,6 +741,7 @@
                     @endif
                 </div>
             @endif
+            @endcan
         </div>
     </div>
 

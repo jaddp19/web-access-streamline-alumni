@@ -31,6 +31,7 @@
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2">
+                    @can('can_view_any')
                     <button type="button" wire:click="exportFilteredCsv" wire:loading.attr="disabled"
                         wire:target="exportFilteredCsv"
                         class="flex-1 sm:flex-none justify-center py-2 px-3 inline-flex items-center gap-x-2 text-xs sm:text-sm font-semibold rounded-lg bg-white dark:bg-[#3A3B3C] border border-black/10 dark:border-white/10 text-[#123524] dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition disabled:opacity-50">
@@ -44,7 +45,8 @@
                         <span wire:loading.remove wire:target="exportFilteredCsv">Export</span>
                         <span wire:loading wire:target="exportFilteredCsv">Exporting...</span>
                     </button>
-
+                    @endcan
+                    @can('can_create')
                     <a href="{{ route('super-admin.user.create') }}"
                         class="flex-1 sm:flex-none justify-center py-2 px-3 inline-flex items-center gap-x-2 text-xs sm:text-sm font-semibold rounded-lg bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524] hover:bg-[#0d2819] dark:hover:bg-[#E5B94A] transition">
                         <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
@@ -55,13 +57,16 @@
                         </svg>
                         Add User
                     </a>
+                    @endcan
                 </div>
             </div>
 
             {{-- Search + filters + status tabs + role tabs --}}
             <div class="px-3 sm:px-5 lg:px-6 pt-3 sm:pt-4 border-b border-black/5 dark:border-white/5">
+                @can('can_view_any')
                 <div class="pb-3 flex flex-col gap-2 sm:gap-3">
                     <div class="flex flex-col lg:flex-row lg:items-center gap-2 sm:gap-3">
+                    
                         <div class="relative w-full lg:w-56 xl:w-72 shrink-0">
                             <input type="text" wire:model.live.debounce.400ms="search"
                                 placeholder="Search name, email, school ID"
@@ -84,7 +89,6 @@
                                 </button>
                             @endif
                         </div>
-
                         @if (in_array($roleFilter, ['all', 'alumni'], true))
                             <div class="flex flex-col sm:flex-row gap-2 sm:flex-1 min-w-0">
                                 <div class="relative flex-1 min-w-0">
@@ -152,6 +156,7 @@
                                 @endif
                             </div>
                         @endif
+                    
                     </div>
 
                     {{-- ===================== STATUS FILTER TABS (Alumni only) ===================== --}}
@@ -233,6 +238,7 @@
                         @endforeach
                     </div>
                 </div>
+                @endcan
             </div>
 
             {{-- Bulk action bar --}}
@@ -263,6 +269,7 @@
 
             {{-- Mobile card list --}}
             <div class="sm:hidden divide-y divide-black/5 dark:divide-white/5">
+                @can('can_view_any')
                 @forelse ($this->users as $user)
                     <div wire:key="mobile-user-{{ $user->id }}" class="p-3 xs:p-4 flex items-start gap-3">
                         <input type="checkbox"
@@ -301,15 +308,19 @@
                             <div class="flex items-start justify-between gap-2">
                                 <p class="font-semibold text-[#123524] dark:text-white truncate">{{ $user->name }}</p>
                                 <div class="shrink-0 flex items-center gap-2">
+                                    @can('can_view')
                                     <a href="{{ route('super-admin.alumni.view-single', $user->id) }}"
                                         class="text-xs font-semibold text-[#123524] dark:text-[#D4A537] hover:underline">
                                         View
                                     </a>
+                                    @endcan
                                     <span class="text-black/20 dark:text-white/20">|</span>
+                                    @can('can_update')
                                     <a href="{{ route('super-admin.user.update', $user->id) }}"
                                         class="text-xs font-semibold text-black/50 dark:text-white/50 hover:underline">
                                         Edit
                                     </a>
+                                    @endcan
                                 </div>
                             </div>
                             <p class="text-xs text-black/60 dark:text-white/60 truncate">{{ $user->email }}</p>
@@ -360,7 +371,9 @@
                         <p class="text-black/40 dark:text-white/40 text-sm">No users found for this filter.</p>
                     </div>
                 @endforelse
+                @endcan
 
+                @can('can_delete')
                 @if ($this->users->count() > 0)
                     <div class="px-3 xs:px-4 py-3">
                         <button type="button" wire:click="toggleSelectAll"
@@ -369,6 +382,7 @@
                         </button>
                     </div>
                 @endif
+                @endcan
             </div>
 
             {{-- Table --}}
@@ -377,6 +391,7 @@
                     <thead class="bg-[#F7F5EF] dark:bg-[#3A3B3C] border-b border-black/5 dark:border-white/5">
                         <tr>
                             <th class="ps-4 lg:ps-6 py-3 w-4">
+                                @can('can_delete')
                                 <input type="checkbox"
                                     wire:key="header-user-cb-{{ $this->totalUsersCount }}"
                                     wire:click="toggleSelectAll"
@@ -390,6 +405,7 @@
                                     "
                                     title="Select all users (all pages)"
                                     class="rounded border-black/20 dark:border-white/20 text-[#123524] dark:text-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] dark:bg-[#3A3B3C]">
+                                @endcan
                             </th>
                             <th class="px-3 lg:px-6 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">
                                 Name
@@ -411,6 +427,7 @@
                     </thead>
 
                     <tbody class="divide-y divide-black/5 dark:divide-white/5">
+                        @can('can_view_any')
                         @forelse ($this->users as $user)
                             @php
                                 $rawAvatar = $user->userProfile?->avatar;
@@ -432,11 +449,13 @@
                             <tr wire:key="table-user-{{ $user->id }}"
                                 class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
                                 <td class="w-4 ps-4 lg:ps-6 py-3 text-center align-middle">
+                                    @can('can_delete')
                                     <input type="checkbox"
                                         wire:key="table-user-cb-{{ $user->id }}-{{ in_array($user->id, $selectedUsers, true) ? '1' : '0' }}"
                                         wire:click="toggleRowSelection({{ $user->id }})"
                                         @checked(in_array($user->id, $selectedUsers, true))
                                         class="rounded border-black/20 dark:border-white/20 text-[#123524] dark:text-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] dark:bg-[#3A3B3C] align-middle">
+                                    @endcan
                                 </td>
                                 <td class="px-3 lg:px-6 py-3">
                                     <div class="flex items-center gap-3 min-w-0">
@@ -491,14 +510,18 @@
                                 </td>
                                 <td class="px-3 lg:px-6 py-3 text-end">
                                     <div class="flex items-center justify-end gap-2 lg:gap-3">
+                                        @can('can_view')
                                         <a href="{{ route('super-admin.alumni.view-single', $user->id) }}"
                                             class="inline-flex items-center gap-1 text-[#123524] dark:text-[#D4A537] hover:text-[#0d2819] dark:hover:text-[#E5B94A] font-semibold hover:underline whitespace-nowrap">
                                             View
                                         </a>
+                                        @endcan
+                                        @can('can_update')
                                         <a href="{{ route('super-admin.user.update', $user->id) }}"
                                             class="inline-flex items-center gap-1 text-black/50 dark:text-white/50 hover:text-[#123524] dark:hover:text-[#D4A537] font-semibold hover:underline whitespace-nowrap">
                                             Edit
                                         </a>
+                                        @endcan
                                     </div>
                                 </td>
                             </tr>
@@ -516,12 +539,15 @@
                                 </td>
                             </tr>
                         @endforelse
+                        @endcan
                     </tbody>
                 </table>
             </div>
 
+
             {{-- Footer --}}
             <div class="px-3 sm:px-5 lg:px-6 py-3 sm:py-4 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center border-t border-black/5 dark:border-white/5">
+                @can('can_view_any')
                 <p class="text-xs sm:text-sm text-black/60 dark:text-white/60 text-center sm:text-left">
                     Showing
                     <span class="font-semibold text-[#123524] dark:text-white">{{ $this->users->firstItem() ?? 0 }}</span>–<span class="font-semibold text-[#123524] dark:text-white">{{ $this->users->lastItem() ?? 0 }}</span>
@@ -575,6 +601,7 @@
                         </button>
                     @endif
                 </div>
+                @endcan
             </div>
         </div>
     </div>

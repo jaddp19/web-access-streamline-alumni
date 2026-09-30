@@ -5,6 +5,7 @@ namespace App\Livewire\Alumni;
 use App\Models\UserProfile;
 use App\Models\WorkHistory;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -12,6 +13,11 @@ use Livewire\Component;
 
 new #[Layout('layouts.app-alumni')] class extends Component
 {
+
+    public function mount(): void
+    {
+        Gate::authorize('can_view');
+    }
     // =========================================================
     //  USER + PROFILE
     // =========================================================

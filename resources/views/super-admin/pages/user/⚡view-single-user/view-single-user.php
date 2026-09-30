@@ -16,6 +16,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function mount(User $user): void
     {
+        Gate::authorize('can_view_any');
         $this->user = $user->load([
             'roles:id,name',
 

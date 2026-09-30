@@ -14,7 +14,7 @@
                     </p>
                 </div>
             </div>
-
+            @can('can_view_any')
             {{-- ========== TABS + FILTERS (no-print) ========== --}}
             <div
                 class="no-print bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-3 sm:p-4 space-y-3">
@@ -729,6 +729,7 @@
                     @endif
                 @endif
             </div>
+            @endcan
         </div>
     </div>
 

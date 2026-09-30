@@ -24,6 +24,7 @@ new #[Layout('layouts.app-admin')] class extends Component
 
     public function mount(User $user): void
     {
+        Gate::authorize('can_update');
         $this->user = $user->load([
             'userProfile:id,user_id,batch_id',
         ]);
@@ -165,7 +166,7 @@ new #[Layout('layouts.app-admin')] class extends Component
 
     public function updateAlumni()
     {
-        abort_unless(Auth::user()?->hasAnyRole(['registrar', 'program head']), 403);
+        Gate::authorize('can_update');
 
         $validated = $this->validate();
 

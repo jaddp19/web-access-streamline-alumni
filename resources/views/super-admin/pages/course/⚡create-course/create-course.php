@@ -19,6 +19,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public bool $is_active = true;
     public ?int $department_id = null;
 
+    public function mount(): void
+    {
+        Gate::authorize('can_create');
+    }
     // =========================================================
     //  COMPUTED — plain arrays, safe across cache boundary
     // =========================================================
@@ -99,6 +103,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function create()
     {
+        Gate::authorize('can_create');
         $validated = $this->validate();
 
         $courseTitle = $this->sanitize($validated['course_title']);

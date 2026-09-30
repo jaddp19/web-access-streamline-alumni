@@ -25,6 +25,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public $image = null;
 
+    public function mount():void
+    {
+        Gate::authorize('can_create');
+    }
     // =========================================================
     //  VALIDATION
     // =========================================================
@@ -167,7 +171,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function save()
     {
-        abort_unless(Auth::user()?->hasAnyRole(['super admin', 'registrar']), 403);
+        Gate::authorize('can_create');
 
         $this->validate();
 

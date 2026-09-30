@@ -23,6 +23,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function mount(Course $course): void
     {
+        Gate::authorize('can_update');
         $this->course        = $course;
         $this->course_title  = $course->course_title;
         $this->course_code   = $course->course_code;
@@ -112,6 +113,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function update()
     {
+        Gate::authorize('can_update');
         $validated = $this->validate();
 
         $courseTitle = $this->sanitize($validated['course_title']);

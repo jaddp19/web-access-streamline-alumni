@@ -26,6 +26,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public string $school_year = '';
     public string $school_id_suffix = '';
     public bool $resetPassword = false;
+    public bool $is_active = true;
     public ?string $selectedRole = null;
 
     // =========================================================
@@ -154,6 +155,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             ],
 
             'resetPassword' => 'boolean',
+            'is_active'     => 'boolean',
         ];
     }
 
@@ -183,6 +185,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function mount(User $user): void
     {
+        Gate::authorize('can_update');
         $this->user = $user->load('roles:id,name');
 
         $first = $user->first_name;
@@ -214,6 +217,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         }
 
         $this->selectedRole = $user->roles->pluck('name')->first();
+        $this->is_active    = (bool) $user->is_active;
     }
 
     // =========================================================
@@ -222,6 +226,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function update()
     {
+        Gate::authorize('can_update');
         $validated = $this->validate();
 
         if ($this->isSelf && blank($this->selectedRole)) {
@@ -259,6 +264,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                     'last_name' => $lastName,
                     'email' => $email,
                     'school_id' => $schoolId,
+                    'is_active'   => $this->is_active,
                 ];
 
                 if (filled($newPassword)) {

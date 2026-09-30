@@ -4,8 +4,10 @@ namespace App\Livewire\Admin;
 
 use App\Jobs\SendEventInvitationEmail;
 use App\Models\Event;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
@@ -27,6 +29,10 @@ new #[Layout('layouts.app-admin')] class extends Component
 
     public $image = null;
 
+    public function mount(): void
+    {
+        Gate::authorize('can_create');
+    }
     // =========================================================
     //  VALIDATION
     // =========================================================
@@ -168,7 +174,7 @@ new #[Layout('layouts.app-admin')] class extends Component
 
     public function save()
     {
-        abort_unless(Auth::user()?->hasAnyRole(['registrar', 'program head']), 403);
+        Gate::authorize('can_create');
 
         $this->validate();
 

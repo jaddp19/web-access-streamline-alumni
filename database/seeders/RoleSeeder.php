@@ -38,11 +38,13 @@ class RoleSeeder extends Seeder
             'can_view',
             'can_create',
             'can_update',
+            'can_delete'
         ],
         'alumni'       => [
             'can_view',
             'can_create',
             'can_update',
+            'can_delete'
         ],
     ];
 

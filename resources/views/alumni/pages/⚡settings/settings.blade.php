@@ -82,6 +82,7 @@
                     Network Preferences
                 </button>
 
+                @can('can_update')
                 {{-- Update Form — routes to the alumni tracer form --}}
                 <a href="{{ route('update-form') }}" target="_blank"
                     class="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-left rounded-lg transition
@@ -93,6 +94,7 @@
                     </svg>
                     Update Form
                 </a>
+                @endcan
             </nav>
         </aside>
 
@@ -193,7 +195,7 @@
                     </section>
                 </div>
             @endif
-
+            @can('can_update')
             {{-- ========== PERSONAL DETAILS ========== --}}
             @if ($activeTab === 'profile')
                 <div class="space-y-6">
@@ -550,7 +552,7 @@
                     </section>
                 </div>
             @endif
-
+            @endcan
         </main>
     </div>
 </div>

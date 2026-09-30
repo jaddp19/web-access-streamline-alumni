@@ -6,6 +6,7 @@ use App\Models\Post;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -28,6 +29,10 @@ new #[Layout('layouts.app-admin')] class extends Component
 
     public bool $showPreview = false;
 
+    public function mount(): void
+    {
+        Gate::authorize('can_create');
+    }
     // =========================================================
     //  COMPUTED
     // =========================================================
@@ -145,7 +150,7 @@ new #[Layout('layouts.app-admin')] class extends Component
 
     public function save()
     {
-        abort_unless(Auth::user()?->hasAnyRole(['registrar', 'program head']), 403);
+        Gate::authorize('can_create');
 
         $validated = $this->validate();
 

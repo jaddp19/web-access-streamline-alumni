@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['first_name', 'middle_name', 'last_name', 'email', 'password', 'school_id', 'last_seen_posts_at'])]
+#[Fillable(['first_name', 'middle_name', 'last_name', 'email', 'password', 'school_id', 'last_seen_posts_at', 'is_active'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -30,6 +30,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -62,6 +63,11 @@ class User extends Authenticatable
         ]);
 
         return $parts ? implode(' ', $parts) : ($this->name ?? '');
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
     }
 
     public const DEFAULT_PASSWORDS = [

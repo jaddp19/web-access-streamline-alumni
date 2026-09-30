@@ -24,6 +24,7 @@
                     </div>
                 </div>
 
+                @can('can_create')
                 <a href="{{ route('admin.event.create') }}"
                     class="w-full sm:w-auto justify-center inline-flex items-center gap-x-2 text-xs sm:text-sm font-semibold rounded-lg bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524] hover:bg-[#0d2819] dark:hover:bg-[#E5B94A] transition py-2.5 px-4">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -31,6 +32,7 @@
                     </svg>
                     Create Event
                 </a>
+                @endcan
             </div>
 
             {{-- ========== FLASHES ========== --}}
@@ -44,7 +46,8 @@
                     {{ session('error') }}
                 </div>
             @endif
-
+            
+            @can('can_view')
             {{-- ========== FILTERS ========== --}}
             <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-black/5 dark:border-white/5">
                 <div class="flex flex-col lg:flex-row lg:items-center gap-3">
@@ -84,6 +87,7 @@
                     @endif
                 </div>
             </div>
+            @endcan
 
             {{-- ========== TABLE ========== --}}
             <div class="overflow-x-auto">
@@ -98,6 +102,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-black/5 dark:divide-white/5">
+                        @can('can_view')
                         @forelse ($this->events as $event)
                             @php
                                 $statusColor = match ($event->status) {
@@ -146,6 +151,7 @@
                                 </td>
                                 <td class="px-3 lg:px-6 py-3 text-end">
                                     <div class="flex items-center justify-end gap-3 flex-wrap">
+                                        @can('can_update')
                                         <a href="{{ route('admin.event.update', $event->id) }}"
                                             class="inline-flex items-center gap-1 text-[#123524] dark:text-[#D4A537] hover:underline font-semibold whitespace-nowrap">
                                             Edit
@@ -159,6 +165,7 @@
                                                 Cancel
                                             </button>
                                         @endif
+                                        @endcan
                                     </div>
                                 </td>
                             </tr>
@@ -181,12 +188,14 @@
                                 </td>
                             </tr>
                         @endforelse
+                        @endcan
                     </tbody>
                 </table>
             </div>
 
             {{-- ========== FOOTER ========== --}}
             <div class="px-4 sm:px-6 py-3 sm:py-4 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center border-t border-black/5 dark:border-white/5">
+                @can('can_view')
                 <p class="text-xs sm:text-sm text-black/60 dark:text-white/60 text-center sm:text-left">
                     Showing
                     <span class="font-semibold text-[#123524] dark:text-white">{{ $this->events->firstItem() ?? 0 }}</span>–<span class="font-semibold text-[#123524] dark:text-white">{{ $this->events->lastItem() ?? 0 }}</span>
@@ -220,6 +229,7 @@
                         </button>
                     @endif
                 </div>
+                @endcan
             </div>
         </div>
     </div>

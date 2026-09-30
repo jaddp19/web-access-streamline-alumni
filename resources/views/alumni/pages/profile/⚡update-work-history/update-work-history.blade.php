@@ -494,7 +494,7 @@
                 {{-- ========== ACTIONS ========== --}}
                 <div
                     class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-4 border-t border-black/5 dark:border-white/10">
-
+                    @can('can_delete')
                     {{-- Delete --}}
                     <button type="button" wire:click="deleteWorkHistory"
                         wire:confirm="Delete this work experience? This cannot be undone."
@@ -515,6 +515,7 @@
                         <span wire:loading.remove wire:target="deleteWorkHistory">Delete</span>
                         <span wire:loading wire:target="deleteWorkHistory">Deleting…</span>
                     </button>
+                    @endcan
 
                     {{-- Cancel + Save --}}
                     <div

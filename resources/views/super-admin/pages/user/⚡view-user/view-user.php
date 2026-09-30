@@ -4,6 +4,8 @@ use App\Models\Batch;
 use App\Models\Course;
 use App\Models\Department;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
@@ -312,6 +314,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     #[Computed]
     public function users()
     {
+        //Gate::authorize('can_view');
         return $this->filteredQuery()
             ->with([
                 'roles:id,name',

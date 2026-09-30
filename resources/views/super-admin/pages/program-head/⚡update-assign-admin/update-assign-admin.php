@@ -17,6 +17,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function mount(Department $department): void
     {
+        Gate::authorize('can_update');
         $this->department    = $department;
         $this->user_id       = $department->program_head_id;
         $this->department_id = $department->id;
@@ -141,6 +142,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function update()
     {
+        Gate::authorize('can_update');
         $validated = $this->validate();
 
         // Role check — no hydration.

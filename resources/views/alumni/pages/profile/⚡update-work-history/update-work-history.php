@@ -58,6 +58,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
     public function mount(WorkHistory $history): void
     {
+        Gate::authorize('can_update');
         abort_unless($history->user_id === Auth::id(), 403);
 
         $this->history = $history->load('company');
@@ -378,6 +379,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
     public function createCompany(): void
     {
+        Gate::authorize('can_create');
         abort_unless(Auth::check(), 403);
 
         $validated = $this->validate($this->companyRules(), $this->messages());
@@ -508,6 +510,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
     public function updateWorkHistory()
     {
+        Gate::authorize('can_update');
         abort_unless($this->history->user_id === Auth::id(), 403);
 
         $rules = array_merge($this->rules(), $this->employmentRules());

@@ -30,6 +30,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public string $intl_state = '';
     public string $intl_city = '';
 
+    public function mount(): void
+    {
+        Gate::authorize('can_create');
+    }
     // =========================================================
     //  VALIDATION
     // =========================================================
@@ -171,6 +175,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function save()
     {
+        Gate::authorize('can_create');
         $validated = $this->validate();
 
         // Defense in depth: reject non-images before touching disk.

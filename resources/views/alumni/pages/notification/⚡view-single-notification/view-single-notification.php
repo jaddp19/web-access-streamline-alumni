@@ -18,7 +18,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
     public function mount(Post $post): void
     {
-
+        Gate::authorize('can_view');
         $this->post = $post;
 
         $user = Auth::user();

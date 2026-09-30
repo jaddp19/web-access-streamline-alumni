@@ -96,6 +96,7 @@ new #[Layout('layouts.app-form')] class extends Component
 
     public function mount()
     {
+        Gate::authorize('can_update');
         $this->courses = Course::orderBy('course_title')->pluck('course_title', 'id');
         $this->batches = Batch::orderBy('batch_name', 'desc')->pluck('batch_name', 'id');
 
@@ -561,6 +562,7 @@ new #[Layout('layouts.app-form')] class extends Component
 
     public function submit()
     {
+        Gate::authorize('can_update');
         $this->validate(
             TracerStudyRules::all([
                 'taken'    => $this->board_taken,

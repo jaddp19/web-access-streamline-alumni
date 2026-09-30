@@ -11,9 +11,12 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Analytics are scoped to APPROVED alumni only (user_profiles.is_approved = true).
- * Pending / rejected profiles are excluded from stats, charts, and drill-downs
- * so the dashboard always reflects reviewed, official data.
+ * Analytics are scoped to APPROVED + ACTIVE alumni only
+ * (user_profiles.is_approved = true AND users.is_active = true).
+ *
+ * Pending / rejected / deactivated profiles are excluded from stats,
+ * charts, and drill-downs so the dashboard always reflects reviewed,
+ * official, currently-active data.
  *
  * Two intentional exceptions:
  *   • pendingVerifications() — counts alumni still awaiting review (workflow counter)
@@ -28,6 +31,24 @@ class DashboardAnalytics
     ) {}
 
     // =========================================================
+    //  ACTIVE-USER GATE (helper for raw-DB queries)
+    // =========================================================
+
+    /**
+     * Restricts a raw-DB query to profiles whose owning user is active.
+     * Use alongside an existing `is_approved` condition on the profile.
+     */
+    protected function requireActiveUser($q, string $profileAlias = 'user_profiles'): void
+    {
+        $q->whereExists(function ($sub) use ($profileAlias) {
+            $sub->select(DB::raw(1))
+                ->from('users')
+                ->whereColumn('users.id', "{$profileAlias}.user_id")
+                ->where('users.is_active', true);
+        });
+    }
+
+    // =========================================================
     //  BATCHES (selector)
     // =========================================================
 
@@ -38,12 +59,15 @@ class DashboardAnalytics
         if ($this->departmentId) {
             $query->whereHas('userProfiles', function ($p) {
                 $p->where('is_approved', true)
-                    ->whereHas('user', fn ($u) => $u->role('alumni'))
+                    ->whereHas('user', fn ($u) => $u->role('alumni')->where('is_active', true))
                     ->whereHas('courses', fn ($c) => $c->where('department_id', $this->departmentId));
             });
         } else {
-            // Only show batches that contain at least one approved alumni profile
-            $query->whereHas('userProfiles', fn ($p) => $p->where('is_approved', true));
+            // Only show batches that contain at least one approved + active alumni profile
+            $query->whereHas('userProfiles', function ($p) {
+                $p->where('is_approved', true)
+                    ->whereHas('user', fn ($u) => $u->where('is_active', true));
+            });
         }
 
         return $query
@@ -59,6 +83,8 @@ class DashboardAnalytics
     /**
      * System-wide user count — intentionally NOT filtered by approval
      * so admins can still see how many accounts exist in total.
+     * Also NOT filtered by is_active, so deactivated accounts are still
+     * visible to admins in this total.
      */
     public function users(): int
     {
@@ -82,9 +108,9 @@ class DashboardAnalytics
 
     /**
      * Alumni who have submitted board data but haven't been verified yet.
-     * This is a WORKFLOW counter — it deliberately excludes the
-     * is_approved filter because pending items are, by definition,
-     * not yet approved.
+     * This is a WORKFLOW counter — it deliberately excludes BOTH the
+     * is_approved and is_active filters, because pending items must be
+     * visible to the registrar regardless of the user's current state.
      */
     public function pendingVerifications(): int
     {
@@ -115,10 +141,12 @@ class DashboardAnalytics
 
     /**
      * Program head staff count — system metric, not alumni data.
+     * Deactivated staff are excluded.
      */
     public function programHeads(): int
     {
         return User::role('program head')
+            ->where('is_active', true)
             ->when($this->departmentId, fn ($q) => $q->whereHas(
                 'department',
                 fn ($d) => $d->where('id', $this->departmentId)
@@ -127,12 +155,13 @@ class DashboardAnalytics
     }
 
     // =========================================================
-    //  BASE QUERIES (with dept + batch + approval scope)
+    //  BASE QUERIES (with dept + batch + approval + active scope)
     // =========================================================
 
     protected function alumniBaseQuery()
     {
         return User::role('alumni')
+            ->where('is_active', true)
             ->whereHas('userProfile', fn ($p) => $p->where('is_approved', true))
             ->when($this->departmentId, fn ($q) => $q->whereHas(
                 'userProfile.courses',
@@ -148,6 +177,7 @@ class DashboardAnalytics
     {
         return UserProfile::query()
             ->where('is_approved', true)
+            ->whereHas('user', fn ($u) => $u->where('is_active', true))
             ->when($this->departmentId, fn ($q) => $q->whereHas(
                 'courses',
                 fn ($c) => $c->where('department_id', $this->departmentId)
@@ -161,7 +191,7 @@ class DashboardAnalytics
 
     public function alumniByDept(): array
     {
-        return DB::table('departments')
+        $q = DB::table('departments')
             ->join('courses', 'courses.department_id', '=', 'departments.id')
             ->join('student_course', 'courses.id', '=', 'student_course.course_id')
             ->join('user_profiles', 'student_course.user_profile_id', '=', 'user_profiles.id')
@@ -175,8 +205,11 @@ class DashboardAnalytics
             ->where('departments.is_active', true)
             ->where('courses.is_active', true)
             ->when($this->departmentId, fn ($q) => $q->where('departments.id', $this->departmentId))
-            ->when($this->batchId, fn ($q) => $q->where('user_profiles.batch_id', $this->batchId))
-            ->select(
+            ->when($this->batchId, fn ($q) => $q->where('user_profiles.batch_id', $this->batchId));
+
+        $this->requireActiveUser($q);
+
+        return $q->select(
                 'departments.id as dept_id',
                 'departments.dept_name',
                 'departments.dept_code',
@@ -200,7 +233,7 @@ class DashboardAnalytics
 
     public function alumniByDeptAndCourse(): array
     {
-        $rows = DB::table('departments')
+        $q = DB::table('departments')
             ->join('courses', 'courses.department_id', '=', 'departments.id')
             ->join('student_course', 'courses.id', '=', 'student_course.course_id')
             ->join('user_profiles', 'student_course.user_profile_id', '=', 'user_profiles.id')
@@ -214,8 +247,11 @@ class DashboardAnalytics
             ->where('departments.is_active', true)
             ->where('courses.is_active', true)
             ->when($this->departmentId, fn ($q) => $q->where('departments.id', $this->departmentId))
-            ->when($this->batchId, fn ($q) => $q->where('user_profiles.batch_id', $this->batchId))
-            ->select(
+            ->when($this->batchId, fn ($q) => $q->where('user_profiles.batch_id', $this->batchId));
+
+        $this->requireActiveUser($q);
+
+        $rows = $q->select(
                 'departments.id as dept_id',
                 'departments.dept_code',
                 'departments.dept_name',
@@ -269,7 +305,7 @@ class DashboardAnalytics
 
     public function alumniByBatch(): array
     {
-        return DB::table('user_profiles')
+        $q = DB::table('user_profiles')
             ->join('batches', 'user_profiles.batch_id', '=', 'batches.id')
             ->join('model_has_roles', function ($join) {
                 $join->on('model_has_roles.model_id', '=', 'user_profiles.user_id')
@@ -285,7 +321,11 @@ class DashboardAnalytics
                     ->whereColumn('student_course.user_profile_id', 'user_profiles.id')
                     ->where('courses.department_id', $this->departmentId);
             }))
-            ->select(
+            ->when($this->batchId, fn ($q) => $q->where('user_profiles.batch_id', $this->batchId));
+
+        $this->requireActiveUser($q);
+
+        return $q->select(
                 'batches.id as batch_id',
                 'batches.batch_name',
                 DB::raw('COUNT(DISTINCT user_profiles.user_id) as total')
@@ -308,7 +348,7 @@ class DashboardAnalytics
 
     public function alumniByBatchAndCourse(): array
     {
-        $rows = DB::table('batches')
+        $q = DB::table('batches')
             ->join('user_profiles', 'user_profiles.batch_id', '=', 'batches.id')
             ->join('student_course', 'user_profiles.id', '=', 'student_course.user_profile_id')
             ->join('courses', 'courses.id', '=', 'student_course.course_id')
@@ -321,8 +361,11 @@ class DashboardAnalytics
             ->where('user_profiles.is_approved', true)
             ->where('courses.is_active', true)
             ->when($this->departmentId, fn ($q) => $q->where('courses.department_id', $this->departmentId))
-            ->when($this->batchId, fn ($q) => $q->where('user_profiles.batch_id', $this->batchId))
-            ->select(
+            ->when($this->batchId, fn ($q) => $q->where('user_profiles.batch_id', $this->batchId));
+
+        $this->requireActiveUser($q);
+
+        $rows = $q->select(
                 'batches.id as batch_id',
                 'batches.batch_name',
                 'courses.id as course_id',
@@ -373,7 +416,7 @@ class DashboardAnalytics
 
     public function alumniByBatchAndDepartment(): array
     {
-        $rows = DB::table('batches')
+        $q = DB::table('batches')
             ->join('user_profiles', 'user_profiles.batch_id', '=', 'batches.id')
             ->join('student_course', 'user_profiles.id', '=', 'student_course.user_profile_id')
             ->join('courses', 'courses.id', '=', 'student_course.course_id')
@@ -388,8 +431,11 @@ class DashboardAnalytics
             ->where('departments.is_active', true)
             ->where('courses.is_active', true)
             ->when($this->departmentId, fn ($q) => $q->where('departments.id', $this->departmentId))
-            ->when($this->batchId, fn ($q) => $q->where('user_profiles.batch_id', $this->batchId))
-            ->select(
+            ->when($this->batchId, fn ($q) => $q->where('user_profiles.batch_id', $this->batchId));
+
+        $this->requireActiveUser($q);
+
+        $rows = $q->select(
                 'batches.id as batch_id',
                 'batches.batch_name',
                 'departments.id as dept_id',
@@ -457,7 +503,7 @@ class DashboardAnalytics
 
     public function courseAnalytics(): array
     {
-        $rows = DB::table('courses')
+        $q = DB::table('courses')
             ->join('student_course', 'courses.id', '=', 'student_course.course_id')
             ->join('user_profiles', 'student_course.user_profile_id', '=', 'user_profiles.id')
             ->join('tracer_studies', 'tracer_studies.user_id', '=', 'user_profiles.user_id')
@@ -466,8 +512,11 @@ class DashboardAnalytics
             ->where('courses.is_active', true)
             ->where('civil_status_employments.employment_status', 'employed')
             ->when($this->departmentId, fn ($q) => $q->where('courses.department_id', $this->departmentId))
-            ->when($this->batchId, fn ($q) => $q->where('user_profiles.batch_id', $this->batchId))
-            ->select(
+            ->when($this->batchId, fn ($q) => $q->where('user_profiles.batch_id', $this->batchId));
+
+        $this->requireActiveUser($q);
+
+        $rows = $q->select(
                 'courses.course_code',
                 DB::raw('COUNT(DISTINCT CASE
                     WHEN civil_status_employments.employed_related_to_degree IN (\'yes\', \'partially-related\')
@@ -487,7 +536,7 @@ class DashboardAnalytics
 
     public function courseAnalyticsByDept(): array
     {
-        $rows = DB::table('departments')
+        $q = DB::table('departments')
             ->join('courses', 'courses.department_id', '=', 'departments.id')
             ->join('student_course', 'courses.id', '=', 'student_course.course_id')
             ->join('user_profiles', 'student_course.user_profile_id', '=', 'user_profiles.id')
@@ -498,8 +547,11 @@ class DashboardAnalytics
             ->where('courses.is_active', true)
             ->where('civil_status_employments.employment_status', 'employed')
             ->when($this->departmentId, fn ($q) => $q->where('departments.id', $this->departmentId))
-            ->when($this->batchId, fn ($q) => $q->where('user_profiles.batch_id', $this->batchId))
-            ->select(
+            ->when($this->batchId, fn ($q) => $q->where('user_profiles.batch_id', $this->batchId));
+
+        $this->requireActiveUser($q);
+
+        $rows = $q->select(
                 'departments.id as dept_id',
                 'departments.dept_code',
                 'departments.dept_name',
@@ -587,6 +639,8 @@ class DashboardAnalytics
             ->join('user_profiles', 'tracer_studies.user_id', '=', 'user_profiles.user_id')
             ->where('user_profiles.is_approved', true);
 
+        $this->requireActiveUser($q);
+
         if ($this->departmentId) {
             $q->whereExists(function ($sub) {
                 $sub->select(DB::raw(1))
@@ -666,6 +720,8 @@ class DashboardAnalytics
             ->join('tracer_studies', 'further_studies.tracer_study_id', '=', 'tracer_studies.id')
             ->join('user_profiles', 'tracer_studies.user_id', '=', 'user_profiles.user_id')
             ->where('user_profiles.is_approved', true);
+
+        $this->requireActiveUser($q);
 
         if ($this->departmentId) {
             $q->whereExists(function ($sub) {
@@ -753,6 +809,8 @@ class DashboardAnalytics
             ->whereNotNull('work_histories.company_id')
             ->where('work_histories.is_current_job', true);
 
+        $this->requireActiveUser($q);
+
         if ($this->departmentId) {
             $q->whereExists(function ($sub) {
                 $sub->select(DB::raw(1))
@@ -789,7 +847,7 @@ class DashboardAnalytics
      */
     public function topNotchersByDeptAndCourse(): array
     {
-        $rows = DB::table('departments')
+        $q = DB::table('departments')
             ->join('courses', 'courses.department_id', '=', 'departments.id')
             ->join('student_course', 'courses.id', '=', 'student_course.course_id')
             ->join('user_profiles', 'student_course.user_profile_id', '=', 'user_profiles.id')
@@ -806,8 +864,11 @@ class DashboardAnalytics
             ->where('departments.is_active', true)
             ->where('courses.is_active', true)
             ->when($this->departmentId, fn ($q) => $q->where('departments.id', $this->departmentId))
-            ->when($this->batchId, fn ($q) => $q->where('user_profiles.batch_id', $this->batchId))
-            ->select(
+            ->when($this->batchId, fn ($q) => $q->where('user_profiles.batch_id', $this->batchId));
+
+        $this->requireActiveUser($q);
+
+        $rows = $q->select(
                 'departments.id as dept_id',
                 'departments.dept_code',
                 'departments.dept_name',
@@ -887,6 +948,7 @@ class DashboardAnalytics
             ->leftJoin('departments', 'departments.id', '=', 'courses.department_id')
             ->where('roles.name', '=', 'alumni')
             ->where('user_profiles.is_approved', true)
+            ->where('users.is_active', true)
             ->where('board_exams.is_top_notcher', true)
             ->where('board_exams.is_verified', true)
             ->whereNotNull('board_exams.top_notcher_rank')

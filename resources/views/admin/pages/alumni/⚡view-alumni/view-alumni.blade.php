@@ -36,6 +36,7 @@
                 </div>
 
                 <div class="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2">
+                    @can('can_view')
                     <button type="button" wire:click="exportCsv" wire:loading.attr="disabled" wire:target="exportCsv"
                         class="w-full sm:w-auto justify-center inline-flex items-center gap-x-2 text-xs sm:text-sm font-semibold rounded-xl bg-white dark:bg-[#3A3B3C] border border-black/10 dark:border-white/10 text-[#123524] dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition py-2.5 px-4 disabled:opacity-50 disabled:cursor-not-allowed">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2"
@@ -47,7 +48,8 @@
                         <span wire:loading.remove wire:target="exportCsv">Export</span>
                         <span wire:loading wire:target="exportCsv">Exporting…</span>
                     </button>
-
+                    @endcan
+                    @can('can_create')
                     <a href="{{ route('admin.alumni.create') }}"
                         class="w-full sm:w-auto justify-center inline-flex items-center gap-x-2 text-xs sm:text-sm font-semibold rounded-xl bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524] hover:bg-[#0d2819] dark:hover:bg-[#E5B94A] transition py-2.5 px-5">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -55,6 +57,7 @@
                         </svg>
                         Create Alumni
                     </a>
+                    @endcan
                 </div>
             </div>
 
@@ -62,7 +65,7 @@
             <div class="px-4 sm:px-6 py-3 border-b border-black/5 dark:border-white/5 flex flex-col gap-2">
 
                 <div class="flex flex-col lg:flex-row lg:items-center gap-2 sm:gap-3">
-
+                    @can('can_view')
                     {{-- Search --}}
                     <div class="relative w-full lg:w-72 xl:w-80 shrink-0">
                         <input type="text" wire:model.live.debounce.400ms="search"
@@ -86,7 +89,6 @@
                             </button>
                         @endif
                     </div>
-
                     {{-- Course + Batch filters --}}
                     <div class="flex flex-col sm:flex-row gap-2 flex-1 min-w-0">
 
@@ -136,8 +138,10 @@
                             </button>
                         @endif
                     </div>
+                    @endcan
                 </div>
 
+                @can('can_view')
                 {{-- ===================== STATUS FILTER TABS ===================== --}}
                 <div class="flex items-center gap-1 overflow-x-auto pb-1 [&::-webkit-scrollbar]:h-0 [scrollbar-width:none]">
                     @php
@@ -190,10 +194,12 @@
                         @endif
                     </p>
                 @endif
+                @endcan
             </div>
 
             <!-- ===================== MOBILE CARD LIST ===================== -->
             <div class="sm:hidden divide-y divide-black/5 dark:divide-white/5">
+                @can('can_view')
                 @forelse ($this->alumni as $profile)
                     @php
                         $displayName = $profile->user?->name ?? 'Alumni';
@@ -239,15 +245,19 @@
                                 <p class="font-semibold text-[#123524] dark:text-white truncate">{{ $displayName }}
                                 </p>
                                 <div class="shrink-0 flex items-center gap-2">
+                                    @can('can_view')
                                     <a href="{{ route('admin.alumni.view-single', $profile->user_id) }}"
                                         class="text-xs font-semibold text-[#123524] dark:text-[#D4A537] hover:underline">
                                         View
                                     </a>
+                                    @endcan
                                     <span class="text-black/20 dark:text-white/20">|</span>
+                                    @can('can_update')
                                     <a href="{{ route('admin.alumni.update', $profile->user_id) }}"
                                         class="text-xs font-semibold text-black/50 dark:text-white/50 hover:underline">
                                         Edit
                                     </a>
+                                    @endcan
                                 </div>
                             </div>
 
@@ -297,6 +307,7 @@
                             </button>
                         @else
                             <p class="text-black/40 dark:text-white/40 text-sm mb-4">No alumni found.</p>
+                            @can('can_create')
                             <a href="{{ route('admin.alumni.create') }}"
                                 class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524] text-sm font-semibold">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
@@ -305,9 +316,11 @@
                                 </svg>
                                 Create the first alumni account
                             </a>
+                            @endcan
                         @endif
                     </div>
                 @endforelse
+                @endcan
             </div>
 
             <!-- ===================== TABLE (sm+) ===================== -->
@@ -336,6 +349,7 @@
                     </thead>
 
                     <tbody class="divide-y divide-black/5 dark:divide-white/5">
+                        @can('can_view')
                         @forelse ($this->alumni as $profile)
                             @php
                                 $displayName = $profile->user?->name ?? 'Alumni';
@@ -411,14 +425,18 @@
                                 </td>
                                 <td class="px-3 lg:px-6 py-3 text-end">
                                     <div class="flex items-center justify-end gap-3">
+                                        @can('can_view')
                                         <a href="{{ route('admin.alumni.view-single', $profile->user_id) }}"
                                             class="inline-flex items-center gap-1 text-[#123524] dark:text-[#D4A537] hover:text-[#0d2819] dark:hover:text-[#E5B94A] font-semibold hover:underline whitespace-nowrap">
                                             View
                                         </a>
+                                        @endcan
+                                        @can('can_update')
                                         <a href="{{ route('admin.alumni.update', $profile->user_id) }}"
                                             class="inline-flex items-center gap-1 text-black/50 dark:text-white/50 hover:text-[#123524] dark:hover:text-[#D4A537] font-semibold hover:underline whitespace-nowrap">
                                             Edit
                                         </a>
+                                        @endcan
                                     </div>
                                 </td>
                             </tr>
@@ -445,6 +463,7 @@
                                         </button>
                                     @else
                                         <p class="text-black/40 dark:text-white/40 text-sm mb-4">No alumni found.</p>
+                                        @can('can_create')
                                         <a href="{{ route('admin.alumni.create') }}"
                                             class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524] text-sm font-semibold hover:bg-[#0d2819] dark:hover:bg-[#E5B94A] transition">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor"
@@ -454,10 +473,12 @@
                                             </svg>
                                             Create the first alumni account
                                         </a>
+                                        @endcan
                                     @endif
                                 </td>
                             </tr>
                         @endforelse
+                        @endcan
                     </tbody>
                 </table>
             </div>
@@ -465,6 +486,7 @@
             <!-- ===================== FOOTER ===================== -->
             <div
                 class="px-4 sm:px-6 py-3 sm:py-4 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center border-t border-black/5 dark:border-white/5">
+                @can('can_view')
                 <p class="text-xs sm:text-sm text-black/60 dark:text-white/60 text-center sm:text-left">
                     Showing
                     <span
@@ -520,6 +542,7 @@
                         </button>
                     @endif
                 </div>
+                @endcan
             </div>
         </div>
     </div>

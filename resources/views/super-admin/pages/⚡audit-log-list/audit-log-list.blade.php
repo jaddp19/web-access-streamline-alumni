@@ -31,7 +31,7 @@
                     </div>
                 </div>
             </div>
-
+            @can('can_view_any')
             {{-- ===================== FILTERS ===================== --}}
             <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-black/5 dark:border-white/5">
                 <div class="flex flex-col lg:flex-row lg:items-center gap-3">
@@ -354,6 +354,7 @@
                     @endif
                 </div>
             </div>
+            @endcan
         </div>
     </div>
 </div>

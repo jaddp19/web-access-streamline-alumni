@@ -88,6 +88,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
     public function mount(): void
     {
+        Gate::authorize('can_update');
         $user = Auth::user();
         $profile = UserProfile::where('user_id', $user->id)->first();
 
@@ -160,6 +161,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
     public function update()
     {
+        Gate::authorize('can_update');
         $validated = $this->validate();
 
         $user = Auth::user();
