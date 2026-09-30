@@ -53,21 +53,6 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16 2v4M8 2v4M3 10h18" />
                             </svg>
                         </div>
-
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-start justify-between gap-2">
-                                <p class="font-semibold text-[#123524] dark:text-white truncate">{{ $batch->batch_name }}</p>
-                                @can('can_update')
-                                <a href="{{ route('super-admin.batch.update', $batch->id) }}"
-                                    class="shrink-0 text-xs font-semibold text-[#123524] dark:text-[#D4A537] hover:underline">
-                                    Edit
-                                </a>
-                                @endcan
-                            </div>
-                            <p class="mt-1.5 text-[11px] text-black/40 dark:text-white/40">
-                                Created {{ $batch->created_at->diffForHumans() }}
-                            </p>
-                        </div>
                     </div>
                 @empty
                     <div class="px-6 py-12 text-center">

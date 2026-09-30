@@ -18,14 +18,20 @@ use Livewire\Component;
 new #[Layout('layouts.auth')] class extends Component
 {
     public string $email = '';
+
     public string $password = '';
+
     public bool $remember = false;
 
     // ============ FORGOT PASSWORD STATE ============
     public bool $showForgotModal = false;
+
     public int $forgotStep = 1;   // 1 = email, 2 = school ID, 3 = success
+
     public string $forgotEmail = '';
+
     public string $forgotSchoolId = '';
+
     public string $forgotSuccessMessage = '';
 
     /** Max failed login attempts before lockout. */
@@ -47,7 +53,7 @@ new #[Layout('layouts.auth')] class extends Component
     protected function rules(): array
     {
         return [
-            'email'    => ['required', 'email:rfc', 'max:255'],
+            'email' => ['required', 'email:rfc', 'max:255'],
             'password' => ['required', 'string', 'min:6'],
         ];
     }
@@ -55,10 +61,10 @@ new #[Layout('layouts.auth')] class extends Component
     protected function messages(): array
     {
         return [
-            'email.required'    => 'Email is required.',
-            'email.email'       => 'Please enter a valid email address.',
+            'email.required' => 'Email is required.',
+            'email.email' => 'Please enter a valid email address.',
             'password.required' => 'Password is required.',
-            'password.min'      => 'Password must be at least 6 characters.',
+            'password.min' => 'Password must be at least 6 characters.',
         ];
     }
 
@@ -79,6 +85,7 @@ new #[Layout('layouts.auth')] class extends Component
                 'email',
                 "Too many login attempts. Please try again in {$seconds} seconds."
             );
+
             return;
         }
 
@@ -90,14 +97,34 @@ new #[Layout('layouts.auth')] class extends Component
             RateLimiter::hit($key, self::LOCKOUT_SECONDS);
 
             Log::warning('Failed login attempt', [
-                'email'  => $this->email,
-                'ip'     => request()->ip(),
+                'email' => $this->email,
+                'ip' => request()->ip(),
                 'reason' => $user ? 'wrong_password' : 'unknown_email',
             ]);
 
             $this->addError('email', 'Invalid credentials.');
+
             return;
         }
+
+        // ── Account deactivation gate ──────────────────────────────────
+        // Checked AFTER credential verification so a deactivated user's
+        // password can't be probed via a different error message. The
+        // email/password match must be proven first.
+        if (! $user->is_active) {
+            RateLimiter::hit($key, self::LOCKOUT_SECONDS);
+
+            Log::notice('Deactivated account login attempt', [
+                'user_id' => $user->id,
+                'email' => $this->email,
+                'ip' => request()->ip(),
+            ]);
+
+            $this->addError('email', 'This account has been deactivated. Please contact the registrar.');
+
+            return;
+        }
+        // ────────────────────────────────────────────────────────────────
 
         Auth::login($user, $this->remember);
         request()->session()->regenerate();
@@ -136,7 +163,7 @@ new #[Layout('layouts.auth')] class extends Component
     protected function throttleKey(): string
     {
         return Str::transliterate(
-            Str::lower($this->email) . '|' . request()->ip()
+            Str::lower($this->email).'|'.request()->ip()
         );
     }
 
@@ -147,17 +174,17 @@ new #[Layout('layouts.auth')] class extends Component
     public function openForgotModal(): void
     {
         $this->reset('forgotStep', 'forgotEmail', 'forgotSchoolId', 'forgotSuccessMessage');
-        $this->forgotStep      = 1;
+        $this->forgotStep = 1;
         $this->resetErrorBag();
         $this->showForgotModal = true;
     }
 
     public function closeForgotModal(): void
     {
-        $this->showForgotModal      = false;
-        $this->forgotStep           = 1;
-        $this->forgotEmail          = '';
-        $this->forgotSchoolId       = '';
+        $this->showForgotModal = false;
+        $this->forgotStep = 1;
+        $this->forgotEmail = '';
+        $this->forgotSchoolId = '';
         $this->forgotSuccessMessage = '';
         $this->resetErrorBag();
     }
@@ -173,7 +200,7 @@ new #[Layout('layouts.auth')] class extends Component
             'forgotEmail' => ['required', 'email:rfc', 'max:255'],
         ], [
             'forgotEmail.required' => 'Please enter your email address.',
-            'forgotEmail.email'    => 'Please enter a valid email address.',
+            'forgotEmail.email' => 'Please enter a valid email address.',
         ]);
 
         $this->forgotEmail = Str::lower(trim($this->forgotEmail));
@@ -191,11 +218,12 @@ new #[Layout('layouts.auth')] class extends Component
         // Rate-limit per email + IP so an attacker can't brute-force
         // school IDs. School IDs are somewhat predictable (0001-0001,
         // 0001-0002, ...), so this matters.
-        $key = 'forgot:' . Str::transliterate($this->forgotEmail) . '|' . request()->ip();
+        $key = 'forgot:'.Str::transliterate($this->forgotEmail).'|'.request()->ip();
 
         if (RateLimiter::tooManyAttempts($key, self::FORGOT_MAX_ATTEMPTS)) {
             $minutes = (int) ceil(RateLimiter::availableIn($key) / 60);
             $this->addError('forgotSchoolId', "Too many attempts. Please try again in {$minutes} minute(s).");
+
             return;
         }
 
@@ -217,12 +245,13 @@ new #[Layout('layouts.auth')] class extends Component
             RateLimiter::hit($key, self::FORGOT_LOCKOUT_SECONDS);
 
             Log::warning('Forgot-password verification failed', [
-                'email'  => $this->forgotEmail,
-                'ip'     => request()->ip(),
+                'email' => $this->forgotEmail,
+                'ip' => request()->ip(),
                 'reason' => $user ? 'school_id_mismatch' : 'unknown_email',
             ]);
 
             $this->addError('forgotSchoolId', 'The information provided does not match our records.');
+
             return;
         }
 
@@ -237,18 +266,19 @@ new #[Layout('layouts.auth')] class extends Component
             ]);
 
             EmailTemplateService::send('password-reset', $user->email, [
-                'name'       => $user->name,
-                'reset_url'  => $resetUrl,
+                'name' => $user->name,
+                'reset_url' => $resetUrl,
                 'expires_in' => (string) config('auth.passwords.users.expire', 60),
             ]);
 
             Log::info('Password reset requested', [
                 'user_id' => $user->id,
-                'ip'      => request()->ip(),
+                'ip' => request()->ip(),
             ]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
             $this->addError('forgotSchoolId', 'Could not send the reset email right now. Please try again later.');
+
             return;
         }
 
