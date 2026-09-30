@@ -671,6 +671,33 @@ new #[Layout('layouts.app-form')] class extends Component
                 ]
             );
 
+            // ─── Re-enter the review queue if anything meaningful changed ─────
+            // Any edit to alumni-editable fields, a course switch, or a change
+            // to the board data sends the profile back to "Awaiting Review" so
+            // the registrar can re-verify it.
+            $profileFieldsChanged = $profile->wasChanged([
+                'gender',
+                'contact_number_1',
+                'contact_number_2',
+                'location',
+                'batch_id',
+                'board_taken',
+                'board_rate',
+            ]);
+
+            if ($profileFieldsChanged || $courseChanged || $boardChanged) {
+                $profile->forceFill([
+                    'is_approved'           => false,
+                    'last_rejection_reason' => null,   // clears "Rejected" → shows "Awaiting Review"
+                ])->saveQuietly();
+
+                // Optional but recommended: drop the cached "verified board passer"
+                // badge until the registrar re-approves. Comment out if you want the
+                // old verified attempt to keep counting.
+                // $profile->forceFill(['is_verified' => false])->saveQuietly();
+            }
+            // ──────────────────────────────────────────────────────────────────
+
             // ── Board exam history handling ──────────────────────────────
             if (! $isBoardCourse) {
                 $profile->boardExams()->delete();
