@@ -132,28 +132,26 @@
                 </div>
             </div>
 
-            {{-- ========== PRINT HEADER ========== --}}
-            <div class="print-only hidden print:block mb-4 pb-4 border-b border-black">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h1 class="text-xl font-bold text-[#0f2b1c]" style="font-family: 'Fraunces', serif;">
-                            Colegio de Sta. Ana de Victorias, Inc.
-                        </h1>
-                        <p class="text-sm text-black/60 mt-0.5">Alumni Information Tracking System</p>
-                    </div>
-                    <div class="text-right text-xs text-black/60">
-                        <p class="font-semibold">{{ $this->reportLabel }}</p>
-                        <p>Generated: {{ now()->format('F j, Y · g:i A') }}</p>
-                        @if ($this->batchLabel)
-                            <p>Batch: {{ $this->batchLabel }}</p>
-                        @endif
-                    </div>
-                </div>
-            </div>
-
             {{-- ========== REPORT CONTENT ========== --}}
             <div
                 class="print-area bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl overflow-hidden">
+
+                {{-- ========== PRINT LETTERHEAD ========== --}}
+                <div class="print-only px-6 pt-6 pb-5">
+                    <div class="text-center">
+                        <h1 class="text-base font-bold text-black uppercase tracking-wide">
+                            Colegio de Sta. Ana de Victorias, Inc.
+                        </h1>
+                        <p class="text-xs text-black mt-1">Alumni Affairs Office</p>
+                        <p class="text-xs text-black">Victorias City, Negros Occidental</p>
+                    </div>
+
+                    <div class="text-center mt-5 pb-3 border-b-2 border-black">
+                        <h2 class="text-sm font-bold text-black uppercase tracking-[0.35em]">
+                            Reports
+                        </h2>
+                    </div>
+                </div>
 
                 {{-- ============ TAB 1 — EMPLOYMENT STATS ============ --}}
                 @if ($tab === 'employment')
@@ -728,30 +726,51 @@
                         </div>
                     @endif
                 @endif
+
+                {{-- ========== PRINT FOOTER ========== --}}
+                <div class="print-only px-6 pt-6 pb-6">
+                    <div class="flex justify-between items-end text-xs text-black border-t border-black/60 pt-3">
+                        <p>
+                            Date: <span class="font-semibold">{{ now()->format('d-m-Y') }}</span>
+                        </p>
+                        <p>
+                            Prepared by: <span class="font-semibold">{{ auth()->user()->name }}</span>
+                        </p>
+                    </div>
+                </div>
             </div>
             @endcan
         </div>
     </div>
 
 <style>
+    /* Hidden on screen — only shown during print. */
+    .print-only {
+        display: none;
+    }
+
     @media print {
         @page {
-            margin: 12mm;
+            margin: 0;
         }
 
         body {
             background: #fff !important;
+            color: #000 !important;
         }
 
+        /* Hide everything by default... */
         body * {
             visibility: hidden;
         }
 
+        /* ...then reveal only the report area. */
         .print-area,
         .print-area * {
             visibility: visible;
         }
 
+        /* Collapse the outer page so the report sits at the top-left. */
         .print-area {
             position: absolute;
             left: 0;
@@ -762,6 +781,7 @@
             border-radius: 0 !important;
         }
 
+        /* Strip interactive chrome. */
         .no-print {
             display: none !important;
         }
@@ -770,6 +790,7 @@
             display: block !important;
         }
 
+        /* Flatten any full-height wrappers so print doesn't leave blank pages. */
         html,
         body {
             height: auto !important;
@@ -798,6 +819,7 @@
             gap: 0 !important;
         }
 
+        /* Tables: let long ones span pages, repeat the header on each page. */
         table {
             font-size: 11px !important;
             page-break-inside: auto;
@@ -815,10 +837,11 @@
         tfoot {
             display: table-footer-group;
         }
-    }
 
-    .print-only {
-        display: none;
+        /* Keep the signature block from getting orphaned at the top of a page. */
+        .print-only:last-child {
+            page-break-inside: avoid;
+        }
     }
 </style>
 </div>

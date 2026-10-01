@@ -9,18 +9,22 @@ use Database\Seeders\CourseSeeder;
 use Database\Seeders\DemoSeeder;
 use Database\Seeders\DepartmentSeeder;
 use Database\Seeders\EmailSeeder;
+use Database\Seeders\EventRsvpSeeder;
+use Database\Seeders\EventSeeder;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\PhAddressSeeder;
+use Database\Seeders\PostSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\PermissionRegistrar;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
 
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
         // Reference data first — roles, permissions, batches, categories,
         // email templates, departments, courses, PSGC addresses.
         $this->call([
@@ -32,7 +36,10 @@ class DatabaseSeeder extends Seeder
             DepartmentSeeder::class,
             CourseSeeder::class,
             PhAddressSeeder::class,
-            DemoSeeder::class
+            DemoSeeder::class,
+            EventSeeder::class,
+            EventRsvpSeeder::class,
+            PostSeeder::class,
         ]);
 
         // Seed the three default accounts. Roles are already created

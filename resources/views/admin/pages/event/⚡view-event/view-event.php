@@ -83,6 +83,7 @@ new #[Layout('layouts.app-admin')] class extends Component
 
     public function cancelEvent(int $id): void
     {
+        Gate::authorize('can_update');
         $user = Auth::user();
 
         abort_unless($user?->hasAnyRole(['registrar', 'program head']), 403);

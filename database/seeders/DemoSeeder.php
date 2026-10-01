@@ -4,15 +4,11 @@ namespace Database\Seeders;
 
 use App\Models\Batch;
 use App\Models\BoardExam;
-use App\Models\Category;
 use App\Models\CivilStatusEmployment;
 use App\Models\Company;
 use App\Models\Course;
 use App\Models\Department;
-use App\Models\Event;
-use App\Models\EventRsvp;
 use App\Models\FurtherStudy;
-use App\Models\Post;
 use App\Models\TracerStudy;
 use App\Models\User;
 use App\Models\UserProfile;
@@ -28,12 +24,6 @@ class DemoSeeder extends Seeder
     /** Percentage of alumni who end up "employed" (get work history). */
     protected int $employedPercent = 70;
 
-    /** Number of events to create. */
-    protected int $eventCount = 10;
-
-    /** Number of posts to create. */
-    protected int $postCount = 15;
-
     /**
      * Approval distribution for seeded alumni.
      * Must sum to 100.
@@ -47,10 +37,10 @@ class DemoSeeder extends Seeder
     {
         $this->command->info('→ Seeding demo data...');
 
-        // Registrar must exist before events can be created.
+        // Registrar must exist before other seeded content can reference it.
         $this->seedRegistrarIfMissing();
 
-        // Only skip the alumni-heavy part — never the events/posts.
+        // Only skip the alumni-heavy part on re-runs.
         $hasAlumni = User::role('alumni')->count() > 100;
 
         if (! $hasAlumni) {
@@ -59,9 +49,6 @@ class DemoSeeder extends Seeder
         } else {
             $this->command->warn('Alumni already seeded — skipping program heads + alumni.');
         }
-
-        $this->seedEventsAndRsvps();
-        $this->seedPosts();
 
         $this->command->info('✓ Demo seeding complete.');
         $this->command->info('  Alumni:            '.User::role('alumni')->count());
@@ -74,8 +61,6 @@ class DemoSeeder extends Seeder
         $this->command->info('    → Top notchers:  '.BoardExam::where('is_top_notcher', true)->count());
         $this->command->info('  Tracer:            '.TracerStudy::count());
         $this->command->info('  Program Head:      '.User::role('program head')->count());
-        $this->command->info('  Events:            '.Event::count());
-        $this->command->info('  Posts:             '.Post::count());
     }
 
     // =========================================================
@@ -307,85 +292,5 @@ class DemoSeeder extends Seeder
                 'is_current_job' => true,
             ]);
         }
-    }
-
-    // =========================================================
-    //  3. EVENTS + RSVPs
-    // =========================================================
-
-    protected function seedEventsAndRsvps(): void
-    {
-        $authors = User::role(['registrar', 'program head'])->get();
-        $alumni = User::role('alumni')->get();
-
-        if ($authors->isEmpty()) {
-            $this->command->error('→ Events: SKIPPED — no registrar/program head found.');
-
-            return;
-        }
-
-        if ($alumni->isEmpty()) {
-            $this->command->error('→ Events: SKIPPED — no alumni found.');
-
-            return;
-        }
-
-        $this->command->info("→ Events: {$this->eventCount} (mixed authors)");
-
-        for ($i = 0; $i < $this->eventCount; $i++) {
-            $author = $authors->random();
-
-            $event = Event::factory()->create([
-                'created_by' => $author->id,
-            ]);
-
-            $responders = $alumni->random(min($alumni->count(), fake()->numberBetween(
-                (int) ($alumni->count() * 0.3),
-                (int) ($alumni->count() * 0.8),
-            )));
-
-            foreach ($responders as $responder) {
-                EventRsvp::factory()->create([
-                    'event_id' => $event->id,
-                    'user_id' => $responder->id,
-                ]);
-            }
-        }
-
-        $this->command->info('  ✓ Events: '.Event::count().', RSVPs: '.EventRsvp::count());
-    }
-
-    // =========================================================
-    //  4. POSTS
-    // =========================================================
-
-    protected function seedPosts(): void
-    {
-        $authors = User::role(['registrar', 'program head'])->get();
-
-        if ($authors->isEmpty()) {
-            $this->command->error('→ Posts: SKIPPED — no registrar/program head found.');
-
-            return;
-        }
-
-        $categories = Category::pluck('id');
-
-        if ($categories->isEmpty()) {
-            $this->command->error('→ Posts: SKIPPED — no categories found.');
-
-            return;
-        }
-
-        $this->command->info("→ Posts: {$this->postCount}");
-
-        for ($i = 0; $i < $this->postCount; $i++) {
-            Post::factory()->create([
-                'user_id' => $authors->random()->id,
-                'category_id' => $categories->random(),
-            ]);
-        }
-
-        $this->command->info('  ✓ Posts: '.Post::count());
     }
 }

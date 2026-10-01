@@ -5,11 +5,12 @@ namespace App\Livewire\SuperAdmin;
 use App\Support\ReportsAnalytics;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-new #[Layout('layouts.app-super-admin')] class extends Component
+new #[Title('Reports')] #[Layout('layouts.app-super-admin')] class extends Component
 {
     #[Url]
     public string $tab = 'employment';

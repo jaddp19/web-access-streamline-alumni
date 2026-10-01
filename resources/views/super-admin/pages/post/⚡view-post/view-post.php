@@ -119,6 +119,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function deletePost(int $id): void
     {
+        Gate::authorize('can_delete');
 
         $post = Post::find($id);
 

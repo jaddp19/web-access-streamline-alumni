@@ -126,9 +126,9 @@
 
             {{-- Feed: official posts from registrar / program head --}}
             @forelse ($this->recentPosts as $post)
-                <article
-                    class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm overflow-hidden border border-transparent dark:border-white/5">
-
+                <a href="{{ route('alumni.view-notification', $post) }}"
+                    wire:navigate
+                    class="block bg-white dark:bg-[#242526] rounded-2xl shadow-sm overflow-hidden border border-transparent dark:border-white/5 hover:border-[#D4A537]/30 dark:hover:border-[#D4A537]/20 transition-colors">
                     {{-- Author header --}}
                     <header class="flex items-center justify-between p-4 pb-2">
                         <div class="flex items-center gap-3">
@@ -225,7 +225,7 @@
                         </div>
                     @endif
 
-                </article>
+                </a>
             @empty
                 {{-- Empty state — no composer CTA for alumni --}}
                 <div

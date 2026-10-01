@@ -406,6 +406,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function deleteSelected(): void
     {
+        Gate::authorize('can_delete');
         $count = User::deleteWithAudit(
             $this->selectedUsersQuery()->where('id', '!=', Auth::id())
         );

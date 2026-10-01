@@ -152,6 +152,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function deleteSelected(): void
     {
+        Gate::authorize('can_delete');
         if ($this->selectedCount <= 0) {
             session()->flash('error', 'Nothing is selected.');
             return;

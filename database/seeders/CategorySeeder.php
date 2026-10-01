@@ -2,69 +2,64 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Category;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\DB;
 
 class CategorySeeder extends Seeder
 {
     /**
-     * Run the database seeds.
+     * Alumni-appropriate categories.
+     * Add or remove as your content mix evolves — the seeder is idempotent,
+     * so re-running just syncs the list without duplicating.
      */
+    protected array $categories = [
+        [
+            'cat_name' => 'Announcements',
+            'cat_desc' => 'Official announcements from the registrar and program heads.',
+        ],
+        [
+            'cat_name' => 'Events',
+            'cat_desc' => 'Upcoming events, homecomings, reunions, and gatherings.',
+        ],
+        [
+            'cat_name' => 'Board Exam Results',
+            'cat_desc' => 'Board exam passers, top notchers, and licensure updates.',
+        ],
+        [
+            'cat_name' => 'Career Opportunities',
+            'cat_desc' => 'Job postings, internships, and career resources for alumni.',
+        ],
+        [
+            'cat_name' => 'Alumni Achievements',
+            'cat_desc' => 'Recognitions, awards, and milestones of CSAV graduates.',
+        ],
+        [
+            'cat_name' => 'Scholarships & Grants',
+            'cat_desc' => 'Scholarship programs, grants, and financial aid opportunities.',
+        ],
+        [
+            'cat_name' => 'Tracer Study',
+            'cat_desc' => 'Reminders and updates about the alumni tracer study.',
+        ],
+        [
+            'cat_name' => 'Alumni Stories',
+            'cat_desc' => 'Feature stories and testimonials from CSAV graduates.',
+        ],
+    ];
+
     public function run(): void
     {
-        $categories = [
-            [
-                'cat_name' => 'Technology',
-                'cat_desc' => 'Articles about the latest trends and news in technology.',
-            ],
-            [
-                'cat_name' => 'Lifestyle',
-                'cat_desc' => 'Tips and stories about everyday living and personal growth.',
-            ],
-            [
-                'cat_name' => 'Travel',
-                'cat_desc' => 'Guides, tips, and stories from destinations around the world.',
-            ],
-            [
-                'cat_name' => 'Health & Fitness',
-                'cat_desc' => 'Advice and insights on staying healthy and fit.',
-            ],
-            [
-                'cat_name' => 'Food & Recipes',
-                'cat_desc' => 'Delicious recipes and cooking tips for every occasion.',
-            ],
-            [
-                'cat_name' => 'Announcements',
-                'cat_desc' => 'Institutional announcements of the school.',
-            ],
-            [
-                'cat_name' => 'Business',
-                'cat_desc' => 'News, strategies, and insights for entrepreneurs and businesses.',
-            ],
-            [
-                'cat_name' => 'Education',
-                'cat_desc' => 'Learning resources, study tips, and educational content.',
-            ],
-            [
-                'cat_name' => 'Entertainment',
-                'cat_desc' => 'Updates and reviews on movies, music, and pop culture.',
-            ],
-            [
-                'cat_name' => 'Jokes & Humor',
-                'cat_desc' => 'Funny posts, jokes, memes, and lighthearted content to make you laugh.',
-            ],
-        ];
-
-        foreach ($categories as $category) {
-            DB::table('categories')->insert([
-                'cat_name' => $category['cat_name'],
-                'cat_slug' => Str::slug($category['cat_name']),
-                'cat_desc' => $category['cat_desc'],
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+        foreach ($this->categories as $category) {
+            Category::updateOrCreate(
+                ['cat_slug' => Str::slug($category['cat_name'])],
+                [
+                    'cat_name' => $category['cat_name'],
+                    'cat_desc' => $category['cat_desc'],
+                ]
+            );
         }
+
+        $this->command->info('  ✓ Categories: '.Category::count());
     }
 }

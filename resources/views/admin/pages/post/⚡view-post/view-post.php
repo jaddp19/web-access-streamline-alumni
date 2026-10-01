@@ -120,6 +120,7 @@ new #[Layout('layouts.app-admin')] class extends Component
 
     public function deletePost(int $id): void
     {
+        Gate::authorize('can_delete');
         $post = Post::query()
             ->where('user_id', Auth::id())
             ->find($id);
