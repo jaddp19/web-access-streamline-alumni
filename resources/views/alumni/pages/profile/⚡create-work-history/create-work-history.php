@@ -451,6 +451,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
     public function saveWorkHistory()
     {
         abort_unless(Auth::check(), 403);
+        Gate::authorize('can_create');
 
         $rules = array_merge($this->rules(), $this->employmentRules());
 
@@ -489,8 +490,11 @@ new #[Layout('layouts.app-alumni')] class extends Component
                     ]
                 );
 
+                // ── Track whether the civil_status_employment record actually changed ──
+                $employmentChanged = $employment->wasRecentlyCreated;
+
                 if ($this->is_current_job) {
-                    $employment->update([
+                    $employment->fill([
                         'civil_status'               => $civilStatus,
                         'employment_status'          => 'employed',
                         'current_job_position'       => $workName,
@@ -503,11 +507,36 @@ new #[Layout('layouts.app-alumni')] class extends Component
                             : null,
                         'months_to_first_job'        => $this->months_to_first_job ?: null,
                     ]);
+
+                    if ($employment->isDirty()) {
+                        $employment->save();
+                        $employmentChanged = true;
+                    }
                 } else {
-                    if (! $employment->civil_status) {
-                        $employment->update(['civil_status' => $civilStatus ?: 'single']);
+                    if (! $employment->civil_status && $civilStatus) {
+                        $employment->civil_status = $civilStatus;
+                        $employment->save();
+                        $employmentChanged = true;
                     }
                 }
+                // ─────────────────────────────────────────────────────────
+
+                // ── Re-enter the review queue ────────────────────────────
+                // Any real change to the alumni's employment or civil status
+                // data must be re-reviewed by the registrar. Flip
+                // is_approved = false and clear any stale rejection reason
+                // so the status shows "Awaiting Review".
+                if ($employmentChanged) {
+                    $profile = UserProfile::query()
+                        ->where('user_id', Auth::id())
+                        ->first();
+
+                    $profile?->forceFill([
+                        'is_approved'           => false,
+                        'last_rejection_reason' => null,
+                    ])->saveQuietly();
+                }
+                // ─────────────────────────────────────────────────────────
             });
         } catch (\Throwable $e) {
             report($e);

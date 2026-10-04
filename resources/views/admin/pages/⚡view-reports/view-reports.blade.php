@@ -167,7 +167,7 @@
                             <div class="min-w-0">
                                 <h2 class="text-sm sm:text-base font-bold text-[#0f2b1c] dark:text-white"
                                     style="font-family: 'Fraunces', serif;">
-                                    Yearly Alumni Employment Statistics
+                                    Yearly Alumni Employment Reports
                                 </h2>
                                 <p class="text-xs text-black/50 dark:text-white/50 mt-0.5">
                                     Employment distribution per batch · employment rate = employed / total

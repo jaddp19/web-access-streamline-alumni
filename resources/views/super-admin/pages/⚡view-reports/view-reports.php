@@ -2,6 +2,7 @@
 
 namespace App\Livewire\SuperAdmin;
 
+use App\Models\Course;
 use App\Support\ReportsAnalytics;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -198,14 +199,40 @@ new #[Title('Reports')] #[Layout('layouts.app-super-admin')] class extends Compo
         ]);
     }
 
-    public function updatedSelectedDepartmentId(): void
+    /**
+     * User picked a course → align the department filter to match it.
+     * Prevents the nonsensical "course in dept A + department B" query.
+     */
+    public function updatedSelectedCourseId(): void
     {
-        $this->selectedCourseId = '';   // reset course when dept changes
+        if ($this->selectedCourseId) {
+            $course = Course::query()->find((int) $this->selectedCourseId);
+
+            if ($course) {
+                $this->selectedDepartmentId = (string) $course->department_id;
+            }
+        }
+
         $this->reportInstance = null;
     }
 
-    public function updatedSelectedCourseId(): void
+    /**
+     * User picked a department → if the current course doesn't belong
+     * to it, clear the course. Keeps the filter pair consistent.
+     */
+    public function updatedSelectedDepartmentId(): void
     {
+        if ($this->selectedCourseId) {
+            $belongs = Course::query()
+                ->whereKey((int) $this->selectedCourseId)
+                ->where('department_id', (int) $this->selectedDepartmentId)
+                ->exists();
+
+            if (! $belongs) {
+                $this->selectedCourseId = '';
+            }
+        }
+
         $this->reportInstance = null;
     }
 

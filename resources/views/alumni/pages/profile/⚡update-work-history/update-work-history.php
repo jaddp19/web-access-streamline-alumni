@@ -455,11 +455,12 @@ new #[Layout('layouts.app-alumni')] class extends Component
         session()->flash('company_created', 'Company "' . $company->company_name . '" created and selected.');
     }
 
-    // =========================================================
-    //  TRACER SYNC
-    // =========================================================
-
-    protected function syncTracerEmployment(): void
+    /**
+     * Syncs the alumni's employment record from their current-job state.
+     * Returns true when the CivilStatusEmployment row was meaningfully
+     * changed (created or had dirty attributes), false otherwise.
+     */
+    protected function syncTracerEmployment(): bool
     {
         $tracerStudy = TracerStudy::firstOrCreate(['user_id' => Auth::id()]);
 
@@ -471,6 +472,8 @@ new #[Layout('layouts.app-alumni')] class extends Component
             ]
         );
 
+        $wasRecentlyCreated = $employment->wasRecentlyCreated;
+
         $current = WorkHistory::query()
             ->where('user_id', Auth::id())
             ->where('is_current_job', true)
@@ -478,7 +481,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
             ->first();
 
         if ($current) {
-            $employment->update([
+            $employment->fill([
                 'civil_status'               => $this->civil_status ?: 'single',
                 'employment_status'          => 'employed',
                 'current_job_position'       => $current->work_name ?: 'Position not specified',
@@ -492,7 +495,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
                 'months_to_first_job'        => $this->months_to_first_job ?: null,
             ]);
         } else {
-            $employment->update([
+            $employment->fill([
                 'employment_status'          => 'unemployed',
                 'current_job_position'       => null,
                 'employed_related_to_degree' => null,
@@ -502,6 +505,13 @@ new #[Layout('layouts.app-alumni')] class extends Component
                 'abroad_country'             => null,
             ]);
         }
+
+        if ($employment->isDirty()) {
+            $employment->save();
+            return true;
+        }
+
+        return $wasRecentlyCreated;
     }
 
     // =========================================================
@@ -522,7 +532,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
         $abroadCountry = trim(strip_tags($this->abroad_country));
 
         try {
-            DB::transaction(function () use ($workName, $civilStatus, $abroadCountry) {
+            DB::transaction(function () use ($workName) {
                 // If we're promoting this record to the current job,
                 // demote any OTHER current job first — keeps exactly one current.
                 if ($this->is_current_job) {
@@ -540,7 +550,20 @@ new #[Layout('layouts.app-alumni')] class extends Component
                     'is_current_job' => $this->is_current_job,
                 ]);
 
-                $this->syncTracerEmployment();
+                $employmentChanged = $this->syncTracerEmployment();
+
+                // ── Re-enter the review queue ────────────────────────────
+                // Any real change to the alumni's employment or civil status
+                // data must be re-reviewed by the registrar.
+                if ($employmentChanged) {
+                    UserProfile::query()
+                        ->where('user_id', Auth::id())
+                        ->update([
+                            'is_approved'           => false,
+                            'last_rejection_reason' => null,
+                        ]);
+                }
+                // ─────────────────────────────────────────────────────────
             });
         } catch (\Throwable $e) {
             report($e);
@@ -559,6 +582,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
     public function deleteWorkHistory()
     {
+        Gate::authorize('can_delete');
         abort_unless($this->history->user_id === Auth::id(), 403);
 
         try {

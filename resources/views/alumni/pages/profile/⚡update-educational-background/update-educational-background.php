@@ -181,6 +181,10 @@ new #[Layout('layouts.app-alumni')] class extends Component
             ? (Course::whereKey($this->original_course_id)->value('course_type') === 'board')
             : false;
 
+        // ── Did the alumni switch to a different course? ─────────────
+        $courseChanged = (int) $this->course_id !== (int) $this->original_course_id;
+        // ─────────────────────────────────────────────────────────────
+
         // ===== Build payload =====
         $profileData = [
             'batch_id'   => $validated['batch_id'],
@@ -197,8 +201,24 @@ new #[Layout('layouts.app-alumni')] class extends Component
             $profileData['board_rate'] = null;
             $profileData['is_verified'] = true;   // non-board programs don't need board verification
         }
-        // For board programs we do NOT touch is_verified here —
-        // recordBoardAttempt() / syncBoardMirrors() computes it from board_exams.
+
+        // ── Course changed → re-review + reset verification ──────────
+        //
+        //   board → board         : is_verified = false, is_approved = false
+        //   non-board → non-board : is_verified = true,  is_approved = false
+        //   non-board → board     : is_verified = false, is_approved = false
+        //   board → non-board     : is_verified = true,  is_approved = false
+        //
+        // (For non-board, `is_verified = true` is already set above.)
+        if ($courseChanged) {
+            $profileData['is_approved'] = false;
+            $profileData['last_rejection_reason'] = null;
+
+            if ($isBoardCourse) {
+                $profileData['is_verified'] = false;
+            }
+        }
+        // ─────────────────────────────────────────────────────────────
 
         // ===== Did the alumni change anything that matters? =====
         $boardChanged = $this->board_taken !== $this->original_board_taken
@@ -235,6 +255,28 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
             return;
         }
+
+        // ── Force re-verification after a board-to-board switch ──────
+        if ($courseChanged && $isBoardCourse) {
+            // Reset every attempt for this program — the old verification
+            // is not valid for the new program, so the registrar must
+            // re-review them. Also clears any top-notcher badge, since
+            // that rank belonged to the previous program.
+            $profile->boardExams()->update([
+                'is_verified'      => false,
+                'verified_at'      => null,
+                'is_top_notcher'   => false,
+                'top_notcher_rank' => null,
+            ]);
+
+            // Re-sync the mirror so is_verified reflects the reset rows.
+            $profile->syncBoardMirrors();
+
+            // syncVerificationStatus() will now compute `false`, but force
+            // it anyway in case a cached flag slips through.
+            $profile->forceFill(['is_verified' => false])->saveQuietly();
+        }
+        // ─────────────────────────────────────────────────────────────
 
         // Refresh snapshots for a second save
         $this->original_board_taken = $this->board_taken;

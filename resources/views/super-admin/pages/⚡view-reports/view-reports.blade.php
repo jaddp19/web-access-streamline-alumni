@@ -89,6 +89,7 @@
                             Course
                         </label>
                         <select id="course-filter" wire:model.live="selectedCourseId"
+                            wire:key="course-filter-{{ $selectedDepartmentId }}"
                             class="px-3 py-2 text-xs sm:text-sm rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#3A3B3C] text-[#0f2b1c] dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition min-w-[110px]">
                             <option value="">All</option>
                             @foreach ($this->courses as $course)
@@ -160,7 +161,7 @@
                         <div class="min-w-0">
                             <h2 class="text-sm sm:text-base font-bold text-[#0f2b1c] dark:text-white"
                                 style="font-family: 'Fraunces', serif;">
-                                Yearly Alumni Employment Statistics
+                                Yearly Alumni Employment Reports
                             </h2>
                             <p class="text-xs text-black/50 dark:text-white/50 mt-0.5">
                                 Employment distribution per batch · employment rate = employed / total
