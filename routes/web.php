@@ -127,6 +127,9 @@ Route::middleware(['auth', 'role:alumni|registrar'])->prefix('alumni')->group(fu
     Route::livewire('/message/view/{event:slug}', 'alumni::pages.message.view-single-message')->name('alumni.view-single-message');
 
     Route::livewire('/view-event/{event:slug}', 'alumni::pages.event.event-detail')->name('view.event');
+    
+    Route::livewire('/dashboard/view-event/{event:slug}', 'alumni::pages.view-single-event')->name('alumni.view-single-event');
+    Route::livewire('/dashboard/view-post/{post:slug}', 'alumni::pages.view-single-post')->name('alumni.view-single-post');
 
     // ========== JSON ENDPOINTS ==========
 

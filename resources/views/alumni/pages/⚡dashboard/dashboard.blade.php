@@ -83,7 +83,7 @@
                                     : null;
                             @endphp
 
-                            <a href="{{ route('view.event', $event->slug) }}"
+                            <a href="{{ route('alumni.view-single-event', $event->slug) }}"
                                 wire:key="home-event-{{ $event->id }}"
                                 class="flex items-center gap-3 p-3 hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
 
@@ -126,7 +126,7 @@
 
             {{-- Feed: official posts from registrar / program head --}}
             @forelse ($this->recentPosts as $post)
-                <a href="{{ route('alumni.view-notification', $post) }}"
+                <a href="{{ route('alumni.view-single-post', $post->slug) }}"
                     wire:navigate
                     class="block bg-white dark:bg-[#242526] rounded-2xl shadow-sm overflow-hidden border border-transparent dark:border-white/5 hover:border-[#D4A537]/30 dark:hover:border-[#D4A537]/20 transition-colors">
                     {{-- Author header --}}
