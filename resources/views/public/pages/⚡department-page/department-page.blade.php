@@ -1,5 +1,5 @@
 <div>
-    <section class="relative min-h-screen overflow-hidden bg-[#F7F5EF] py-16 sm:py-20">
+    <section class="relative min-h-screen overflow-hidden bg-[#F7F5EF]">
 
         {{-- Decorative background --}}
         <div class="absolute inset-0 -z-10">
@@ -11,36 +11,35 @@
             </div>
         </div>
 
-        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-10 sm:py-14 lg:py-20">
 
             {{-- ========== HEADER ========== --}}
-            <div class="text-center mb-10 sm:mb-16">
-                <div class="inline-flex items-center gap-2 px-4 sm:px-6 py-2 bg-[#123524] rounded-full shadow-md mb-5 sm:mb-6">
+            <div class="text-center space-y-4 sm:space-y-5 mb-10 sm:mb-14 lg:mb-20">
+                <div class="inline-flex items-center gap-2 px-4 sm:px-5 py-2 bg-[#123524] rounded-full shadow-md">
                     <span class="w-1.5 h-1.5 rounded-full bg-[#D4A537] shrink-0"></span>
                     <span class="text-white text-[10px] sm:text-xs font-bold tracking-[0.15em] sm:tracking-[0.2em]">
                         COLEGIO DE STA. ANA DE VICTORIAS
                     </span>
                 </div>
 
-                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#123524] mb-3 tracking-tight"
+                <h1 class="text-3xl sm:text-3xl lg:text-3xl xl:text-4xl font-bold text-[#123524] leading-[1.05] tracking-tighter"
                     style="font-family: 'Fraunces', serif;">
                     Academic Departments
-                    <span class="block mt-2 relative inline-block">
+                    <span class="block mt-1.5 relative inline-block">
                         <span class="relative z-10">Excellence in Every Field</span>
                         <span class="absolute left-0 bottom-0 w-full h-1 bg-[#D4A537]/30 -z-0"></span>
                     </span>
                 </h1>
 
-                <p class="text-[#123524]/70 max-w-2xl mx-auto text-base sm:text-lg px-2">
+                <p class="max-w-lg mx-auto text-base sm:text-md text-[#123524]/70 leading-relaxed px-2">
                     Explore our diverse academic departments committed to shaping future leaders.
                 </p>
             </div>
 
             {{-- ========== DEPARTMENTS GRID ========== --}}
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
                 @forelse ($this->departments as $department)
                     @php
-                        // Guard: only build a Storage URL for local paths, not external URLs.
                         $logoUrl = null;
                         if ($department['dept_logo']) {
                             $logoUrl = $department['dept_logo'] === 'CSAV-LOGO'
@@ -52,15 +51,15 @@
                     @endphp
 
                     <div wire:key="dept-{{ $department['id'] }}"
-                        class="group bg-white rounded-2xl p-5 sm:p-6 border border-[#123524]/5 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col">
+                        class="group bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8 border border-[#123524]/5 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col">
 
                         {{-- Icon / Logo --}}
-                        <div class="w-12 h-12 sm:w-14 sm:h-14 mb-4 rounded-full bg-[#123524]/5 flex items-center justify-center group-hover:bg-[#D4A537]/15 transition-colors overflow-hidden shrink-0">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 mb-3 sm:mb-4 rounded-full bg-[#123524]/5 flex items-center justify-center group-hover:bg-[#D4A537]/15 transition-colors overflow-hidden shrink-0">
                             @if ($logoUrl)
                                 <img src="{{ $logoUrl }}" alt="{{ $department['dept_name'] }}"
                                     class="w-full h-full object-cover" loading="lazy">
                             @else
-                                <svg class="w-6 h-6 sm:w-7 sm:h-7 text-[#123524]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                <svg class="w-5 h-5 sm:w-6 sm:h-6 text-[#123524]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
                                 </svg>
@@ -74,13 +73,13 @@
 
                         {{-- Description --}}
                         @if ($department['dept_desc'])
-                            <p class="text-sm text-[#123524]/60 mt-1 line-clamp-2">
+                            <p class="text-sm text-[#123524]/60 mt-1.5 line-clamp-2">
                                 {{ $department['dept_desc'] }}
                             </p>
                         @endif
 
                         {{-- Student count --}}
-                        <div class="flex items-center gap-1.5 mt-2 text-[#123524]/60 text-xs sm:text-sm">
+                        <div class="flex items-center gap-1.5 mt-2.5 text-[#123524]/60 text-xs sm:text-sm">
                             <span class="w-1.5 h-1.5 rounded-full bg-[#D4A537]"></span>
                             {{ number_format($department['students_count']) }}
                             {{ \Illuminate\Support\Str::plural('Student', $department['students_count']) }}
@@ -89,7 +88,7 @@
                         {{-- Courses list --}}
                         @if (! empty($department['courses']))
                             <div class="mt-4 pt-4 border-t border-[#123524]/5">
-                                <p class="text-xs font-bold text-[#123524]/40 uppercase tracking-wider mb-2">
+                                <p class="text-[10px] sm:text-xs font-bold text-[#123524]/40 uppercase tracking-widest mb-2.5">
                                     {{ count($department['courses']) }}
                                     {{ \Illuminate\Support\Str::plural('Program', count($department['courses'])) }}
                                 </p>

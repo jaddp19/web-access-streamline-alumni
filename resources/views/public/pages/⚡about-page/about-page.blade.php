@@ -11,84 +11,81 @@
                 style="background-image: radial-gradient(#123524 1px, transparent 1px); background-size: 24px 24px;"></div>
         </div>
 
-        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-16 sm:py-24 lg:py-36 space-y-16 sm:space-y-20 lg:space-y-24">
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-10 sm:py-14 lg:py-20 space-y-12 sm:space-y-16 lg:space-y-20">
 
             {{-- ========== INTRO ========== --}}
-            <div class="text-center max-w-3xl mx-auto space-y-6 sm:space-y-8">
-                <div class="inline-flex items-center gap-2 px-4 sm:px-6 py-2 bg-[#123524] rounded-full shadow-md">
+            <div class="text-center max-w-3xl mx-auto space-y-4 sm:space-y-5">
+                <div class="inline-flex items-center gap-2 px-4 sm:px-5 py-2 bg-[#123524] rounded-full shadow-md">
                     <span class="w-1.5 h-1.5 rounded-full bg-[#D4A537] shrink-0"></span>
                     <span class="text-white text-[10px] sm:text-xs font-bold tracking-[0.15em] sm:tracking-[0.2em]">
-                        ABOUT OUR ALUMNI COMMUNITY
+                        ABOUT THE ALUMNI SYSTEM
                     </span>
                 </div>
 
-                <h1 class="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-[#123524] leading-tight tracking-tight"
+                <h1 class="text-3xl sm:text-3xl lg:text-3xl xl:text-4xl font-bold text-[#123524] leading-[1.05] tracking-tighter"
                     style="font-family: 'Fraunces', serif;">
-                    One Legacy.
-                    <span class="block mt-2 relative inline-block">
-                        <span class="relative z-10">Endless Connections.</span>
-                        <span class="absolute left-0 bottom-1 w-full h-1.5 sm:h-2 bg-[#D4A537]/30 -z-0"></span>
+                    Tracking Success.
+                    <span class="block mt-1.5 relative inline-block">
+                        <span class="relative z-10">Shaping Tomorrow.</span>
+                        <span class="absolute left-0 bottom-1 w-full h-1 bg-[#D4A537]/30 -z-0"></span>
                     </span>
                 </h1>
 
-                <p class="text-base sm:text-lg text-[#123524]/70 leading-relaxed px-2">
-                    The Colegio de Sta. Ana de Victorias Alumni Association is more than a network — it's a family.
-                    We honor our shared legacy of faith, excellence, and service while building bridges across generations.
+                <p class="text-base sm:text-md text-[#123524]/70 leading-relaxed px-2">
+                    The Colegio de Sta. Ana de Victorias Alumni Tracking Portal bridges graduate career pathways with institutional growth. By capturing real-time employment data and comparative analytics, we transform graduate achievements into insights for continuous educational enhancement.
                 </p>
             </div>
 
             {{-- ========== MISSION & VISION ========== --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-10 items-start">
-                <div class="group relative p-6 sm:p-8 lg:p-10 bg-white rounded-2xl sm:rounded-3xl border border-[#123524]/5 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
-                    <div class="w-11 h-11 sm:w-12 sm:h-12 mb-5 sm:mb-6 rounded-full bg-[#123524]/5 flex items-center justify-center group-hover:bg-[#D4A537]/15 transition-colors">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 lg:gap-8 items-stretch">
+                <div class="group relative p-5 sm:p-6 lg:p-8 bg-white rounded-2xl sm:rounded-3xl border border-[#123524]/5 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 mb-4 sm:mb-5 rounded-full bg-[#123524]/5 flex items-center justify-center group-hover:bg-[#D4A537]/15 transition-colors shrink-0">
                         <svg class="w-5 h-5 sm:w-6 sm:h-6 text-[#123524]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                         </svg>
                     </div>
-                    <h2 class="text-2xl sm:text-3xl font-bold text-[#123524] mb-3 sm:mb-4" style="font-family: 'Fraunces', serif;">
+                    <h2 class="text-2xl sm:text-3xl font-bold text-[#123524] mb-3" style="font-family: 'Fraunces', serif;">
                         Our Mission
                     </h2>
                     <p class="text-sm sm:text-base text-[#123524]/70 leading-relaxed">
-                        To foster lifelong connections among alumni, empower graduates through opportunities, and
-                        strengthen the values of community, leadership, and service in every endeavor.
+                        To provide an accessible digital platform for alumni to maintain updated employment profiles, enabling Colegio de Sta. Ana de Victorias to systematically track career trends, evaluate curriculum relevance, and fulfill institutional accreditation standards.
                     </p>
                 </div>
 
-                <div class="group relative p-6 sm:p-8 lg:p-10 bg-white rounded-2xl sm:rounded-3xl border border-[#123524]/5 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
-                    <div class="w-11 h-11 sm:w-12 sm:h-12 mb-5 sm:mb-6 rounded-full bg-[#123524]/5 flex items-center justify-center group-hover:bg-[#D4A537]/15 transition-colors">
+                <div class="group relative p-5 sm:p-6 lg:p-8 bg-white rounded-2xl sm:rounded-3xl border border-[#123524]/5 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 mb-4 sm:mb-5 rounded-full bg-[#123524]/5 flex items-center justify-center group-hover:bg-[#D4A537]/15 transition-colors shrink-0">
                         <svg class="w-5 h-5 sm:w-6 sm:h-6 text-[#123524]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
                     </div>
-                    <h2 class="text-2xl sm:text-3xl font-bold text-[#123524] mb-3 sm:mb-4" style="font-family: 'Fraunces', serif;">
+                    <h2 class="text-2xl sm:text-3xl font-bold text-[#123524] mb-3" style="font-family: 'Fraunces', serif;">
                         Our Vision
                     </h2>
                     <p class="text-sm sm:text-base text-[#123524]/70 leading-relaxed">
-                        A global alumni family united by shared experiences, committed to uplifting one another,
-                        and dedicated to making a lasting impact in society.
+                        A data-empowered alumni network where graduate success directly informs academic quality, curriculum innovation, and sustainable career opportunities for future generations.
                     </p>
                 </div>
             </div>
 
             {{-- ========== VALUES ========== --}}
             <div>
-                <div class="text-center mb-8 sm:mb-12">
-                    <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#123524]" style="font-family: 'Fraunces', serif;">
+                <div class="text-center space-y-4 sm:space-y-5 mb-10 sm:mb-14 lg:mb-20">
+                    <h2 class="text-3xl sm:text-3xl lg:text-3xl xl:text-4xl font-bold text-[#123524] leading-[1.05] tracking-tighter"
+                        style="font-family: 'Fraunces', serif;">
                         What Guides Us
                     </h2>
-                    <div class="w-16 h-1 bg-[#D4A537] mx-auto mt-3 sm:mt-4 rounded-full"></div>
+                    <div class="w-16 h-1 bg-[#D4A537] mx-auto rounded-full"></div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 sm:gap-6 lg:gap-8 text-center">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 text-center">
 
                     {{-- Faith --}}
-                    <div class="group p-6 sm:p-8 bg-white rounded-2xl border border-[#123524]/5 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
-                        <div class="w-12 h-12 sm:w-14 sm:h-14 mx-auto mb-4 sm:mb-5 rounded-full bg-[#123524]/5 flex items-center justify-center group-hover:bg-[#D4A537]/15 transition-colors">
-                            {{-- Fixed: replaced the corrupted "5.persistent" path with a proper academic cap --}}
-                            <svg class="w-6 h-6 sm:w-7 sm:h-7 text-[#123524]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <div class="group p-5 sm:p-6 lg:p-8 bg-white rounded-2xl sm:rounded-3xl border border-[#123524]/5 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 sm:mb-4 rounded-full bg-[#123524]/5 flex items-center justify-center group-hover:bg-[#D4A537]/15 transition-colors">
+                            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-[#123524]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.62 48.62 0 0112 20.904a48.62 48.62 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342" />
                             </svg>
@@ -102,9 +99,9 @@
                     </div>
 
                     {{-- Excellence --}}
-                    <div class="group p-6 sm:p-8 bg-white rounded-2xl border border-[#123524]/5 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
-                        <div class="w-12 h-12 sm:w-14 sm:h-14 mx-auto mb-4 sm:mb-5 rounded-full bg-[#123524]/5 flex items-center justify-center group-hover:bg-[#D4A537]/15 transition-colors">
-                            <svg class="w-6 h-6 sm:w-7 sm:h-7 text-[#123524]" fill="currentColor" viewBox="0 0 24 24">
+                    <div class="group p-5 sm:p-6 lg:p-8 bg-white rounded-2xl sm:rounded-3xl border border-[#123524]/5 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 sm:mb-4 rounded-full bg-[#123524]/5 flex items-center justify-center group-hover:bg-[#D4A537]/15 transition-colors">
+                            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-[#123524]" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M12 2l2.4 7.2H22l-6 4.6 2.3 7.2L12 16.4 5.7 21l2.3-7.2-6-4.6h7.6z" />
                             </svg>
                         </div>
@@ -117,9 +114,9 @@
                     </div>
 
                     {{-- Service --}}
-                    <div class="group p-6 sm:p-8 bg-white rounded-2xl border border-[#123524]/5 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 sm:col-span-2 md:col-span-1">
-                        <div class="w-12 h-12 sm:w-14 sm:h-14 mx-auto mb-4 sm:mb-5 rounded-full bg-[#123524]/5 flex items-center justify-center group-hover:bg-[#D4A537]/15 transition-colors">
-                            <svg class="w-6 h-6 sm:w-7 sm:h-7 text-[#123524]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <div class="group p-5 sm:p-6 lg:p-8 bg-white rounded-2xl sm:rounded-3xl border border-[#123524]/5 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 sm:col-span-2 md:col-span-1">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 sm:mb-4 rounded-full bg-[#123524]/5 flex items-center justify-center group-hover:bg-[#D4A537]/15 transition-colors">
+                            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-[#123524]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                             </svg>

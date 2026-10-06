@@ -180,9 +180,15 @@ class DemoSeeder extends Seeder
      * syncs the profile's mirror columns + is_verified flag.
      *
      * Verification state is derived from the alumni's approval state:
-     *   approved → attempts are verified (has at least one passing attempt)
-     *   pending  → attempts exist but are NOT verified (shows up in queue)
-     *   rejected → attempts exist but are NOT verified
+     *   approved → every attempt is verified (has at least one passing attempt)
+     *   pending  → only the LATEST attempt is unverified (shows in queue);
+     *              every earlier attempt is verified history
+     *   rejected → same as pending
+     *
+     * Rule: only ONE unverified row per alumni at any time. If an alumni
+     * retook the exam, the earlier attempts were already reviewed by the
+     * registrar — they MUST be is_verified = true so the queue shows one
+     * row, not the entire attempt chain.
      */
     protected function seedBoardAttemptsFor(UserProfile $profile, Course $course, string $approvalState): void
     {
@@ -195,35 +201,46 @@ class DemoSeeder extends Seeder
 
             $baseState = [
                 'user_profile_id' => $profile->id,
-                'attempt_number' => $n,
-                'exam_name' => $course->course_title,
+                'attempt_number'  => $n,
+                'exam_name'       => $course->course_title,
             ];
 
             if ($approvalState === 'approved') {
-                // A retaker can't pass twice. Every attempt before the final
-                // one MUST be a fail (rate 60–74.99) — that's why they retook.
+                // Approved — every attempt is verified. Retakers only passed
+                // on the final take.
                 $factory = match (true) {
-                    $isTopNotcher && $isFinalAttempt => BoardExam::factory()->topNotcher(),
+                    $isTopNotcher && $isFinalAttempt       => BoardExam::factory()->topNotcher(),
                     $isFinalAttempt && fake()->boolean(85) => BoardExam::factory()->verifiedPassing(),
-                    default => BoardExam::factory()->verifiedFailing(),
+                    default                                 => BoardExam::factory()->verifiedFailing(),
                 };
 
                 $factory->state($baseState)->create();
-            } else {
-                // Pending / rejected → unverified, but the same retake rule
-                // still applies: only the final attempt may pass.
-                $passing = $isFinalAttempt && fake()->boolean(85);
 
-                BoardExam::factory()
-                    ->state(array_merge($baseState, [
-                        'rate' => $passing
-                            ? fake()->randomFloat(2, 75, 99)
-                            : fake()->randomFloat(2, 60, 74.99),
-                        'passed' => $passing,
-                        'is_verified' => false,
-                        'verified_at' => null,
-                    ]))
-                    ->create();
+                continue;
+            }
+
+            // ── Pending / rejected ─────────────────────────────────────
+            if ($isFinalAttempt) {
+                // The ONE pending row awaiting registrar review.
+                $passing = fake()->boolean(85);
+
+                BoardExam::factory()->state(array_merge($baseState, [
+                    'rate'        => $passing
+                        ? fake()->randomFloat(2, 75, 99)
+                        : fake()->randomFloat(2, 60, 74.99),
+                    'passed'      => $passing,
+                    'is_verified' => false,
+                    'verified_at' => null,
+                ]))->create();
+            } else {
+                // Historical attempt → already reviewed (and failed —
+                // otherwise the alumni would be approved, not pending).
+                BoardExam::factory()->state(array_merge($baseState, [
+                    'rate'        => fake()->randomFloat(2, 60, 74.99),
+                    'passed'      => false,
+                    'is_verified' => true,
+                    'verified_at' => now()->subMonths(fake()->numberBetween(6, 36)),
+                ]))->create();
             }
         }
 

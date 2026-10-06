@@ -81,7 +81,15 @@
                             </span>
                         @endforeach
 
-                        @if ($user->userProfile?->is_verified)
+                        @php
+                            // "Verified" only makes sense for board programs — the flag mirrors
+                            // "has at least one verified PASSING board exam attempt". Non-board
+                            // courses always carry is_verified = true for internal reasons, so we
+                            // gate the badge on course_type to avoid a misleading label.
+                            $isBoardCourse = $user->userProfile?->courses->contains('course_type', 'board') ?? false;
+                        @endphp
+
+                        @if ($isBoardCourse && $user->userProfile?->is_verified)
                             <span
                                 class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold bg-white/10 text-white">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2"
@@ -89,7 +97,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
-                                Verified
+                                Board Passer
                             </span>
                         @endif
 
@@ -212,21 +220,21 @@
                     {{-- Buttons --}}
                     <div class="flex flex-col xs:flex-row gap-2 shrink-0">
                         @can('can_create')
-                        @if (!$p->is_approved)
-                            <button type="button" wire:click="approve" wire:loading.attr="disabled"
-                                wire:target="approve"
-                                class="inline-flex items-center justify-center gap-x-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition disabled:opacity-50">
-                                <span wire:loading.remove wire:target="approve">Approve</span>
-                                <span wire:loading wire:target="approve">Approving…</span>
-                            </button>
-                        @endif
+                            @if (!$p->is_approved)
+                                <button type="button" wire:click="approve" wire:loading.attr="disabled"
+                                    wire:target="approve"
+                                    class="inline-flex items-center justify-center gap-x-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition disabled:opacity-50">
+                                    <span wire:loading.remove wire:target="approve">Approve</span>
+                                    <span wire:loading wire:target="approve">Approving…</span>
+                                </button>
+                            @endif
                         @endcan
-                        
+
                         @can('can_delete')
-                        <button type="button" wire:click="openRejectModal"
-                            class="inline-flex items-center justify-center gap-x-2 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition">
-                            {{ $p->is_approved ? 'Revoke / Reject' : 'Reject' }}
-                        </button>
+                            <button type="button" wire:click="openRejectModal"
+                                class="inline-flex items-center justify-center gap-x-2 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition">
+                                {{ $p->is_approved ? 'Revoke / Reject' : 'Reject' }}
+                            </button>
                         @endcan
                     </div>
                 </div>

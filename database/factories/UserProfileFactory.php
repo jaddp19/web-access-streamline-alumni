@@ -193,4 +193,4 @@ class UserProfileFactory extends Factory
             'intl_city'      => $city,
         ];
     }
-}
+}   

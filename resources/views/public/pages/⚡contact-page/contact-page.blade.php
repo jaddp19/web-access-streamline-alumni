@@ -10,18 +10,18 @@
                 style="background-image: radial-gradient(#123524 1px, transparent 1px); background-size: 24px 24px;"></div>
         </div>
 
-        <div class="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-12 py-16 sm:py-24 lg:py-32">
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-10 sm:py-14 lg:py-20">
 
             {{-- ========== HEADER ========== --}}
-            <div class="text-center space-y-5 sm:space-y-6 mb-10 sm:mb-16">
-                <div class="inline-flex items-center gap-2 px-4 sm:px-6 py-2 bg-[#123524] rounded-full shadow-md">
+            <div class="text-center space-y-4 sm:space-y-5 mb-10 sm:mb-14 lg:mb-20">
+                <div class="inline-flex items-center gap-2 px-4 sm:px-5 py-2 bg-[#123524] rounded-full shadow-md">
                     <span class="w-1.5 h-1.5 rounded-full bg-[#D4A537] shrink-0"></span>
                     <span class="text-white text-[10px] sm:text-xs font-bold tracking-[0.15em] sm:tracking-[0.2em]">
                         CONTACT US
                     </span>
                 </div>
 
-                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#123524] tracking-tight"
+                <h1 class="text-3xl sm:text-3xl lg:text-3xl xl:text-4xl font-bold text-[#123524] leading-[1.05] tracking-tighter"
                     style="font-family: 'Fraunces', serif;">
                     Get in
                     <span class="relative inline-block">
@@ -30,20 +30,20 @@
                     </span>
                 </h1>
 
-                <p class="text-[#123524]/70 max-w-2xl mx-auto text-base sm:text-lg px-2">
+                <p class="max-w-lg mx-auto text-base sm:text-md text-[#123524]/70 leading-relaxed px-2">
                     Have questions, ideas, or want to reconnect? We'd love to hear from you.
                 </p>
             </div>
 
             {{-- ========== CONTACT GRID ========== --}}
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10 items-start">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-start">
 
                 {{-- ========== CONTACT INFO ========== --}}
-                <div class="space-y-4 sm:space-y-6">
+                <div class="lg:col-span-5 space-y-4">
 
                     {{-- Address --}}
-                    <div class="group flex items-start gap-4 sm:gap-5 p-4 sm:p-6 bg-white rounded-2xl border border-[#123524]/5 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300">
-                        <div class="w-11 h-11 sm:w-12 sm:h-12 shrink-0 rounded-full bg-[#123524]/5 flex items-center justify-center group-hover:bg-[#D4A537]/15 transition-colors">
+                    <div class="group flex items-start gap-4 p-5 sm:p-6 bg-white rounded-2xl sm:rounded-3xl border border-[#123524]/5 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-full bg-[#123524]/5 flex items-center justify-center group-hover:bg-[#D4A537]/15 transition-colors">
                             <svg class="w-5 h-5 sm:w-6 sm:h-6 text-[#123524]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
@@ -60,8 +60,8 @@
                     </div>
 
                     {{-- Phone --}}
-                    <div class="group flex items-start gap-4 sm:gap-5 p-4 sm:p-6 bg-white rounded-2xl border border-[#123524]/5 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300">
-                        <div class="w-11 h-11 sm:w-12 sm:h-12 shrink-0 rounded-full bg-[#123524]/5 flex items-center justify-center group-hover:bg-[#D4A537]/15 transition-colors">
+                    <div class="group flex items-start gap-4 p-5 sm:p-6 bg-white rounded-2xl sm:rounded-3xl border border-[#123524]/5 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-full bg-[#123524]/5 flex items-center justify-center group-hover:bg-[#D4A537]/15 transition-colors">
                             <svg class="w-5 h-5 sm:w-6 sm:h-6 text-[#123524]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.362-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
                             </svg>
@@ -77,8 +77,8 @@
                     </div>
 
                     {{-- Email --}}
-                    <div class="group flex items-start gap-4 sm:gap-5 p-4 sm:p-6 bg-white rounded-2xl border border-[#123524]/5 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300">
-                        <div class="w-11 h-11 sm:w-12 sm:h-12 shrink-0 rounded-full bg-[#123524]/5 flex items-center justify-center group-hover:bg-[#D4A537]/15 transition-colors">
+                    <div class="group flex items-start gap-4 p-5 sm:p-6 bg-white rounded-2xl sm:rounded-3xl border border-[#123524]/5 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-full bg-[#123524]/5 flex items-center justify-center group-hover:bg-[#D4A537]/15 transition-colors">
                             <svg class="w-5 h-5 sm:w-6 sm:h-6 text-[#123524]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0-.621.504-1.125 1.125-1.125h17.25c.621 0 1.125.504 1.125 1.125v10.5c0 .621-.504 1.125-1.125 1.125H3.375A1.125 1.125 0 012.25 17.25V6.75zm0 0l9.75 6.75 9.75-6.75" />
                             </svg>
@@ -94,14 +94,14 @@
                     </div>
 
                     {{-- Note --}}
-                    <div class="flex items-center gap-2 px-2 pt-2 text-[#123524]/50 text-xs sm:text-sm">
+                    <div class="flex items-center gap-2 px-2 text-[#123524]/50 text-xs sm:text-sm">
                         <span class="w-1.5 h-1.5 rounded-full bg-[#D4A537] shrink-0"></span>
                         We typically respond within 1–2 business days.
                     </div>
                 </div>
 
                 {{-- ========== CONTACT FORM ========== --}}
-                <form wire:submit="submit" class="space-y-4 sm:space-y-5 bg-white p-5 sm:p-6 lg:p-8 rounded-2xl sm:rounded-3xl border border-[#123524]/5 shadow-xl">
+                <form wire:submit="submit" class="lg:col-span-7 space-y-4 sm:space-y-5 bg-white p-5 sm:p-6 lg:p-8 rounded-2xl sm:rounded-3xl border border-[#123524]/5 shadow-lg">
 
                     {{-- Flash --}}
                     @if (session('contact_success'))

@@ -198,4 +198,24 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $this->analyticsInstance = null;
         $this->dispatch('batch-changed');
     }
+
+        // ===== Board Passers =====
+
+    #[Computed]
+    public function boardExamBreakdown(): array
+    {
+        return $this->analytics()->boardExamBreakdown();
+    }
+
+    #[Computed]
+    public function boardPassersByDeptAndCourse(): array
+    {
+        return $this->analytics()->boardPassersByDeptAndCourse();
+    }
+
+    #[Computed]
+    public function boardPasserTotal(): int
+    {
+        return array_sum(array_column($this->boardPassersByDeptAndCourse, 'total'));
+    }
 };

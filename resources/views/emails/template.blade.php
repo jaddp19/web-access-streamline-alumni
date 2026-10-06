@@ -64,7 +64,7 @@
                     <tr>
                         <td style="padding:24px 40px; background-color:#F7F5EF; border-top:1px solid #E5E2D8;">
                             <p style="margin:0; font-size:12px; color:#8a897f; line-height:1.6;">
-                                Osmeña Ave., Victorias City, Negros Occidental<br>
+                                Osmeña Ave., Victorias City, Negros Occidental, Philippines, 6119<br>
                                 You're receiving this because you're part of the CSAV Alumni network.
                             </p>
                         </td>

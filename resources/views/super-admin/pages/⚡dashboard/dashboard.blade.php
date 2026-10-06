@@ -305,6 +305,63 @@
                     </div>
                 @endif
 
+                {{-- ===== Board Passers (pie → department → course) ===== --}}
+                @php
+                    $bp = $this->boardExamBreakdown;
+                    $bpTotal = ($bp['Passed'] ?? 0) + ($bp['Failed'] ?? 0);
+                    $bpRate  = $bpTotal > 0 ? round(($bp['Passed'] / $bpTotal) * 100, 1) : 0;
+                @endphp
+
+                @if ($bpTotal > 0)
+                    <div class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                        <div class="flex items-start justify-between gap-3 mb-4">
+                            <div class="min-w-0">
+                                <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white">Board Passers</h2>
+                                <p id="board-passers-subtitle" class="text-xs text-black/40 dark:text-white/40 mt-0.5">
+                                    Overall pass rate · click the Passed slice to see departments
+                                </p>
+                            </div>
+                            <button type="button" id="board-passers-back-btn"
+                                class="hidden shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold text-[#1877F2] hover:underline">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                                </svg>
+                                Back
+                            </button>
+                        </div>
+
+                        {{-- Highlight cards --}}
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+                            <div class="rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 p-3">
+                                <p class="text-[10px] uppercase tracking-wide font-bold text-emerald-700 dark:text-emerald-400">
+                                    Passers</p>
+                                <p class="text-2xl font-bold text-[#0f2b1c] dark:text-white mt-0.5">
+                                    {{ $bp['Passed'] ?? 0 }}</p>
+                            </div>
+                            <div class="rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 p-3">
+                                <p class="text-[10px] uppercase tracking-wide font-bold text-red-700 dark:text-red-400">
+                                    Non-passers</p>
+                                <p class="text-2xl font-bold text-[#0f2b1c] dark:text-white mt-0.5">
+                                    {{ $bp['Failed'] ?? 0 }}</p>
+                            </div>
+                            <div class="rounded-xl bg-[#D4A537]/10 border border-[#D4A537]/20 p-3">
+                                <p class="text-[10px] uppercase tracking-wide font-bold text-[#a97f1f] dark:text-[#E5B94A]">
+                                    Pass Rate</p>
+                                <p class="text-2xl font-bold text-[#0f2b1c] dark:text-white mt-0.5">{{ $bpRate }}%</p>
+                            </div>
+                            <div class="rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 p-3">
+                                <p class="text-[10px] uppercase tracking-wide font-bold text-blue-700 dark:text-blue-400">
+                                    Total Verified</p>
+                                <p class="text-2xl font-bold text-[#0f2b1c] dark:text-white mt-0.5">{{ $bpTotal }}</p>
+                            </div>
+                        </div>
+
+                        <div class="w-full h-72">
+                            <canvas id="boardPassersChart"></canvas>
+                        </div>
+                    </div>
+                @endif
+
                 <div>
                     <h2 class="text-lg sm:text-xl font-bold text-[#0f2b1c] dark:text-white"
                         style="font-family: 'Fraunces', serif;">
@@ -401,6 +458,8 @@
             'employmentArea'             => $this->employmentAreaBreakdown,
             'monthsToFirstJob'           => $this->monthsToFirstJobBreakdown,
             'topNotchers'                => $this->topNotchersByDeptAndCourse,
+            'boardExamBreakdown'         => $this->boardExamBreakdown,
+            'boardPassers'               => $this->boardPassersByDeptAndCourse,
         ]) !!}
     </script>
 </div>
@@ -444,22 +503,17 @@
             'ARTS': '#111827', // Black
         };
 
-        // Fallback palette — used for course codes (level 2/3) and any
-        // department code that isn't listed above.
         const DEPT_COLORS = [
             '#16a34a', '#D4A537', '#1C6B45', '#E5B94A',
             '#10b981', '#a97f1f', '#0f2b1c', '#FCD34D',
             '#2563eb', '#9333ea', '#dc2626', '#0891b2',
         ];
 
-        // Course code → parent department code. Built once per page render
-        // from the payload so a course bar inherits its department's color.
         let COURSE_TO_DEPT = {};
 
         const buildCourseDeptMap = () => {
             COURSE_TO_DEPT = {};
 
-            // Source 1: regular alumni-by-dept tree
             const byDept = window.__analyticsData?.alumniByDeptCourse || {};
             Object.entries(byDept).forEach(([deptCode, info]) => {
                 Object.keys(info?.courses || {}).forEach((courseCode) => {
@@ -467,7 +521,6 @@
                 });
             });
 
-            // Source 2: top notcher tree — fills any courses missing above
             const top = window.__analyticsData?.topNotchers || {};
             Object.entries(top).forEach(([deptCode, info]) => {
                 Object.keys(info?.courses || {}).forEach((courseCode) => {
@@ -476,20 +529,22 @@
                     }
                 });
             });
+
+            const bp = window.__analyticsData?.boardPassers || {};
+            Object.entries(bp).forEach(([deptCode, info]) => {
+                Object.keys(info?.courses || {}).forEach((courseCode) => {
+                    if (!COURSE_TO_DEPT[courseCode]) {
+                        COURSE_TO_DEPT[courseCode] = deptCode;
+                    }
+                });
+            });
         };
 
-        // Resolve a bar's color:
-        //   1. Department code → its mapped color
-        //   2. Course code     → its parent department's color
-        //   3. Otherwise       → cycle the fallback palette
         const deptColor = (key, index = 0) => {
             if (!key) return DEPT_COLORS[index % DEPT_COLORS.length];
-
             if (DEPT_COLOR_MAP[key]) return DEPT_COLOR_MAP[key];
-
             const parent = COURSE_TO_DEPT[key];
             if (parent && DEPT_COLOR_MAP[parent]) return DEPT_COLOR_MAP[parent];
-
             return DEPT_COLORS[index % DEPT_COLORS.length];
         };
 
@@ -509,7 +564,6 @@
             return `rgba(${r}, ${g}, ${b}, ${alpha})`;
         };
 
-        // Recolors the highlight cards to match the department color.
         const paintTopNotcherCards = () => {
             document.querySelectorAll('[data-dept-card]').forEach((el) => {
                 const code = el.dataset.deptCard;
@@ -528,26 +582,14 @@
         };
 
         // =====================================================================
-        // Drill-down state (per chart, client-side only)
+        // Drill-down state
         // =====================================================================
         const drillState = {
-            dept: {
-                view: 'departments',
-                selected: null
-            },
-            batch: {
-                view: 'batches',
-                selected: null,
-                selectedDept: null
-            },
-            comparative: {
-                view: 'departments',
-                selected: null
-            },
-            topNotcher: {
-                view: 'departments',
-                selected: null
-            },
+            dept: { view: 'departments', selected: null },
+            batch: { view: 'batches', selected: null, selectedDept: null },
+            comparative: { view: 'departments', selected: null },
+            topNotcher: { view: 'departments', selected: null },
+            boardPassers: { view: 'overview', selected: null },
         };
 
         // =====================================================================
@@ -621,9 +663,6 @@
             new ChartLib(el, config);
         };
 
-        // =====================================================================
-        // Smart Y-axis — nice round steps based on the data's max value.
-        // =====================================================================
         const niceStep = (max) => {
             if (!Number.isFinite(max) || max <= 0) return 1;
             if (max <= 10)    return 1;
@@ -656,9 +695,6 @@
             };
         };
 
-        // =====================================================================
-        // Minimum y-axis width enforcement for horizontal bar charts
-        // =====================================================================
         const horizontalYAxis = (minWidth = 170) => {
             const t = chartTheme();
             return {
@@ -672,8 +708,9 @@
         };
 
         // =====================================================================
-        // Universal bar-value label plugin
+        // Universal plugins (defined once at top scope)
         // =====================================================================
+
         const barValueLabelPlugin = {
             id: 'barValueLabels',
             afterDatasetsDraw(chart) {
@@ -691,9 +728,7 @@
                     chart.getDatasetMeta(di).data.forEach((bar, i) => {
                         const v = dataset.data[i];
                         if (v == null || v === 0) return;
-
                         const text = String(v);
-
                         if (isHorizontal) {
                             ctx.fillText(text, bar.x + 6, bar.y);
                         } else {
@@ -703,6 +738,59 @@
                 });
 
                 ctx.restore();
+            },
+        };
+
+        const pieLabelPlugin = {
+            id: 'piePercentLabels',
+            afterDatasetsDraw(chart) {
+                const { ctx } = chart;
+                const theme = chartTheme();
+                const dataset = chart.data.datasets[0];
+                const total = dataset.data.reduce((a, b) => a + b, 0);
+                if (!total) return;
+
+                chart.getDatasetMeta(0).data.forEach((arc, i) => {
+                    const value = dataset.data[i];
+                    if (!value) return;
+                    const pct = ((value / total) * 100).toFixed(0) + '%';
+                    const pos = arc.tooltipPosition();
+                    ctx.save();
+                    ctx.fillStyle = theme.pieLabel;
+                    ctx.font = '700 12px ' + theme.fontFamily;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(pct, pos.x, pos.y);
+                    ctx.restore();
+                });
+            },
+        };
+
+        const pieTooltip = {
+            backgroundColor: chartTheme().tooltipBg,
+            padding: 10,
+            cornerRadius: 8,
+            titleFont: { size: 12, weight: '600' },
+            bodyFont: { size: 12 },
+            callbacks: {
+                label: (ctx) => {
+                    const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                    const pct = total > 0 ? ((ctx.raw / total) * 100).toFixed(1) + '%' : '0%';
+                    return ` ${ctx.raw} (${pct})`;
+                },
+            },
+        };
+
+        const pieLegend = {
+            position: 'bottom',
+            labels: {
+                color: chartTheme().mutedText,
+                boxWidth: 10,
+                boxHeight: 10,
+                usePointStyle: true,
+                pointStyle: 'circle',
+                padding: 12,
+                font: { size: 11, weight: '600' },
             },
         };
 
@@ -736,6 +824,8 @@
             const areaData = payload.employmentArea || {};
             const monthsData = payload.monthsToFirstJob || {};
             const topNotchers = payload.topNotchers || {};
+            const boardExamBreakdown = payload.boardExamBreakdown || { Passed: 0, Failed: 0 };
+            const boardPassers = payload.boardPassers || {};
 
             window.__analyticsData = {
                 alumniByDept,
@@ -745,83 +835,34 @@
                 alumniByBatchDept,
                 analyticsByDept,
                 topNotchers,
+                boardExamBreakdown,
+                boardPassers,
                 theme,
             };
 
-            // Build the course → dept lookup AFTER the data is in place.
             buildCourseDeptMap();
-
-            // Repaint the top-notcher highlight cards (dept-colored).
             paintTopNotcherCards();
 
-            // 1. Alumni by Department (drillable)
+            // 1. Alumni by Department
             renderDeptChart(ChartLib);
 
-            // 2. Comparative Analysis (drillable)
+            // 2. Comparative Analysis
             renderComparativeChart(ChartLib);
 
-            // 3. Alumni by Year (drillable: batch → department → course)
+            // 3. Alumni by Year
             renderBatchChart(ChartLib);
 
-            // 4. Top Notchers (drillable: department → course)
+            // 4. Top Notchers
             if (Object.keys(topNotchers).length > 0) {
                 renderTopNotcherChart(ChartLib);
             }
 
-            // ===== Pie helpers =====
-            const pieLabelPlugin = {
-                id: 'piePercentLabels',
-                afterDatasetsDraw(chart) {
-                    const { ctx } = chart;
-                    const dataset = chart.data.datasets[0];
-                    const total = dataset.data.reduce((a, b) => a + b, 0);
-                    if (!total) return;
+            // 5. Board Passers (pie → dept → course)
+            if ((boardExamBreakdown.Passed || 0) + (boardExamBreakdown.Failed || 0) > 0) {
+                renderBoardPassersChart(ChartLib);
+            }
 
-                    chart.getDatasetMeta(0).data.forEach((arc, i) => {
-                        const value = dataset.data[i];
-                        if (!value) return;
-                        const pct = ((value / total) * 100).toFixed(0) + '%';
-                        const pos = arc.tooltipPosition();
-                        ctx.save();
-                        ctx.fillStyle = theme.pieLabel;
-                        ctx.font = '700 12px ' + theme.fontFamily;
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        ctx.fillText(pct, pos.x, pos.y);
-                        ctx.restore();
-                    });
-                },
-            };
-
-            const pieTooltip = {
-                backgroundColor: theme.tooltipBg,
-                padding: 10,
-                cornerRadius: 8,
-                titleFont: { size: 12, weight: '600' },
-                bodyFont: { size: 12 },
-                callbacks: {
-                    label: (ctx) => {
-                        const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                        const pct = total > 0 ? ((ctx.raw / total) * 100).toFixed(1) + '%' : '0%';
-                        return ` ${ctx.raw} (${pct})`;
-                    },
-                },
-            };
-
-            const pieLegend = {
-                position: 'bottom',
-                labels: {
-                    color: theme.mutedText,
-                    boxWidth: 10,
-                    boxHeight: 10,
-                    usePointStyle: true,
-                    pointStyle: 'circle',
-                    padding: 12,
-                    font: { size: 11, weight: '600' },
-                },
-            };
-
-            // 5. Employment Status
+            // 6. Employment Status (doughnut)
             if (Object.keys(statusData).length > 0) {
                 makeChart(ChartLib, 'employmentStatusChart', {
                     type: 'doughnut',
@@ -845,7 +886,7 @@
                 });
             }
 
-            // 6. Employment Type
+            // 7. Employment Type
             if (Object.keys(typeData).length > 0) {
                 const typeValues = Object.values(typeData);
                 makeChart(ChartLib, 'employmentTypeChart', {
@@ -890,7 +931,7 @@
                 });
             }
 
-            // 7. Organization Type
+            // 8. Organization Type
             if (Object.keys(orgData).length > 0) {
                 const orgValues = Object.values(orgData);
                 makeChart(ChartLib, 'organizationTypeChart', {
@@ -936,7 +977,7 @@
                 });
             }
 
-            // 8. Employment Area
+            // 9. Employment Area
             if (Object.keys(areaData).length > 0) {
                 makeChart(ChartLib, 'employmentAreaChart', {
                     type: 'doughnut',
@@ -960,7 +1001,7 @@
                 });
             }
 
-            // 9. Months to First Job
+            // 10. Months to First Job
             if (Object.keys(monthsData).length > 0) {
                 const monthValues = Object.values(monthsData);
                 makeChart(ChartLib, 'monthsToFirstJobChart', {
@@ -1007,19 +1048,15 @@
         };
 
         // =====================================================================
-        // Dept chart renderer — dept colors always
+        // Dept chart renderer
         // =====================================================================
         const renderDeptChart = (ChartLib) => {
             const data = window.__analyticsData;
             const theme = data.theme;
             const state = drillState.dept;
 
-            let labels = [],
-                totals = [],
-                names = [];
-            let clickable = false,
-                subtitleText = '',
-                backBtnVisible = false;
+            let labels = [], totals = [], names = [];
+            let clickable = false, subtitleText = '', backBtnVisible = false;
 
             if (state.view === 'departments') {
                 const codes = Object.keys(data.alumniByDept);
@@ -1030,10 +1067,7 @@
                 subtitleText = 'Breakdown by department · click a bar to see courses';
                 backBtnVisible = false;
             } else {
-                const dept = data.alumniByDeptCourse[state.selected] || {
-                    courses: {},
-                    name: state.selected
-                };
+                const dept = data.alumniByDeptCourse[state.selected] || { courses: {}, name: state.selected };
                 const codes = Object.keys(dept.courses || {});
                 labels = codes;
                 names = codes.map(c => dept.courses[c]?.name || c);
@@ -1078,9 +1112,8 @@
                     onClick: (event, els) => {
                         if (!clickable || els.length === 0) return;
                         const idx = els[0].index;
-                        const code = labels[idx];
                         drillState.dept.view = 'courses';
-                        drillState.dept.selected = code;
+                        drillState.dept.selected = labels[idx];
                         renderDeptChart(ChartLib);
                     },
                     plugins: {
@@ -1113,7 +1146,7 @@
         };
 
         // =====================================================================
-        // Comparative chart renderer (DRILLABLE)
+        // Comparative chart renderer
         // =====================================================================
         const renderComparativeChart = (ChartLib) => {
             const data = window.__analyticsData;
@@ -1138,10 +1171,7 @@
                 subtitleText = 'Course alignment with work · by department · click a bar to see courses';
                 backBtnVisible = false;
             } else {
-                const dept = data.analyticsByDept?.[state.selected] || {
-                    courses: {},
-                    name: state.selected
-                };
+                const dept = data.analyticsByDept?.[state.selected] || { courses: {}, name: state.selected };
                 const codes = Object.keys(dept.courses || {});
                 labels = codes;
                 names = codes.map(c => dept.courses[c]?.name || c);
@@ -1167,7 +1197,8 @@
                 type: 'bar',
                 data: {
                     labels,
-                    datasets: [{
+                    datasets: [
+                        {
                             label: 'Aligned with Work',
                             data: relatedData,
                             backgroundColor: PALETTE.greenBright,
@@ -1197,10 +1228,8 @@
                     },
                     onClick: (event, els) => {
                         if (!clickable || els.length === 0) return;
-                        const idx = els[0].index;
-                        const code = labels[idx];
                         drillState.comparative.view = 'courses';
-                        drillState.comparative.selected = code;
+                        drillState.comparative.selected = labels[els[0].index];
                         renderComparativeChart(ChartLib);
                     },
                     scales: {
@@ -1275,19 +1304,15 @@
         };
 
         // =====================================================================
-        // Batch chart renderer  (batch → department → course)
+        // Batch chart renderer
         // =====================================================================
         const renderBatchChart = (ChartLib) => {
             const data = window.__analyticsData;
             const theme = data.theme;
             const state = drillState.batch;
 
-            let labels = [],
-                totals = [],
-                names = [];
-            let clickable = false,
-                subtitleText = '',
-                backBtnVisible = false;
+            let labels = [], totals = [], names = [];
+            let clickable = false, subtitleText = '', backBtnVisible = false;
 
             if (state.view === 'batches') {
                 const ids = Object.keys(data.alumniByBatch);
@@ -1297,12 +1322,8 @@
                 clickable = true;
                 subtitleText = 'Total graduates per batch · click a bar to see departments';
                 backBtnVisible = false;
-
             } else if (state.view === 'departments') {
-                const batch = data.alumniByBatchDept[state.selected] || {
-                    departments: {},
-                    batch_name: state.selected
-                };
+                const batch = data.alumniByBatchDept[state.selected] || { departments: {}, batch_name: state.selected };
                 const codes = Object.keys(batch.departments || {});
                 labels = codes;
                 names = codes.map(c => batch.departments[c]?.name || c);
@@ -1310,16 +1331,9 @@
                 clickable = true;
                 subtitleText = `Batch ${batch.batch_name} · breakdown by department · click a bar to see courses`;
                 backBtnVisible = true;
-
-            } else { // 'courses'
-                const batch = data.alumniByBatchDept[state.selected] || {
-                    departments: {},
-                    batch_name: state.selected
-                };
-                const dept = batch.departments?.[state.selectedDept] || {
-                    courses: {},
-                    name: state.selectedDept
-                };
+            } else {
+                const batch = data.alumniByBatchDept[state.selected] || { departments: {}, batch_name: state.selected };
+                const dept = batch.departments?.[state.selectedDept] || { courses: {}, name: state.selectedDept };
                 const codes = Object.keys(dept.courses || {});
                 labels = codes;
                 names = codes.map(c => dept.courses[c]?.name || c);
@@ -1381,7 +1395,6 @@
                             state.view = 'departments';
                             state.selected = batchId;
                             state.selectedDept = null;
-
                         } else if (state.view === 'departments') {
                             state.view = 'courses';
                             state.selectedDept = labels[idx];
@@ -1403,9 +1416,7 @@
                                 label: (ctx) => `${ctx.raw} graduate${ctx.raw === 1 ? '' : 's'}`,
                                 afterLabel: () => {
                                     if (!clickable) return '';
-                                    return state.view === 'batches' ?
-                                        'Click to see departments' :
-                                        'Click to see courses';
+                                    return state.view === 'batches' ? 'Click to see departments' : 'Click to see courses';
                                 },
                             },
                         },
@@ -1424,7 +1435,7 @@
         };
 
         // =====================================================================
-        // Top Notcher chart renderer  (department → course)
+        // Top Notcher chart renderer
         // =====================================================================
         const renderTopNotcherChart = (ChartLib) => {
             const data = window.__analyticsData;
@@ -1495,9 +1506,8 @@
                     },
                     onClick: (event, els) => {
                         if (!clickable || els.length === 0) return;
-                        const idx = els[0].index;
                         drillState.topNotcher.view = 'courses';
-                        drillState.topNotcher.selected = labels[idx];
+                        drillState.topNotcher.selected = labels[els[0].index];
                         renderTopNotcherChart(ChartLib);
                     },
                     plugins: {
@@ -1518,6 +1528,169 @@
                                     const clickLine = clickable ? 'Click to see courses' : '';
                                     return [rankLine, clickLine].filter(Boolean).join('\n');
                                 },
+                            },
+                        },
+                    },
+                    scales: {
+                        y: integerTicks(Math.max(0, ...totals), theme),
+                        x: {
+                            ticks: { color: theme.mutedText, font: { weight: '600' }, autoSkip: true, maxRotation: 45 },
+                            grid: { display: false },
+                            border: { display: false },
+                        },
+                    },
+                },
+                plugins: [barValueLabelPlugin],
+            });
+        };
+
+        // =====================================================================
+        // Board Passers chart renderer (pie → department → course)
+        // =====================================================================
+        const renderBoardPassersChart = (ChartLib) => {
+            const data = window.__analyticsData;
+            const theme = data.theme;
+            const state = drillState.boardPassers;
+            const overall = data.boardExamBreakdown || { Passed: 0, Failed: 0 };
+            const deptTree = data.boardPassers || {};
+
+            const subEl = document.getElementById('board-passers-subtitle');
+            const backBtn = document.getElementById('board-passers-back-btn');
+
+            // ===== Level 0: Pie =====
+            if (state.view === 'overview') {
+                if (subEl) subEl.textContent = 'Overall pass rate · click the Passed slice to see departments';
+                if (backBtn) {
+                    backBtn.classList.add('hidden');
+                    backBtn.classList.remove('inline-flex');
+                }
+
+                const pieData = [overall.Passed || 0, overall.Failed || 0];
+                if (pieData[0] + pieData[1] === 0) return;
+
+                makeChart(ChartLib, 'boardPassersChart', {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Passed', 'Failed'],
+                        datasets: [{
+                            data: pieData,
+                            backgroundColor: [PALETTE.greenBright, PALETTE.gold],
+                            borderWidth: 3,
+                            borderColor: theme.borderColor,
+                            hoverOffset: 6,
+                        }],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '60%',
+                        onHover: (event, els) => {
+                            const canDrill = els.length > 0 && els[0].index === 0 && (overall.Passed || 0) > 0;
+                            event.native.target.style.cursor = canDrill ? 'pointer' : 'default';
+                        },
+                        onClick: (event, els) => {
+                            if (els.length === 0 || els[0].index !== 0) return;
+                            if (!(overall.Passed > 0)) return;
+                            drillState.boardPassers.view = 'departments';
+                            drillState.boardPassers.selected = null;
+                            renderBoardPassersChart(ChartLib);
+                        },
+                        plugins: {
+                            legend: pieLegend,
+                            tooltip: {
+                                ...pieTooltip,
+                                callbacks: {
+                                    label: (ctx) => {
+                                        const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                        const pct = total > 0 ? ((ctx.raw / total) * 100).toFixed(1) + '%' : '0%';
+                                        const hint = ctx.dataIndex === 0 ? ' · click to drill' : '';
+                                        return ` ${ctx.raw} (${pct})${hint}`;
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    plugins: [pieLabelPlugin],
+                });
+
+                return;
+            }
+
+            // ===== Levels 1 & 2: Bar =====
+            let labels = [];
+            let totals = [];
+            let names = [];
+            let clickable = false;
+
+            if (state.view === 'departments') {
+                const codes = Object.keys(deptTree);
+                labels = codes;
+                names = codes.map(c => deptTree[c]?.name || c);
+                totals = codes.map(c => deptTree[c]?.total || 0);
+                clickable = true;
+
+                if (subEl) subEl.textContent = 'Passers by department · click a bar to see courses';
+                if (backBtn) {
+                    backBtn.classList.remove('hidden');
+                    backBtn.classList.add('inline-flex');
+                }
+            } else {
+                const dept = deptTree[state.selected] || { courses: {}, name: state.selected };
+                const codes = Object.keys(dept.courses || {});
+                labels = codes;
+                names = codes.map(c => dept.courses[c]?.name || c);
+                totals = codes.map(c => dept.courses[c]?.total || 0);
+                clickable = false;
+
+                if (subEl) subEl.textContent = `${dept.name} · passers by course`;
+                if (backBtn) {
+                    backBtn.classList.remove('hidden');
+                    backBtn.classList.add('inline-flex');
+                }
+            }
+
+            if (labels.length === 0) return;
+
+            makeChart(ChartLib, 'boardPassersChart', {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        data: totals,
+                        backgroundColor: (ctx) => deptColor(labels[ctx.dataIndex], ctx.dataIndex),
+                        hoverBackgroundColor: (ctx) => darken(deptColor(labels[ctx.dataIndex], ctx.dataIndex), 0.2),
+                        borderRadius: 8,
+                        borderSkipped: false,
+                        maxBarThickness: 48,
+                    }],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: { padding: { top: 18 } },
+                    onHover: (event, els) => {
+                        if (!clickable) return;
+                        event.native.target.style.cursor = els.length > 0 ? 'pointer' : 'default';
+                    },
+                    onClick: (event, els) => {
+                        if (!clickable || els.length === 0) return;
+                        drillState.boardPassers.view = 'courses';
+                        drillState.boardPassers.selected = labels[els[0].index];
+                        renderBoardPassersChart(ChartLib);
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: theme.tooltipBg,
+                            padding: 10,
+                            cornerRadius: 8,
+                            titleFont: { size: 12, weight: '600' },
+                            bodyFont: { size: 12 },
+                            displayColors: false,
+                            callbacks: {
+                                title: (items) => names[items[0]?.dataIndex] || labels[items[0]?.dataIndex],
+                                label: (ctx) => `${ctx.raw} passer${ctx.raw === 1 ? '' : 's'}`,
+                                afterLabel: () => clickable ? 'Click to see courses' : '',
                             },
                         },
                     },
@@ -1589,6 +1762,24 @@
             });
         }
 
+        if (!window.__analyticsBoardPassersBack) {
+            window.__analyticsBoardPassersBack = true;
+            document.addEventListener('click', (e) => {
+                const btn = e.target.closest('#board-passers-back-btn');
+                if (!btn || !ChartLibRef) return;
+
+                if (drillState.boardPassers.view === 'courses') {
+                    drillState.boardPassers.view = 'departments';
+                    drillState.boardPassers.selected = null;
+                } else {
+                    drillState.boardPassers.view = 'overview';
+                    drillState.boardPassers.selected = null;
+                }
+
+                renderBoardPassersChart(ChartLibRef);
+            });
+        }
+
         // =====================================================================
         // Debounced init
         // =====================================================================
@@ -1598,23 +1789,11 @@
             __initScheduled = true;
             requestAnimationFrame(() => {
                 __initScheduled = false;
-                drillState.dept = {
-                    view: 'departments',
-                    selected: null
-                };
-                drillState.batch = {
-                    view: 'batches',
-                    selected: null,
-                    selectedDept: null
-                };
-                drillState.comparative = {
-                    view: 'departments',
-                    selected: null
-                };
-                drillState.topNotcher = {
-                    view: 'departments',
-                    selected: null
-                };
+                drillState.dept = { view: 'departments', selected: null };
+                drillState.batch = { view: 'batches', selected: null, selectedDept: null };
+                drillState.comparative = { view: 'departments', selected: null };
+                drillState.topNotcher = { view: 'departments', selected: null };
+                drillState.boardPassers = { view: 'overview', selected: null };
                 initCharts();
             });
         };

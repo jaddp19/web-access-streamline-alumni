@@ -36,16 +36,14 @@
 
             @can('can_view')
             <div class="relative w-full lg:w-72 shrink-0">
-            
                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <svg class="w-4 h-4 text-[#123524]/40 dark:text-white/40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                     </svg>
                 </div>
-                
                 <input wire:model.live.debounce.400ms="search" type="text"
                     placeholder="Search name, email, or school ID…"
-                    class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#123524]/15 dark:border-white/10 bg-white dark:bg-[#3A3B3C] text-sm text-[#123524] dark:text-white placeholder-[#123524]/30 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition"> 
+                    class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#123524]/15 dark:border-white/10 bg-white dark:bg-[#3A3B3C] text-sm text-[#123524] dark:text-white placeholder-[#123524]/30 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
             </div>
             @endcan
         </div>
@@ -80,8 +78,16 @@
                             : null;
                         $initial = strtoupper(substr($user->name, 0, 1));
 
-                        // Only pending attempts for this alumni.
-                        $pendingAttempts = $profile?->boardExams?->where('is_verified', false) ?? collect();
+                        // Pending attempts, newest first.
+                        $pendingAttempts = ($profile?->boardExams?->where('is_verified', false) ?? collect())
+                            ->sortByDesc('id')
+                            ->values();
+
+                        // Verified history — reference so the reviewer can see how many
+                        // times this alumni has taken the board exam before.
+                        $historyAttempts = ($profile?->boardExams?->where('is_verified', true) ?? collect())
+                            ->sortByDesc('id')
+                            ->values();
                     @endphp
 
                     <div wire:key="user-{{ $user->id }}"
@@ -149,80 +155,142 @@
                                     @endif
                                 </div>
 
-                                {{-- PENDING BOARD ATTEMPTS with top notcher rank inputs --}}
-                                @if ($pendingAttempts->isNotEmpty())
-                                    <div class="mt-3 space-y-2">
-                                        <p class="text-[10px] uppercase tracking-wide font-bold text-amber-700 dark:text-amber-400">
-                                            {{ $pendingAttempts->count() }} pending {{ \Illuminate\Support\Str::plural('attempt', $pendingAttempts->count()) }}
-                                        </p>
+                                @can('can_create')
+                                    {{-- PENDING BOARD ATTEMPTS with top notcher rank inputs --}}
+                                    @if ($pendingAttempts->isNotEmpty())
+                                        <div class="mt-3 space-y-2">
+                                            <p class="text-[10px] uppercase tracking-wide font-bold text-amber-700 dark:text-amber-400">
+                                                {{ $pendingAttempts->count() }} pending {{ \Illuminate\Support\Str::plural('attempt', $pendingAttempts->count()) }}
+                                            </p>
 
-                                        @foreach ($pendingAttempts as $exam)
-                                            @php
-                                                $rate   = (float) $exam->rate;
-                                                $passed = (bool) $exam->passed;
-                                            @endphp
+                                            @foreach ($pendingAttempts as $exam)
+                                                @php
+                                                    $rate   = (float) $exam->rate;
+                                                    $passed = $rate >= \App\Models\UserProfile::BOARD_PASSING_RATE;
+                                                @endphp
 
-                                            <div wire:key="pending-attempt-{{ $exam->id }}"
-                                                class="rounded-lg border border-amber-200 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/10 px-3 py-2.5">
+                                                <div wire:key="pending-attempt-{{ $exam->id }}"
+                                                    class="rounded-lg border border-amber-200 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/10 px-3 py-2.5">
 
-                                                {{-- Attempt header --}}
-                                                <div class="flex items-center justify-between gap-3">
+                                                    {{-- Attempt header --}}
+                                                    <div class="flex items-center justify-between gap-3">
+                                                        <div class="min-w-0 flex-1">
+                                                            <div class="flex items-center gap-2 flex-wrap">
+                                                                <span class="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524]">
+                                                                    {{ $exam->attempt_label }}
+                                                                </span>
+                                                                @if ($exam->exam_name)
+                                                                    <span class="text-xs font-semibold text-[#123524] dark:text-white truncate">
+                                                                        {{ $exam->exam_name }}
+                                                                    </span>
+                                                                @endif
+                                                            </div>
+                                                            <p class="text-[11px] text-[#123524]/70 dark:text-white/70 mt-1">
+                                                                Taken {{ $exam->date_taken?->format('M d, Y') ?? '—' }}
+                                                                @if ($exam->rate !== null)
+                                                                    &middot; Rating: <span class="font-semibold">{{ number_format($rate, 2) }}%</span>
+                                                                @endif
+                                                            </p>
+                                                        </div>
+
+                                                        <span class="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full
+                                                            {{ $passed
+                                                                ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-500/15'
+                                                                : 'text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-500/15' }}">
+                                                            {{ $passed ? 'Passed' : 'Failed' }}
+                                                        </span>
+                                                    </div>
+
+                                                    {{-- Top notcher rank input --}}
+                                                    <div class="mt-2 flex items-center gap-2 pt-2 border-t border-amber-200/60 dark:border-amber-500/20">
+                                                        <label class="flex items-center gap-1.5 text-[11px] font-semibold text-[#123524] dark:text-white shrink-0">
+                                                            <svg class="w-3.5 h-3.5 text-[#D4A537]" fill="currentColor" viewBox="0 0 24 24">
+                                                                <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4-6.2-4.5-6.2 4.5 2.4-7.4L2 9.4h7.6z" />
+                                                            </svg>
+                                                            Top notcher?
+                                                        </label>
+
+                                                        <input
+                                                            type="number"
+                                                            min="1"
+                                                            max="100"
+                                                            placeholder="Rank (e.g. 3)"
+                                                            wire:model="topNotcherRank.{{ $exam->id }}"
+                                                            class="w-28 px-2.5 py-1.5 rounded-lg border border-[#123524]/15 dark:border-white/10 bg-white dark:bg-[#3A3B3C] text-xs text-[#123524] dark:text-white placeholder-[#123524]/30 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
+
+                                                        <span class="text-[10px] text-[#123524]/50 dark:text-white/50 italic truncate">
+                                                            Leave blank if not a top notcher.
+                                                        </span>
+                                                    </div>
+
+                                                    @error("topNotcherRank.{$exam->id}")
+                                                        <p class="text-[11px] text-red-500 dark:text-red-400 mt-1">{{ $message }}</p>
+                                                    @enderror
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+
+                                    {{-- Verified board exam history — read-only reference --}}
+                                    @if ($historyAttempts->isNotEmpty())
+                                        <div class="mt-3">
+                                            <p class="text-[10px] uppercase tracking-wide font-bold text-[#123524]/50 dark:text-white/50 mb-2">
+                                                Previously verified ({{ $historyAttempts->count() }})
+                                            </p>
+
+                                            @foreach ($historyAttempts as $exam)
+                                                @php
+                                                    $hRate   = (float) $exam->rate;
+                                                    $hPassed = $hRate >= \App\Models\UserProfile::BOARD_PASSING_RATE;
+                                                @endphp
+
+                                                <div wire:key="history-attempt-{{ $exam->id }}"
+                                                    class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 p-3 rounded-xl bg-[#F1EFE7] dark:bg-[#3A3B3C] mb-2 last:mb-0">
+
                                                     <div class="min-w-0 flex-1">
                                                         <div class="flex items-center gap-2 flex-wrap">
-                                                            <span class="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524]">
+                                                            <span class="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide bg-[#123524] text-white">
                                                                 {{ $exam->attempt_label }}
                                                             </span>
+
                                                             @if ($exam->exam_name)
-                                                                <span class="text-xs font-semibold text-[#123524] dark:text-white truncate">
+                                                                <span class="text-xs font-semibold text-black/70 dark:text-white/70">
                                                                     {{ $exam->exam_name }}
                                                                 </span>
                                                             @endif
+
+                                                            @if ($exam->is_top_notcher)
+                                                                <span class="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide bg-[#D4A537] text-[#123524]">
+                                                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                                                                        <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4-6.2-4.5-6.2 4.5 2.4-7.4L2 9.4h7.6z" />
+                                                                    </svg>
+                                                                    {{ $exam->top_notcher_label }}
+                                                                </span>
+                                                            @endif
                                                         </div>
-                                                        <p class="text-[11px] text-[#123524]/70 dark:text-white/70 mt-1">
+
+                                                        <p class="text-xs text-black/60 dark:text-white/60 mt-1.5">
                                                             Taken {{ $exam->date_taken?->format('M d, Y') ?? '—' }}
                                                             @if ($exam->rate !== null)
-                                                                &middot; Rating: <span class="font-semibold">{{ number_format($rate, 2) }}%</span>
+                                                                &middot; Rating: <span class="font-semibold">{{ number_format($hRate, 2) }}%</span>
+                                                            @endif
+                                                            @if ($exam->verified_at)
+                                                                &middot; Verified {{ $exam->verified_at->format('M d, Y') }}
                                                             @endif
                                                         </p>
                                                     </div>
 
-                                                    <span class="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full
-                                                        {{ $passed
-                                                            ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-500/15'
+                                                    <span class="self-start sm:self-center shrink-0 text-[10px] sm:text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap
+                                                        {{ $hPassed
+                                                            ? 'text-green-700 dark:text-emerald-400 bg-green-100 dark:bg-emerald-500/15'
                                                             : 'text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-500/15' }}">
-                                                        {{ $passed ? 'Passed' : 'Failed' }}
+                                                        {{ $hPassed ? 'Passed' : 'Failed' }}
                                                     </span>
                                                 </div>
-
-                                                {{-- Top notcher rank input --}}
-                                                <div class="mt-2 flex items-center gap-2 pt-2 border-t border-amber-200/60 dark:border-amber-500/20">
-                                                    <label class="flex items-center gap-1.5 text-[11px] font-semibold text-[#123524] dark:text-white shrink-0">
-                                                        <svg class="w-3.5 h-3.5 text-[#D4A537]" fill="currentColor" viewBox="0 0 24 24">
-                                                            <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4-6.2-4.5-6.2 4.5 2.4-7.4L2 9.4h7.6z" />
-                                                        </svg>
-                                                        Top notcher?
-                                                    </label>
-
-                                                    <input
-                                                        type="number"
-                                                        min="1"
-                                                        max="100"
-                                                        placeholder="Rank (e.g. 3)"
-                                                        wire:model="topNotcherRank.{{ $exam->id }}"
-                                                        class="w-28 px-2.5 py-1.5 rounded-lg border border-[#123524]/15 dark:border-white/10 bg-white dark:bg-[#3A3B3C] text-xs text-[#123524] dark:text-white placeholder-[#123524]/30 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
-
-                                                    <span class="text-[10px] text-[#123524]/50 dark:text-white/50 italic truncate">
-                                                        Leave blank if not a top notcher.
-                                                    </span>
-                                                </div>
-
-                                                @error("topNotcherRank.{$exam->id}")
-                                                    <p class="text-[11px] text-red-500 dark:text-red-400 mt-1">{{ $message }}</p>
-                                                @enderror
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                @endif
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                @endcan
                             </div>
                         </div>
 

@@ -3,8 +3,10 @@
 
         {{-- Flash messages --}}
         @if (session('success'))
-            <div class="mb-5 flex items-start gap-2.5 px-4 py-3 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl text-emerald-700 dark:text-emerald-400 text-sm font-medium">
-                <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <div
+                class="mb-5 flex items-start gap-2.5 px-4 py-3 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl text-emerald-700 dark:text-emerald-400 text-sm font-medium">
+                <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2"
+                    viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round"
                         d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -13,8 +15,10 @@
         @endif
 
         @if (session('error'))
-            <div class="mb-5 flex items-start gap-2.5 px-4 py-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl text-red-700 dark:text-red-400 text-sm font-medium">
-                <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <div
+                class="mb-5 flex items-start gap-2.5 px-4 py-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl text-red-700 dark:text-red-400 text-sm font-medium">
+                <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2"
+                    viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round"
                         d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                 </svg>
@@ -26,8 +30,8 @@
         <div class="mb-5">
             <a href="{{ route('admin.alumni.view') }}"
                 class="inline-flex items-center gap-x-2 px-3.5 py-2 text-sm font-semibold rounded-lg bg-white dark:bg-[#3A3B3C] border border-black/10 dark:border-white/10 text-[#123524] dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition">
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
                     <path d="M15 15l-6-6 6-6" />
                 </svg>
                 <span>Back</span>
@@ -64,15 +68,23 @@
                                 {{ Str::ucfirst($role->name) }}
                             </span>
                         @endforeach
-                        @if ($user->userProfile?->is_verified)
+                        @php
+                            // "Verified" only makes sense for board programs — the flag mirrors
+                            // "has at least one verified PASSING board exam attempt". Non-board
+                            // courses always carry is_verified = true for internal reasons, so we
+                            // gate the badge on course_type to avoid a misleading label.
+                            $isBoardCourse = $user->userProfile?->courses->contains('course_type', 'board') ?? false;
+                        @endphp
+
+                        @if ($isBoardCourse && $user->userProfile?->is_verified)
                             <span
-                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/10 text-white">
+                                class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold bg-white/10 text-white">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
-                                Verified
+                                Board Passer
                             </span>
                         @endif
                         @if ($user->userProfile?->is_private)
@@ -85,24 +97,30 @@
                         @php $p = $user->userProfile; @endphp
                         @if ($p)
                             @if ($p->is_approved)
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-400/20 text-emerald-300">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <span
+                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-400/20 text-emerald-300">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2"
+                                        viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round"
                                             d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                     Approved
                                 </span>
                             @elseif (filled($p->last_rejection_reason))
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-400/20 text-red-300">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <span
+                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-400/20 text-red-300">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2"
+                                        viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round"
                                             d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                                     </svg>
                                     Rejected
                                 </span>
                             @else
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-400/20 text-amber-300">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <span
+                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-400/20 text-amber-300">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2"
+                                        viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round"
                                             d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
@@ -130,8 +148,10 @@
 
                         @if ($p->is_approved)
                             <p class="text-sm text-black/60 dark:text-white/60">
-                                <span class="inline-flex items-center gap-1.5 font-semibold text-emerald-700 dark:text-emerald-400">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <span
+                                    class="inline-flex items-center gap-1.5 font-semibold text-emerald-700 dark:text-emerald-400">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
+                                        viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round"
                                             d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
@@ -143,16 +163,20 @@
                             </p>
                         @elseif (filled($p->last_rejection_reason))
                             <p class="text-sm text-black/60 dark:text-white/60">
-                                <span class="inline-flex items-center gap-1.5 font-semibold text-red-700 dark:text-red-400">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <span
+                                    class="inline-flex items-center gap-1.5 font-semibold text-red-700 dark:text-red-400">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
+                                        viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round"
                                             d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                                     </svg>
                                     This profile was rejected
                                 </span>
                             </p>
-                            <div class="mt-2 p-3 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20">
-                                <p class="text-[10px] uppercase tracking-wide font-semibold text-red-700 dark:text-red-400 mb-1">
+                            <div
+                                class="mt-2 p-3 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20">
+                                <p
+                                    class="text-[10px] uppercase tracking-wide font-semibold text-red-700 dark:text-red-400 mb-1">
                                     Reason sent to the alumni
                                 </p>
                                 <p class="text-sm text-red-800 dark:text-red-300 whitespace-pre-line">
@@ -161,8 +185,10 @@
                             </div>
                         @else
                             <p class="text-sm text-black/60 dark:text-white/60">
-                                <span class="inline-flex items-center gap-1.5 font-semibold text-amber-700 dark:text-amber-400">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <span
+                                    class="inline-flex items-center gap-1.5 font-semibold text-amber-700 dark:text-amber-400">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
+                                        viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round"
                                             d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
@@ -177,9 +203,9 @@
 
                     {{-- Buttons --}}
                     <div class="flex flex-col xs:flex-row gap-2 shrink-0">
-                        @if (! $p->is_approved)
-                            <button type="button" wire:click="approve"
-                                wire:loading.attr="disabled" wire:target="approve"
+                        @if (!$p->is_approved)
+                            <button type="button" wire:click="approve" wire:loading.attr="disabled"
+                                wire:target="approve"
                                 class="inline-flex items-center justify-center gap-x-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition disabled:opacity-50">
                                 <span wire:loading.remove wire:target="approve">Approve</span>
                                 <span wire:loading wire:target="approve">Approving…</span>
@@ -202,20 +228,26 @@
                 <h2 class="text-sm font-bold text-[#123524] dark:text-white uppercase tracking-wide mb-4">Account</h2>
                 <dl class="grid sm:grid-cols-2 gap-x-6 gap-y-4">
                     <div>
-                        <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Email</dt>
+                        <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">
+                            Email</dt>
                         <dd class="text-black dark:text-white mt-1">{{ $user->email }}</dd>
                     </div>
                     <div>
-                        <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">School ID</dt>
+                        <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">
+                            School ID</dt>
                         <dd class="text-black dark:text-white mt-1">{{ $user->school_id ?? '—' }}</dd>
                     </div>
                     <div>
-                        <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Batch</dt>
-                        <dd class="text-black dark:text-white mt-1">{{ $user->userProfile?->batch?->batch_name ?? '—' }}</dd>
+                        <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">
+                            Batch</dt>
+                        <dd class="text-black dark:text-white mt-1">
+                            {{ $user->userProfile?->batch?->batch_name ?? '—' }}</dd>
                     </div>
                     <div>
-                        <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Joined</dt>
-                        <dd class="text-black dark:text-white mt-1">{{ $user->created_at?->format('M d, Y') ?? '—' }}</dd>
+                        <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">
+                            Joined</dt>
+                        <dd class="text-black dark:text-white mt-1">{{ $user->created_at?->format('M d, Y') ?? '—' }}
+                        </dd>
                     </div>
                 </dl>
             </div>
@@ -265,14 +297,17 @@
 
                     <dl class="grid sm:grid-cols-2 gap-x-6 gap-y-4">
                         <div>
-                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Gender</dt>
+                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">
+                                Gender</dt>
                             <dd class="text-black dark:text-white mt-1">{{ $gender }}</dd>
                         </div>
                         <div>
-                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Mobile Number</dt>
+                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">
+                                Mobile Number</dt>
                             <dd class="text-black dark:text-white mt-1 font-medium">
                                 @if ($displayPhone)
-                                    <a href="tel:{{ $rawPhone }}" class="hover:text-[#123524] dark:hover:text-[#D4A537] transition">
+                                    <a href="tel:{{ $rawPhone }}"
+                                        class="hover:text-[#123524] dark:hover:text-[#D4A537] transition">
                                         {{ $displayPhone }}
                                     </a>
                                 @else
@@ -282,29 +317,37 @@
                         </div>
                         @if ($displayPhone2)
                             <div>
-                                <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Alternate Number</dt>
+                                <dt
+                                    class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">
+                                    Alternate Number</dt>
                                 <dd class="text-black dark:text-white mt-1 font-medium">
-                                    <a href="tel:{{ $rawPhone2 }}" class="hover:text-[#123524] dark:hover:text-[#D4A537] transition">
+                                    <a href="tel:{{ $rawPhone2 }}"
+                                        class="hover:text-[#123524] dark:hover:text-[#D4A537] transition">
                                         {{ $displayPhone2 }}
                                     </a>
                                 </dd>
                             </div>
                         @endif
                         <div class="sm:col-span-2">
-                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Address</dt>
+                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">
+                                Address</dt>
                             <dd class="text-black dark:text-white mt-1">{{ $fullAddress ?: '—' }}</dd>
                         </div>
 
                         @if ($profile->is_verified)
                             {{-- Verified board data → show normally --}}
                             <div>
-                                <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Featured Board Date</dt>
+                                <dt
+                                    class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">
+                                    Featured Board Date</dt>
                                 <dd class="text-black dark:text-white mt-1">
                                     {{ $profile->board_taken?->format('M d, Y') ?? '—' }}
                                 </dd>
                             </div>
                             <div>
-                                <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Featured Board Rating</dt>
+                                <dt
+                                    class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">
+                                    Featured Board Rating</dt>
                                 <dd class="text-black dark:text-white mt-1">
                                     {{ $profile->board_rate !== null ? number_format((float) $profile->board_rate, 2) . '%' : '—' }}
                                 </dd>
@@ -312,22 +355,27 @@
                         @elseif ($profile->board_taken || $profile->board_rate !== null)
                             {{-- Unverified board data → hidden until verified --}}
                             <div class="sm:col-span-2">
-                                <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Board Details</dt>
+                                <dt
+                                    class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">
+                                    Board Details</dt>
                                 <dd class="mt-1 flex items-start gap-2 text-sm text-amber-700 dark:text-amber-400">
-                                    <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                                        stroke-width="2" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round"
                                             d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                                     </svg>
                                     <span>
                                         <span class="font-semibold">Awaiting verification</span>
-                                        &mdash; submitted board details are hidden from public view until you approve this profile.
+                                        &mdash; submitted board details are hidden from public view until you approve
+                                        this profile.
                                     </span>
                                 </dd>
                             </div>
                         @endif
                     </dl>
                 @else
-                    <p class="text-black/50 dark:text-white/50 text-sm">This alumni hasn't completed their profile yet.</p>
+                    <p class="text-black/50 dark:text-white/50 text-sm">This alumni hasn't completed their profile yet.
+                    </p>
                 @endif
             </div>
 
@@ -344,8 +392,10 @@
                                 Board Examinations
                             </h2>
 
-                            <span class="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <span
+                                class="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
@@ -353,14 +403,16 @@
                             </span>
                         </div>
 
-                        <span class="text-xs px-2 py-0.5 rounded-full font-semibold bg-[#123524]/5 dark:bg-white/10 text-[#123524]/60 dark:text-white/60">
-                            {{ $boardExams->count() }} {{ \Illuminate\Support\Str::plural('attempt', $boardExams->count()) }}
+                        <span
+                            class="text-xs px-2 py-0.5 rounded-full font-semibold bg-[#123524]/5 dark:bg-white/10 text-[#123524]/60 dark:text-white/60">
+                            {{ $boardExams->count() }}
+                            {{ \Illuminate\Support\Str::plural('attempt', $boardExams->count()) }}
                         </span>
                     </div>
 
                     @foreach ($boardExams as $exam)
                         @php
-                            $rate   = (float) $exam->rate;
+                            $rate = (float) $exam->rate;
                             $passed = (bool) $exam->passed;
                         @endphp
 
@@ -370,7 +422,8 @@
                             {{-- Left: attempt details --}}
                             <div class="min-w-0 flex-1">
                                 <div class="flex items-center gap-2 flex-wrap">
-                                    <span class="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide bg-[#123524] text-white">
+                                    <span
+                                        class="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide bg-[#123524] text-white">
                                         {{ $exam->attempt_label }}
                                     </span>
 
@@ -381,9 +434,11 @@
                                     @endif
 
                                     @if ($exam->is_top_notcher)
-                                        <span class="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide bg-[#D4A537] text-[#123524]">
+                                        <span
+                                            class="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide bg-[#D4A537] text-[#123524]">
                                             <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                                                <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4-6.2-4.5-6.2 4.5 2.4-7.4L2 9.4h7.6z" />
+                                                <path
+                                                    d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4-6.2-4.5-6.2 4.5 2.4-7.4L2 9.4h7.6z" />
                                             </svg>
                                             {{ $exam->top_notcher_label }}
                                         </span>
@@ -393,7 +448,8 @@
                                 <p class="text-xs text-black/60 dark:text-white/60 mt-1.5">
                                     Taken {{ $exam->date_taken?->format('M d, Y') ?? '—' }}
                                     @if ($exam->rate !== null)
-                                        &middot; Rating: <span class="font-semibold">{{ number_format($rate, 2) }}%</span>
+                                        &middot; Rating: <span
+                                            class="font-semibold">{{ number_format($rate, 2) }}%</span>
                                     @endif
                                 </p>
 
@@ -405,7 +461,8 @@
                             </div>
 
                             {{-- Right: pass/fail badge --}}
-                            <span class="self-start sm:self-center shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap
+                            <span
+                                class="self-start sm:self-center shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap
                                 {{ $passed
                                     ? 'text-green-700 dark:text-emerald-400 bg-green-100 dark:bg-emerald-500/15'
                                     : 'text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-500/15' }}">
@@ -418,15 +475,19 @@
 
             <!-- Education -->
             <div class="bg-white dark:bg-[#242526] border border-black/10 dark:border-white/5 rounded-3xl p-8">
-                <h2 class="text-sm font-bold text-[#123524] dark:text-white uppercase tracking-wide mb-4">Education</h2>
+                <h2 class="text-sm font-bold text-[#123524] dark:text-white uppercase tracking-wide mb-4">Education
+                </h2>
                 @forelse ($user->userProfile?->courses ?? [] as $course)
-                    <div class="flex items-center justify-between p-3 rounded-xl bg-[#F1EFE7] dark:bg-[#3A3B3C] mb-2 last:mb-0">
+                    <div
+                        class="flex items-center justify-between p-3 rounded-xl bg-[#F1EFE7] dark:bg-[#3A3B3C] mb-2 last:mb-0">
                         <div>
                             <p class="text-black dark:text-white font-medium">{{ $course->course_title }}</p>
-                            <p class="text-black/50 dark:text-white/50 text-xs">{{ $course->department?->dept_name }} &middot;
+                            <p class="text-black/50 dark:text-white/50 text-xs">{{ $course->department?->dept_name }}
+                                &middot;
                                 {{ $course->course_code }}</p>
                         </div>
-                        <span class="text-xs font-semibold text-[#123524] dark:text-[#D4A537] bg-[#D4A537]/20 dark:bg-[#D4A537]/20 px-2.5 py-1 rounded-full">
+                        <span
+                            class="text-xs font-semibold text-[#123524] dark:text-[#D4A537] bg-[#D4A537]/20 dark:bg-[#D4A537]/20 px-2.5 py-1 rounded-full">
                             {{ Str::headline($course->course_type) }}
                         </span>
                     </div>
@@ -437,13 +498,17 @@
 
             <!-- Work History -->
             <div class="bg-white dark:bg-[#242526] border border-black/10 dark:border-white/5 rounded-3xl p-8">
-                <h2 class="text-sm font-bold text-[#123524] dark:text-white uppercase tracking-wide mb-4">Work History</h2>
+                <h2 class="text-sm font-bold text-[#123524] dark:text-white uppercase tracking-wide mb-4">Work History
+                </h2>
                 @forelse ($user->workHistories as $work)
-                    <div class="flex items-start justify-between p-3 rounded-xl bg-[#F1EFE7] dark:bg-[#3A3B3C] mb-2 last:mb-0">
+                    <div
+                        class="flex items-start justify-between p-3 rounded-xl bg-[#F1EFE7] dark:bg-[#3A3B3C] mb-2 last:mb-0">
                         <div>
                             <p class="text-black dark:text-white font-medium">{{ $work->work_name }}</p>
-                            <p class="text-black/50 dark:text-white/50 text-xs">{{ $work->company?->company_name }}</p>
-                            <p class="text-black/40 dark:text-white/40 text-xs mt-1">Hired {{ $work->date_hired?->format('M d, Y') }}</p>
+                            <p class="text-black/50 dark:text-white/50 text-xs">{{ $work->company?->company_name }}
+                            </p>
+                            <p class="text-black/40 dark:text-white/40 text-xs mt-1">Hired
+                                {{ $work->date_hired?->format('M d, Y') }}</p>
                         </div>
                         <div class="flex flex-col gap-1 items-end">
                             @if ($work->is_current_job)
@@ -461,12 +526,14 @@
 
             <!-- Tracer Study -->
             <div class="bg-white dark:bg-[#242526] border border-black/10 dark:border-white/5 rounded-3xl p-8">
-                <h2 class="text-sm font-bold text-[#123524] dark:text-white uppercase tracking-wide mb-4">Tracer Study</h2>
+                <h2 class="text-sm font-bold text-[#123524] dark:text-white uppercase tracking-wide mb-4">Tracer Study
+                </h2>
                 @if ($user->tracerStudy?->civilStatusEmployment)
                     @php($cse = $user->tracerStudy->civilStatusEmployment)
                     <dl class="grid sm:grid-cols-2 gap-x-6 gap-y-4">
                         <div>
-                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Civil Status</dt>
+                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">
+                                Civil Status</dt>
                             <dd class="text-black dark:text-white mt-1">{{ Str::headline($cse->civil_status) }}</dd>
                         </div>
                         <div class="min-w-0">
@@ -482,30 +549,35 @@
                             </dd>
                         </div>
                         <div>
-                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Current Job Position
+                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">
+                                Current Job Position
                             </dt>
                             <dd class="text-black dark:text-white mt-1">{{ $cse->current_job_position ?? '—' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Related to Degree
+                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">
+                                Related to Degree
                             </dt>
                             <dd class="text-black dark:text-white mt-1">
                                 {{ $cse->employed_related_to_degree ? Str::headline($cse->employed_related_to_degree) : '—' }}
                             </dd>
                         </div>
                         <div>
-                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Employment Type</dt>
+                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">
+                                Employment Type</dt>
                             <dd class="text-black dark:text-white mt-1">
                                 {{ $cse->employment_type ? Str::headline($cse->employment_type) : '—' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Organization Type
+                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">
+                                Organization Type
                             </dt>
                             <dd class="text-black dark:text-white mt-1">
                                 {{ $cse->organization_type ? Str::headline($cse->organization_type) : '—' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Employment Area</dt>
+                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">
+                                Employment Area</dt>
                             <dd class="text-black dark:text-white mt-1">
                                 {{ $cse->employment_area ? Str::headline($cse->employment_area) : '—' }}
                                 @if ($cse->employment_area === 'abroad' && $cse->abroad_country)
@@ -514,7 +586,8 @@
                             </dd>
                         </div>
                         <div>
-                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">Time to First Job</dt>
+                            <dt class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">
+                                Time to First Job</dt>
                             <dd class="text-black dark:text-white mt-1">{{ $this->monthsToFirstJobLabel() }}</dd>
                         </div>
                     </dl>
@@ -525,12 +598,16 @@
                 @if ($user->tracerStudy?->furtherStudy)
                     @php($fs = $user->tracerStudy->furtherStudy)
                     <div class="mt-6 pt-6 border-t border-black/5 dark:border-white/10">
-                        <h3 class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold mb-2">Further Studies
+                        <h3
+                            class="text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold mb-2">
+                            Further Studies
                         </h3>
                         @if ($fs->is_pursued_further_studies)
-                            <p class="text-black dark:text-white">Pursuing further studies &mdash; {{ $fs->level_of_study }}</p>
+                            <p class="text-black dark:text-white">Pursuing further studies &mdash;
+                                {{ $fs->level_of_study }}</p>
                         @else
-                            <p class="text-black/50 dark:text-white/50 text-sm">Not currently pursuing further studies.</p>
+                            <p class="text-black/50 dark:text-white/50 text-sm">Not currently pursuing further studies.
+                            </p>
                         @endif
                     </div>
                 @endif
@@ -542,13 +619,16 @@
         @if ($showRejectModal)
             <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
                 wire:click.self="closeRejectModal">
-                <div class="bg-white dark:bg-[#242526] border border-black/10 dark:border-white/10 rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+                <div
+                    class="bg-white dark:bg-[#242526] border border-black/10 dark:border-white/10 rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
 
                     {{-- Modal header --}}
                     <div class="px-5 sm:px-6 pt-5 sm:pt-6 pb-4 border-b border-black/5 dark:border-white/10">
                         <div class="flex items-start gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-500/15 flex items-center justify-center text-red-600 dark:text-red-400 shrink-0">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <div
+                                class="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-500/15 flex items-center justify-center text-red-600 dark:text-red-400 shrink-0">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5"
+                                    viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                                 </svg>
@@ -558,7 +638,8 @@
                                     Reject {{ $user->name }}'s profile
                                 </h3>
                                 <p class="text-xs text-black/60 dark:text-white/60 mt-1">
-                                    The alumni will receive this reason by email and their profile will show as "Rejected" until they resubmit.
+                                    The alumni will receive this reason by email and their profile will show as
+                                    "Rejected" until they resubmit.
                                 </p>
                             </div>
                         </div>
@@ -566,7 +647,8 @@
 
                     {{-- Modal body --}}
                     <div class="px-5 sm:px-6 py-5 space-y-3">
-                        <label class="block text-xs font-semibold text-[#123524] dark:text-white uppercase tracking-wide">
+                        <label
+                            class="block text-xs font-semibold text-[#123524] dark:text-white uppercase tracking-wide">
                             Reason for rejection <span class="text-red-500">*</span>
                         </label>
 
@@ -585,13 +667,13 @@
                     </div>
 
                     {{-- Modal footer --}}
-                    <div class="px-5 sm:px-6 py-4 border-t border-black/5 dark:border-white/10 flex flex-col xs:flex-row gap-2 justify-end">
+                    <div
+                        class="px-5 sm:px-6 py-4 border-t border-black/5 dark:border-white/10 flex flex-col xs:flex-row gap-2 justify-end">
                         <button type="button" wire:click="closeRejectModal"
                             class="w-full xs:w-auto px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 text-sm font-semibold text-black/70 dark:text-white/70 hover:bg-black/5 dark:hover:bg-white/5 transition">
                             Cancel
                         </button>
-                        <button type="button" wire:click="reject"
-                            wire:loading.attr="disabled" wire:target="reject"
+                        <button type="button" wire:click="reject" wire:loading.attr="disabled" wire:target="reject"
                             class="w-full xs:w-auto px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition disabled:opacity-50">
                             <span wire:loading.remove wire:target="reject">Reject &amp; Notify Alumni</span>
                             <span wire:loading wire:target="reject">Sending…</span>

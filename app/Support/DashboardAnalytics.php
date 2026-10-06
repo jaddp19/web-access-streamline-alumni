@@ -982,6 +982,90 @@ class DashboardAnalytics
     }
 
     // =========================================================
+    //  BOARD PASSERS — dept → course drill-down
+    // =========================================================
+
+    /**
+     * Verified passing board-exam count, grouped by department → course.
+     * Counts DISTINCT alumni per bucket (a retaker who passed twice still
+     * counts once). Only board-type courses, verified attempts, active
+     * and approved alumni.
+     */
+    public function boardPassersByDeptAndCourse(): array
+    {
+        $q = DB::table('departments')
+            ->join('courses', 'courses.department_id', '=', 'departments.id')
+            ->join('student_course', 'courses.id', '=', 'student_course.course_id')
+            ->join('user_profiles', 'student_course.user_profile_id', '=', 'user_profiles.id')
+            ->join('board_exams', 'board_exams.user_profile_id', '=', 'user_profiles.id')
+            ->join('model_has_roles', function ($join) {
+                $join->on('model_has_roles.model_id', '=', 'user_profiles.user_id')
+                    ->where('model_has_roles.model_type', '=', User::class);
+            })
+            ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+            ->where('roles.name', '=', 'alumni')
+            ->where('user_profiles.is_approved', true)
+            ->where('board_exams.is_verified', true)
+            ->where('board_exams.passed', true)
+            ->where('courses.course_type', 'board')
+            ->where('departments.is_active', true)
+            ->where('courses.is_active', true)
+            ->when($this->departmentId, fn ($q) => $q->where('departments.id', $this->departmentId))
+            ->when($this->batchId, fn ($q) => $q->where('user_profiles.batch_id', $this->batchId));
+
+        $this->requireActiveUser($q);
+
+        $rows = $q->select(
+                'departments.id as dept_id',
+                'departments.dept_code',
+                'departments.dept_name',
+                'courses.id as course_id',
+                'courses.course_code',
+                'courses.course_title',
+                DB::raw('COUNT(DISTINCT user_profiles.user_id) as total'),
+            )
+            ->groupBy(
+                'departments.id',
+                'departments.dept_code',
+                'departments.dept_name',
+                'courses.id',
+                'courses.course_code',
+                'courses.course_title'
+            )
+            ->orderBy('departments.dept_name')
+            ->orderBy('courses.course_code')
+            ->get();
+
+        $result = [];
+
+        foreach ($rows as $row) {
+            $deptKey   = $row->dept_code ?: "DEPT-{$row->dept_id}";
+            $courseKey = $row->course_code ?: "COURSE-{$row->course_id}";
+            $count     = (int) $row->total;
+
+            if (! isset($result[$deptKey])) {
+                $result[$deptKey] = [
+                    'name'    => $row->dept_name,
+                    'total'   => 0,
+                    'courses' => [],
+                ];
+            }
+
+            $result[$deptKey]['courses'][$courseKey] = [
+                'name'  => $row->course_title,
+                'total' => $count,
+            ];
+
+            $result[$deptKey]['total'] += $count;
+        }
+
+        // Sort departments by passers DESC (biggest first).
+        uasort($result, fn ($a, $b) => $b['total'] <=> $a['total']);
+
+        return $result;
+    }
+
+    // =========================================================
     //  CHART PAYLOAD
     // =========================================================
 

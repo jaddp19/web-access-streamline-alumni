@@ -30,17 +30,16 @@
             <div class="space-y-8 max-w-md">
                 <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-white/10 rounded-full backdrop-blur-sm">
                     <span class="w-1.5 h-1.5 rounded-full bg-[#D4A537]"></span>
-                    <span class="text-white/90 text-xs font-bold tracking-[0.2em]">ALUMNI PORTAL</span>
+                    <span class="text-white/90 text-xs font-bold tracking-[0.2em]">CSAV ALUMNI SYSTEM</span>
                 </div>
 
                 <h1 class="text-4xl xl:text-5xl font-bold text-white leading-tight" style="font-family: 'Fraunces', serif;">
-                    Welcome back to your
-                    <span class="text-[#D4A537]">alumni family.</span>
+                    Welcome to the
+                    <span class="text-[#D4A537]">CSAV Alumni Portal</span>
                 </h1>
 
                 <p class="text-white/70 leading-relaxed">
-                    Reconnect with fellow graduates, stay updated on events, and continue building on the legacy
-                    of faith, excellence, and service.
+                    Log in to update your career profile, track graduate batch insights, and drive data-driven growth for Colegio de Sta. Ana de Victorias.
                 </p>
             </div>
 
@@ -83,7 +82,7 @@
 
             <div class="mb-9">
                 <h3 class="text-3xl font-bold text-[#123524]" style="font-family: 'Fraunces', serif;">Sign In</h3>
-                <p class="text-[#123524]/60 mt-2">Enter your credentials to access your account</p>
+                <p class="text-[#123524]/60 mt-2">Enter your registered credentials to access your portal dashboard</p>
             </div>
 
             <form wire:submit.prevent="login" class="space-y-5">

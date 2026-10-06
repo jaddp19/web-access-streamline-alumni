@@ -51,6 +51,7 @@
                 @endunless
                 @endcan
             </div>
+
             @can('can_view')
             @if ($this->hasNoDepartment)
                 <div
@@ -163,7 +164,6 @@
                     {{-- Main charts --}}
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
-                        {{-- Alumni Graduates (drill-down aware) --}}
                         <div
                             class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                             <div class="flex items-start justify-between gap-3 mb-3">
@@ -196,7 +196,6 @@
                             @endif
                         </div>
 
-                        {{-- Comparative Analysis --}}
                         <div
                             class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                             <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white">Comparative Analysis</h2>
@@ -213,7 +212,6 @@
                         </div>
                     </div>
 
-                    {{-- Alumni by Year (drill-down aware) --}}
                     <div
                         class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
                         <div class="flex items-start justify-between gap-3 mb-3">
@@ -242,19 +240,16 @@
                         @endif
                     </div>
 
-                    {{-- Top Notchers (drill-down aware) --}}
+                    {{-- Top Notchers --}}
                     @if ($this->topNotcherTotal > 0)
                         @php
-                            // Champion card resolution:
-                            //  • Registrar   → top DEPARTMENT (unchanged, uses dept_code)
-                            //  • Program Head → top COURSE within their own department (uses course_code)
                             $championCard = $this->topNotcherChampion;
                             if ($championCard && !$this->isRegistrar) {
                                 $deptData = $this->topNotchersByDeptAndCourse[$championCard['code']] ?? null;
                                 $courses = collect($deptData['courses'] ?? [])->sortByDesc('total');
 
-                                $topCode = $courses->keys()->first(); // ← course_code
-                                $topCourse = $courses->first(); // ← ['name' => ..., 'total' => ..., 'best_rank' => ...]
+                                $topCode = $courses->keys()->first();
+                                $topCourse = $courses->first();
 
                                 if ($topCode && $topCourse) {
                                     $championCard['name'] = $topCode;
@@ -291,7 +286,6 @@
                                 </button>
                             </div>
 
-                            {{-- Highlight cards --}}
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
                                 <div class="rounded-xl bg-[#D4A537]/10 border border-[#D4A537]/20 p-3">
                                     <p
@@ -346,7 +340,74 @@
                         </div>
                     @endif
 
-                    {{-- Analytics section --}}
+                    {{-- Board Passers --}}
+                    @php
+                        $bp = $this->boardExamBreakdown;
+                        $bpTotal = ($bp['Passed'] ?? 0) + ($bp['Failed'] ?? 0);
+                        $bpRate = $bpTotal > 0 ? round(($bp['Passed'] / $bpTotal) * 100, 1) : 0;
+                    @endphp
+
+                    @if ($bpTotal > 0)
+                        <div
+                            class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
+                            <div class="flex items-start justify-between gap-3 mb-4">
+                                <div class="min-w-0">
+                                    <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white">Board Passers</h2>
+                                    <p id="board-passers-subtitle"
+                                        class="text-xs text-black/40 dark:text-white/40 mt-0.5">
+                                        Overall pass rate · click the Passed slice to see
+                                        {{ $this->isRegistrar ? 'departments' : 'courses' }}
+                                    </p>
+                                </div>
+                                <button type="button" id="board-passers-back-btn"
+                                    class="hidden shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold text-[#1877F2] hover:underline">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                                    </svg>
+                                    Back
+                                </button>
+                            </div>
+
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+                                <div
+                                    class="rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 p-3">
+                                    <p
+                                        class="text-[10px] uppercase tracking-wide font-bold text-emerald-700 dark:text-emerald-400">
+                                        Passers</p>
+                                    <p class="text-2xl font-bold text-[#0f2b1c] dark:text-white mt-0.5">
+                                        {{ $bp['Passed'] ?? 0 }}</p>
+                                </div>
+                                <div
+                                    class="rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 p-3">
+                                    <p
+                                        class="text-[10px] uppercase tracking-wide font-bold text-red-700 dark:text-red-400">
+                                        Non-passers</p>
+                                    <p class="text-2xl font-bold text-[#0f2b1c] dark:text-white mt-0.5">
+                                        {{ $bp['Failed'] ?? 0 }}</p>
+                                </div>
+                                <div class="rounded-xl bg-[#D4A537]/10 border border-[#D4A537]/20 p-3">
+                                    <p
+                                        class="text-[10px] uppercase tracking-wide font-bold text-[#a97f1f] dark:text-[#E5B94A]">
+                                        Pass Rate</p>
+                                    <p class="text-2xl font-bold text-[#0f2b1c] dark:text-white mt-0.5">{{ $bpRate }}%
+                                    </p>
+                                </div>
+                                <div
+                                    class="rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 p-3">
+                                    <p
+                                        class="text-[10px] uppercase tracking-wide font-bold text-blue-700 dark:text-blue-400">
+                                        Total Verified</p>
+                                    <p class="text-2xl font-bold text-[#0f2b1c] dark:text-white mt-0.5">
+                                        {{ $bpTotal }}</p>
+                                </div>
+                            </div>
+
+                            <div class="w-full h-72"><canvas id="boardPassersChart"></canvas></div>
+                        </div>
+                    @endif
+
                     <div>
                         <h2 class="text-lg sm:text-xl font-bold text-[#0f2b1c] dark:text-white"
                             style="font-family: 'Fraunces', serif;">Analytics</h2>
@@ -552,6 +613,7 @@
                 'topEmployers'            => $this->topEmployers,
                 'jobAlignment'            => $this->jobAlignmentBreakdown,
                 'boardExam'               => $this->boardExamBreakdown,
+                'boardPassers'            => $this->boardPassersByDeptAndCourse,
                 'alumniByRegion'          => $this->alumniByRegion,
                 'topNotchers'             => $this->topNotchersByDeptAndCourse,
             ]) !!}
@@ -587,16 +649,13 @@
                 PALETTE.greenDark, PALETTE.goldDeep,
             ];
 
-            // =====================================================================
-            // Per-department bar colors
-            // =====================================================================
             const DEPT_COLOR_MAP = {
-                'EDUC': '#2563eb', // Blue
-                'DOCS': '#6b7280', // Gray
-                'CRIM': '#7f1d1d', // Maroon
-                'BMAD': '#eab308', // Yellow
-                'ENGR': '#ea580c', // Orange
-                'ARTS': '#111827', // Black
+                'EDUC': '#2563eb',
+                'DOCS': '#6b7280',
+                'CRIM': '#7f1d1d',
+                'BMAD': '#eab308',
+                'ENGR': '#ea580c',
+                'ARTS': '#111827',
             };
 
             const DEPT_COLORS = [
@@ -605,13 +664,11 @@
                 '#2563eb', '#9333ea', '#dc2626', '#0891b2',
             ];
 
-            // Course code → parent department code, built from payload.
             let COURSE_TO_DEPT = {};
 
             const buildCourseDeptMap = () => {
                 COURSE_TO_DEPT = {};
 
-                // Source 1: regular alumni-by-dept tree
                 const byDept = window.__payload?.alumniByDeptAndCourse || {};
                 Object.entries(byDept).forEach(([deptCode, info]) => {
                     Object.keys(info?.courses || {}).forEach((courseCode) => {
@@ -619,9 +676,17 @@
                     });
                 });
 
-                // Source 2: top notcher tree — fills any courses missing above
                 const top = window.__payload?.topNotchers || {};
                 Object.entries(top).forEach(([deptCode, info]) => {
+                    Object.keys(info?.courses || {}).forEach((courseCode) => {
+                        if (!COURSE_TO_DEPT[courseCode]) {
+                            COURSE_TO_DEPT[courseCode] = deptCode;
+                        }
+                    });
+                });
+
+                const bp = window.__payload?.boardPassers || {};
+                Object.entries(bp).forEach(([deptCode, info]) => {
                     Object.keys(info?.courses || {}).forEach((courseCode) => {
                         if (!COURSE_TO_DEPT[courseCode]) {
                             COURSE_TO_DEPT[courseCode] = deptCode;
@@ -632,12 +697,9 @@
 
             const deptColor = (key, index = 0) => {
                 if (!key) return DEPT_COLORS[index % DEPT_COLORS.length];
-
                 if (DEPT_COLOR_MAP[key]) return DEPT_COLOR_MAP[key];
-
                 const parent = COURSE_TO_DEPT[key];
                 if (parent && DEPT_COLOR_MAP[parent]) return DEPT_COLOR_MAP[parent];
-
                 return DEPT_COLORS[index % DEPT_COLORS.length];
             };
 
@@ -657,7 +719,6 @@
                 return `rgba(${r}, ${g}, ${b}, ${alpha})`;
             };
 
-            // Recolors the top-notcher highlight cards to match the department color.
             const paintTopNotcherCards = () => {
                 document.querySelectorAll('[data-dept-card]').forEach((el) => {
                     const code = el.dataset.deptCard;
@@ -675,9 +736,6 @@
                 });
             };
 
-            // =====================================================================
-            // Smart Y-axis — nice round steps based on data max.
-            // =====================================================================
             const niceStep = (max) => {
                 if (!Number.isFinite(max) || max <= 0) return 1;
                 if (max <= 10) return 1;
@@ -693,27 +751,13 @@
                 return pow;
             };
 
-            // =====================================================================
-            // Drill state (client-side, per chart)
-            // =====================================================================
             const drillState = {
-                dept: {
-                    view: 'departments',
-                    selected: null
-                },
-                batch: {
-                    view: 'batches',
-                    selected: null
-                },
-                topNotcher: {
-                    view: 'departments',
-                    selected: null
-                },
+                dept: { view: 'departments', selected: null },
+                batch: { view: 'batches', selected: null },
+                topNotcher: { view: 'departments', selected: null },
+                boardPassers: { view: 'overview', selected: null },
             };
 
-            // =====================================================================
-            // Helpers
-            // =====================================================================
             const isDark = () => document.documentElement.classList.contains('dark');
 
             const theme = () => ({
@@ -787,13 +831,8 @@
                 const t = theme();
                 return {
                     beginAtZero: true,
-                    grid: {
-                        color: t.gridColor,
-                        drawBorder: false
-                    },
-                    border: {
-                        display: false
-                    },
+                    grid: { color: t.gridColor, drawBorder: false },
+                    border: { display: false },
                     ticks: {
                         stepSize: dataMax > 0 ? niceStep(dataMax) : undefined,
                         precision: 0,
@@ -805,15 +844,10 @@
                 };
             };
 
-            // =====================================================================
-            // Universal bar-value label plugin
-            // =====================================================================
             const barValueLabelPlugin = {
                 id: 'barValueLabels',
                 afterDatasetsDraw(chart) {
-                    const {
-                        ctx
-                    } = chart;
+                    const { ctx } = chart;
                     const t = theme();
                     const isHorizontal = chart.options.indexAxis === 'y';
 
@@ -842,19 +876,72 @@
                 },
             };
 
+            // =====================================================================
+            // Pie helpers — TOP-LEVEL so renderBoardPassersChart can use them
+            // =====================================================================
+            const pieLabelPlugin = {
+                id: 'piePercentLabels',
+                afterDatasetsDraw(chart) {
+                    const { ctx } = chart;
+                    const t = theme();
+                    const dataset = chart.data.datasets[0];
+                    const total = dataset.data.reduce((a, b) => a + b, 0);
+                    if (!total) return;
+
+                    chart.getDatasetMeta(0).data.forEach((arc, i) => {
+                        const v = dataset.data[i];
+                        if (!v) return;
+                        const pct = ((v / total) * 100).toFixed(0) + '%';
+                        const pos = arc.tooltipPosition();
+                        ctx.save();
+                        ctx.fillStyle = t.pieLabel;
+                        ctx.font = '700 12px ' + t.fontFamily;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(pct, pos.x, pos.y);
+                        ctx.restore();
+                    });
+                },
+            };
+
+            const pieTooltip = {
+                backgroundColor: theme().tooltipBg,
+                padding: 10,
+                cornerRadius: 8,
+                callbacks: {
+                    label: (ctx) => {
+                        const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                        const pct = total > 0 ? ((ctx.raw / total) * 100).toFixed(1) + '%' : '0%';
+                        return ` ${ctx.raw} (${pct})`;
+                    },
+                },
+            };
+
+            const pieLegend = {
+                position: 'bottom',
+                labels: {
+                    color: theme().mutedText,
+                    boxWidth: 10,
+                    boxHeight: 10,
+                    usePointStyle: true,
+                    pointStyle: 'circle',
+                    padding: 12,
+                    font: { size: 11, weight: '600' },
+                },
+            };
+
             let ChartLibRef = null;
 
             // =====================================================================
-            // Renderers for drill-down charts
+            // Renderers
             // =====================================================================
             const renderDeptChart = (ChartLib) => {
                 const p = window.__payload;
                 const state = drillState.dept;
                 const drillable = p.isRegistrar;
+                const t = theme();
 
-                let labels = [],
-                    totals = [],
-                    names = [];
+                let labels = [], totals = [], names = [];
                 let clickable = false;
                 let subtitleText = '';
                 let backBtnVisible = false;
@@ -871,18 +958,15 @@
                 } else {
                     const map = p.alumniByDeptAndCourse || {};
                     const deptKey = state.selected || Object.keys(map)[0];
-                    const dept = map[deptKey] || {
-                        courses: {},
-                        name: deptKey
-                    };
+                    const dept = map[deptKey] || { courses: {}, name: deptKey };
                     const codes = Object.keys(dept.courses || {});
                     labels = codes;
                     names = codes.map(c => dept.courses[c]?.name || c);
                     totals = codes.map(c => dept.courses[c]?.total || 0);
                     clickable = false;
-                    subtitleText = p.isRegistrar ?
-                        `${dept.name} · breakdown by course` :
-                        `Breakdown by course within ${dept.name}`;
+                    subtitleText = p.isRegistrar
+                        ? `${dept.name} · breakdown by course`
+                        : `Breakdown by course within ${dept.name}`;
                     backBtnVisible = p.isRegistrar;
                 }
 
@@ -897,8 +981,6 @@
 
                 if (labels.length === 0) return;
 
-                const t = theme();
-
                 makeChart(ChartLib, 'alumniDynamicChart', {
                     type: 'bar',
                     data: {
@@ -906,8 +988,7 @@
                         datasets: [{
                             data: totals,
                             backgroundColor: (ctx) => deptColor(labels[ctx.dataIndex], ctx.dataIndex),
-                            hoverBackgroundColor: (ctx) => darken(deptColor(labels[ctx.dataIndex], ctx
-                                .dataIndex), 0.2),
+                            hoverBackgroundColor: (ctx) => darken(deptColor(labels[ctx.dataIndex], ctx.dataIndex), 0.2),
                             borderRadius: 8,
                             borderSkipped: false,
                             maxBarThickness: 48,
@@ -916,11 +997,7 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        layout: {
-                            padding: {
-                                top: 18
-                            }
-                        },
+                        layout: { padding: { top: 18 } },
                         onHover: (event, els) => {
                             if (!clickable) return;
                             event.native.target.style.cursor = els.length > 0 ? 'pointer' : 'default';
@@ -932,20 +1009,13 @@
                             renderDeptChart(ChartLib);
                         },
                         plugins: {
-                            legend: {
-                                display: false
-                            },
+                            legend: { display: false },
                             tooltip: {
                                 backgroundColor: t.tooltipBg,
                                 padding: 10,
                                 cornerRadius: 8,
-                                titleFont: {
-                                    size: 12,
-                                    weight: '600'
-                                },
-                                bodyFont: {
-                                    size: 12
-                                },
+                                titleFont: { size: 12, weight: '600' },
+                                bodyFont: { size: 12 },
                                 displayColors: false,
                                 callbacks: {
                                     title: (items) => names[items[0]?.dataIndex] || labels[items[0]?.dataIndex],
@@ -957,20 +1027,9 @@
                         scales: {
                             y: integerTicks(Math.max(0, ...totals)),
                             x: {
-                                ticks: {
-                                    color: t.mutedText,
-                                    font: {
-                                        weight: '600'
-                                    },
-                                    autoSkip: true,
-                                    maxRotation: 45
-                                },
-                                grid: {
-                                    display: false
-                                },
-                                border: {
-                                    display: false
-                                },
+                                ticks: { color: t.mutedText, font: { weight: '600' }, autoSkip: true, maxRotation: 45 },
+                                grid: { display: false },
+                                border: { display: false },
                             },
                         },
                     },
@@ -983,9 +1042,7 @@
                 const state = drillState.batch;
                 const t = theme();
 
-                let labels = [],
-                    totals = [],
-                    names = [];
+                let labels = [], totals = [], names = [];
                 let clickable = false;
                 let subtitleText = '';
                 let backBtnVisible = false;
@@ -1001,10 +1058,7 @@
                     backBtnVisible = false;
                 } else {
                     const map = p.alumniByBatchAndCourse || {};
-                    const batch = map[state.selected] || {
-                        courses: {},
-                        batch_name: state.selected
-                    };
+                    const batch = map[state.selected] || { courses: {}, batch_name: state.selected };
                     const codes = Object.keys(batch.courses || {});
                     labels = codes;
                     names = codes.map(c => batch.courses[c]?.name || c);
@@ -1033,10 +1087,7 @@
                             data: totals,
                             backgroundColor: (ctx) => {
                                 if (state.view === 'batches') {
-                                    const {
-                                        ctx: c,
-                                        chartArea
-                                    } = ctx.chart;
+                                    const { ctx: c, chartArea } = ctx.chart;
                                     return barGradient(c, chartArea, PALETTE.greenBright);
                                 }
                                 return deptColor(labels[ctx.dataIndex], ctx.dataIndex);
@@ -1053,11 +1104,7 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        layout: {
-                            padding: {
-                                top: 18
-                            }
-                        },
+                        layout: { padding: { top: 18 } },
                         onHover: (event, els) => {
                             if (!clickable) return;
                             event.native.target.style.cursor = els.length > 0 ? 'pointer' : 'default';
@@ -1074,20 +1121,13 @@
                             renderBatchChart(ChartLib);
                         },
                         plugins: {
-                            legend: {
-                                display: false
-                            },
+                            legend: { display: false },
                             tooltip: {
                                 backgroundColor: t.tooltipBg,
                                 padding: 10,
                                 cornerRadius: 8,
-                                titleFont: {
-                                    size: 12,
-                                    weight: '600'
-                                },
-                                bodyFont: {
-                                    size: 12
-                                },
+                                titleFont: { size: 12, weight: '600' },
+                                bodyFont: { size: 12 },
                                 displayColors: false,
                                 callbacks: {
                                     title: (items) => names[items[0]?.dataIndex] || labels[items[0]?.dataIndex],
@@ -1099,20 +1139,9 @@
                         scales: {
                             y: integerTicks(Math.max(0, ...totals)),
                             x: {
-                                ticks: {
-                                    color: t.mutedText,
-                                    font: {
-                                        weight: '600'
-                                    },
-                                    autoSkip: true,
-                                    maxRotation: 45
-                                },
-                                grid: {
-                                    display: false
-                                },
-                                border: {
-                                    display: false
-                                },
+                                ticks: { color: t.mutedText, font: { weight: '600' }, autoSkip: true, maxRotation: 45 },
+                                grid: { display: false },
+                                border: { display: false },
                             },
                         },
                     },
@@ -1120,9 +1149,6 @@
                 });
             };
 
-            // =====================================================================
-            // Top Notcher chart renderer  (dept → course, or direct courses)
-            // =====================================================================
             const renderTopNotcherChart = (ChartLib) => {
                 const p = window.__payload;
                 const t = theme();
@@ -1130,10 +1156,7 @@
                 const source = p.topNotchers || {};
                 const drillable = p.isRegistrar;
 
-                let labels = [],
-                    totals = [],
-                    names = [],
-                    ranks = [];
+                let labels = [], totals = [], names = [], ranks = [];
                 let clickable = false;
                 let subtitleText = '';
                 let backBtnVisible = false;
@@ -1149,20 +1172,16 @@
                     backBtnVisible = false;
                 } else {
                     const deptKey = state.selected || Object.keys(source)[0];
-                    const dept = source[deptKey] || {
-                        courses: {},
-                        name: deptKey
-                    };
-
+                    const dept = source[deptKey] || { courses: {}, name: deptKey };
                     const codes = Object.keys(dept.courses || {});
                     labels = codes;
                     names = codes.map(c => dept.courses[c]?.name || c);
                     totals = codes.map(c => dept.courses[c]?.total || 0);
                     ranks = codes.map(c => dept.courses[c]?.best_rank || null);
                     clickable = false;
-                    subtitleText = drillable ?
-                        `${dept.name} · top notchers by course` :
-                        `Top-notcher attempts by course within ${dept.name}`;
+                    subtitleText = drillable
+                        ? `${dept.name} · top notchers by course`
+                        : `Top-notcher attempts by course within ${dept.name}`;
                     backBtnVisible = drillable;
                 }
 
@@ -1184,8 +1203,7 @@
                         datasets: [{
                             data: totals,
                             backgroundColor: (ctx) => deptColor(labels[ctx.dataIndex], ctx.dataIndex),
-                            hoverBackgroundColor: (ctx) => darken(deptColor(labels[ctx.dataIndex], ctx
-                                .dataIndex), 0.2),
+                            hoverBackgroundColor: (ctx) => darken(deptColor(labels[ctx.dataIndex], ctx.dataIndex), 0.2),
                             borderRadius: 8,
                             borderSkipped: false,
                             maxBarThickness: 48,
@@ -1194,11 +1212,7 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        layout: {
-                            padding: {
-                                top: 18
-                            }
-                        },
+                        layout: { padding: { top: 18 } },
                         onHover: (event, els) => {
                             if (!clickable) return;
                             event.native.target.style.cursor = els.length > 0 ? 'pointer' : 'default';
@@ -1210,20 +1224,13 @@
                             renderTopNotcherChart(ChartLib);
                         },
                         plugins: {
-                            legend: {
-                                display: false
-                            },
+                            legend: { display: false },
                             tooltip: {
                                 backgroundColor: t.tooltipBg,
                                 padding: 10,
                                 cornerRadius: 8,
-                                titleFont: {
-                                    size: 12,
-                                    weight: '600'
-                                },
-                                bodyFont: {
-                                    size: 12
-                                },
+                                titleFont: { size: 12, weight: '600' },
+                                bodyFont: { size: 12 },
                                 displayColors: false,
                                 callbacks: {
                                     title: (items) => names[items[0]?.dataIndex] || labels[items[0]?.dataIndex],
@@ -1240,20 +1247,170 @@
                         scales: {
                             y: integerTicks(Math.max(0, ...totals)),
                             x: {
-                                ticks: {
-                                    color: t.mutedText,
-                                    font: {
-                                        weight: '600'
+                                ticks: { color: t.mutedText, font: { weight: '600' }, autoSkip: true, maxRotation: 45 },
+                                grid: { display: false },
+                                border: { display: false },
+                            },
+                        },
+                    },
+                    plugins: [barValueLabelPlugin],
+                });
+            };
+
+            // =====================================================================
+            // Board Passers renderer — pie → dept → course
+            // =====================================================================
+            const renderBoardPassersChart = (ChartLib) => {
+                const p = window.__payload;
+                const t = theme();
+                const state = drillState.boardPassers;
+                const overall = p.boardExam || { Passed: 0, Failed: 0 };
+                const deptTree = p.boardPassers || {};
+                const drillable = p.isRegistrar;
+                const firstDeptKey = Object.keys(deptTree)[0];
+
+                const subEl = document.getElementById('board-passers-subtitle');
+                const backBtn = document.getElementById('board-passers-back-btn');
+
+                // ===== Level 0: Pie =====
+                if (state.view === 'overview') {
+                    if (subEl) subEl.textContent = `Overall pass rate · click the Passed slice to see ${drillable ? 'departments' : 'courses'}`;
+                    if (backBtn) {
+                        backBtn.classList.add('hidden');
+                        backBtn.classList.remove('inline-flex');
+                    }
+
+                    const pieData = [overall.Passed || 0, overall.Failed || 0];
+                    if (pieData[0] + pieData[1] === 0) return;
+
+                    makeChart(ChartLib, 'boardPassersChart', {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Passed', 'Failed'],
+                            datasets: [{
+                                data: pieData,
+                                backgroundColor: [PALETTE.greenBright, PALETTE.gold],
+                                borderWidth: 3,
+                                borderColor: t.borderColor,
+                                hoverOffset: 6,
+                            }],
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            cutout: '60%',
+                            onHover: (event, els) => {
+                                const canDrill = els.length > 0 && els[0].index === 0 && (overall.Passed || 0) > 0;
+                                event.native.target.style.cursor = canDrill ? 'pointer' : 'default';
+                            },
+                            onClick: (event, els) => {
+                                if (els.length === 0 || els[0].index !== 0) return;
+                                if (!(overall.Passed > 0)) return;
+                                drillState.boardPassers.view = drillable ? 'departments' : 'courses';
+                                drillState.boardPassers.selected = drillable ? null : firstDeptKey;
+                                renderBoardPassersChart(ChartLib);
+                            },
+                            plugins: {
+                                legend: pieLegend,
+                                tooltip: {
+                                    ...pieTooltip,
+                                    callbacks: {
+                                        label: (ctx) => {
+                                            const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                            const pct = total > 0 ? ((ctx.raw / total) * 100).toFixed(1) + '%' : '0%';
+                                            const hint = ctx.dataIndex === 0 ? ' · click to drill' : '';
+                                            return ` ${ctx.raw} (${pct})${hint}`;
+                                        },
                                     },
-                                    autoSkip: true,
-                                    maxRotation: 45
                                 },
-                                grid: {
-                                    display: false
+                            },
+                        },
+                        plugins: [pieLabelPlugin],
+                    });
+
+                    return;
+                }
+
+                // ===== Levels 1 & 2: Bar =====
+                let labels = [], totals = [], names = [];
+                let clickable = false;
+
+                if (state.view === 'departments') {
+                    const codes = Object.keys(deptTree);
+                    labels = codes;
+                    names = codes.map(c => deptTree[c]?.name || c);
+                    totals = codes.map(c => deptTree[c]?.total || 0);
+                    clickable = true;
+                    if (subEl) subEl.textContent = 'Passers by department · click a bar to see courses';
+                } else {
+                    const deptId = state.selected || firstDeptKey;
+                    const dept = deptTree[deptId] || { courses: {}, name: deptId };
+                    const codes = Object.keys(dept.courses || {});
+                    labels = codes;
+                    names = codes.map(c => dept.courses[c]?.name || c);
+                    totals = codes.map(c => dept.courses[c]?.total || 0);
+                    clickable = false;
+                    if (subEl) subEl.textContent = drillable
+                        ? `${dept.name} · passers by course`
+                        : `Passers by course within ${dept.name}`;
+                }
+
+                if (backBtn) {
+                    backBtn.classList.remove('hidden');
+                    backBtn.classList.add('inline-flex');
+                }
+
+                if (labels.length === 0) return;
+
+                makeChart(ChartLib, 'boardPassersChart', {
+                    type: 'bar',
+                    data: {
+                        labels,
+                        datasets: [{
+                            data: totals,
+                            backgroundColor: (ctx) => deptColor(labels[ctx.dataIndex], ctx.dataIndex),
+                            hoverBackgroundColor: (ctx) => darken(deptColor(labels[ctx.dataIndex], ctx.dataIndex), 0.2),
+                            borderRadius: 8,
+                            borderSkipped: false,
+                            maxBarThickness: 48,
+                        }],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        layout: { padding: { top: 18 } },
+                        onHover: (event, els) => {
+                            if (!clickable) return;
+                            event.native.target.style.cursor = els.length > 0 ? 'pointer' : 'default';
+                        },
+                        onClick: (event, els) => {
+                            if (!clickable || els.length === 0) return;
+                            drillState.boardPassers.view = 'courses';
+                            drillState.boardPassers.selected = labels[els[0].index];
+                            renderBoardPassersChart(ChartLib);
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: t.tooltipBg,
+                                padding: 10,
+                                cornerRadius: 8,
+                                titleFont: { size: 12, weight: '600' },
+                                bodyFont: { size: 12 },
+                                displayColors: false,
+                                callbacks: {
+                                    title: (items) => names[items[0]?.dataIndex] || labels[items[0]?.dataIndex],
+                                    label: (ctx) => `${ctx.raw} passer${ctx.raw === 1 ? '' : 's'}`,
+                                    afterLabel: () => clickable ? 'Click to see courses' : '',
                                 },
-                                border: {
-                                    display: false
-                                },
+                            },
+                        },
+                        scales: {
+                            y: integerTicks(Math.max(0, ...totals)),
+                            x: {
+                                ticks: { color: t.mutedText, font: { weight: '600' }, autoSkip: true, maxRotation: 45 },
+                                grid: { display: false },
+                                border: { display: false },
                             },
                         },
                     },
@@ -1297,6 +1454,29 @@
                 });
             }
 
+            if (!window.__adminBoardPassersBack) {
+                window.__adminBoardPassersBack = true;
+                document.addEventListener('click', (e) => {
+                    const btn = e.target.closest('#board-passers-back-btn');
+                    if (!btn || !ChartLibRef) return;
+
+                    if (drillState.boardPassers.view === 'courses') {
+                        if (window.__payload.isRegistrar) {
+                            drillState.boardPassers.view = 'departments';
+                            drillState.boardPassers.selected = null;
+                        } else {
+                            drillState.boardPassers.view = 'overview';
+                            drillState.boardPassers.selected = null;
+                        }
+                    } else {
+                        drillState.boardPassers.view = 'overview';
+                        drillState.boardPassers.selected = null;
+                    }
+
+                    renderBoardPassersChart(ChartLibRef);
+                });
+            }
+
             // =====================================================================
             // Init
             // =====================================================================
@@ -1318,40 +1498,25 @@
                 buildCourseDeptMap();
                 paintTopNotcherCards();
 
-                drillState.dept = p.isRegistrar ?
-                    {
-                        view: 'departments',
-                        selected: null
-                    } :
-                    {
-                        view: 'courses',
-                        selected: null
-                    };
-                drillState.batch = {
-                    view: 'batches',
-                    selected: null
-                };
-                drillState.topNotcher = p.isRegistrar ?
-                    {
-                        view: 'departments',
-                        selected: null
-                    } :
-                    {
-                        view: 'courses',
-                        selected: null
-                    };
+                drillState.dept = p.isRegistrar
+                    ? { view: 'departments', selected: null }
+                    : { view: 'courses', selected: null };
+                drillState.batch = { view: 'batches', selected: null };
+                drillState.topNotcher = p.isRegistrar
+                    ? { view: 'departments', selected: null }
+                    : { view: 'courses', selected: null };
+                drillState.boardPassers = { view: 'overview', selected: null };
 
-                // 1. Alumni by Dept / Courses
                 renderDeptChart(ChartLib);
 
-                // 2. Comparative Analysis
                 const ca = p.courseAnalytics || [];
                 if (ca.length > 0) {
                     makeChart(ChartLib, 'comparativeChart', {
                         type: 'bar',
                         data: {
                             labels: ca.map(i => i.course_code),
-                            datasets: [{
+                            datasets: [
+                                {
                                     label: 'Aligned',
                                     data: ca.map(i => i.related_rate),
                                     backgroundColor: PALETTE.greenBright,
@@ -1374,43 +1539,19 @@
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
-                            layout: {
-                                padding: {
-                                    top: 16
-                                }
-                            },
+                            layout: { padding: { top: 16 } },
                             scales: {
                                 y: {
                                     beginAtZero: true,
                                     max: 110,
-                                    grid: {
-                                        color: t.gridColor,
-                                        drawBorder: false
-                                    },
-                                    border: {
-                                        display: false
-                                    },
-                                    ticks: {
-                                        stepSize: 25,
-                                        color: t.mutedText,
-                                        callback: v => v > 100 ? '' : v + '%'
-                                    },
+                                    grid: { color: t.gridColor, drawBorder: false },
+                                    border: { display: false },
+                                    ticks: { stepSize: 25, color: t.mutedText, callback: v => v > 100 ? '' : v + '%' },
                                 },
                                 x: {
-                                    ticks: {
-                                        color: t.mutedText,
-                                        font: {
-                                            weight: '600'
-                                        },
-                                        autoSkip: true,
-                                        maxRotation: 45
-                                    },
-                                    grid: {
-                                        display: false
-                                    },
-                                    border: {
-                                        display: false
-                                    },
+                                    ticks: { color: t.mutedText, font: { weight: '600' }, autoSkip: true, maxRotation: 45 },
+                                    grid: { display: false },
+                                    border: { display: false },
                                 },
                             },
                             plugins: {
@@ -1424,28 +1565,21 @@
                                         usePointStyle: true,
                                         pointStyle: 'rectRounded',
                                         padding: 14,
-                                        font: {
-                                            size: 11,
-                                            weight: '600'
-                                        },
+                                        font: { size: 11, weight: '600' },
                                     },
                                 },
                                 tooltip: {
                                     backgroundColor: t.tooltipBg,
                                     padding: 10,
                                     cornerRadius: 8,
-                                    callbacks: {
-                                        label: ctx => ` ${ctx.dataset.label}: ${Number(ctx.raw).toFixed(2)}%`
-                                    },
+                                    callbacks: { label: ctx => ` ${ctx.dataset.label}: ${Number(ctx.raw).toFixed(2)}%` },
                                 },
                             },
                         },
                         plugins: [{
                             id: 'barPercentLabels',
                             afterDatasetsDraw(chart) {
-                                const {
-                                    ctx
-                                } = chart;
+                                const { ctx } = chart;
                                 ctx.save();
                                 ctx.font = '600 10px ' + t.fontFamily;
                                 ctx.fillStyle = t.mutedText;
@@ -1455,8 +1589,7 @@
                                     chart.getDatasetMeta(di).data.forEach((bar, i) => {
                                         const v = dataset.data[i];
                                         if (v == null) return;
-                                        ctx.fillText(Number(v).toFixed(2) + '%', bar.x,
-                                            bar.y - 4);
+                                        ctx.fillText(Number(v).toFixed(2) + '%', bar.x, bar.y - 4);
                                     });
                                 });
                                 ctx.restore();
@@ -1465,68 +1598,15 @@
                     });
                 }
 
-                // 3. Alumni by Batch
                 renderBatchChart(ChartLib);
 
-                // 4. Top Notchers
                 if (Object.keys(p.topNotchers || {}).length > 0) {
                     renderTopNotcherChart(ChartLib);
                 }
 
-                // ===== Pie helpers =====
-                const pieLabelPlugin = {
-                    id: 'piePercentLabels',
-                    afterDatasetsDraw(chart) {
-                        const {
-                            ctx
-                        } = chart;
-                        const dataset = chart.data.datasets[0];
-                        const total = dataset.data.reduce((a, b) => a + b, 0);
-                        if (!total) return;
-                        chart.getDatasetMeta(0).data.forEach((arc, i) => {
-                            const v = dataset.data[i];
-                            if (!v) return;
-                            const pct = ((v / total) * 100).toFixed(0) + '%';
-                            const pos = arc.tooltipPosition();
-                            ctx.save();
-                            ctx.fillStyle = t.pieLabel;
-                            ctx.font = '700 12px ' + t.fontFamily;
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'middle';
-                            ctx.fillText(pct, pos.x, pos.y);
-                            ctx.restore();
-                        });
-                    },
-                };
-
-                const pieTooltip = {
-                    backgroundColor: t.tooltipBg,
-                    padding: 10,
-                    cornerRadius: 8,
-                    callbacks: {
-                        label: (ctx) => {
-                            const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                            const pct = total > 0 ? ((ctx.raw / total) * 100).toFixed(1) + '%' : '0%';
-                            return ` ${ctx.raw} (${pct})`;
-                        },
-                    },
-                };
-
-                const pieLegend = {
-                    position: 'bottom',
-                    labels: {
-                        color: t.mutedText,
-                        boxWidth: 10,
-                        boxHeight: 10,
-                        usePointStyle: true,
-                        pointStyle: 'circle',
-                        padding: 12,
-                        font: {
-                            size: 11,
-                            weight: '600'
-                        },
-                    },
-                };
+                if ((p.boardExam?.Passed || 0) + (p.boardExam?.Failed || 0) > 0) {
+                    renderBoardPassersChart(ChartLib);
+                }
 
                 const pieConfig = (id, dataMap, colorsOrFn) => {
                     const keys = Object.keys(dataMap || {});
@@ -1557,10 +1637,7 @@
                             responsive: true,
                             maintainAspectRatio: false,
                             cutout: '60%',
-                            plugins: {
-                                legend: pieLegend,
-                                tooltip: pieTooltip
-                            },
+                            plugins: { legend: pieLegend, tooltip: pieTooltip },
                         },
                         plugins: [pieLabelPlugin],
                     });
@@ -1581,7 +1658,6 @@
                 pieConfig('jobAlignmentChart', p.jobAlignment, jobAlignColorFn);
                 pieConfig('boardExamChart', p.boardExam, [PALETTE.greenBright, '#ef4444']);
 
-                // ===== Bar configs =====
                 const barConfig = (id, dataMap, color, horizontal = false) => {
                     const keys = Object.keys(dataMap || {});
                     if (keys.length === 0) return;
@@ -1605,47 +1681,21 @@
                             responsive: true,
                             maintainAspectRatio: false,
                             indexAxis: horizontal ? 'y' : 'x',
-                            layout: {
-                                padding: horizontal ? {
-                                    right: 24
-                                } : {
-                                    top: 18
-                                }
-                            },
-                            plugins: {
-                                legend: {
-                                    display: false
-                                }
-                            },
-                            scales: horizontal ?
-                                {
+                            layout: { padding: horizontal ? { right: 24 } : { top: 18 } },
+                            plugins: { legend: { display: false } },
+                            scales: horizontal
+                                ? {
                                     x: integerTicks(dataMax),
                                     y: {
-                                        grid: {
-                                            display: false
-                                        },
-                                        ticks: {
-                                            color: t.mutedText,
-                                            font: {
-                                                weight: '600'
-                                            }
-                                        }
+                                        grid: { display: false },
+                                        ticks: { color: t.mutedText, font: { weight: '600' } }
                                     },
-                                } :
-                                {
+                                }
+                                : {
                                     y: integerTicks(dataMax),
                                     x: {
-                                        grid: {
-                                            display: false
-                                        },
-                                        ticks: {
-                                            color: t.mutedText,
-                                            font: {
-                                                weight: '600'
-                                            },
-                                            autoSkip: true,
-                                            maxRotation: 45
-                                        },
+                                        grid: { display: false },
+                                        ticks: { color: t.mutedText, font: { weight: '600' }, autoSkip: true, maxRotation: 45 },
                                     },
                                 },
                         },

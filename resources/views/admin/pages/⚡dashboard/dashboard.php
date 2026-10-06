@@ -223,6 +223,12 @@ new #[Layout('layouts.app-admin')] class extends Component
     }
 
     #[Computed]
+    public function boardPassersByDeptAndCourse(): array
+    {
+        return $this->hasNoDepartment ? [] : $this->analytics()->boardPassersByDeptAndCourse();
+    }
+
+    #[Computed]
     public function topEmployers(): array
     {
         return $this->hasNoDepartment ? [] : $this->analytics()->topEmployers();
@@ -234,7 +240,7 @@ new #[Layout('layouts.app-admin')] class extends Component
         return $this->hasNoDepartment ? [] : $this->analytics()->alumniByRegion();
     }
 
-        // ===== Top Notchers =====
+    // ===== Top Notchers =====
 
     #[Computed]
     public function topNotchersByDeptAndCourse(): array
@@ -257,7 +263,6 @@ new #[Layout('layouts.app-admin')] class extends Component
             return null;
         }
 
-        // Already sorted DESC by total.
         $key = array_key_first($items);
 
         return [
