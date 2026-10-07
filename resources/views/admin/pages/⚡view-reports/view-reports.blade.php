@@ -137,28 +137,36 @@
                     </div>
                 </div>
 
-                {{-- ========== PRINT HEADER ========== --}}
-                <div class="print-only hidden print:block mb-4 pb-4 border-b border-black">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <h1 class="text-xl font-bold text-[#0f2b1c]" style="font-family: 'Fraunces', serif;">
-                                Colegio de Sta. Ana de Victorias, Inc.
-                            </h1>
-                            <p class="text-sm text-black/60 mt-0.5">Alumni Information Tracking System</p>
-                        </div>
-                        <div class="text-right text-xs text-black/60">
-                            <p class="font-semibold">{{ $this->reportLabel }}</p>
-                            <p>Generated: {{ now()->format('F j, Y · g:i A') }}</p>
-                            @if ($this->batchLabel)
-                                <p>Batch: {{ $this->batchLabel }}</p>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-
                 {{-- ========== REPORT CONTENT ========== --}}
                 <div
                     class="print-area bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl overflow-hidden">
+
+                    {{-- ========== PRINT LETTERHEAD ========== --}}
+                    <div class="print-only px-6 pt-6 pb-5">
+                        <div class="text-center">
+                            <h1 class="text-base font-bold text-black uppercase tracking-wide">
+                                Colegio de Sta. Ana de Victorias, Inc.
+                            </h1>
+                            <p class="text-xs text-black mt-1">Office of the Registrar</p>
+                            <p class="text-xs text-black">Osmeña Ave., Victorias City, Negros Occidental, 6119</p>
+                        </div>
+
+                        <div class="text-center mt-5 pb-3 border-b-2 border-black">
+                            <h2 class="text-sm font-bold text-black uppercase tracking-[0.35em]">
+                                Reports
+                            </h2>
+                        </div>
+
+                        <div class="mt-3 text-xs text-black text-center space-y-0.5">
+                            <p class="font-semibold">{{ $this->reportLabel }}</p>
+                            <p>
+                                Department: {{ $this->isRegistrar ? 'All Departments' : $this->myDepartmentName }}
+                                @if ($this->batchLabel)
+                                    · Batch: {{ $this->batchLabel }}
+                                @endif
+                            </p>
+                        </div>
+                    </div>
 
                     {{-- ============ TAB 1 — EMPLOYMENT STATS ============ --}}
                     @if ($tab === 'employment')
@@ -739,6 +747,14 @@
                             </div>
                         @endif
                     @endif
+
+                    {{-- ========== PRINT FOOTER ========== --}}
+                    <div class="print-only px-6 pt-6 pb-6">
+                        <div class="flex justify-between items-end text-xs text-black border-t border-black/60 pt-3">
+                            <p>Date: <span class="font-semibold">{{ now()->format('d-m-Y') }}</span></p>
+                            <p>Prepared by: <span class="font-semibold">{{ auth()->user()->name }}</span></p>
+                        </div>
+                    </div>
                 </div>
             @endif
             @endcan
@@ -746,13 +762,30 @@
     </div>
 
     <style>
+        /* Hidden on screen — only shown during print. */
+        .print-only {
+            display: none;
+        }
+
         @media print {
+            /* Margin 0 removes the browser's own date/title header and footer.
+               The real document margin comes from the padding on .print-area. */
             @page {
-                margin: 12mm;
+                size: A4 portrait;   /* use "A4 landscape" for wider tables */
+                margin: 0;
             }
 
+            html,
             body {
                 background: #fff !important;
+                color: #000 !important;
+                height: auto !important;
+                min-height: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: visible !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
 
             body * {
@@ -769,9 +802,22 @@
                 left: 0;
                 top: 0;
                 width: 100%;
+                box-sizing: border-box;
+                margin: 0 !important;
+                padding: 18mm 15mm !important;   /* document margin */
                 border: none !important;
                 box-shadow: none !important;
                 border-radius: 0 !important;
+                background: #fff !important;
+                color: #000 !important;
+                overflow: visible !important;
+            }
+
+            /* Inner sections shouldn't add extra side padding */
+            .print-area > div,
+            .print-area .print-only {
+                padding-left: 0 !important;
+                padding-right: 0 !important;
             }
 
             .no-print {
@@ -782,17 +828,8 @@
                 display: block !important;
             }
 
-            html,
-            body {
-                height: auto !important;
-                min-height: 0 !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                overflow: visible !important;
-            }
-
-            body>*,
-            body>*>*,
+            body > *,
+            body > * > *,
             main,
             [class*="min-h-screen"] {
                 min-height: 0 !important;
@@ -810,9 +847,60 @@
                 gap: 0 !important;
             }
 
+            /* Show every column regardless of paper width */
+            .print-area th.hidden,
+            .print-area td.hidden {
+                display: table-cell !important;
+            }
+
+            /* Hide the mobile-only duplicate lines */
+            .print-area .sm\:hidden,
+            .print-area .md\:hidden {
+                display: none !important;
+            }
+
+            /* Keep the 4 summary cards in one row */
+            .print-area .grid {
+                grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+            }
+
+            /* Let text wrap instead of being cut off */
+            .print-area .truncate {
+                overflow: visible !important;
+                text-overflow: clip !important;
+                white-space: normal !important;
+                max-width: none !important;
+            }
+
+            .print-area .overflow-x-auto {
+                overflow: visible !important;
+            }
+
+            /* Force light colors even in dark mode */
+            .print-area thead,
+            .print-area tfoot {
+                background: #F7F5EF !important;
+            }
+
+            .dark .print-area .dark\:text-white,
+            .dark .print-area .dark\:text-white\/70,
+            .dark .print-area .dark\:text-white\/60,
+            .dark .print-area .dark\:text-white\/50,
+            .dark .print-area .dark\:text-white\/40 {
+                color: #000 !important;
+            }
+
+            /* Tables */
             table {
+                width: 100% !important;
                 font-size: 11px !important;
+                border-collapse: collapse;
                 page-break-inside: auto;
+            }
+
+            th,
+            td {
+                padding: 6px 8px !important;
             }
 
             tr {
@@ -827,10 +915,15 @@
             tfoot {
                 display: table-footer-group;
             }
-        }
 
-        .print-only {
-            display: none;
+            h2,
+            h3 {
+                page-break-after: avoid;
+            }
+
+            .print-only:last-child {
+                page-break-inside: avoid;
+            }
         }
     </style>
 </div>

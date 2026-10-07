@@ -246,6 +246,15 @@ class DemoSeeder extends Seeder
 
         $profile->refresh();
         $profile->syncBoardMirrors();
+
+        // Approved board alumni are always "verified" — the registrar
+        // already reviewed them, pass or fail. Without this, failed-only
+        // alumni end up with is_verified = false after syncBoardMirrors()
+        // (which keys off "has a verified PASSING attempt") and they vanish
+        // from the dashboard's Passed/Failed breakdown.
+        if ($approvalState === 'approved') {
+            $profile->forceFill(['is_verified' => true])->saveQuietly();
+        }
     }
 
     /**

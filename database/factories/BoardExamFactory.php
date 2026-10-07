@@ -12,7 +12,7 @@ class BoardExamFactory extends Factory
 
     public function definition(): array
     {
-        $passed = fake()->boolean(85);
+        $passed = fake()->boolean(72);
 
         $rate = $passed
             ? fake()->randomFloat(2, 75, 99)
