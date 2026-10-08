@@ -6,12 +6,13 @@ use App\Services\PhAddressService;
 use App\Support\SettingsRules;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Illuminate\Support\Str;
 
 new #[Layout('layouts::app-settings')] class extends Component
 {
@@ -20,22 +21,32 @@ new #[Layout('layouts::app-settings')] class extends Component
     public string $activeTab = 'appearance';
 
     // ===== User fields =====
-    public string $first_name  = '';
+    public string $first_name = '';
+
     public string $middle_name = '';
-    public string $last_name   = '';
-    public string $email       = '';
+
+    public string $last_name = '';
+
+    public string $email = '';
 
     // ===== Profile fields =====
     public ?int $batch_id = null;
+
     public string $gender = '';
+
     public string $contact_number_1 = '';
+
     public string $contact_number_2 = '';
+
     public string $street_address = '';
 
     // Location cascade
     public string $regionCode = '';
+
     public string $provinceCode = '';
+
     public string $cityCode = '';
+
     public string $barangayCode = '';
 
     // Avatar upload
@@ -52,27 +63,27 @@ new #[Layout('layouts::app-settings')] class extends Component
 
         [$first, $middle, $last] = $this->resolveNameParts($user);
 
-        $this->first_name  = $first;
+        $this->first_name = $first;
         $this->middle_name = $middle;
-        $this->last_name   = $last;
-        $this->email       = $user->email;
+        $this->last_name = $last;
+        $this->email = $user->email;
 
         if (! $profile = $this->userProfile) {
             return;
         }
 
-        $this->batch_id         = $profile->batch_id;
-        $this->gender           = $profile->gender ?? '';
+        $this->batch_id = $profile->batch_id;
+        $this->gender = $profile->gender ?? '';
         $this->contact_number_1 = $profile->contact_number_1 ?? '';
         $this->contact_number_2 = $profile->contact_number_2 ?? '';
 
         $location = $profile->location ?? [];
 
         $this->street_address = $location['street_address'] ?? '';
-        $this->regionCode     = $location['region_code'] ?? '';
-        $this->provinceCode   = $location['province_code'] ?? '';
-        $this->cityCode       = $location['city_code'] ?? '';
-        $this->barangayCode   = $location['barangay_code'] ?? '';
+        $this->regionCode = $location['region_code'] ?? '';
+        $this->provinceCode = $location['province_code'] ?? '';
+        $this->cityCode = $location['city_code'] ?? '';
+        $this->barangayCode = $location['barangay_code'] ?? '';
     }
 
     // ===== Computed =====
@@ -105,6 +116,34 @@ new #[Layout('layouts::app-settings')] class extends Component
         return filter_var($avatar, FILTER_VALIDATE_URL)
             ? $avatar
             : Storage::url($avatar);
+    }
+
+    public function updatedAvatarFile(): void
+    {
+        if (! $this->avatarFile) {
+            return;
+        }
+
+        try {
+            // Pass the rules explicitly — SettingsRules::profileDetails() must
+            // include the avatarFile rule for this to catch anything. Passing
+            // it inline guarantees the check always runs regardless of what the
+            // shared rule set contains.
+            $this->validateOnly('avatarFile', [
+                'avatarFile' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            ], [
+                'avatarFile.image' => 'Invalid, please upload image only.',
+                'avatarFile.mimes' => 'Invalid, please upload image only.',
+                'avatarFile.max' => 'The image is too large — maximum size is 2MB.',
+            ]);
+        } catch (ValidationException $e) {
+            // Clear the invalid file so the blade doesn't render a broken preview
+            // (temporaryUrl() throws FileNotPreviewableException on non-images).
+            // Re-throw so Livewire surfaces the error to the user.
+            $this->reset('avatarFile');
+
+            throw $e;
+        }
     }
 
     #[Computed]
@@ -188,30 +227,30 @@ new #[Layout('layouts::app-settings')] class extends Component
         $user = Auth::user();
 
         // Sanitize name parts + email once
-        $first  = $this->sanitize($this->first_name);
+        $first = $this->sanitize($this->first_name);
         $middle = $this->middle_name ? $this->sanitize($this->middle_name) : null;
-        $last   = $this->sanitize($this->last_name);
-        $email  = Str::lower($this->sanitize($this->email));
+        $last = $this->sanitize($this->last_name);
+        $email = Str::lower($this->sanitize($this->email));
 
         // The User model's `saving` hook auto-syncs `name` from the three parts.
         $user->update([
-            'first_name'  => $first,
+            'first_name' => $first,
             'middle_name' => $middle,
-            'last_name'   => $last,
-            'email'       => $email,
+            'last_name' => $last,
+            'email' => $email,
         ]);
 
         // Refresh locals with sanitized values
-        $this->first_name  = $first;
+        $this->first_name = $first;
         $this->middle_name = $middle ?? '';
-        $this->last_name   = $last;
-        $this->email       = $email;
+        $this->last_name = $last;
+        $this->email = $email;
 
         // ===== Build full address =====
-        $service  = app(PhAddressService::class);
-        $region   = $service->findByCode($this->regionCode);
+        $service = app(PhAddressService::class);
+        $region = $service->findByCode($this->regionCode);
         $province = $service->findByCode($this->provinceCode);
-        $city     = $service->findByCode($this->cityCode);
+        $city = $service->findByCode($this->cityCode);
         $barangay = $service->findByCode($this->barangayCode);
 
         $fullAddress = collect([
@@ -239,27 +278,27 @@ new #[Layout('layouts::app-settings')] class extends Component
         UserProfile::updateOrCreate(
             ['user_id' => $user->id],
             [
-                'avatar'           => $avatarPath,
-                'gender'           => $this->gender,
+                'avatar' => $avatarPath,
+                'gender' => $this->gender,
                 'contact_number_1' => $this->contact_number_1,
                 'contact_number_2' => $this->contact_number_2 ?: null,
-                'batch_id'         => $this->batch_id,
+                'batch_id' => $this->batch_id,
                 'location' => array_merge(
                     $existing?->location ?? [],
                     [
                         'street_address' => $this->street_address,
-                        'region_code'    => $this->regionCode,
-                        'region_name'    => $region->name ?? null,
-                        'province_code'  => $this->provinceCode,
-                        'province_name'  => $province->name ?? null,
-                        'city_code'      => $this->cityCode,
-                        'city_name'      => $city->name ?? null,
-                        'barangay_code'  => $this->barangayCode,
-                        'barangay_name'  => $barangay->name ?? null,
-                        'address'        => $fullAddress,
+                        'region_code' => $this->regionCode,
+                        'region_name' => $region->name ?? null,
+                        'province_code' => $this->provinceCode,
+                        'province_name' => $province->name ?? null,
+                        'city_code' => $this->cityCode,
+                        'city_name' => $city->name ?? null,
+                        'barangay_code' => $this->barangayCode,
+                        'barangay_name' => $barangay->name ?? null,
+                        'address' => $fullAddress,
                     ]
                 ),
-                'is_private'  => $existing?->is_private ?? false,
+                'is_private' => $existing?->is_private ?? false,
                 'is_verified' => $existing?->is_verified ?? false,
             ]
         );
@@ -280,14 +319,14 @@ new #[Layout('layouts::app-settings')] class extends Component
      */
     protected function resolveNameParts($user): array
     {
-        $first  = $user->first_name;
+        $first = $user->first_name;
         $middle = $user->middle_name;
-        $last   = $user->last_name;
+        $last = $user->last_name;
 
         if (! $first && ! $last && $user->name) {
-            $split  = preg_split('/\s+/', trim($user->name));
-            $first  = $split[0] ?? '';
-            $last   = count($split) > 1 ? end($split) : '';
+            $split = preg_split('/\s+/', trim($user->name));
+            $first = $split[0] ?? '';
+            $last = count($split) > 1 ? end($split) : '';
             $middle = count($split) > 2 ? implode(' ', array_slice($split, 1, -1)) : '';
         }
 

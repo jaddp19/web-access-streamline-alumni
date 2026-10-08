@@ -7,9 +7,12 @@ use App\Models\TracerStudy;
 use App\Models\UserProfile;
 use App\Models\WorkHistory;
 use App\Services\PhAddressService;
+use Carbon\Carbon;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -21,33 +24,52 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
     // Work history
     public string $work_name = '';
+
     public ?int $company_id = null;
+
     public string $date_hired = '';
+
     public bool $is_current_job = false;
 
     // Employment details
     public string $civil_status = '';
+
     public string $employment_area = '';
+
     public string $abroad_country = '';
+
     public string $employed_related_to_degree = '';
+
     public string $employment_type = '';
+
     public string $organization_type = '';
+
     public string $months_to_first_job = '';
 
     // Inline new-company form — basic
     public bool $showNewCompanyForm = false;
+
     public $new_company_logo = null;
+
     public string $new_company_name = '';
+
     public string $new_company_desc = '';
 
     // Inline new-company form — address cascade
     public string $new_company_address_type = 'philippines';
+
     public string $new_company_region_code = '';
+
     public string $new_company_province_code = '';
+
     public string $new_company_city_code = '';
+
     public string $new_company_street_address = '';
+
     public string $new_company_intl_country = '';
+
     public string $new_company_intl_state = '';
+
     public string $new_company_intl_city = '';
 
     // =========================================================
@@ -55,7 +77,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
     // =========================================================
 
     public function mount(): void
-    { 
+    {
         Gate::authorize('can_create');
         $tracerStudy = TracerStudy::query()
             ->where('user_id', Auth::id())
@@ -73,13 +95,13 @@ new #[Layout('layouts.app-alumni')] class extends Component
             return;
         }
 
-        $this->civil_status               = $employment->civil_status ?? '';
-        $this->employment_area            = $employment->employment_area ?? '';
-        $this->abroad_country             = $employment->abroad_country ?? '';
+        $this->civil_status = $employment->civil_status ?? '';
+        $this->employment_area = $employment->employment_area ?? '';
+        $this->abroad_country = $employment->abroad_country ?? '';
         $this->employed_related_to_degree = $employment->employed_related_to_degree ?? '';
-        $this->employment_type            = $employment->employment_type ?? '';
-        $this->organization_type          = $employment->organization_type ?? '';
-        $this->months_to_first_job        = $employment->months_to_first_job ?? '';
+        $this->employment_type = $employment->employment_type ?? '';
+        $this->organization_type = $employment->organization_type ?? '';
+        $this->months_to_first_job = $employment->months_to_first_job ?? '';
     }
 
     // =========================================================
@@ -109,7 +131,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
             return null;
         }
 
-        return ((int) $batchName) . '-01-01';
+        return ((int) $batchName).'-01-01';
     }
 
     /**
@@ -128,7 +150,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
             return null;
         }
 
-        return $current->date_hired instanceof \Carbon\Carbon
+        return $current->date_hired instanceof Carbon
             ? $current->date_hired->toDateString()
             : (string) $current->date_hired;
     }
@@ -140,7 +162,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
     protected function rules(): array
     {
         return [
-            'work_name'  => ['required', 'string', 'min:2', 'max:255'],
+            'work_name' => ['required', 'string', 'min:2', 'max:255'],
             'company_id' => ['required', 'integer', 'exists:companies,id'],
 
             'date_hired' => [
@@ -154,6 +176,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
                     if ($minDate && $value < $minDate) {
                         $year = (int) substr($minDate, 0, 4);
                         $fail("The hire date cannot be earlier than your graduation year ({$year}).");
+
                         return;
                     }
 
@@ -165,7 +188,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
                         return;
                     }
 
-                    $formatted = \Carbon\Carbon::parse($currentJobDate)->format('M d, Y');
+                    $formatted = Carbon::parse($currentJobDate)->format('M d, Y');
 
                     if (! $this->is_current_job) {
                         // Adding a PAST job → its date must be strictly BEFORE the current job.
@@ -192,13 +215,13 @@ new #[Layout('layouts.app-alumni')] class extends Component
         }
 
         return [
-            'civil_status'               => ['required', 'in:single,married,widowed,separated,single-parent'],
+            'civil_status' => ['required', 'in:single,married,widowed,separated,single-parent'],
             'employed_related_to_degree' => ['required', 'in:yes,no,partially-related'],
-            'employment_type'            => ['required', 'in:full-time,part-time,contractual-project-based,freelance,other'],
-            'organization_type'          => ['required', 'in:private-company,government-agency,non-government-organization,educational-institution,self-employed-business,other'],
-            'employment_area'            => ['required', 'in:philippines,abroad'],
-            'abroad_country'             => ['required_if:employment_area,abroad', 'nullable', 'string', 'max:255'],
-            'months_to_first_job'        => ['required', 'in:1-3-months,4-6-months,more-than-6-months,more-than-1-year'],
+            'employment_type' => ['required', 'in:full-time,part-time,contractual-project-based,freelance,other'],
+            'organization_type' => ['required', 'in:private-company,government-agency,non-government-organization,educational-institution,self-employed-business,other'],
+            'employment_area' => ['required', 'in:philippines,abroad'],
+            'abroad_country' => ['required_if:employment_area,abroad', 'nullable', 'string', 'max:255'],
+            'months_to_first_job' => ['required', 'in:1-3-months,4-6-months,more-than-6-months,more-than-1-year'],
         ];
     }
 
@@ -211,45 +234,45 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
             'new_company_address_type' => ['required', 'in:philippines,abroad'],
 
-            'new_company_region_code'    => ['required_if:new_company_address_type,philippines', 'nullable', 'string'],
-            'new_company_province_code'  => ['required_if:new_company_address_type,philippines', 'nullable', 'string'],
-            'new_company_city_code'      => ['required_if:new_company_address_type,philippines', 'nullable', 'string'],
+            'new_company_region_code' => ['required_if:new_company_address_type,philippines', 'nullable', 'string'],
+            'new_company_province_code' => ['required_if:new_company_address_type,philippines', 'nullable', 'string'],
+            'new_company_city_code' => ['required_if:new_company_address_type,philippines', 'nullable', 'string'],
             'new_company_street_address' => ['nullable', 'string', 'max:500'],
 
             'new_company_intl_country' => ['required_if:new_company_address_type,abroad', 'nullable', 'string', 'max:255'],
-            'new_company_intl_state'   => ['nullable', 'string', 'max:255'],
-            'new_company_intl_city'    => ['required_if:new_company_address_type,abroad', 'nullable', 'string', 'max:255'],
+            'new_company_intl_state' => ['nullable', 'string', 'max:255'],
+            'new_company_intl_city' => ['required_if:new_company_address_type,abroad', 'nullable', 'string', 'max:255'],
         ];
     }
 
     protected function messages(): array
     {
         return [
-            'work_name.required'                  => 'Please enter your job title or position.',
-            'work_name.min'                       => 'Job title must be at least 2 characters.',
-            'company_id.required'                 => 'Please select a company.',
-            'company_id.exists'                   => 'The selected company no longer exists.',
-            'date_hired.required'                 => 'Please enter the date you were hired.',
-            'date_hired.before_or_equal'          => 'The hire date cannot be in the future.',
-            'civil_status.required'               => 'Please select your civil status.',
+            'work_name.required' => 'Please enter your job title or position.',
+            'work_name.min' => 'Job title must be at least 2 characters.',
+            'company_id.required' => 'Please select a company.',
+            'company_id.exists' => 'The selected company no longer exists.',
+            'date_hired.required' => 'Please enter the date you were hired.',
+            'date_hired.before_or_equal' => 'The hire date cannot be in the future.',
+            'civil_status.required' => 'Please select your civil status.',
             'employed_related_to_degree.required' => 'Please answer if your job is related to your degree.',
-            'employment_type.required'            => 'Please select type of employment.',
-            'organization_type.required'          => 'Please select type of organization.',
-            'employment_area.required'            => 'Please select employment area.',
-            'abroad_country.required_if'          => 'Please specify the country.',
-            'months_to_first_job.required'        => 'Please select how long it took to get your first job.',
+            'employment_type.required' => 'Please select type of employment.',
+            'organization_type.required' => 'Please select type of organization.',
+            'employment_area.required' => 'Please select employment area.',
+            'abroad_country.required_if' => 'Please specify the country.',
+            'months_to_first_job.required' => 'Please select how long it took to get your first job.',
 
-            'new_company_name.required'   => 'Please enter the company name.',
-            'new_company_name.unique'     => 'A company with this name already exists.',
-            'new_company_logo.image'      => 'The logo must be an image file.',
-            'new_company_logo.mimes'      => 'Logo must be JPG, PNG, or WebP.',
-            'new_company_logo.max'        => 'The logo cannot exceed 2MB.',
+            'new_company_name.required' => 'Please enter the company name.',
+            'new_company_name.unique' => 'A company with this name already exists.',
+            'new_company_logo.image' => 'The logo must be an image file.',
+            'new_company_logo.mimes' => 'Logo must be JPG, PNG, or WebP.',
+            'new_company_logo.max' => 'The logo cannot exceed 2MB.',
 
-            'new_company_region_code.required_if'   => 'Please select a region.',
+            'new_company_region_code.required_if' => 'Please select a region.',
             'new_company_province_code.required_if' => 'Please select a province.',
-            'new_company_city_code.required_if'     => 'Please select a city / municipality.',
-            'new_company_intl_country.required_if'  => 'Please enter the country.',
-            'new_company_intl_city.required_if'     => 'Please enter the city.',
+            'new_company_city_code.required_if' => 'Please select a city / municipality.',
+            'new_company_intl_country.required_if' => 'Please enter the country.',
+            'new_company_intl_city.required_if' => 'Please enter the city.',
         ];
     }
 
@@ -337,7 +360,23 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
     public function updatedNewCompanyLogo(): void
     {
-        $this->validateOnly('new_company_logo');
+        if (! $this->new_company_logo) {
+            return;
+        }
+
+        try {
+            // Pass the companyRules explicitly — validateOnly() defaults to rules(),
+            // which doesn't contain the logo rule, so without this the validation
+            // silently passes and the HTML/PDF file stays in the property.
+            $this->validateOnly('new_company_logo', $this->companyRules(), $this->messages());
+        } catch (ValidationException $e) {
+            // Clear the invalid file so the blade doesn't render a broken preview
+            // (temporaryUrl() throws on non-images). Re-throw so Livewire surfaces
+            // the error message to the user.
+            $this->reset('new_company_logo');
+
+            throw $e;
+        }
     }
 
     public function updatedNewCompanyAddressType(): void
@@ -352,7 +391,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
     public function updatedNewCompanyRegionCode(): void
     {
         $this->new_company_province_code = '';
-        $this->new_company_city_code     = '';
+        $this->new_company_city_code = '';
         $this->resetErrorBag(['new_company_province_code', 'new_company_city_code']);
     }
 
@@ -376,9 +415,9 @@ new #[Layout('layouts.app-alumni')] class extends Component
         $service = app(PhAddressService::class);
 
         if ($this->new_company_address_type === 'philippines') {
-            $region   = $service->findByCode($this->new_company_region_code);
+            $region = $service->findByCode($this->new_company_region_code);
             $province = $service->findByCode($this->new_company_province_code);
-            $city     = $service->findByCode($this->new_company_city_code);
+            $city = $service->findByCode($this->new_company_city_code);
 
             $companyAddress = collect([
                 $this->new_company_street_address,
@@ -403,45 +442,48 @@ new #[Layout('layouts.app-alumni')] class extends Component
                 }
 
                 return Company::create([
-                    'company_name'    => trim(strip_tags($validated['new_company_name'])),
+                    'company_name' => trim(strip_tags($validated['new_company_name'])),
                     'company_address' => $companyAddress ?: null,
-                    'company_logo'    => $logoPath,
-                    'company_desc'    => filled($validated['new_company_desc'])
+                    'company_logo' => $logoPath,
+                    'company_desc' => filled($validated['new_company_desc'])
                         ? trim(strip_tags($validated['new_company_desc']))
                         : null,
                 ]);
             });
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             if ($logoPath && Storage::disk('public')->exists($logoPath)) {
                 Storage::disk('public')->delete($logoPath);
             }
 
             if ($e->getCode() === '23000') {
                 $this->addError('new_company_name', 'This company name was just taken. Please refresh and try again.');
+
                 return;
             }
 
             report($e);
             session()->flash('error', 'Could not create the company. Please try again.');
+
             return;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             if ($logoPath && Storage::disk('public')->exists($logoPath)) {
                 Storage::disk('public')->delete($logoPath);
             }
 
             report($e);
             session()->flash('error', 'Could not create the company. Please try again.');
+
             return;
         }
 
-        $this->company_id         = $company->id;
+        $this->company_id = $company->id;
         $this->showNewCompanyForm = false;
 
         $this->resetNewCompanyFields();
 
         unset($this->companies);
 
-        session()->flash('company_created', 'Company "' . $company->company_name . '" created and selected.');
+        session()->flash('company_created', 'Company "'.$company->company_name.'" created and selected.');
     }
 
     // =========================================================
@@ -457,8 +499,8 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
         $this->validate($rules, $this->messages());
 
-        $workName      = trim(strip_tags($this->work_name));
-        $civilStatus   = trim(strip_tags($this->civil_status));
+        $workName = trim(strip_tags($this->work_name));
+        $civilStatus = trim(strip_tags($this->civil_status));
         $abroadCountry = trim(strip_tags($this->abroad_country));
 
         try {
@@ -473,10 +515,10 @@ new #[Layout('layouts.app-alumni')] class extends Component
                 }
 
                 WorkHistory::create([
-                    'user_id'        => Auth::id(),
-                    'work_name'      => $workName,
-                    'company_id'     => $this->company_id,
-                    'date_hired'     => $this->date_hired,
+                    'user_id' => Auth::id(),
+                    'work_name' => $workName,
+                    'company_id' => $this->company_id,
+                    'date_hired' => $this->date_hired,
                     'is_current_job' => $this->is_current_job,
                 ]);
 
@@ -485,7 +527,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
                 $employment = CivilStatusEmployment::firstOrCreate(
                     ['tracer_study_id' => $tracerStudy->id],
                     [
-                        'civil_status'      => $civilStatus ?: 'single',
+                        'civil_status' => $civilStatus ?: 'single',
                         'employment_status' => 'unemployed',
                     ]
                 );
@@ -495,17 +537,17 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
                 if ($this->is_current_job) {
                     $employment->fill([
-                        'civil_status'               => $civilStatus,
-                        'employment_status'          => 'employed',
-                        'current_job_position'       => $workName,
+                        'civil_status' => $civilStatus,
+                        'employment_status' => 'employed',
+                        'current_job_position' => $workName,
                         'employed_related_to_degree' => $this->employed_related_to_degree ?: null,
-                        'employment_type'            => $this->employment_type ?: null,
-                        'organization_type'          => $this->organization_type ?: null,
-                        'employment_area'            => $this->employment_area ?: null,
-                        'abroad_country'             => $this->employment_area === 'abroad'
+                        'employment_type' => $this->employment_type ?: null,
+                        'organization_type' => $this->organization_type ?: null,
+                        'employment_area' => $this->employment_area ?: null,
+                        'abroad_country' => $this->employment_area === 'abroad'
                             ? ($abroadCountry ?: null)
                             : null,
-                        'months_to_first_job'        => $this->months_to_first_job ?: null,
+                        'months_to_first_job' => $this->months_to_first_job ?: null,
                     ]);
 
                     if ($employment->isDirty()) {
@@ -532,15 +574,16 @@ new #[Layout('layouts.app-alumni')] class extends Component
                         ->first();
 
                     $profile?->forceFill([
-                        'is_approved'           => false,
+                        'is_approved' => false,
                         'last_rejection_reason' => null,
                     ])->saveQuietly();
                 }
                 // ─────────────────────────────────────────────────────────
             });
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
             session()->flash('error', 'Could not save your work experience. Please try again.');
+
             return;
         }
 

@@ -10,6 +10,7 @@ use App\Services\PhAddressService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -348,7 +349,23 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
     public function updatedNewCompanyLogo(): void
     {
-        $this->validateOnly('new_company_logo');
+        if (! $this->new_company_logo) {
+            return;
+        }
+
+        try {
+            // Pass the companyRules explicitly — validateOnly() defaults to rules(),
+            // which doesn't contain the logo rule, so without this the validation
+            // silently passes and the HTML/PDF file stays in the property.
+            $this->validateOnly('new_company_logo', $this->companyRules(), $this->messages());
+        } catch (ValidationException $e) {
+            // Clear the invalid file so the blade doesn't render a broken preview
+            // (temporaryUrl() throws on non-images). Re-throw so Livewire surfaces
+            // the error message to the user.
+            $this->reset('new_company_logo');
+
+            throw $e;
+        }
     }
 
     public function updatedNewCompanyAddressType(): void

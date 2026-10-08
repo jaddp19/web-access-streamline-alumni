@@ -100,7 +100,7 @@
                                 <div class="flex items-center gap-3">
                                     <div
                                         class="w-16 h-16 rounded-xl bg-white dark:bg-[#242526] border border-black/10 dark:border-white/10 flex items-center justify-center shrink-0 overflow-hidden">
-                                        @if ($new_company_logo)
+                                        @if ($new_company_logo && $new_company_logo->isPreviewable())
                                             <img src="{{ $new_company_logo->temporaryUrl() }}" alt="Preview"
                                                 loading="lazy" class="w-full h-full object-cover">
                                         @else

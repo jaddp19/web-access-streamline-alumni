@@ -188,7 +188,9 @@
                             {{-- Avatar --}}
                             <div class="flex items-center gap-5">
                                 @php
-                                    $preview = $avatarFile ? $avatarFile->temporaryUrl() : $this->avatarUrl;
+                                    $preview = ($avatarFile && $avatarFile->isPreviewable())
+                                        ? $avatarFile->temporaryUrl()
+                                        : $this->avatarUrl;
                                 @endphp
 
                                 @if ($preview)
@@ -286,7 +288,7 @@
                                     </label>
                                     <select wire:model="gender"
                                         class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#1C6B45] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#1C6B45] dark:focus:ring-[#D4A537] transition">
-                                        <option value="">Select gender</option>
+                                        <option value="">Select Gender</option>
                                         <option value="male">Male</option>
                                         <option value="female">Female</option>
                                         <option value="other">Other</option>
@@ -304,7 +306,7 @@
                                     </label>
                                     <select wire:model="batch_id"
                                         class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#1C6B45] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#1C6B45] dark:focus:ring-[#D4A537] transition">
-                                        <option value="">Select batch</option>
+                                        <option value="">Select Batch</option>
                                         @foreach ($this->batches as $batch)
                                             <option value="{{ $batch->id }}">{{ $batch->batch_name }}</option>
                                         @endforeach
@@ -429,7 +431,7 @@
                                             <span class="text-red-500">*</span></label>
                                         <select wire:model.live="regionCode"
                                             class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#1C6B45] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#1C6B45] dark:focus:ring-[#D4A537] transition">
-                                            <option value="">Select region</option>
+                                            <option value="">Select Region</option>
                                             @foreach ($this->regions as $region)
                                                 <option value="{{ $region->code }}">{{ $region->name }}</option>
                                             @endforeach
@@ -447,7 +449,7 @@
                                                 <span class="text-red-500">*</span></label>
                                             <select wire:model.live="provinceCode"
                                                 class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#1C6B45] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#1C6B45] dark:focus:ring-[#D4A537] transition">
-                                                <option value="">Select province</option>
+                                                <option value="">Select Province</option>
                                                 @foreach ($this->provinces as $province)
                                                     <option value="{{ $province->code }}">{{ $province->name }}
                                                     </option>
@@ -467,7 +469,7 @@
                                                 / Municipality <span class="text-red-500">*</span></label>
                                             <select wire:model.live="cityCode"
                                                 class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#1C6B45] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#1C6B45] dark:focus:ring-[#D4A537] transition">
-                                                <option value="">Select city / municipality</option>
+                                                <option value="">Select City / Municipality</option>
                                                 @foreach ($this->cities as $city)
                                                     <option value="{{ $city->code }}">{{ $city->name }}</option>
                                                 @endforeach
@@ -486,7 +488,7 @@
                                                 <span class="text-red-500">*</span></label>
                                             <select wire:model.live="barangayCode"
                                                 class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-black dark:text-white focus:outline-none focus:border-[#1C6B45] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#1C6B45] dark:focus:ring-[#D4A537] transition">
-                                                <option value="">Select barangay</option>
+                                                <option value="">Select Barangay</option>
                                                 @foreach ($this->barangays as $barangay)
                                                     <option value="{{ $barangay->code }}">{{ $barangay->name }}
                                                     </option>
