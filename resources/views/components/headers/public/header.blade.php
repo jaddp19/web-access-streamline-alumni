@@ -1,5 +1,5 @@
 <!-- ========== HEADER ========== -->
-<header class="w-full bg-green-800 dark:bg-green-900 shadow-md select-none">
+<header class="w-full bg-gradient-to-r from-[#0f2b1c] via-green-800 to-[#0f2b1c] shadow-md select-none">
 
     <nav class="max-w-7xl mx-auto flex items-center justify-between px-6 py-3.5">
         <!-- Logo -->

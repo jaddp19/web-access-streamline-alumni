@@ -121,7 +121,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
             'email' => [
                 'required',
-                'email:rfc,dns',
+                'email:rfc,',
                 'max:255',
                 Rule::unique('users', 'email')->ignore($this->user->id),
             ],

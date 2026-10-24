@@ -119,7 +119,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
             'email' => [
                 'required',
-                'email:rfc,dns',   // ✅ built-in DNS check — cached by Laravel validator
+                'email:rfc,',  
                 'max:255',
                 Rule::unique('users', 'email'),
             ],
