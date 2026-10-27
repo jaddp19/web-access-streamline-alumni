@@ -126,6 +126,26 @@
 
             {{-- Feed: official posts from registrar / program head --}}
             @forelse ($this->recentPosts as $post)
+                @php
+                    // 1. Date Logic
+                    $isOlderThan7Days = $post->created_at->lt(now()->subDays(7));
+                    $displayDate = $isOlderThan7Days 
+                        ? $post->created_at->format('F j, Y g:ia') 
+                        : $post->created_at->diffForHumans();
+
+                    // 2. Updated Logic
+                    $isUpdated = $post->updated_at->gt($post->created_at);
+                    $displayUpdated = '';
+                    
+                    if ($isUpdated) {
+                        $isUpdateOlderThan7Days = $post->updated_at->lt(now()->subDays(7));
+                        $updatedDateStr = $isUpdateOlderThan7Days 
+                            ? $post->updated_at->format('F j, Y g:ia') 
+                            : $post->updated_at->diffForHumans();
+                        $displayUpdated = "(Updated {$updatedDateStr})";
+                    }
+                @endphp
+                
                 <a href="{{ route('alumni.view-single-post', $post->slug) }}"
                     wire:navigate
                     class="block bg-white dark:bg-[#242526] rounded-2xl shadow-sm overflow-hidden border border-transparent dark:border-white/5 hover:border-[#D4A537]/30 dark:hover:border-[#D4A537]/20 transition-colors">
@@ -162,12 +182,17 @@
                                 <p class="font-semibold text-black dark:text-white text-sm leading-tight">
                                     {{ $post->user->name ?? 'CSAV Admin' }}
                                 </p>
-                                <p class="text-xs text-black/50 dark:text-white/50">
+                                <p class="text-xs text-black/50 dark:text-white/50 flex items-center flex-wrap gap-1">
                                     @if ($authorRole)
                                         <span class="capitalize">{{ $authorRole }}</span>
                                         &middot;
                                     @endif
-                                    {{ $post->created_at->diffForHumans() }}
+                                    
+                                    <span>{{ $displayDate }}</span>
+                                    
+                                    @if ($isUpdated)
+                                        <span class="text-[#D4A537] dark:text-[#E5B94A]">{{ $displayUpdated }}</span>
+                                    @endif
                                 </p>
                             </div>
                         </div>

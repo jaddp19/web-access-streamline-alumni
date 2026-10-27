@@ -2,6 +2,7 @@
 
 use App\Models\AuditLog;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -19,6 +20,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     #[Url] public string $userFilter = 'all';
     #[Url] public string $dateRange = '30';
 
+    public ?int $viewingLogId = null;
     protected int $perPage = 20;
 
     public function updatingSearch(): void { $this->resetPage(); }
@@ -104,4 +106,39 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             || $this->dateRange !== '30';
     }
 
+    public function viewLog(int $id): void
+    {
+        $this->viewingLogId = $id;
+    }
+
+    public function closeLog(): void
+    {
+        $this->viewingLogId = null;
+    }
+
+    #[Computed]
+    public function viewingLog(): ?AuditLog
+    {
+        if (! $this->viewingLogId) {
+            return null;
+        }
+        
+        return AuditLog::find($this->viewingLogId);
+    }
+    
+    #[Computed]
+    public function currentModel(): ?Model
+    {
+        $log = $this->viewingLog;
+        
+        if (! $log || ! $log->auditable_type || ! class_exists($log->auditable_type)) {
+            return null;
+        }
+
+        if ($log->action === 'deleted') {
+            return null;
+        }
+
+        return $log->auditable_type::find($log->auditable_id);
+    }
 };

@@ -72,7 +72,7 @@ class CourseSeeder extends Seeder
             [
                 'course_title'   => 'Teacher Certificate Program',
                 'course_code'    => 'TCP',
-                'course_type'    => 'non-board',
+                'course_type'    => 'board',
                 'department'     => 'Education Department',
                 'course_desc'    => '18-unit professional education course designed for college graduates of non-education degrees who want to become licensed teachers',
             ],

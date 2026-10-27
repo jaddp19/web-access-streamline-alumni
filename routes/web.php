@@ -73,7 +73,7 @@ Route::middleware(['auth', 'role:registrar'])->prefix('registrar')->group(functi
 
     Route::livewire('/post/view', 'super-admin::pages.post.view-post')->name('super-admin.post.view');
     Route::livewire('/post/create', 'super-admin::pages.post.create-post')->name('super-admin.post.create');
-    Route::livewire('/post/update{post}', 'super-admin::pages.post.update-post')->name('super-admin.post.update');
+    Route::livewire('/post/update/{post}', 'super-admin::pages.post.update-post')->name('super-admin.post.update');
 
     Route::livewire('/verification-queue', 'super-admin::verification.verification-queue')->name('super-admin.verification-queue');
 
@@ -98,7 +98,7 @@ Route::middleware(['auth', 'role:program head|registrar'])->prefix('program-head
 
     Route::livewire('/post/view-post', 'admin::pages.post.view-post')->name('admin.post.view');
     Route::livewire('/post/create-post', 'admin::pages.post.create-post')->name('admin.post.create');
-    Route::livewire('/post/update-post{post}', 'admin::pages.post.update-post')->name('admin.post.update');
+    Route::livewire('/post/update-post/{post}', 'admin::pages.post.update-post')->name('admin.post.update');
 
 
     Route::livewire('/verification-queue', 'admin::pages.verification-queue')->name('admin.verification-queue');

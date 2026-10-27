@@ -118,7 +118,7 @@
                             default    => 'bg-black/5 dark:bg-white/10 text-black/50 dark:text-white/50',
                         };
                     @endphp
-                    <div wire:key="mobile-log-{{ $log->id }}" class="p-4">
+                    <div wire:key="mobile-log-{{ $log->id }}" wire:click="viewLog({{ $log->id }})" class="p-4">
                         <div class="flex items-start justify-between gap-2 mb-1.5">
                             <p class="font-semibold text-sm text-[#123524] dark:text-white truncate">
                                 {{ $log->user_name ?? 'System' }}
@@ -129,22 +129,15 @@
                         </div>
 
                         <div class="min-w-0">
-                            @if ($log->subject_label)
-                                <p class="text-sm font-semibold text-[#123524] dark:text-white truncate">
-                                    {{ $log->subject_label }}
+                            <button wire:click="viewLog({{ $log->id }})" class="text-left group w-full">
+                                <p class="text-sm font-semibold text-[#123524] dark:text-white truncate group-hover:text-[#1877F2] dark:group-hover:text-[#D4A537] transition">
+                                    {{ $log->subject_label ?? (class_basename($log->auditable_type) . ' #' . $log->auditable_id) }}
                                 </p>
                                 <p class="text-[11px] text-black/40 dark:text-white/40">
                                     {{ class_basename($log->auditable_type) }}
                                     <span class="font-mono">#{{ $log->auditable_id }}</span>
                                 </p>
-                            @else
-                                <p class="text-xs text-black/60 dark:text-white/60">
-                                    {{ class_basename($log->auditable_type) }}
-                                    <span class="font-mono text-[11px] text-black/40 dark:text-white/40">
-                                        #{{ $log->auditable_id }}
-                                    </span>
-                                </p>
-                            @endif
+                            </button>
                         </div>
 
                         @if ($log->changes)
@@ -217,7 +210,7 @@
                                     default    => 'bg-black/5 dark:bg-white/10 text-black/50 dark:text-white/50',
                                 };
                             @endphp
-                            <tr wire:key="log-{{ $log->id }}" class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
+                            <tr wire:key="log-{{ $log->id }}" wire:click="viewLog({{ $log->id }})" class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
                                 <td class="ps-4 sm:ps-6 py-3">
                                     <span class="font-semibold text-[#123524] dark:text-white truncate block max-w-[140px]">
                                         {{ $log->user_name ?? 'System' }}
@@ -231,24 +224,15 @@
                                 </td>
 
                                 <td class="px-3 py-3">
-                                    <div class="min-w-0">
-                                        @if ($log->subject_label)
-                                            <span class="font-semibold text-[#123524] dark:text-white block truncate max-w-[180px]">
-                                                {{ $log->subject_label }}
-                                            </span>
-                                            <span class="text-[11px] text-black/40 dark:text-white/40">
-                                                {{ class_basename($log->auditable_type) }}
-                                                <span class="font-mono">#{{ $log->auditable_id }}</span>
-                                            </span>
-                                        @else
-                                            <span class="text-black/70 dark:text-white/70">
-                                                {{ class_basename($log->auditable_type) }}
-                                                <span class="font-mono text-[11px] text-black/40 dark:text-white/40">
-                                                    #{{ $log->auditable_id }}
-                                                </span>
-                                            </span>
-                                        @endif
-                                    </div>
+                                    <button wire:click="viewLog({{ $log->id }})" class="text-left group w-full">
+                                        <span class="font-semibold text-[#123524] dark:text-white block truncate max-w-[180px] group-hover:text-[#1877F2] dark:group-hover:text-[#D4A537] transition">
+                                            {{ $log->subject_label ?? (class_basename($log->auditable_type) . ' #' . $log->auditable_id) }}
+                                        </span>
+                                        <span class="text-[11px] text-black/40 dark:text-white/40">
+                                            {{ class_basename($log->auditable_type) }}
+                                            <span class="font-mono">#{{ $log->auditable_id }}</span>
+                                        </span>
+                                    </button>
                                 </td>
 
                                 <td class="hidden lg:table-cell px-3 py-3 max-w-md">
@@ -357,4 +341,144 @@
             @endcan
         </div>
     </div>
+
+    {{-- ===================== VIEW CHANGES MODAL ===================== --}}
+    @if ($this->viewingLog)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            
+            {{-- Backdrop --}}
+            <div class="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" wire:click="closeLog"></div>
+
+            <div class="relative w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white dark:bg-[#242526] text-left shadow-2xl transition-all border border-black/10 dark:border-white/10">
+                
+                {{-- Header --}}
+                <div class="px-6 py-4 border-b border-black/5 dark:border-white/5 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-bold text-[#123524] dark:text-white">
+                            {{ $this->viewingLog->subject_label ?? (class_basename($this->viewingLog->auditable_type) . ' #' . $this->viewingLog->auditable_id) }}
+                        </h3>
+                        <p class="text-xs text-black/50 dark:text-white/50">
+                            {{ ucfirst($this->viewingLog->action) }} by {{ $this->viewingLog->user_name ?? 'System' }} • {{ $this->viewingLog->created_at->format('M d, Y g:i A') }}
+                        </p>
+                    </div>
+                    <button wire:click="closeLog" class="text-black/40 hover:text-black dark:text-white/40 dark:hover:text-white transition">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+
+                {{-- Body --}}
+                <div class="px-6 py-4 max-h-[60vh] overflow-y-auto">
+                    
+                    @php
+                        $log = $this->viewingLog;
+                        $changes = $log->changes ?? [];
+                        $currentModel = $this->currentModel;
+
+                        $hiddenFields = ['created_at', 'updated_at', 'deleted_at', 'password', 'remember_token', 'email_verified_at'];
+
+                        // 1. Start with the current DB state (so we see all fields)
+                        $currentState = $currentModel ? $currentModel->getAttributes() : [];
+                        
+                        // If it's deleted, build the state from the log's 'new' values
+                        if (!$currentModel) {
+                            foreach ($changes as $field => $change) {
+                                $currentState[$field] = is_array($change) ? ($change['new'] ?? null) : $change;
+                            }
+                        }
+
+                        // 2. Build the "After" and "Before" states
+                        $newState = $currentState;
+                        $oldState = $currentState;
+
+                        foreach ($changes as $field => $change) {
+                            $oldVal = is_array($change) ? ($change['old'] ?? null) : null;
+                            $newVal = is_array($change) ? ($change['new'] ?? null) : $change;
+
+                            $oldState[$field] = $oldVal;
+                            $newState[$field] = $newVal;
+                        }
+
+                        // 3. Get ALL keys, filter out hidden ones
+                        $allFields = array_unique(array_merge(array_keys($oldState), array_keys($newState)));
+                        sort($allFields);
+
+                        $allFields = array_filter($allFields, function($field) use ($hiddenFields, $oldState, $newState) {
+                            if (in_array($field, $hiddenFields)) return false;
+                            $old = $oldState[$field] ?? null;
+                            $new = $newState[$field] ?? null;
+                            return $old !== null || $new !== null;
+                        });
+
+                        // 4. Formatting helper
+                        $formatValue = function($val) {
+                            if ($val === null || $val === '') return '—';
+                            if (is_bool($val)) return $val ? 'true' : 'false';
+                            if (is_array($val)) return json_encode($val);
+                            return (string) $val;
+                        };
+                    @endphp
+
+                    <div class="rounded-xl border border-black/5 dark:border-white/5 bg-[#F7F5EF] dark:bg-[#3A3B3C] overflow-hidden">
+                        <table class="w-full text-sm text-left">
+                            <thead class="bg-black/[0.02] dark:bg-white/[0.02] border-b border-black/5 dark:border-white/5">
+                                <tr>
+                                    <th class="px-4 py-2 font-bold uppercase tracking-wider text-[10px] text-black/60 dark:text-white/60 w-1/3">Attribute</th>
+                                    <th class="px-4 py-2 font-bold uppercase tracking-wider text-[10px] text-black/60 dark:text-white/60 w-1/3">Before</th>
+                                    <th class="px-4 py-2 font-bold uppercase tracking-wider text-[10px] text-black/60 dark:text-white/60 w-1/3">After</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-black/5 dark:divide-white/5 font-mono text-xs">
+                                @foreach ($allFields as $field)
+                                    @php
+                                        $oldVal = $oldState[$field] ?? null;
+                                        $newVal = $newState[$field] ?? null;
+                                        
+                                        // It only changed if the log explicitly recorded a change for this field
+                                        $isChanged = array_key_exists($field, $changes);
+                                        
+                                        $displayOld = $formatValue($oldVal);
+                                        $displayNew = $formatValue($newVal);
+                                    @endphp
+                                    
+                                    <tr class="{{ $isChanged ? 'bg-amber-50/50 dark:bg-amber-500/5' : 'opacity-60' }}">
+                                        {{-- Field Name --}}
+                                        <td class="px-4 py-2 text-black/70 dark:text-white/70 font-sans font-medium">
+                                            {{ str_replace('_', ' ', $field) }}
+                                        </td>
+
+                                        {{-- Old Value --}}
+                                        <td class="px-4 py-2 text-black/60 dark:text-white/60 break-all {{ $isChanged ? 'line-through' : '' }}">
+                                            {{ $displayOld }}
+                                        </td>
+
+                                        {{-- New Value --}}
+                                        <td class="px-4 py-2 break-all">
+                                            @if ($isChanged)
+                                                <div class="flex items-center gap-2">
+                                                    <svg class="w-3 h-3 text-emerald-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                                                    <span class="font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                                                        {{ $displayNew }}
+                                                    </span>
+                                                </div>
+                                            @else
+                                                {{-- Unchanged --}}
+                                                <span class="text-black/50 dark:text-white/50">{{ $displayNew }}</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {{-- Footer --}}
+                <div class="px-6 py-4 border-t border-black/5 dark:border-white/5 bg-[#F7F5EF] dark:bg-[#3A3B3C] flex justify-end">
+                    <button wire:click="closeLog" class="px-4 py-2 text-sm font-semibold rounded-lg bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524] hover:bg-[#0d2819] dark:hover:bg-[#E5B94A] transition">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>

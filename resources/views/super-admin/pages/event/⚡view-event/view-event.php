@@ -24,7 +24,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     #[Url]
     public string $timeFilter = 'all';     // all | upcoming | past
 
-    protected int $perPage = 15;
+    protected int $perPage = 10;
 
     public function updatingSearch(): void
     {
