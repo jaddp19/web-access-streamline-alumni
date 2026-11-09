@@ -23,6 +23,7 @@ class PostSeeder extends Seeder
 
         if ($authors->isEmpty()) {
             $this->command->error('→ Posts: SKIPPED — no registrar or program head found.');
+
             return;
         }
 
@@ -30,6 +31,7 @@ class PostSeeder extends Seeder
 
         if ($categories->isEmpty()) {
             $this->command->error('→ Posts: SKIPPED — no categories found. Run CategorySeeder first.');
+
             return;
         }
 
@@ -53,13 +55,13 @@ class PostSeeder extends Seeder
             $title = $this->sampleTitle();
 
             Post::create([
-                'user_id'     => $author->id,
-                'title'       => $title,
-                'slug'        => $this->uniqueSlug($title),
+                'user_id' => $author->id,
+                'title' => $title,
+                'slug' => $this->uniqueSlug($title),
                 'description' => $this->description(),
-                'image'       => null, // seeded posts have no cover image
+                'image' => null, // seeded posts have no cover image
                 'category_id' => $this->categoryIdFor($title, $categories),
-                'status'      => $status,
+                'status' => $status,
                 'attachments' => $this->attachments(),
             ]);
 
@@ -84,26 +86,26 @@ class PostSeeder extends Seeder
         $lower = strtolower($title);
 
         $keywordMap = [
-            'board'          => 'board-exam-results',
-            'top notcher'    => 'board-exam-results',
-            'scholarship'    => 'scholarships-grants',
-            'grant'          => 'scholarships-grants',
-            'career'         => 'career-opportunities',
-            'job'            => 'career-opportunities',
-            'internship'     => 'career-opportunities',
-            'tracer'         => 'tracer-study',
-            'homecoming'     => 'events',
-            'reunion'        => 'events',
-            'event'          => 'events',
-            'achievement'    => 'alumni-achievements',
-            'recognized'     => 'alumni-achievements',
-            'award'          => 'alumni-achievements',
-            'story'          => 'alumni-stories',
-            'testimonial'    => 'alumni-stories',
-            'announcement'   => 'announcements',
-            'reminder'       => 'announcements',
-            'update'         => 'announcements',
-            'welcome'        => 'announcements',
+            'board' => 'board-exam-results',
+            'top notcher' => 'board-exam-results',
+            'scholarship' => 'scholarships-grants',
+            'grant' => 'scholarships-grants',
+            'career' => 'career-opportunities',
+            'job' => 'career-opportunities',
+            'internship' => 'career-opportunities',
+            'tracer' => 'tracer-study',
+            'homecoming' => 'events',
+            'reunion' => 'events',
+            'event' => 'events',
+            'achievement' => 'alumni-achievements',
+            'recognized' => 'alumni-achievements',
+            'award' => 'alumni-achievements',
+            'story' => 'alumni-stories',
+            'testimonial' => 'alumni-stories',
+            'announcement' => 'announcements',
+            'reminder' => 'announcements',
+            'update' => 'announcements',
+            'welcome' => 'announcements',
         ];
 
         $slug = null;

@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('slug');
             $table->string('image')->nullable();
             $table->foreignId('category_id')->constrained('categories')->cascadeOnDelete();
-            $table->enum('status', ['public','private','draft']);
+            $table->enum('status', ['public', 'private', 'draft']);
             $table->json('attachments')->nullable();
             $table->timestamps();
         });

@@ -2,9 +2,11 @@
 
 use App\Models\Company;
 use App\Services\PhAddressService;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -15,19 +17,27 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     use WithFileUploads;
 
     public string $company_name = '';
+
     public string $company_desc = '';
+
     public $company_logo = null;
 
     // ---- Address (Philippines) ----
     public string $address_type = 'philippines';
+
     public string $regionCode = '';
+
     public string $provinceCode = '';
+
     public string $cityCode = '';
+
     public string $street_address = '';
 
     // ---- Address (Abroad) ----
     public string $intl_country = '';
+
     public string $intl_state = '';
+
     public string $intl_city = '';
 
     public function mount(): void
@@ -53,36 +63,36 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
             'address_type' => ['required', 'in:philippines,abroad'],
 
-            'regionCode'     => ['required_if:address_type,philippines', 'nullable', 'string'],
-            'provinceCode'   => ['required_if:address_type,philippines', 'nullable', 'string'],
-            'cityCode'       => ['required_if:address_type,philippines', 'nullable', 'string'],
+            'regionCode' => ['required_if:address_type,philippines', 'nullable', 'string'],
+            'provinceCode' => ['required_if:address_type,philippines', 'nullable', 'string'],
+            'cityCode' => ['required_if:address_type,philippines', 'nullable', 'string'],
             'street_address' => ['nullable', 'string', 'max:500'],
 
             'intl_country' => ['required_if:address_type,abroad', 'nullable', 'string', 'max:255'],
-            'intl_state'   => ['nullable', 'string', 'max:255'],
-            'intl_city'    => ['required_if:address_type,abroad', 'nullable', 'string', 'max:255'],
+            'intl_state' => ['nullable', 'string', 'max:255'],
+            'intl_city' => ['required_if:address_type,abroad', 'nullable', 'string', 'max:255'],
         ];
     }
 
     protected function messages(): array
     {
         return [
-            'company_name.required'   => 'Company name is required.',
-            'company_name.min'        => 'Company name must be at least 2 characters.',
-            'company_name.unique'     => 'A company with this name already exists.',
-            'company_name.max'        => 'Company name cannot exceed 255 characters.',
-            'company_desc.max'        => 'Description cannot exceed 2000 characters.',
-            'company_logo.image'      => 'The logo must be a valid image file.',
-            'company_logo.mimes'      => 'The logo must be a JPG, PNG, WebP, or SVG file.',
-            'company_logo.max'        => 'The logo must not exceed 2MB.',
+            'company_name.required' => 'Company name is required.',
+            'company_name.min' => 'Company name must be at least 2 characters.',
+            'company_name.unique' => 'A company with this name already exists.',
+            'company_name.max' => 'Company name cannot exceed 255 characters.',
+            'company_desc.max' => 'Description cannot exceed 2000 characters.',
+            'company_logo.image' => 'The logo must be a valid image file.',
+            'company_logo.mimes' => 'The logo must be a JPG, PNG, WebP, or SVG file.',
+            'company_logo.max' => 'The logo must not exceed 2MB.',
             'company_logo.dimensions' => 'The logo must be between 32×32 and 2000×2000 pixels.',
 
-            'address_type.required'    => 'Please select the company location.',
-            'regionCode.required_if'   => 'Please select a region.',
+            'address_type.required' => 'Please select the company location.',
+            'regionCode.required_if' => 'Please select a region.',
             'provinceCode.required_if' => 'Please select a province.',
-            'cityCode.required_if'     => 'Please select a city / municipality.',
+            'cityCode.required_if' => 'Please select a city / municipality.',
             'intl_country.required_if' => 'Please enter the country.',
-            'intl_city.required_if'    => 'Please enter the city.',
+            'intl_city.required_if' => 'Please enter the city.',
         ];
     }
 
@@ -98,21 +108,23 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         try {
             $mime = (string) $this->company_logo->getMimeType();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->reset('company_logo');
             $this->addError('company_logo', 'Could not read the uploaded file. Please try another image.');
+
             return;
         }
 
         if (! str_starts_with($mime, 'image/')) {
             $this->reset('company_logo');
             $this->addError('company_logo', 'The logo must be an image file (JPG, PNG, WebP, or SVG).');
+
             return;
         }
 
         try {
             $this->validateOnly('company_logo');
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             $this->reset('company_logo');
             throw $e;
         }
@@ -182,13 +194,15 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         if ($this->company_logo) {
             try {
                 $mime = (string) $this->company_logo->getMimeType();
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $this->addError('company_logo', 'Could not read the uploaded file. Please try another image.');
+
                 return;
             }
 
             if (! str_starts_with($mime, 'image/')) {
                 $this->addError('company_logo', 'The logo must be an image file (JPG, PNG, WebP, or SVG).');
+
                 return;
             }
         }
@@ -196,9 +210,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $service = app(PhAddressService::class);
 
         if ($this->address_type === 'philippines') {
-            $region   = $service->findByCode($this->regionCode);
+            $region = $service->findByCode($this->regionCode);
             $province = $service->findByCode($this->provinceCode);
-            $city     = $service->findByCode($this->cityCode);
+            $city = $service->findByCode($this->cityCode);
 
             $companyAddress = collect([
                 $this->street_address,
@@ -223,34 +237,37 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
             DB::transaction(function () use ($validated, $logoPath, $companyAddress) {
                 Company::create([
-                    'company_name'    => trim(strip_tags($validated['company_name'])),
+                    'company_name' => trim(strip_tags($validated['company_name'])),
                     'company_address' => $companyAddress ?: null,
-                    'company_desc'    => filled($validated['company_desc'])
+                    'company_desc' => filled($validated['company_desc'])
                         ? trim(strip_tags($validated['company_desc']))
                         : null,
-                    'company_logo'    => $logoPath,
+                    'company_logo' => $logoPath,
                 ]);
             });
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             if ($logoPath) {
                 Storage::disk('public')->delete($logoPath);
             }
 
             if ($e->getCode() === '23000') {
                 $this->addError('company_name', 'This company name was just taken. Please try again.');
+
                 return;
             }
 
             report($e);
             session()->flash('error', 'Could not create company. Please try again.');
+
             return;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             if ($logoPath) {
                 Storage::disk('public')->delete($logoPath);
             }
 
             report($e);
             session()->flash('error', 'Could not create company. Please try again.');
+
             return;
         }
 

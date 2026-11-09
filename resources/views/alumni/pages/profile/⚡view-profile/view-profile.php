@@ -13,7 +13,6 @@ use Livewire\Component;
 
 new #[Layout('layouts.app-alumni')] class extends Component
 {
-
     public function mount(): void
     {
         Gate::authorize('can_view');
@@ -69,6 +68,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
         if (is_string($raw) && $raw !== '') {
             $decoded = json_decode($raw, true);
+
             return is_array($decoded) ? $decoded : [];
         }
 
@@ -79,15 +79,15 @@ new #[Layout('layouts.app-alumni')] class extends Component
     public function contact(): array
     {
         $loc = $this->location;
-        $p   = $this->userProfile;
+        $p = $this->userProfile;
 
         return [
-            'gender'         => $p?->gender ?? ($loc['gender'] ?? null),
+            'gender' => $p?->gender ?? ($loc['gender'] ?? null),
             'phone_number_1' => $p?->contact_number_1,
             'phone_number_2' => $p?->contact_number_2,
-            'latitude'       => $loc['latitude'] ?? null,
-            'longitude'      => $loc['longitude'] ?? null,
-            'address'        => $loc['address'] ?? null,
+            'latitude' => $loc['latitude'] ?? null,
+            'longitude' => $loc['longitude'] ?? null,
+            'address' => $loc['address'] ?? null,
         ];
     }
 
@@ -146,11 +146,15 @@ new #[Layout('layouts.app-alumni')] class extends Component
         }
 
         $years = intdiv($months, 12);
-        $rem   = $months % 12;
+        $rem = $months % 12;
 
         $parts = [];
-        if ($years > 0) $parts[] = $years . ' yr' . ($years > 1 ? 's' : '');
-        if ($rem > 0)   $parts[] = $rem   . ' mo' . ($rem   > 1 ? 's' : '');
+        if ($years > 0) {
+            $parts[] = $years.' yr'.($years > 1 ? 's' : '');
+        }
+        if ($rem > 0) {
+            $parts[] = $rem.' mo'.($rem > 1 ? 's' : '');
+        }
 
         return implode(' ', $parts);
     }

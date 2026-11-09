@@ -2,8 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\Course;
-use App\Models\User;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +10,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Department extends Model
 {
     use LogsActivity;
+
     protected array $auditExclude = ['id', 'dept_slug', 'program_head_id'];
+
     protected $fillable = [
         'dept_name',
         'dept_slug',
@@ -36,5 +36,4 @@ class Department extends Model
     {
         return $this->belongsTo(User::class, 'program_head_id');
     }
-
 }

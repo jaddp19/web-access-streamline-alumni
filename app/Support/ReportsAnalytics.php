@@ -36,7 +36,7 @@ class ReportsAnalytics
         if ($this->departmentId || $this->courseId) {
             $q->whereHas('userProfiles', function ($p) {
                 $p->where('is_approved', true)
-                  ->whereHas('user', fn ($u) => $u->role('alumni')->where('is_active', true));
+                    ->whereHas('user', fn ($u) => $u->role('alumni')->where('is_active', true));
 
                 if ($this->courseId) {
                     $p->whereHas('courses', fn ($c) => $c->where('courses.id', $this->courseId));
@@ -51,7 +51,7 @@ class ReportsAnalytics
             // one approved + active alumni profile.
             $q->whereHas('userProfiles', function ($p) {
                 $p->where('is_approved', true)
-                  ->whereHas('user', fn ($u) => $u->where('is_active', true));
+                    ->whereHas('user', fn ($u) => $u->where('is_active', true));
             });
         }
 
@@ -584,15 +584,15 @@ class ReportsAnalytics
             COUNT(DISTINCT CASE WHEN board_exams.is_top_notcher = 1 THEN user_profiles.user_id END) as top_notcher_alumni
         ')->first();
 
-        $verified     = (int) ($row->verified_alumni ?? 0);
-        $passed       = (int) ($row->passed_alumni ?? 0);
-        $topNotchers  = (int) ($row->top_notcher_alumni ?? 0);
+        $verified = (int) ($row->verified_alumni ?? 0);
+        $passed = (int) ($row->passed_alumni ?? 0);
+        $topNotchers = (int) ($row->top_notcher_alumni ?? 0);
 
         return [
-            'verified_alumni'    => $verified,
-            'passed_alumni'      => $passed,
+            'verified_alumni' => $verified,
+            'passed_alumni' => $passed,
             'top_notcher_alumni' => $topNotchers,
-            'pass_rate'          => $verified > 0 ? round(($passed / $verified) * 100, 1) : 0.0,
+            'pass_rate' => $verified > 0 ? round(($passed / $verified) * 100, 1) : 0.0,
         ];
     }
 }

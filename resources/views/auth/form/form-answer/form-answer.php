@@ -1,11 +1,11 @@
 <?php
 
 use App\Models\Batch;
+use App\Models\CivilStatusEmployment;
 use App\Models\Company;
 use App\Models\Course;
-use App\Models\TracerStudy;
-use App\Models\CivilStatusEmployment;
 use App\Models\FurtherStudy;
+use App\Models\TracerStudy;
 use App\Models\UserProfile;
 use App\Models\WorkHistory;
 use App\Services\EmailTemplateService;
@@ -13,6 +13,8 @@ use App\Services\PhAddressService;
 use App\Support\TracerStudyRules;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
@@ -26,69 +28,106 @@ new #[Layout('layouts.app-form')] class extends Component
     public bool $alreadyFilled = false;
 
     public int $step = 1;
+
     #[Locked]
     public int $totalSteps = 4;
 
     // Step 1 — Personal
     public string $gender = '';
+
     public string $contact_number_1 = '';
+
     public string $contact_number_2 = '';
+
     public bool $consentGiven = false;
 
     // Step 1 — Address (alumni's own)
     public string $address_type = 'philippines';
+
     public string $regionCode = '';
+
     public string $provinceCode = '';
+
     public string $cityCode = '';
+
     public string $barangayCode = '';
+
     public string $street_address = '';
 
     // Step 1 — International address (alumni's own)
     public string $intl_country = '';
+
     public string $intl_state = '';
+
     public string $intl_city = '';
 
     // Step 2
     public string $civil_status = '';
+
     public $course_id = '';
+
     public $batch_id = '';
+
     public ?string $board_taken = null;
+
     public string $board_rate = '';
 
     // Step 3
     public string $employment_status = '';
+
     public string $employment_status_other = '';
+
     public string $current_job_position = '';
+
     public string $employed_related_to_degree = '';
+
     public string $employment_type = '';
+
     public string $organization_type = '';
+
     public string $employment_area = '';
+
     public string $abroad_country = '';
+
     public string $months_to_first_job = '';
+
     public ?int $company_id = null;
+
     public string $date_hired = '';
 
     // Step 3 — Inline new company (basic)
     public bool $showNewCompanyForm = false;
+
     public $new_company_logo = null;
+
     public string $new_company_name = '';
+
     public string $new_company_desc = '';
 
     // Step 3 — Inline new company (address cascade)
     public string $new_company_address_type = 'philippines';
+
     public string $new_company_region_code = '';
+
     public string $new_company_province_code = '';
+
     public string $new_company_city_code = '';
+
     public string $new_company_street_address = '';
+
     public string $new_company_intl_country = '';
+
     public string $new_company_intl_state = '';
+
     public string $new_company_intl_city = '';
 
     // Step 4
     public bool $is_pursued_further_studies = false;
+
     public string $level_of_study = '';
 
     public $courses = [];
+
     public $batches = [];
 
     public function mount()
@@ -98,6 +137,7 @@ new #[Layout('layouts.app-form')] class extends Component
 
         if (UserProfile::where('user_id', $user->id)->exists()) {
             $this->alreadyFilled = true;
+
             return;
         }
 
@@ -137,7 +177,7 @@ new #[Layout('layouts.app-form')] class extends Component
     {
         if ($this->selectedCourse?->course_type !== 'board') {
             $this->board_taken = null;
-            $this->board_rate  = '';
+            $this->board_rate = '';
             $this->resetErrorBag(['board_taken', 'board_rate']);
         }
     }
@@ -174,15 +214,17 @@ new #[Layout('layouts.app-form')] class extends Component
 
         try {
             $mime = (string) $this->new_company_logo->getMimeType();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->reset('new_company_logo');
             $this->addError('new_company_logo', 'Could not read the uploaded file. Please try another image.');
+
             return;
         }
 
         if (! str_starts_with($mime, 'image/')) {
             $this->reset('new_company_logo');
             $this->addError('new_company_logo', 'The logo must be an image file (JPG, PNG, or WebP).');
+
             return;
         }
 
@@ -192,9 +234,9 @@ new #[Layout('layouts.app-form')] class extends Component
             ], [
                 'new_company_logo.image' => 'The logo must be an image file.',
                 'new_company_logo.mimes' => 'Logo must be JPG, PNG, or WebP.',
-                'new_company_logo.max'   => 'The logo cannot exceed 2MB.',
+                'new_company_logo.max' => 'The logo cannot exceed 2MB.',
             ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             $this->reset('new_company_logo');
             throw $e;
         }
@@ -296,37 +338,39 @@ new #[Layout('layouts.app-form')] class extends Component
 
             'new_company_address_type' => 'required|in:philippines,abroad',
 
-            'new_company_region_code'    => 'required_if:new_company_address_type,philippines|nullable|string',
-            'new_company_province_code'  => 'required_if:new_company_address_type,philippines|nullable|string',
-            'new_company_city_code'      => 'required_if:new_company_address_type,philippines|nullable|string',
+            'new_company_region_code' => 'required_if:new_company_address_type,philippines|nullable|string',
+            'new_company_province_code' => 'required_if:new_company_address_type,philippines|nullable|string',
+            'new_company_city_code' => 'required_if:new_company_address_type,philippines|nullable|string',
             'new_company_street_address' => 'nullable|string|max:500',
 
             'new_company_intl_country' => 'required_if:new_company_address_type,abroad|nullable|string|max:255',
-            'new_company_intl_state'   => 'nullable|string|max:255',
-            'new_company_intl_city'    => 'required_if:new_company_address_type,abroad|nullable|string|max:255',
+            'new_company_intl_state' => 'nullable|string|max:255',
+            'new_company_intl_city' => 'required_if:new_company_address_type,abroad|nullable|string|max:255',
         ], [
-            'new_company_name.required'    => 'Company name is required.',
-            'new_company_name.unique'      => 'A company with this name already exists.',
-            'new_company_logo.image'       => 'The logo must be an image file.',
-            'new_company_logo.mimes'       => 'Logo must be JPG, PNG, or WebP.',
-            'new_company_logo.max'         => 'The logo cannot exceed 2MB.',
-            'new_company_region_code.required_if'   => 'Please select a region.',
+            'new_company_name.required' => 'Company name is required.',
+            'new_company_name.unique' => 'A company with this name already exists.',
+            'new_company_logo.image' => 'The logo must be an image file.',
+            'new_company_logo.mimes' => 'Logo must be JPG, PNG, or WebP.',
+            'new_company_logo.max' => 'The logo cannot exceed 2MB.',
+            'new_company_region_code.required_if' => 'Please select a region.',
             'new_company_province_code.required_if' => 'Please select a province.',
-            'new_company_city_code.required_if'     => 'Please select a city / municipality.',
-            'new_company_intl_country.required_if'  => 'Please enter the country.',
-            'new_company_intl_city.required_if'     => 'Please enter the city.',
+            'new_company_city_code.required_if' => 'Please select a city / municipality.',
+            'new_company_intl_country.required_if' => 'Please enter the country.',
+            'new_company_intl_city.required_if' => 'Please enter the city.',
         ]);
 
         if ($this->new_company_logo) {
             try {
                 $mime = (string) $this->new_company_logo->getMimeType();
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $this->addError('new_company_logo', 'Could not read the uploaded file. Please try another image.');
+
                 return;
             }
 
             if (! str_starts_with($mime, 'image/')) {
                 $this->addError('new_company_logo', 'The logo must be an image file (JPG, PNG, or WebP).');
+
                 return;
             }
         }
@@ -334,9 +378,9 @@ new #[Layout('layouts.app-form')] class extends Component
         $service = app(PhAddressService::class);
 
         if ($this->new_company_address_type === 'philippines') {
-            $region   = $service->findByCode($this->new_company_region_code);
+            $region = $service->findByCode($this->new_company_region_code);
             $province = $service->findByCode($this->new_company_province_code);
-            $city     = $service->findByCode($this->new_company_city_code);
+            $city = $service->findByCode($this->new_company_city_code);
 
             $companyAddress = collect([
                 $this->new_company_street_address,
@@ -358,13 +402,13 @@ new #[Layout('layouts.app-form')] class extends Component
                 : null;
 
             $company = Company::create([
-                'company_name'    => trim(strip_tags($this->new_company_name)),
+                'company_name' => trim(strip_tags($this->new_company_name)),
                 'company_address' => $companyAddress ?: null,
-                'company_logo'    => $logoPath,
-                'company_desc'    => trim(strip_tags($this->new_company_desc)) ?: null,
+                'company_logo' => $logoPath,
+                'company_desc' => trim(strip_tags($this->new_company_desc)) ?: null,
             ]);
 
-            $this->company_id         = $company->id;
+            $this->company_id = $company->id;
             $this->showNewCompanyForm = false;
 
             $this->reset([
@@ -384,13 +428,13 @@ new #[Layout('layouts.app-form')] class extends Component
 
             unset($this->companies);
 
-            session()->flash('company_created', 'Company "' . $company->company_name . '" created and selected.');
-        } catch (\Throwable $e) {
+            session()->flash('company_created', 'Company "'.$company->company_name.'" created and selected.');
+        } catch (Throwable $e) {
             if ($logoPath ?? null) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($logoPath);
+                Storage::disk('public')->delete($logoPath);
             }
 
-            logger()->error('Company creation failed: ' . $e->getMessage());
+            logger()->error('Company creation failed: '.$e->getMessage());
             session()->flash('error', 'Failed to create company. Please try again.');
         }
     }
@@ -448,8 +492,8 @@ new #[Layout('layouts.app-form')] class extends Component
     {
         $this->validate(
             TracerStudyRules::step($this->step, [
-                'taken'    => $this->board_taken,
-                'rate'     => $this->board_rate,
+                'taken' => $this->board_taken,
+                'rate' => $this->board_rate,
                 'batch_id' => $this->batch_id,
             ]),
             TracerStudyRules::messages()
@@ -476,19 +520,19 @@ new #[Layout('layouts.app-form')] class extends Component
     {
         $this->validate(
             TracerStudyRules::all([
-                'taken'    => $this->board_taken,
-                'rate'     => $this->board_rate,
+                'taken' => $this->board_taken,
+                'rate' => $this->board_rate,
                 'batch_id' => $this->batch_id,
             ]),
             TracerStudyRules::messages()
         );
 
-        $user    = Auth::user();
+        $user = Auth::user();
         $service = app(PhAddressService::class);
 
-        $region   = $this->address_type === 'philippines' ? $service->findByCode($this->regionCode) : null;
+        $region = $this->address_type === 'philippines' ? $service->findByCode($this->regionCode) : null;
         $province = $this->address_type === 'philippines' ? $service->findByCode($this->provinceCode) : null;
-        $city     = $this->address_type === 'philippines' ? $service->findByCode($this->cityCode) : null;
+        $city = $this->address_type === 'philippines' ? $service->findByCode($this->cityCode) : null;
         $barangay = $this->address_type === 'philippines' ? $service->findByCode($this->barangayCode) : null;
 
         $fullAddress = $this->address_type === 'philippines'
@@ -508,7 +552,7 @@ new #[Layout('layouts.app-form')] class extends Component
 
         // Snapshot board-course info BEFORE the transaction closure.
         $isBoardCourse = $this->selectedCourse?->course_type === 'board';
-        $examName      = $this->selectedCourse?->course_title;
+        $examName = $this->selectedCourse?->course_title;
 
         DB::transaction(function () use (
             $user, $region, $province, $city, $barangay, $fullAddress,
@@ -518,36 +562,36 @@ new #[Layout('layouts.app-form')] class extends Component
 
             $location = $this->address_type === 'philippines'
                 ? array_merge($existingProfile->location ?? [], [
-                    'address_type'   => 'philippines',
+                    'address_type' => 'philippines',
                     'street_address' => $this->street_address,
-                    'region_code'    => $this->regionCode,
-                    'region_name'    => $region->name ?? null,
-                    'province_code'  => $this->provinceCode,
-                    'province_name'  => $province->name ?? null,
-                    'city_code'      => $this->cityCode,
-                    'city_name'      => $city->name ?? null,
-                    'barangay_code'  => $this->barangayCode,
-                    'barangay_name'  => $barangay->name ?? null,
-                    'address'        => $fullAddress,
-                    'intl_country'   => null,
-                    'intl_state'     => null,
-                    'intl_city'      => null,
+                    'region_code' => $this->regionCode,
+                    'region_name' => $region->name ?? null,
+                    'province_code' => $this->provinceCode,
+                    'province_name' => $province->name ?? null,
+                    'city_code' => $this->cityCode,
+                    'city_name' => $city->name ?? null,
+                    'barangay_code' => $this->barangayCode,
+                    'barangay_name' => $barangay->name ?? null,
+                    'address' => $fullAddress,
+                    'intl_country' => null,
+                    'intl_state' => null,
+                    'intl_city' => null,
                 ])
                 : array_merge($existingProfile->location ?? [], [
-                    'address_type'   => 'abroad',
+                    'address_type' => 'abroad',
                     'street_address' => $this->street_address,
-                    'intl_country'   => $this->intl_country,
-                    'intl_state'     => $this->intl_state,
-                    'intl_city'      => $this->intl_city,
-                    'address'        => $fullAddress,
-                    'region_code'    => null,
-                    'region_name'    => null,
-                    'province_code'  => null,
-                    'province_name'  => null,
-                    'city_code'      => null,
-                    'city_name'      => null,
-                    'barangay_code'  => null,
-                    'barangay_name'  => null,
+                    'intl_country' => $this->intl_country,
+                    'intl_state' => $this->intl_state,
+                    'intl_city' => $this->intl_city,
+                    'address' => $fullAddress,
+                    'region_code' => null,
+                    'region_name' => null,
+                    'province_code' => null,
+                    'province_name' => null,
+                    'city_code' => null,
+                    'city_name' => null,
+                    'barangay_code' => null,
+                    'barangay_name' => null,
                 ]);
 
             $boardRate = trim((string) $this->board_rate);
@@ -556,16 +600,16 @@ new #[Layout('layouts.app-form')] class extends Component
             $profile = UserProfile::updateOrCreate(
                 ['user_id' => $user->id],
                 [
-                    'avatar'           => $existingProfile->avatar ?? null,
-                    'gender'           => strtolower($this->gender),
+                    'avatar' => $existingProfile->avatar ?? null,
+                    'gender' => strtolower($this->gender),
                     'contact_number_1' => $this->contact_number_1,
                     'contact_number_2' => $this->contact_number_2 ?: null,
-                    'location'         => $location,
-                    'batch_id'         => $this->batch_id,
-                    'is_private'       => $existingProfile->is_private ?? false,
-                    'is_verified'      => ! $isBoardCourse,
-                    'board_taken'      => $isBoardCourse ? ($this->board_taken ?: null) : null,
-                    'board_rate'       => $isBoardCourse && $boardRate !== ''
+                    'location' => $location,
+                    'batch_id' => $this->batch_id,
+                    'is_private' => $existingProfile->is_private ?? false,
+                    'is_verified' => ! $isBoardCourse,
+                    'board_taken' => $isBoardCourse ? ($this->board_taken ?: null) : null,
+                    'board_rate' => $isBoardCourse && $boardRate !== ''
                         ? round((float) $boardRate, 2)
                         : null,
                 ]
@@ -574,7 +618,7 @@ new #[Layout('layouts.app-form')] class extends Component
             if ($isBoardCourse) {
                 $profile->recordBoardAttempt(
                     $this->board_taken ?: null,
-                    $this->board_rate  ?: null,
+                    $this->board_rate ?: null,
                     $examName
                 );
             }
@@ -586,18 +630,18 @@ new #[Layout('layouts.app-form')] class extends Component
             CivilStatusEmployment::updateOrCreate(
                 ['tracer_study_id' => $tracerStudy->id],
                 [
-                    'civil_status'               => $this->civil_status,
-                    'employment_status'          => $this->employment_status,
-                    'employment_status_other'    => $this->employment_status === 'other'
+                    'civil_status' => $this->civil_status,
+                    'employment_status' => $this->employment_status,
+                    'employment_status_other' => $this->employment_status === 'other'
                         ? ($this->employment_status_other ?: null)
                         : null,
-                    'current_job_position'       => $this->current_job_position ?: null,
+                    'current_job_position' => $this->current_job_position ?: null,
                     'employed_related_to_degree' => $this->employed_related_to_degree ?: null,
-                    'employment_type'            => $this->employment_type ?: null,
-                    'organization_type'          => $this->organization_type ?: null,
-                    'employment_area'            => $this->employment_area ?: null,
-                    'abroad_country'             => $this->abroad_country ?: null,
-                    'months_to_first_job'        => $this->months_to_first_job ?: null,
+                    'employment_type' => $this->employment_type ?: null,
+                    'organization_type' => $this->organization_type ?: null,
+                    'employment_area' => $this->employment_area ?: null,
+                    'abroad_country' => $this->abroad_country ?: null,
+                    'months_to_first_job' => $this->months_to_first_job ?: null,
                 ]
             );
 
@@ -605,7 +649,7 @@ new #[Layout('layouts.app-form')] class extends Component
                 ['tracer_study_id' => $tracerStudy->id],
                 [
                     'is_pursued_further_studies' => $this->is_pursued_further_studies,
-                    'level_of_study'             => $this->is_pursued_further_studies ? $this->level_of_study : null,
+                    'level_of_study' => $this->is_pursued_further_studies ? $this->level_of_study : null,
                 ]
             );
 
@@ -616,16 +660,16 @@ new #[Layout('layouts.app-form')] class extends Component
 
                 if ($existingCurrent) {
                     $existingCurrent->update([
-                        'work_name'  => $this->current_job_position ?: 'Position not specified',
+                        'work_name' => $this->current_job_position ?: 'Position not specified',
                         'company_id' => $this->company_id,
                         'date_hired' => $this->date_hired,
                     ]);
                 } else {
                     WorkHistory::create([
-                        'user_id'        => $user->id,
-                        'work_name'      => $this->current_job_position ?: 'Position not specified',
-                        'company_id'     => $this->company_id,
-                        'date_hired'     => $this->date_hired,
+                        'user_id' => $user->id,
+                        'work_name' => $this->current_job_position ?: 'Position not specified',
+                        'company_id' => $this->company_id,
+                        'date_hired' => $this->date_hired,
                         'is_current_job' => true,
                     ]);
                 }
@@ -633,8 +677,8 @@ new #[Layout('layouts.app-form')] class extends Component
         });
 
         EmailTemplateService::send('tracer-study-submitted', $user->email, [
-            'name'         => $user->name,
-            'year'         => now()->year,
+            'name' => $user->name,
+            'year' => now()->year,
             'submitted_at' => now()->format('F j, Y · g:i A'),
         ]);
 

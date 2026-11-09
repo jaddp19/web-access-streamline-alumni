@@ -201,17 +201,17 @@ class DemoSeeder extends Seeder
 
             $baseState = [
                 'user_profile_id' => $profile->id,
-                'attempt_number'  => $n,
-                'exam_name'       => $course->course_title,
+                'attempt_number' => $n,
+                'exam_name' => $course->course_title,
             ];
 
             if ($approvalState === 'approved') {
                 // Approved — every attempt is verified. Retakers only passed
                 // on the final take.
                 $factory = match (true) {
-                    $isTopNotcher && $isFinalAttempt       => BoardExam::factory()->topNotcher(),
+                    $isTopNotcher && $isFinalAttempt => BoardExam::factory()->topNotcher(),
                     $isFinalAttempt && fake()->boolean(85) => BoardExam::factory()->verifiedPassing(),
-                    default                                 => BoardExam::factory()->verifiedFailing(),
+                    default => BoardExam::factory()->verifiedFailing(),
                 };
 
                 $factory->state($baseState)->create();
@@ -225,10 +225,10 @@ class DemoSeeder extends Seeder
                 $passing = fake()->boolean(85);
 
                 BoardExam::factory()->state(array_merge($baseState, [
-                    'rate'        => $passing
+                    'rate' => $passing
                         ? fake()->randomFloat(2, 75, 99)
                         : fake()->randomFloat(2, 60, 74.99),
-                    'passed'      => $passing,
+                    'passed' => $passing,
                     'is_verified' => false,
                     'verified_at' => null,
                 ]))->create();
@@ -236,8 +236,8 @@ class DemoSeeder extends Seeder
                 // Historical attempt → already reviewed (and failed —
                 // otherwise the alumni would be approved, not pending).
                 BoardExam::factory()->state(array_merge($baseState, [
-                    'rate'        => fake()->randomFloat(2, 60, 74.99),
-                    'passed'      => false,
+                    'rate' => fake()->randomFloat(2, 60, 74.99),
+                    'passed' => false,
                     'is_verified' => true,
                     'verified_at' => now()->subMonths(fake()->numberBetween(6, 36)),
                 ]))->create();

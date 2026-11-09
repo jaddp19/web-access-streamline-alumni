@@ -4,7 +4,6 @@ namespace App\Livewire\Admin;
 
 use App\Jobs\SendEventInvitationEmail;
 use App\Models\Event;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -19,12 +18,19 @@ new #[Layout('layouts.app-admin')] class extends Component
     use WithFileUploads;
 
     public string $title = '';
+
     public string $description = '';
+
     public string $location = '';
+
     public string $starts_at = '';
+
     public string $ends_at = '';
+
     public string $registration_deadline = '';
+
     public ?int $capacity = null;
+
     public string $status = 'draft';
 
     public $image = null;
@@ -77,11 +83,13 @@ new #[Layout('layouts.app-admin')] class extends Component
                 'date',
                 'after:starts_at',
                 function ($attribute, $value, $fail) {
-                    if (! $value || ! $this->starts_at) return;
+                    if (! $value || ! $this->starts_at) {
+                        return;
+                    }
 
                     try {
                         $start = \Carbon\Carbon::parse($this->starts_at);
-                        $end   = \Carbon\Carbon::parse($value);
+                        $end = \Carbon\Carbon::parse($value);
 
                         if ($end->diffInDays($start) > 30) {
                             $fail('The end date cannot be more than 30 days after the start.');
@@ -97,7 +105,9 @@ new #[Layout('layouts.app-admin')] class extends Component
                 'date',
                 'before_or_equal:starts_at',
                 function ($attribute, $value, $fail) {
-                    if (! $value) return;
+                    if (! $value) {
+                        return;
+                    }
 
                     try {
                         $deadline = \Carbon\Carbon::parse($value);
@@ -130,26 +140,26 @@ new #[Layout('layouts.app-admin')] class extends Component
     protected function messages(): array
     {
         return [
-            'title.required'                         => 'Please enter an event title.',
-            'title.min'                              => 'Title must be at least 3 characters.',
-            'title.max'                              => 'Title cannot exceed 255 characters.',
-            'description.max'                        => 'Description cannot exceed 5000 characters.',
-            'location.max'                           => 'Location cannot exceed 255 characters.',
-            'starts_at.required'                     => 'Please pick a start date and time.',
-            'starts_at.date'                         => 'The start date is not a valid date.',
-            'starts_at.after'                        => 'Start date must be in the future.',
-            'starts_at.before'                       => 'The start date cannot be more than 5 years in the future.',
-            'ends_at.date'                           => 'The end date is not a valid date.',
-            'ends_at.after'                          => 'The end date must be after the start date.',
-            'registration_deadline.date'             => 'The registration deadline is not a valid date.',
-            'registration_deadline.before_or_equal'  => 'The registration deadline cannot be after the event starts.',
-            'capacity.integer'                       => 'Capacity must be a whole number.',
-            'capacity.min'                           => 'Capacity must be at least 1.',
-            'capacity.max'                           => 'Capacity cannot exceed 10,000.',
-            'status.in'                              => 'The selected status is invalid.',
-            'image.image'                            => 'Cover image must be a valid image file.',
-            'image.mimes'                            => 'Cover image must be a JPG, PNG, or WebP file.',
-            'image.max'                              => 'Cover image cannot exceed 5MB.',
+            'title.required' => 'Please enter an event title.',
+            'title.min' => 'Title must be at least 3 characters.',
+            'title.max' => 'Title cannot exceed 255 characters.',
+            'description.max' => 'Description cannot exceed 5000 characters.',
+            'location.max' => 'Location cannot exceed 255 characters.',
+            'starts_at.required' => 'Please pick a start date and time.',
+            'starts_at.date' => 'The start date is not a valid date.',
+            'starts_at.after' => 'Start date must be in the future.',
+            'starts_at.before' => 'The start date cannot be more than 5 years in the future.',
+            'ends_at.date' => 'The end date is not a valid date.',
+            'ends_at.after' => 'The end date must be after the start date.',
+            'registration_deadline.date' => 'The registration deadline is not a valid date.',
+            'registration_deadline.before_or_equal' => 'The registration deadline cannot be after the event starts.',
+            'capacity.integer' => 'Capacity must be a whole number.',
+            'capacity.min' => 'Capacity must be at least 1.',
+            'capacity.max' => 'Capacity cannot exceed 10,000.',
+            'status.in' => 'The selected status is invalid.',
+            'image.image' => 'Cover image must be a valid image file.',
+            'image.mimes' => 'Cover image must be a JPG, PNG, or WebP file.',
+            'image.max' => 'Cover image cannot exceed 5MB.',
         ];
     }
 
@@ -183,6 +193,7 @@ new #[Layout('layouts.app-admin')] class extends Component
             && \Carbon\Carbon::parse($this->starts_at)->isPast()
         ) {
             $this->addError('starts_at', 'You cannot publish an event with a start date in the past.');
+
             return;
         }
 
@@ -201,17 +212,17 @@ new #[Layout('layouts.app-admin')] class extends Component
 
             $event = DB::transaction(function () use ($validated, $imagePath) {
                 return Event::create([
-                    'title'                  => trim(strip_tags($validated['title'])),
-                    'slug'                   => $this->uniqueSlug($validated['title']),
-                    'description'            => filled($validated['description']) ? trim(strip_tags($validated['description'])) : null,
-                    'image'                  => $imagePath,
-                    'location'               => filled($validated['location']) ? trim(strip_tags($validated['location'])) : null,
-                    'starts_at'              => $validated['starts_at'],
-                    'ends_at'                => $validated['ends_at'] ?: null,
-                    'registration_deadline'  => $validated['registration_deadline'] ?: null,
-                    'capacity'               => $validated['capacity'],
-                    'status'                 => $validated['status'],
-                    'created_by'             => Auth::id(),
+                    'title' => trim(strip_tags($validated['title'])),
+                    'slug' => $this->uniqueSlug($validated['title']),
+                    'description' => filled($validated['description']) ? trim(strip_tags($validated['description'])) : null,
+                    'image' => $imagePath,
+                    'location' => filled($validated['location']) ? trim(strip_tags($validated['location'])) : null,
+                    'starts_at' => $validated['starts_at'],
+                    'ends_at' => $validated['ends_at'] ?: null,
+                    'registration_deadline' => $validated['registration_deadline'] ?: null,
+                    'capacity' => $validated['capacity'],
+                    'status' => $validated['status'],
+                    'created_by' => Auth::id(),
                 ]);
             });
         } catch (\Throwable $e) {
@@ -221,6 +232,7 @@ new #[Layout('layouts.app-admin')] class extends Component
 
             report($e);
             session()->flash('error', 'Could not create event. Please try again.');
+
             return;
         }
 

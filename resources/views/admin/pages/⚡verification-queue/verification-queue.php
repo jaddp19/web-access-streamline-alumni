@@ -17,7 +17,9 @@ new #[Layout('layouts.app-admin')] class extends Component
     use WithPagination;
 
     public string $search = '';
+
     public string $rejectReasonInput = '';
+
     public ?int $rejectingUserId = null;
 
     /**
@@ -39,8 +41,12 @@ new #[Layout('layouts.app-admin')] class extends Component
     public function scope(): int|false|null
     {
         $user = Auth::user();
-        if (! $user) return false;
-        if ($user->hasRole('registrar')) return null;
+        if (! $user) {
+            return false;
+        }
+        if ($user->hasRole('registrar')) {
+            return null;
+        }
 
         return Department::where('program_head_id', $user->id)->value('id') ?? false;
     }
@@ -76,20 +82,20 @@ new #[Layout('layouts.app-admin')] class extends Component
             ->whereHas('userProfile', function ($q) use ($scope) {
                 // Only alumni with at least one UNVERIFIED board attempt.
                 $q->whereHas('boardExams', fn ($b) => $b->where('is_verified', false))
-                  ->whereHas('courses', function ($c) use ($scope) {
-                      $c->where('course_type', 'board');
+                    ->whereHas('courses', function ($c) use ($scope) {
+                        $c->where('course_type', 'board');
 
-                      if (is_int($scope)) {
-                          $c->where('department_id', $scope);
-                      }
-                  });
+                        if (is_int($scope)) {
+                            $c->where('department_id', $scope);
+                        }
+                    });
             })
             ->when($this->search !== '', function ($q) {
-                $term = '%' . $this->search . '%';
+                $term = '%'.$this->search.'%';
                 $q->where(function ($inner) use ($term) {
                     $inner->where('name', 'like', $term)
-                          ->orWhere('email', 'like', $term)
-                          ->orWhere('school_id', 'like', $term);
+                        ->orWhere('email', 'like', $term)
+                        ->orWhere('school_id', 'like', $term);
                 });
             })
             ->with([
@@ -109,6 +115,7 @@ new #[Layout('layouts.app-admin')] class extends Component
         if (! $this->rejectingUserId) {
             return null;
         }
+
         return User::query()->whereKey($this->rejectingUserId)->value('name');
     }
 
@@ -125,18 +132,19 @@ new #[Layout('layouts.app-admin')] class extends Component
 
         // Validate any top notcher ranks the registrar typed in.
         $this->validate([
-            'topNotcherRank'   => 'array',
+            'topNotcherRank' => 'array',
             'topNotcherRank.*' => 'nullable|integer|min:1|max:100',
         ], [
             'topNotcherRank.*.integer' => 'Top notcher rank must be a whole number.',
-            'topNotcherRank.*.min'     => 'Top notcher rank must be at least 1.',
-            'topNotcherRank.*.max'     => 'Top notcher rank cannot exceed 100.',
+            'topNotcherRank.*.min' => 'Top notcher rank must be at least 1.',
+            'topNotcherRank.*.max' => 'Top notcher rank cannot exceed 100.',
         ]);
 
         $user = User::with('userProfile.courses:id,course_title,course_type,department_id')->find($userId);
 
         if (! $user) {
             session()->flash('status', 'User not found.');
+
             return;
         }
 
@@ -152,6 +160,7 @@ new #[Layout('layouts.app-admin')] class extends Component
 
         if (! $profile) {
             session()->flash('status', 'This alumni has no profile.');
+
             return;
         }
 
@@ -192,13 +201,13 @@ new #[Layout('layouts.app-admin')] class extends Component
 
                 foreach ($pendingAttempts as $attempt) {
                     $rawRank = $rankInput[$attempt->id] ?? null;
-                    $rank    = is_numeric($rawRank) ? (int) $rawRank : null;
-                    $isTop   = $rank !== null && $rank > 0;
+                    $rank = is_numeric($rawRank) ? (int) $rawRank : null;
+                    $isTop = $rank !== null && $rank > 0;
 
                     $attempt->update([
-                        'is_verified'      => true,
-                        'verified_at'      => now(),
-                        'is_top_notcher'   => $isTop,
+                        'is_verified' => true,
+                        'verified_at' => now(),
+                        'is_top_notcher' => $isTop,
                         'top_notcher_rank' => $isTop ? $rank : null,
                     ]);
                 }
@@ -206,9 +215,10 @@ new #[Layout('layouts.app-admin')] class extends Component
                 // Sync the profile's cached mirror (is_verified = has verified+passing attempt).
                 $lockedProfile->syncBoardMirrors();
             });
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
             session()->flash('status', 'Could not approve user. Please try again.');
+
             return;
         }
 
@@ -221,23 +231,23 @@ new #[Layout('layouts.app-admin')] class extends Component
         try {
             if ($profile->is_verified) {
                 EmailTemplateService::send('profile-approved', $user->email, [
-                    'name'        => $user->name,
+                    'name' => $user->name,
                     'approved_at' => now()->format('F j, Y · g:i A'),
                     'approved_by' => Auth::user()?->name ?? 'the registrar',
-                    'login_url'   => route('login'),
+                    'login_url' => route('login'),
                 ]);
             } else {
                 EmailTemplateService::send('profile-verified-not-passer', $user->email, [
-                    'name'        => $user->name,
+                    'name' => $user->name,
                     'verified_at' => now()->format('F j, Y · g:i A'),
                     'verified_by' => Auth::user()?->name ?? 'the registrar',
-                    'login_url'   => route('login'),
+                    'login_url' => route('login'),
                 ]);
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::warning('Approval email failed', [
                 'user_id' => $user->id,
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
         }
         // ────────────────────────────────────────────────────────────
@@ -248,10 +258,8 @@ new #[Layout('layouts.app-admin')] class extends Component
         Cache::forget('verification:pending-count');
 
         session()->flash('status', match (true) {
-            $profile->is_verified
-                => "{$user->name} has been verified as a board passer.",
-            default
-                => "{$user->name}'s board records were verified, but no passing attempt was found — the profile stays unverified publicly.",
+            $profile->is_verified => "{$user->name} has been verified as a board passer.",
+            default => "{$user->name}'s board records were verified, but no passing attempt was found — the profile stays unverified publicly.",
         });
     }
 
@@ -261,14 +269,14 @@ new #[Layout('layouts.app-admin')] class extends Component
 
     public function openRejectModal(int $userId): void
     {
-        $this->rejectingUserId   = $userId;
+        $this->rejectingUserId = $userId;
         $this->rejectReasonInput = '';
         $this->resetErrorBag('rejectReasonInput');
     }
 
     public function closeRejectModal(): void
     {
-        $this->rejectingUserId   = null;
+        $this->rejectingUserId = null;
         $this->rejectReasonInput = '';
         $this->resetErrorBag('rejectReasonInput');
     }
@@ -286,6 +294,7 @@ new #[Layout('layouts.app-admin')] class extends Component
 
         if (! $this->rejectingUserId) {
             session()->flash('status', 'No user selected.');
+
             return;
         }
 
@@ -294,6 +303,7 @@ new #[Layout('layouts.app-admin')] class extends Component
         if (! $user) {
             session()->flash('status', 'User not found.');
             $this->closeRejectModal();
+
             return;
         }
 
@@ -310,6 +320,7 @@ new #[Layout('layouts.app-admin')] class extends Component
         if (! $profile) {
             session()->flash('status', 'This user has no profile to reject.');
             $this->closeRejectModal();
+
             return;
         }
 
@@ -324,9 +335,10 @@ new #[Layout('layouts.app-admin')] class extends Component
                 // profile stays verified and the best verified attempt wins.
                 $profile->syncBoardMirrors();
             });
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
             session()->flash('status', 'Could not reject user. Please try again.');
+
             return;
         }
 
@@ -334,16 +346,16 @@ new #[Layout('layouts.app-admin')] class extends Component
         // roll back the rejection itself.
         try {
             EmailTemplateService::send('alumni-verification-rejected', $user->email, [
-                'name'      => $user->name,
-                'reason'    => $reason !== ''
+                'name' => $user->name,
+                'reason' => $reason !== ''
                     ? $reason
                     : 'No specific reason was provided by the reviewer.',
                 'login_url' => route('login'),
             ]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::warning('Rejection email failed', [
                 'user_id' => $user->id,
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
         }
 

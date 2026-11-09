@@ -2,6 +2,7 @@
 
 use App\Models\Course;
 use App\Models\Department;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -15,21 +16,26 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public Course $course;
 
     public string $course_title = '';
+
     public string $course_desc = '';
+
     public string $course_code = '';
+
     public string $course_type = 'non-board';
+
     public bool $is_active = true;
+
     public ?int $department_id = null;
 
     public function mount(Course $course): void
     {
         Gate::authorize('can_update');
-        $this->course        = $course;
-        $this->course_title  = $course->course_title;
-        $this->course_code   = $course->course_code;
-        $this->course_desc   = $course->course_desc;
-        $this->course_type   = $course->course_type;
-        $this->is_active     = (bool) $course->is_active;
+        $this->course = $course;
+        $this->course_title = $course->course_title;
+        $this->course_code = $course->course_code;
+        $this->course_desc = $course->course_desc;
+        $this->course_type = $course->course_type;
+        $this->is_active = (bool) $course->is_active;
         $this->department_id = $course->department_id;
     }
 
@@ -41,7 +47,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public function departments(): array
     {
         $cacheKey = 'courses:active-departments:v1';
-        $cached   = Cache::get($cacheKey);
+        $cached = Cache::get($cacheKey);
 
         if (! is_array($cached)) {
             Cache::forget($cacheKey);
@@ -90,20 +96,20 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public function messages(): array
     {
         return [
-            'course_title.required'  => 'Course name is required.',
-            'course_title.min'       => 'Course name must be at least 2 characters.',
-            'course_title.max'       => 'Course name cannot exceed 255 characters.',
-            'course_title.unique'    => 'Course name must be unique.',
-            'course_code.required'   => 'Course code is required.',
-            'course_code.min'        => 'Course code must be at least 2 characters.',
-            'course_code.max'        => 'Course code cannot exceed 50 characters.',
-            'course_code.unique'     => 'Course code must be unique.',
-            'course_desc.required'   => 'Please provide a short description.',
-            'course_desc.max'        => 'The description may not be greater than 1000 characters.',
-            'course_type.required'   => 'Please select a course type.',
-            'course_type.in'         => 'The course type is invalid.',
+            'course_title.required' => 'Course name is required.',
+            'course_title.min' => 'Course name must be at least 2 characters.',
+            'course_title.max' => 'Course name cannot exceed 255 characters.',
+            'course_title.unique' => 'Course name must be unique.',
+            'course_code.required' => 'Course code is required.',
+            'course_code.min' => 'Course code must be at least 2 characters.',
+            'course_code.max' => 'Course code cannot exceed 50 characters.',
+            'course_code.unique' => 'Course code must be unique.',
+            'course_desc.required' => 'Please provide a short description.',
+            'course_desc.max' => 'The description may not be greater than 1000 characters.',
+            'course_type.required' => 'Please select a course type.',
+            'course_type.in' => 'The course type is invalid.',
             'department_id.required' => 'Department selection is required.',
-            'department_id.exists'   => 'Selected department does not exist.',
+            'department_id.exists' => 'Selected department does not exist.',
         ];
     }
 
@@ -117,22 +123,22 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $validated = $this->validate();
 
         $courseTitle = $this->sanitize($validated['course_title']);
-        $courseCode  = strtoupper($this->sanitize($validated['course_code']));
-        $courseDesc  = $this->sanitize($validated['course_desc']);
+        $courseCode = strtoupper($this->sanitize($validated['course_code']));
+        $courseDesc = $this->sanitize($validated['course_desc']);
 
         $data = [
-            'course_title'  => $courseTitle,
-            'course_slug'   => $this->uniqueSlug($courseTitle),
-            'course_desc'   => $courseDesc,
-            'course_type'   => $validated['course_type'],
-            'course_code'   => $courseCode,
-            'is_active'     => $validated['is_active'] ?? false,
+            'course_title' => $courseTitle,
+            'course_slug' => $this->uniqueSlug($courseTitle),
+            'course_desc' => $courseDesc,
+            'course_type' => $validated['course_type'],
+            'course_code' => $courseCode,
+            'is_active' => $validated['is_active'] ?? false,
             'department_id' => $validated['department_id'],
         ];
 
         try {
             DB::transaction(fn () => $this->course->update($data));
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             if ($e->getCode() === '23000') {
                 $field = str_contains($e->getMessage(), 'course_code')
                     ? 'course_code'
@@ -142,15 +148,18 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                     $field,
                     'This value was just taken by another course. Please try again.'
                 );
+
                 return;
             }
 
             report($e);
             session()->flash('error', 'Could not update course. Please try again.');
+
             return;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
             session()->flash('error', 'Could not update course. Please try again.');
+
             return;
         }
 
@@ -176,7 +185,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         $base = Str::slug($title);
         $slug = $base;
-        $i    = 2;
+        $i = 2;
 
         while (
             Course::where('course_slug', $slug)

@@ -18,9 +18,9 @@ new class extends Component
     {
         return Cache::remember('landing:stats', now()->addMinutes(5), function () {
             return [
-                'alumni'      => User::role('alumni')->count(),
+                'alumni' => User::role('alumni')->count(),
                 'departments' => Department::where('is_active', true)->count(),
-                'programs'    => Course::where('is_active', true)->count(),
+                'programs' => Course::where('is_active', true)->count(),
             ];
         });
     }

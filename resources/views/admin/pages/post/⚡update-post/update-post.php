@@ -3,7 +3,7 @@
 use App\Jobs\SendPostAnnouncementEmail;
 use App\Models\Category;
 use App\Models\Post;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -21,14 +21,19 @@ new #[Layout('layouts.app-admin')] class extends Component
     public Post $post;
 
     public string $title = '';
+
     public string $description = '';
+
     public ?int $category_id = null;
+
     public string $status = 'draft';
 
     public $image = null;
+
     public ?string $currentImage = null;
 
     public array $existingAttachments = [];
+
     public array $attachments = [];
 
     /** Set by the "Resend announcement" checkbox — only applies to already-public posts. */
@@ -40,11 +45,11 @@ new #[Layout('layouts.app-admin')] class extends Component
 
         $this->post = $post;
 
-        $this->title               = $post->title;
-        $this->description         = $post->description ?? '';
-        $this->category_id         = $post->category_id;
-        $this->status              = $post->status;
-        $this->currentImage        = $post->image;
+        $this->title = $post->title;
+        $this->description = $post->description ?? '';
+        $this->category_id = $post->category_id;
+        $this->status = $post->status;
+        $this->currentImage = $post->image;
         $this->existingAttachments = is_array($post->attachments) ? $post->attachments : [];
     }
 
@@ -56,7 +61,7 @@ new #[Layout('layouts.app-admin')] class extends Component
     public function categories(): array
     {
         $cacheKey = 'posts:categories:v1';
-        $cached   = Cache::get($cacheKey);
+        $cached = Cache::get($cacheKey);
 
         if (! is_array($cached)) {
             Cache::forget($cacheKey);
@@ -101,37 +106,37 @@ new #[Layout('layouts.app-admin')] class extends Component
     protected function rules(): array
     {
         return [
-            'title'               => ['required', 'string', 'min:3', 'max:255'],
-            'description'         => ['nullable', 'string', 'max:5000'],
-            'category_id'         => ['required', 'integer', Rule::exists('categories', 'id')],
-            'status'              => ['required', Rule::in(['public', 'private', 'draft'])],
-            'image'               => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
-            'attachments'         => ['nullable', 'array', 'max:5'],
-            'attachments.*'       => [
+            'title' => ['required', 'string', 'min:3', 'max:255'],
+            'description' => ['nullable', 'string', 'max:5000'],
+            'category_id' => ['required', 'integer', Rule::exists('categories', 'id')],
+            'status' => ['required', Rule::in(['public', 'private', 'draft'])],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'attachments' => ['nullable', 'array', 'max:5'],
+            'attachments.*' => [
                 'file',
                 'max:10240',
                 'mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,zip,jpg,jpeg,png,webp,txt,csv',
             ],
-            'resendAnnouncement'  => ['boolean'],
+            'resendAnnouncement' => ['boolean'],
         ];
     }
 
     protected function messages(): array
     {
         return [
-            'title.required'        => 'Please enter a post title.',
-            'title.min'             => 'Title must be at least 3 characters.',
-            'title.max'             => 'Title cannot exceed 255 characters.',
-            'description.max'       => 'Description cannot exceed 5000 characters.',
-            'category_id.required'  => 'Please select a category.',
-            'category_id.exists'    => 'The selected category no longer exists.',
-            'status.in'             => 'The selected status is invalid.',
-            'image.image'           => 'Cover image must be a valid image file.',
-            'image.mimes'           => 'Cover image must be a JPG, PNG, or WebP file.',
-            'image.max'             => 'Cover image cannot exceed 5MB.',
-            'attachments.max'       => 'You can attach up to 5 files.',
-            'attachments.*.max'     => 'Each attachment cannot exceed 10MB.',
-            'attachments.*.mimes'   => 'One or more attachments have an unsupported file type.',
+            'title.required' => 'Please enter a post title.',
+            'title.min' => 'Title must be at least 3 characters.',
+            'title.max' => 'Title cannot exceed 255 characters.',
+            'description.max' => 'Description cannot exceed 5000 characters.',
+            'category_id.required' => 'Please select a category.',
+            'category_id.exists' => 'The selected category no longer exists.',
+            'status.in' => 'The selected status is invalid.',
+            'image.image' => 'Cover image must be a valid image file.',
+            'image.mimes' => 'Cover image must be a JPG, PNG, or WebP file.',
+            'image.max' => 'Cover image cannot exceed 5MB.',
+            'attachments.max' => 'You can attach up to 5 files.',
+            'attachments.*.max' => 'Each attachment cannot exceed 10MB.',
+            'attachments.*.mimes' => 'One or more attachments have an unsupported file type.',
         ];
     }
 
@@ -190,7 +195,7 @@ new #[Layout('layouts.app-admin')] class extends Component
 
         $wasPublic = $this->post->status === 'public';
 
-        $newImagePath       = null;
+        $newImagePath = null;
         $newAttachmentPaths = [];
 
         try {
@@ -204,7 +209,7 @@ new #[Layout('layouts.app-admin')] class extends Component
             $finalImagePath = $this->currentImage;
 
             if ($this->image) {
-                $newImagePath   = $this->image->store('posts', 'public');
+                $newImagePath = $this->image->store('posts', 'public');
                 $finalImagePath = $newImagePath;
             } elseif (! $this->currentImage) {
                 $finalImagePath = null;
@@ -217,7 +222,7 @@ new #[Layout('layouts.app-admin')] class extends Component
                 if ($file) {
                     $path = $file->store('posts/attachments', 'public');
                     $newAttachmentPaths[] = $path;
-                    $finalAttachments[]   = $path;
+                    $finalAttachments[] = $path;
                 }
             }
 
@@ -229,33 +234,36 @@ new #[Layout('layouts.app-admin')] class extends Component
                 $finalAttachments
             ) {
                 $this->post->update([
-                    'title'       => trim(strip_tags($validated['title'])),
+                    'title' => trim(strip_tags($validated['title'])),
                     'description' => filled($validated['description'])
                         ? trim(strip_tags($validated['description']))
                         : null,
-                    'slug'        => $newSlug,
-                    'image'       => $finalImagePath,
+                    'slug' => $newSlug,
+                    'image' => $finalImagePath,
                     'category_id' => $validated['category_id'],
-                    'status'      => $validated['status'],
+                    'status' => $validated['status'],
                     'attachments' => array_values($finalAttachments) ?: null,
                 ]);
             });
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             $this->cleanupFiles($newImagePath, $newAttachmentPaths);
 
             if ($e->getCode() === '23000') {
                 $this->addError('title', 'This title was just taken. Please try again.');
+
                 return;
             }
 
             report($e);
             session()->flash('error', 'Could not update post. Please try again.');
+
             return;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->cleanupFiles($newImagePath, $newAttachmentPaths);
 
             report($e);
             session()->flash('error', 'Could not update post. Please try again.');
+
             return;
         }
 
@@ -299,9 +307,9 @@ new #[Layout('layouts.app-admin')] class extends Component
         $this->resendAnnouncement = false;
 
         session()->flash('success', match (true) {
-            $justBecamePublic     => 'Post published. Alumni will be notified shortly.',
+            $justBecamePublic => 'Post published. Alumni will be notified shortly.',
             $adminRequestedResend => 'Post updated. Announcement re-sent to all alumni.',
-            default               => 'Post updated successfully.',
+            default => 'Post updated successfully.',
         });
 
         return redirect()->route('admin.post.view');
@@ -315,7 +323,7 @@ new #[Layout('layouts.app-admin')] class extends Component
     {
         $base = Str::slug($title) ?: 'post';
         $slug = $base;
-        $i    = 2;
+        $i = 2;
 
         while (
             Post::where('slug', $slug)

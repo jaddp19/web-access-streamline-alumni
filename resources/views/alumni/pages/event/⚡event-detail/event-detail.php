@@ -43,9 +43,15 @@ new #[Layout('layouts.app-alumni')] class extends Component
     #[Computed]
     public function canRsvp(): bool
     {
-        if ($this->event->status !== 'published') return false;
-        if ($this->event->isCancelled()) return false;
-        if ($this->event->starts_at->isPast()) return false;
+        if ($this->event->status !== 'published') {
+            return false;
+        }
+        if ($this->event->isCancelled()) {
+            return false;
+        }
+        if ($this->event->starts_at->isPast()) {
+            return false;
+        }
 
         if ($this->event->registration_deadline
             && now()->isAfter($this->event->registration_deadline)) {
@@ -66,6 +72,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
             if (! $isAlreadyYes && $this->attendeeCount >= $this->event->capacity) {
                 $this->addError('rsvp', 'This event has reached full capacity.');
+
                 return;
             }
         }
@@ -79,9 +86,9 @@ new #[Layout('layouts.app-alumni')] class extends Component
             unset($this->myRsvp, $this->attendeeCount);
 
             session()->flash('rsvp_success', match ($response) {
-                'yes'   => "You're going! See you there.",
+                'yes' => "You're going! See you there.",
                 'maybe' => 'Marked as maybe. You can update this anytime.',
-                'no'    => "Response saved. We'll miss you!",
+                'no' => "Response saved. We'll miss you!",
             });
         } catch (\Throwable $e) {
             report($e);

@@ -173,7 +173,7 @@
 
                             @foreach ($statusTabs as $value => $tab)
                                 @php $isActive = $statusFilter === $value; @endphp
-                                <button type="button" wire:click="setStatusFilter('{{ $value }}')"
+                                <button type="button" wire:key="status-tab-{{ $value }}" wire:click="setStatusFilter('{{ $value }}')"
                                     class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition
                                         {{ $isActive
                                             ? $tab['accent'] . ' border-transparent'
@@ -228,7 +228,7 @@
                             ];
                         @endphp
                         @foreach ($tabs as $key => $label)
-                            <button type="button" wire:click="setRoleFilter('{{ $key }}')"
+                            <button type="button" wire:key="role-tab-{{ $key }}" wire:click="setRoleFilter('{{ $key }}')"
                                 class="shrink-0 px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-t-lg border-b-2 transition
                     {{ $roleFilter === $key
                         ? 'text-[#123524] dark:text-[#D4A537] border-[#123524] dark:border-[#D4A537]'

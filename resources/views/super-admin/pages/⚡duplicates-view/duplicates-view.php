@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Company;
 use App\Models\User;
 use App\Models\UserProfile;
 use Illuminate\Support\Facades\DB;
@@ -11,7 +10,8 @@ use Livewire\Component;
 
 new #[Layout('layouts.app-super-admin')] class extends Component
 {
-    #[Url] public string $tab = 'name';
+    #[Url]
+    public string $tab = 'name';
 
     public function setTab(string $tab): void
     {
@@ -59,7 +59,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                 ]);
 
             return [
-                'key'   => $group->first_name . ' ' . $group->last_name,
+                'key' => $group->first_name.' '.$group->last_name,
                 'batch' => $users->first()?->userProfile?->batch?->batch_name,
                 'count' => $group->total,
                 'users' => $users,
@@ -86,8 +86,8 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                 ->get();
 
             return [
-                'key'      => $group->contact_number_1,
-                'count'    => $group->total,
+                'key' => $group->contact_number_1,
+                'count' => $group->total,
                 'profiles' => $profiles,
             ];
         });
@@ -111,7 +111,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                 ->get(['id', 'name', 'email', 'created_at']);
 
             return [
-                'key'   => $group->email,
+                'key' => $group->email,
                 'count' => $group->total,
                 'users' => $users,
             ];

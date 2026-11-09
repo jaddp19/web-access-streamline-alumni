@@ -73,7 +73,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
         }
 
         sort($deptIds);
-        $key = 'program_head_ids_by_dept_' . implode('_', $deptIds);
+        $key = 'program_head_ids_by_dept_'.implode('_', $deptIds);
 
         return Cache::remember($key, now()->addHour(), function () use ($deptIds) {
             return Department::query()
@@ -141,9 +141,9 @@ new #[Layout('layouts.app-alumni')] class extends Component
                     : Storage::url($path);
 
                 return [
-                    'url'  => $url,
+                    'url' => $url,
                     'name' => basename($path),
-                    'ext'  => strtolower(pathinfo($path, PATHINFO_EXTENSION)),
+                    'ext' => strtolower(pathinfo($path, PATHINFO_EXTENSION)),
                 ];
             })
             ->values()

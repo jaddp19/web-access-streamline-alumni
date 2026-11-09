@@ -20,13 +20,21 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public User $user;
 
     public string $first_name = '';
+
     public string $middle_name = '';
+
     public string $last_name = '';
+
     public string $email = '';
+
     public string $school_year = '';
+
     public string $school_id_suffix = '';
+
     public bool $resetPassword = false;
+
     public bool $is_active = true;
+
     public ?string $selectedRole = null;
 
     // =========================================================
@@ -155,7 +163,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             ],
 
             'resetPassword' => 'boolean',
-            'is_active'     => 'boolean',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -217,7 +225,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         }
 
         $this->selectedRole = $user->roles->pluck('name')->first();
-        $this->is_active    = (bool) $user->is_active;
+        $this->is_active = (bool) $user->is_active;
     }
 
     // =========================================================
@@ -264,7 +272,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                     'last_name' => $lastName,
                     'email' => $email,
                     'school_id' => $schoolId,
-                    'is_active'   => $this->is_active,
+                    'is_active' => $this->is_active,
                 ];
 
                 if (filled($newPassword)) {
@@ -325,7 +333,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                 'temp_password' => $plainPassword,
                 'login_url' => route('login'),
             ]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::error('Password-reset email failed', [
                 'user_id' => $user->id,
                 'error' => $e->getMessage(),

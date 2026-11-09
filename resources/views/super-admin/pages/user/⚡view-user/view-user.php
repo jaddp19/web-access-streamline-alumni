@@ -17,29 +17,61 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 {
     use WithPagination;
 
-    #[Url] public string $roleFilter = 'all';
-    #[Url] public string $search = '';
-    #[Url] public string $departmentFilter = '';
-    #[Url] public string $courseFilter = '';
-    #[Url] public string $batchFilter = '';
+    #[Url]
+    public string $roleFilter = 'all';
+
+    #[Url]
+    public string $search = '';
+
+    #[Url]
+    public string $departmentFilter = '';
+
+    #[Url]
+    public string $courseFilter = '';
+
+    #[Url]
+    public string $batchFilter = '';
 
     /** '' | 'approved' | 'pending' | 'rejected' — only used on the Alumni tab */
-    #[Url] public string $statusFilter = '';
+    #[Url]
+    public string $statusFilter = '';
 
     public array $selectedUsers = [];
+
     public bool $selectAll = false;
+
     public bool $selectAllFiltered = false;
 
     protected $filteredQueryCache = null;
+
+    public function mount(): void
+    {
+        Gate::authorize('viewAny', User::class);
+    }
 
     // =========================================================
     //  FILTER UPDATES
     // =========================================================
 
-    public function updatedRoleFilter(): void       { $this->invalidateFilterCache(); }
-    public function updatedSearch(): void           { $this->invalidateFilterCache(); }
-    public function updatedCourseFilter(): void     { $this->invalidateFilterCache(); }
-    public function updatedBatchFilter(): void      { $this->invalidateFilterCache(); }
+    public function updatedRoleFilter(): void
+    {
+        $this->invalidateFilterCache();
+    }
+
+    public function updatedSearch(): void
+    {
+        $this->invalidateFilterCache();
+    }
+
+    public function updatedCourseFilter(): void
+    {
+        $this->invalidateFilterCache();
+    }
+
+    public function updatedBatchFilter(): void
+    {
+        $this->invalidateFilterCache();
+    }
 
     public function updatedDepartmentFilter(): void
     {
@@ -151,16 +183,14 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             $query->when($this->statusFilter === 'approved', function ($q) {
                 $q->whereHas('userProfile', fn ($p) => $p->where('is_approved', true));
             })
-            ->when($this->statusFilter === 'rejected', function ($q) {
-                $q->whereHas('userProfile', fn ($p) =>
-                    $p->where('is_approved', false)->whereNotNull('last_rejection_reason')
-                );
-            })
-            ->when($this->statusFilter === 'pending', function ($q) {
-                $q->whereHas('userProfile', fn ($p) =>
-                    $p->where('is_approved', false)->whereNull('last_rejection_reason')
-                );
-            });
+                ->when($this->statusFilter === 'rejected', function ($q) {
+                    $q->whereHas('userProfile', fn ($p) => $p->where('is_approved', false)->whereNotNull('last_rejection_reason')
+                    );
+                })
+                ->when($this->statusFilter === 'pending', function ($q) {
+                    $q->whereHas('userProfile', fn ($p) => $p->where('is_approved', false)->whereNull('last_rejection_reason')
+                    );
+                });
         }
 
         return $this->filteredQueryCache = $query;
@@ -201,13 +231,11 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                 });
             })
             ->when($this->departmentFilter !== '', function ($q) {
-                $q->whereHas('userProfile.courses', fn ($c) =>
-                    $c->where('courses.department_id', (int) $this->departmentFilter)
+                $q->whereHas('userProfile.courses', fn ($c) => $c->where('courses.department_id', (int) $this->departmentFilter)
                 );
             })
             ->when($this->courseFilter !== '', function ($q) {
-                $q->whereHas('userProfile.courses', fn ($c) =>
-                    $c->where('courses.id', (int) $this->courseFilter)
+                $q->whereHas('userProfile.courses', fn ($c) => $c->where('courses.id', (int) $this->courseFilter)
                 );
             })
             ->when($this->batchFilter !== '', function ($q) {
@@ -225,13 +253,11 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $base = $this->countsBaseQuery();
 
         return [
-            'all'      => (clone $base)->count(),
+            'all' => (clone $base)->count(),
             'approved' => (clone $base)->whereHas('userProfile', fn ($p) => $p->where('is_approved', true))->count(),
-            'pending'  => (clone $base)->whereHas('userProfile', fn ($p) =>
-                $p->where('is_approved', false)->whereNull('last_rejection_reason')
+            'pending' => (clone $base)->whereHas('userProfile', fn ($p) => $p->where('is_approved', false)->whereNull('last_rejection_reason')
             )->count(),
-            'rejected' => (clone $base)->whereHas('userProfile', fn ($p) =>
-                $p->where('is_approved', false)->whereNotNull('last_rejection_reason')
+            'rejected' => (clone $base)->whereHas('userProfile', fn ($p) => $p->where('is_approved', false)->whereNotNull('last_rejection_reason')
             )->count(),
         ];
     }
@@ -314,7 +340,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     #[Computed]
     public function users()
     {
-        //Gate::authorize('can_view');
         return $this->filteredQuery()
             ->with([
                 'roles:id,name',

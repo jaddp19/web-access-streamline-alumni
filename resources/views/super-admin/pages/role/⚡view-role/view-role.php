@@ -112,6 +112,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     {
         if (empty($this->selectedRoles)) {
             session()->flash('error', 'Nothing is selected.');
+
             return;
         }
 
@@ -124,6 +125,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         if (empty($deletable)) {
             session()->flash('error', 'No deletable roles in selection.');
+
             return;
         }
 
@@ -133,6 +135,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $this->selectAllFiltered = false;
         $this->resetPage();
 
-        session()->flash('success', count($deletable) . ' role(s) deleted successfully.');
+        session()->flash('success', count($deletable).' role(s) deleted successfully.');
     }
 };

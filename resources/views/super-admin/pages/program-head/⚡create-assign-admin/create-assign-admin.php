@@ -12,6 +12,7 @@ use Livewire\Component;
 new #[Layout('layouts.app-super-admin')] class extends Component
 {
     public ?int $user_id = null;
+
     public ?int $department_id = null;
 
     /** User confirmed they want to replace the existing department head. */
@@ -40,8 +41,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
      * the serialization boundary (this is what caused
      * "Attempt to read property 'id' on string").
      */
-
-    public function mount():void
+    public function mount(): void
     {
         Gate::authorize('can_create');
     }
@@ -88,8 +88,8 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                 ->orderBy('dept_name')
                 ->get(['id', 'dept_name', 'program_head_id'])
                 ->map(fn ($d) => [
-                    'id'              => (int) $d->id,
-                    'dept_name'       => (string) $d->dept_name,
+                    'id' => (int) $d->id,
+                    'dept_name' => (string) $d->dept_name,
                     'program_head_id' => $d->program_head_id ? (int) $d->program_head_id : null,
                 ])
                 ->all();
@@ -151,7 +151,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     protected function rules(): array
     {
         return [
-            'user_id'       => ['required', 'integer', Rule::exists('users', 'id')],
+            'user_id' => ['required', 'integer', Rule::exists('users', 'id')],
             'department_id' => ['required', 'integer', Rule::exists('departments', 'id')],
         ];
     }
@@ -159,10 +159,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public function messages(): array
     {
         return [
-            'user_id.required'       => 'You must select a user.',
-            'user_id.exists'         => 'Selected user does not exist.',
+            'user_id.required' => 'You must select a user.',
+            'user_id.exists' => 'Selected user does not exist.',
             'department_id.required' => 'You must select a department.',
-            'department_id.exists'   => 'Selected department does not exist.',
+            'department_id.exists' => 'Selected department does not exist.',
         ];
     }
 
@@ -181,6 +181,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                 'confirmReassign',
                 'This department already has a program head. Tick the confirmation box to proceed.'
             );
+
             return;
         }
 
@@ -191,6 +192,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         if (! $hasRole) {
             $this->addError('user_id', 'Selected user must already have the Program Head role.');
+
             return;
         }
 
@@ -206,9 +208,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                     'program_head_id' => $validated['user_id'],
                 ]);
             });
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
             session()->flash('error', 'Could not assign program head. Please try again.');
+
             return;
         }
 

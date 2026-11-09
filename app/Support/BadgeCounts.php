@@ -2,6 +2,8 @@
 
 namespace App\Support;
 
+use App\Models\Event;
+use App\Models\Post;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -16,7 +18,7 @@ class BadgeCounts
         }
 
         return [
-            'messages'      => self::pendingMessages($user->id),
+            'messages' => self::pendingMessages($user->id),
             'notifications' => self::unreadNotifications($user->id),
         ];
     }
@@ -29,12 +31,11 @@ class BadgeCounts
                 return 0;
             }
 
-            return \App\Models\Event::query()
+            return Event::query()
                 ->where('status', 'published')
                 ->whereIn('created_by', $allowed)
-                ->whereDoesntHave('rsvps', fn ($q) =>
-                    $q->where('user_id', $userId)
-                        ->whereIn('response', ['yes', 'maybe', 'no'])
+                ->whereDoesntHave('rsvps', fn ($q) => $q->where('user_id', $userId)
+                    ->whereIn('response', ['yes', 'maybe', 'no'])
                 )
                 ->count();
         });
@@ -48,7 +49,7 @@ class BadgeCounts
                 return 0;
             }
 
-            return \App\Models\Post::query()
+            return Post::query()
                 ->where('status', 'public')
                 ->whereIn('user_id', $allowed)
                 ->whereDoesntHave('reads', fn ($q) => $q->where('user_id', $userId))
@@ -112,7 +113,7 @@ class BadgeCounts
         }
 
         sort($deptIds);
-        $key = 'program_head_ids_by_dept_v2_' . implode('_', $deptIds);
+        $key = 'program_head_ids_by_dept_v2_'.implode('_', $deptIds);
 
         return Cache::remember($key, now()->addMinutes(15), function () use ($deptIds) {
             return User::query()

@@ -32,7 +32,7 @@ return new class extends Migration
             $table->unique(['user_profile_id', 'attempt_number']);
             $table->index(['user_profile_id', 'passed']);
             $table->index(['user_profile_id', 'is_top_notcher']);
-            $table->index(['user_profile_id', 'is_verified']);  
+            $table->index(['user_profile_id', 'is_verified']);
         });
     }
 

@@ -5,18 +5,21 @@ use App\Services\EmailTemplateService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 new #[Layout('layouts::app-admin')] class extends Component
 {
+    #[Locked]
     public User $user;
 
     public bool $showRejectModal = false;
+
     public string $rejectionReason = '';
 
     public function mount(User $user): void
     {
-        Gate::authorize('can_view');
+        Gate::authorize('view', $user);
         $this->user = $user->load([
             'roles',
 
@@ -26,7 +29,7 @@ new #[Layout('layouts::app-admin')] class extends Component
 
             // ── Board exam attempts — only VERIFIED ones ──
             'userProfile.boardExams' => fn ($q) => $q->where('is_verified', true)
-                                                      ->orderByDesc('date_taken'),
+                ->orderByDesc('date_taken'),
 
             'workHistories.company',
             'workHistories:id,user_id,work_name,date_hired,is_current_job,company_id',
@@ -42,16 +45,19 @@ new #[Layout('layouts::app-admin')] class extends Component
 
     public function approve(): void
     {
+        Gate::authorize('update', $this->user);
+
         $profile = $this->user->userProfile;
 
         if (! $profile) {
             session()->flash('error', 'This alumni has no profile to approve.');
+
             return;
         }
 
         $profile->update([
-            'is_approved'           => true,
-            'is_verified'           => true,
+            'is_approved' => true,
+            'is_verified' => true,
             'last_rejection_reason' => null,
         ]);
 
@@ -59,12 +65,12 @@ new #[Layout('layouts::app-admin')] class extends Component
 
         try {
             EmailTemplateService::send('profile-approved', $this->user->email, [
-                'name'        => $this->user->name,
+                'name' => $this->user->name,
                 'approved_at' => now()->format('F j, Y · g:i A'),
                 'approved_by' => Auth::user()?->name ?? 'the registrar',
-                'login_url'   => route('login'),
+                'login_url' => route('login'),
             ]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
         }
 
@@ -87,26 +93,29 @@ new #[Layout('layouts::app-admin')] class extends Component
 
     public function reject(): void
     {
+        Gate::authorize('update', $this->user);
+
         $this->validate([
             'rejectionReason' => 'required|string|min:5|max:1000',
         ], [
             'rejectionReason.required' => 'Please explain why this profile is being rejected.',
-            'rejectionReason.min'      => 'Please provide a more detailed reason (at least 5 characters).',
-            'rejectionReason.max'      => 'The reason cannot exceed 1000 characters.',
+            'rejectionReason.min' => 'Please provide a more detailed reason (at least 5 characters).',
+            'rejectionReason.max' => 'The reason cannot exceed 1000 characters.',
         ]);
 
         $profile = $this->user->userProfile;
 
         if (! $profile) {
             session()->flash('error', 'This alumni has no profile to reject.');
+
             return;
         }
 
         $reason = trim(strip_tags($this->rejectionReason));
 
         $profile->update([
-            'is_approved'           => false,
-            'is_verified'           => false,
+            'is_approved' => false,
+            'is_verified' => false,
             'last_rejection_reason' => $reason,
         ]);
 
@@ -114,13 +123,13 @@ new #[Layout('layouts::app-admin')] class extends Component
 
         try {
             EmailTemplateService::send('profile-rejected', $this->user->email, [
-                'name'        => $this->user->name,
-                'reason'      => $reason,
+                'name' => $this->user->name,
+                'reason' => $reason,
                 'rejected_at' => now()->format('F j, Y · g:i A'),
                 'rejected_by' => Auth::user()?->name ?? 'the registrar',
-                'login_url'   => route('login'),
+                'login_url' => route('login'),
             ]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
         }
 
@@ -143,11 +152,11 @@ new #[Layout('layouts::app-admin')] class extends Component
         }
 
         return [
-            '1-3-months'         => '1–3 Months',
-            '4-6-months'         => '4–6 Months',
+            '1-3-months' => '1–3 Months',
+            '4-6-months' => '4–6 Months',
             'more-than-6-months' => 'More than 6 Months',
-            'more-than-1-year'   => 'More than 1 Year',
-            'not-yet-employed'   => 'Not yet employed',
+            'more-than-1-year' => 'More than 1 Year',
+            'not-yet-employed' => 'Not yet employed',
         ][$value] ?? Str::headline($value);
     }
 
@@ -159,7 +168,7 @@ new #[Layout('layouts::app-admin')] class extends Component
 
             // Only verified attempts after reload too.
             'userProfile.boardExams' => fn ($q) => $q->where('is_verified', true)
-                                                      ->orderByDesc('date_taken'),
+                ->orderByDesc('date_taken'),
         ]);
     }
 };

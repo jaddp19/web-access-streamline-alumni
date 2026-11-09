@@ -24,13 +24,19 @@ class UserPolicy
 
     public function update(User $user, User $target): bool
     {
+        // Everyone may edit their own account.
+        if ($user->id === $target->id) {
+            return true;
+        }
+
         // Nobody edits a super-admin except a super-admin.
         if ($target->hasRole('super-admin') && ! $user->hasRole('super-admin')) {
             return false;
         }
 
-        return $user->hasPermissionTo('can_update')
-            || $user->id === $target->id;
+        // Editing someone else's account is staff-only.
+        return $user->hasAnyRole(['registrar', 'program head'])
+            && $user->hasPermissionTo('can_update');
     }
 
     public function delete(User $user, User $target): bool
@@ -44,7 +50,9 @@ class UserPolicy
             return false;
         }
 
-        return $user->hasPermissionTo('can_delete');
+        // Deleting someone else's account is staff-only.
+        return $user->hasAnyRole(['registrar', 'program head'])
+            && $user->hasPermissionTo('can_delete');
     }
 
     /**

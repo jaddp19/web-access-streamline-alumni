@@ -28,11 +28,23 @@
                 document.documentElement.classList.remove('dark');
             }
         })();
+
+        (function () {
+            let lastWidth = window.innerWidth;
+            window.addEventListener('resize', function (e) {
+                // Keyboard open/close only changes height, not width.
+                if (window.innerWidth === lastWidth) {
+                    e.stopImmediatePropagation();
+                } else {
+                    lastWidth = window.innerWidth;
+                }
+            }, true);
+        })();   
     </script>
     @livewireStyles
 </head>
 
-<body class="bg-[#F0F2F5] dark:bg-[#18191A]">
+<body class="bg-[#F0F2F5] dark:bg-[#18191A]" x-data>
     @include('components.headers.admin.header')
     @include('components.navbars.admin.navbar')
     <main class="lg:hs-overlay-layout-open:ps-60 transition-all duration-300 lg:fixed lg:inset-0 pt-13 px-3 pb-3">

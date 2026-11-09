@@ -19,17 +19,17 @@ class BoardExamFactory extends Factory
             : fake()->randomFloat(2, 60, 74.99);
 
         return [
-            'user_profile_id'  => UserProfile::factory(),
-            'exam_name'        => null,
-            'attempt_number'   => 1,
-            'date_taken'       => fake()->dateTimeBetween('-6 years', 'now'),
-            'rate'             => $rate,
-            'passed'           => $passed,
-            'is_verified'      => false,
-            'verified_at'      => null,
-            'is_top_notcher'   => false,
+            'user_profile_id' => UserProfile::factory(),
+            'exam_name' => null,
+            'attempt_number' => 1,
+            'date_taken' => fake()->dateTimeBetween('-6 years', 'now'),
+            'rate' => $rate,
+            'passed' => $passed,
+            'is_verified' => false,
+            'verified_at' => null,
+            'is_top_notcher' => false,
             'top_notcher_rank' => null,
-            'remarks'          => null,
+            'remarks' => null,
         ];
     }
 
@@ -44,8 +44,8 @@ class BoardExamFactory extends Factory
     public function verifiedPassing(): static
     {
         return $this->state(fn () => [
-            'rate'        => fake()->randomFloat(2, 75, 99),
-            'passed'      => true,
+            'rate' => fake()->randomFloat(2, 75, 99),
+            'passed' => true,
             'is_verified' => true,
             'verified_at' => now(),
         ]);
@@ -54,8 +54,8 @@ class BoardExamFactory extends Factory
     public function verifiedFailing(): static
     {
         return $this->state(fn () => [
-            'rate'        => fake()->randomFloat(2, 60, 74.99),
-            'passed'      => false,
+            'rate' => fake()->randomFloat(2, 60, 74.99),
+            'passed' => false,
             'is_verified' => true,
             'verified_at' => now(),
         ]);
@@ -64,11 +64,11 @@ class BoardExamFactory extends Factory
     public function topNotcher(?int $rank = null): static
     {
         return $this->state(fn () => [
-            'rate'             => fake()->randomFloat(2, 88, 99),
-            'passed'           => true,
-            'is_verified'      => true,
-            'verified_at'      => now(),
-            'is_top_notcher'   => true,
+            'rate' => fake()->randomFloat(2, 88, 99),
+            'passed' => true,
+            'is_verified' => true,
+            'verified_at' => now(),
+            'is_top_notcher' => true,
             'top_notcher_rank' => $rank ?? fake()->numberBetween(1, 10),
         ]);
     }

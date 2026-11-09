@@ -18,6 +18,7 @@ class SendPostAnnouncementEmail implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 3;
+
     public int $timeout = 120;
 
     public function __construct(public int $postId) {}
@@ -39,19 +40,19 @@ class SendPostAnnouncementEmail implements ShouldQueue
                             'institutional-announcement',
                             $u->email,
                             [
-                                'name'         => $u->name,
-                                'post_title'   => $post->title,
+                                'name' => $u->name,
+                                'post_title' => $post->title,
                                 'post_excerpt' => Str::limit(strip_tags($post->description ?? ''), 180),
-                                'category'     => $post->category?->cat_name ?? 'Announcement',
-                                'post_url'     => route('login'),
-                                'login_url'    => route('login'),
+                                'category' => $post->category?->cat_name ?? 'Announcement',
+                                'post_url' => route('login'),
+                                'login_url' => route('login'),
                             ]
                         );
                     } catch (\Throwable $e) {
                         Log::warning('Post announcement email failed', [
                             'post_id' => $post->id,
-                            'email'   => $u->email,
-                            'error'   => $e->getMessage(),
+                            'email' => $u->email,
+                            'error' => $e->getMessage(),
                         ]);
                     }
                 }

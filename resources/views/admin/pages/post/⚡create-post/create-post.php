@@ -3,6 +3,7 @@
 use App\Jobs\SendPostAnnouncementEmail;
 use App\Models\Category;
 use App\Models\Post;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -20,11 +21,15 @@ new #[Layout('layouts.app-admin')] class extends Component
     use WithFileUploads;
 
     public string $title = '';
+
     public string $description = '';
+
     public ?int $category_id = null;
+
     public string $status = 'draft';
 
     public $image = null;
+
     public array $attachments = [];
 
     public bool $showPreview = false;
@@ -41,7 +46,7 @@ new #[Layout('layouts.app-admin')] class extends Component
     public function categories(): array
     {
         $cacheKey = 'posts:categories:v1';
-        $cached   = Cache::get($cacheKey);
+        $cached = Cache::get($cacheKey);
 
         if (! is_array($cached)) {
             Cache::forget($cacheKey);
@@ -80,12 +85,12 @@ new #[Layout('layouts.app-admin')] class extends Component
     protected function rules(): array
     {
         return [
-            'title'         => ['required', 'string', 'min:3', 'max:255'],
-            'description'   => ['nullable', 'string', 'max:5000'],
-            'category_id'   => ['required', 'integer', Rule::exists('categories', 'id')],
-            'status'        => ['required', Rule::in(['public', 'private', 'draft'])],
-            'image'         => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
-            'attachments'   => ['nullable', 'array', 'max:5'],
+            'title' => ['required', 'string', 'min:3', 'max:255'],
+            'description' => ['nullable', 'string', 'max:5000'],
+            'category_id' => ['required', 'integer', Rule::exists('categories', 'id')],
+            'status' => ['required', Rule::in(['public', 'private', 'draft'])],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'attachments' => ['nullable', 'array', 'max:5'],
             'attachments.*' => [
                 'file',
                 'max:10240',
@@ -97,19 +102,19 @@ new #[Layout('layouts.app-admin')] class extends Component
     protected function messages(): array
     {
         return [
-            'title.required'        => 'Please enter a post title.',
-            'title.min'             => 'Title must be at least 3 characters.',
-            'title.max'             => 'Title cannot exceed 255 characters.',
-            'description.max'       => 'Description cannot exceed 5000 characters.',
-            'category_id.required'  => 'Please select a category.',
-            'category_id.exists'    => 'The selected category no longer exists.',
-            'status.in'             => 'The selected status is invalid.',
-            'image.image'           => 'Cover image must be a valid image file.',
-            'image.mimes'           => 'Cover image must be a JPG, PNG, or WebP file.',
-            'image.max'             => 'Cover image cannot exceed 5MB.',
-            'attachments.max'       => 'You can attach up to 5 files.',
-            'attachments.*.max'     => 'Each attachment cannot exceed 10MB.',
-            'attachments.*.mimes'   => 'One or more attachments have an unsupported file type.',
+            'title.required' => 'Please enter a post title.',
+            'title.min' => 'Title must be at least 3 characters.',
+            'title.max' => 'Title cannot exceed 255 characters.',
+            'description.max' => 'Description cannot exceed 5000 characters.',
+            'category_id.required' => 'Please select a category.',
+            'category_id.exists' => 'The selected category no longer exists.',
+            'status.in' => 'The selected status is invalid.',
+            'image.image' => 'Cover image must be a valid image file.',
+            'image.mimes' => 'Cover image must be a JPG, PNG, or WebP file.',
+            'image.max' => 'Cover image cannot exceed 5MB.',
+            'attachments.max' => 'You can attach up to 5 files.',
+            'attachments.*.max' => 'Each attachment cannot exceed 10MB.',
+            'attachments.*.mimes' => 'One or more attachments have an unsupported file type.',
         ];
     }
 
@@ -154,7 +159,7 @@ new #[Layout('layouts.app-admin')] class extends Component
 
         $validated = $this->validate();
 
-        $imagePath       = null;
+        $imagePath = null;
         $attachmentPaths = [];
 
         try {
@@ -173,34 +178,37 @@ new #[Layout('layouts.app-admin')] class extends Component
             // 👇 Now returns the created Post model
             $post = DB::transaction(function () use ($validated, $imagePath, $attachmentPaths) {
                 return Post::create([
-                    'user_id'     => Auth::id(),
-                    'title'       => trim(strip_tags($validated['title'])),
+                    'user_id' => Auth::id(),
+                    'title' => trim(strip_tags($validated['title'])),
                     'description' => filled($validated['description'])
                         ? trim(strip_tags($validated['description']))
                         : null,
-                    'slug'        => $this->uniqueSlug($validated['title']),
-                    'image'       => $imagePath,
+                    'slug' => $this->uniqueSlug($validated['title']),
+                    'image' => $imagePath,
                     'category_id' => $validated['category_id'],
-                    'status'      => $validated['status'],
+                    'status' => $validated['status'],
                     'attachments' => $attachmentPaths ?: null,
                 ]);
             });
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             $this->cleanupFiles($imagePath, $attachmentPaths);
 
             if ($e->getCode() === '23000') {
                 $this->addError('title', 'This title was just taken. Please try again.');
+
                 return;
             }
 
             report($e);
             session()->flash('error', 'Could not create post. Please try again.');
+
             return;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->cleanupFiles($imagePath, $attachmentPaths);
 
             report($e);
             session()->flash('error', 'Could not create post. Please try again.');
+
             return;
         }
 
@@ -227,7 +235,7 @@ new #[Layout('layouts.app-admin')] class extends Component
     {
         $base = Str::slug($title) ?: 'post';
         $slug = $base;
-        $i    = 2;
+        $i = 2;
 
         while (Post::where('slug', $slug)->exists()) {
             $slug = "{$base}-{$i}";

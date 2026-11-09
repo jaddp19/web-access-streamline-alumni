@@ -2,10 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\Batch;
-use App\Models\BoardExam;
-use App\Models\Course;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -34,13 +30,13 @@ class UserProfile extends Model
     ];
 
     protected $casts = [
-        'location'            => 'array',
-        'is_private'          => 'boolean',
-        'is_verified'         => 'boolean',
-        'is_approved'         => 'boolean',
+        'location' => 'array',
+        'is_private' => 'boolean',
+        'is_verified' => 'boolean',
+        'is_approved' => 'boolean',
         'email_notifications' => 'boolean',
-        'board_taken'         => 'date',
-        'board_rate'          => 'decimal:2',
+        'board_taken' => 'date',
+        'board_rate' => 'decimal:2',
     ];
 
     /** Passing rate threshold (%), tweak to match PRC rules per program. */
@@ -112,7 +108,7 @@ class UserProfile extends Model
 
         $this->forceFill([
             'board_taken' => $featured?->date_taken,
-            'board_rate'  => $featured?->rate,
+            'board_rate' => $featured?->rate,
         ])->saveQuietly();
     }
 
@@ -165,9 +161,9 @@ class UserProfile extends Model
             return null;
         }
 
-        $rate    = round((float) $rate, 2);
-        $passed  = $passed ?? ($rate >= self::BOARD_PASSING_RATE);
-        $latest  = $this->boardExams()->first();
+        $rate = round((float) $rate, 2);
+        $passed = $passed ?? ($rate >= self::BOARD_PASSING_RATE);
+        $latest = $this->boardExams()->first();
 
         // Same attempt as the latest one? Don't duplicate — and DO NOT touch
         // its verification flags (keeps an already-verified attempt verified).
@@ -176,11 +172,11 @@ class UserProfile extends Model
             && (float) $latest->rate === $rate) {
 
             $latest->update([
-                'exam_name'        => $examName ?? $latest->exam_name,
-                'passed'           => $passed,
-                'is_top_notcher'   => $isTopNotcher ?? $latest->is_top_notcher,
+                'exam_name' => $examName ?? $latest->exam_name,
+                'passed' => $passed,
+                'is_top_notcher' => $isTopNotcher ?? $latest->is_top_notcher,
                 'top_notcher_rank' => $topNotcherRank ?? $latest->top_notcher_rank,
-                'remarks'          => $remarks ?? $latest->remarks,
+                'remarks' => $remarks ?? $latest->remarks,
             ]);
 
             $this->syncBoardMirrors();
@@ -191,16 +187,16 @@ class UserProfile extends Model
         $nextAttempt = ((int) $this->boardExams()->max('attempt_number')) + 1;
 
         $exam = $this->boardExams()->create([
-            'exam_name'        => $examName,
-            'attempt_number'   => $nextAttempt,
-            'date_taken'       => $date,
-            'rate'             => $rate,
-            'passed'           => $passed,
-            'is_verified'      => false,   // new attempts always start unverified
-            'verified_at'      => null,
-            'is_top_notcher'   => $isTopNotcher ?? false,
+            'exam_name' => $examName,
+            'attempt_number' => $nextAttempt,
+            'date_taken' => $date,
+            'rate' => $rate,
+            'passed' => $passed,
+            'is_verified' => false,   // new attempts always start unverified
+            'verified_at' => null,
+            'is_top_notcher' => $isTopNotcher ?? false,
             'top_notcher_rank' => $topNotcherRank,
-            'remarks'          => $remarks,
+            'remarks' => $remarks,
         ]);
 
         $this->syncBoardMirrors();
@@ -260,7 +256,7 @@ class UserProfile extends Model
     public function scopeRejected($query)
     {
         return $query->where('is_approved', false)
-                     ->whereNotNull('last_rejection_reason');
+            ->whereNotNull('last_rejection_reason');
     }
 
     public function scopeVerified($query)
@@ -306,9 +302,9 @@ class UserProfile extends Model
     public function approvalBadgeClasses(): string
     {
         return match (true) {
-            $this->is_approved                   => 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
+            $this->is_approved => 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
             filled($this->last_rejection_reason) => 'bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400',
-            default                              => 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400',
+            default => 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400',
         };
     }
 

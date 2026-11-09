@@ -1,4 +1,6 @@
-<div>
+<div x-data="{ modalOpen: @entangle('viewingPostId') }" 
+     @keydown.escape.window="$wire.closePost()">
+     
     <div class="max-w-[85rem] px-3 sm:px-6 lg:px-8 py-6 sm:py-10 lg:py-14 mx-auto">
         <div class="relative flex flex-col rounded-2xl border border-black/5 dark:border-white/5 bg-white dark:bg-[#242526] shadow-sm overflow-hidden">
 
@@ -145,7 +147,10 @@
 
                         <div class="flex-1 min-w-0">
                             <div class="flex items-start justify-between gap-2">
-                                <p class="font-semibold text-[#123524] dark:text-white truncate">{{ $post->title }}</p>
+                                <p class="font-semibold text-[#123524] dark:text-white truncate cursor-pointer hover:text-[#1877F2] dark:hover:text-[#D4A537] transition" 
+                                   wire:click="openPost({{ $post->id }})">
+                                    {{ $post->title }}
+                                </p>
                                 <div class="shrink-0 flex items-center gap-2">
                                     @can('can_update')
                                     <a href="{{ route('super-admin.post.update', $post->id) }}"
@@ -274,9 +279,10 @@
                                     @endif
                                 </td>
 
-                                {{-- Title + slug --}}
+                                {{-- Title + slug (Clickable) --}}
                                 <td class="px-3 py-3 min-w-[200px]">
-                                    <p class="font-semibold text-[#123524] dark:text-white truncate max-w-[240px]">
+                                    <p class="font-semibold text-[#123524] dark:text-white truncate max-w-[240px] cursor-pointer hover:text-[#1877F2] dark:hover:text-[#D4A537] transition"
+                                       wire:click="openPost({{ $post->id }})">
                                         {{ $post->title }}
                                     </p>
                                     <p class="text-[11px] text-black/40 dark:text-white/40 font-mono truncate max-w-[240px]">
@@ -436,4 +442,162 @@
             </div>
         </div>
     </div>
+
+    {{-- ================= CENTERED SINGLE VIEW MODAL ================= --}}
+    <template x-teleport="body">
+        <div x-show="modalOpen" class="relative z-[100]" aria-labelledby="modal-title" role="dialog" aria-modal="true" x-cloak>
+            
+            {{-- Backdrop --}}
+            <div x-show="modalOpen" 
+                 x-transition:enter="ease-out duration-300" 
+                 x-transition:enter-start="opacity-0" 
+                 x-transition:enter-end="opacity-100" 
+                 x-transition:leave="ease-in duration-200" 
+                 x-transition:leave-start="opacity-100" 
+                 x-transition:leave-end="opacity-0" 
+                 class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" 
+                 @click="$wire.closePost()"></div>
+
+            <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+                <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                    
+                    {{-- Modal Panel --}}
+                    <div x-show="modalOpen" 
+                         x-transition:enter="ease-out duration-300" 
+                         x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+                         x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" 
+                         x-transition:leave="ease-in duration-200" 
+                         x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" 
+                         x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+                         class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-[#242526] text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-xl border border-black/5 dark:border-white/5">
+                        
+                        @if($this->viewingPost)
+                            @php 
+                                $post = $this->viewingPost; 
+                                $modalImg = $post->image
+                                    ? (filter_var($post->image, FILTER_VALIDATE_URL)
+                                        ? $post->image
+                                        : Storage::url($post->image))
+                                    : null;
+                            @endphp
+
+                            {{-- Header --}}
+                            <div class="px-4 py-5 sm:px-6 bg-[#F7F5EF] dark:bg-[#3A3B3C] border-b border-black/5 dark:border-white/5 flex items-start justify-between">
+                                <div>
+                                    <h2 class="text-lg font-bold text-[#123524] dark:text-white" id="modal-title" style="font-family: 'Fraunces', serif;">
+                                        Post Details
+                                    </h2>
+                                    <div class="mt-2">
+                                        <span class="inline-flex items-center text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wide 
+                                            @if ($post->status === 'public') bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400
+                                            @elseif ($post->status === 'private') bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400
+                                            @else bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 @endif">
+                                            {{ $post->status }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <button type="button" @click="$wire.closePost()" class="relative rounded-md bg-transparent text-gray-400 hover:text-gray-500 focus:outline-none">
+                                    <span class="sr-only">Close</span>
+                                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            {{-- Body --}}
+                            <div class="px-4 py-6 sm:px-6">
+                                
+                                {{-- Image --}}
+                                @if($modalImg)
+                                    <div class="mb-6 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800">
+                                        <img src="{{ $modalImg }}" alt="{{ $post->title }}" class="w-full h-48 sm:h-64 object-cover">
+                                    </div>
+                                @endif
+
+                                {{-- Title & Desc --}}
+                                <h3 class="text-2xl font-bold text-[#123524] dark:text-white">{{ $post->title }}</h3>
+                                <div class="mt-4 prose prose-sm text-black/70 dark:text-white/70">
+                                    <p>{{ $post->description ?? 'No description provided.' }}</p>
+                                </div>
+
+                                {{-- Details List --}}
+                                <div class="mt-8 border-t border-black/5 dark:border-white/5 pt-6 grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-4">
+                                    <div class="flex gap-x-3">
+                                        <svg class="h-6 w-5 flex-none text-[#a97f1f] dark:text-[#D4A537]" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                                        </svg>
+                                        <div class="text-sm">
+                                            <p class="font-semibold text-black dark:text-white">Author</p>
+                                            <p class="text-black/60 dark:text-white/60">{{ $post->user?->name ?? 'System' }}</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex gap-x-3">
+                                        <svg class="h-6 w-5 flex-none text-[#a97f1f] dark:text-[#D4A537]" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" />
+                                        </svg>
+                                        <div class="text-sm">
+                                            <p class="font-semibold text-black dark:text-white">Category</p>
+                                            <p class="text-black/60 dark:text-white/60">{{ $post->category->cat_name ?? 'None' }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Attachments --}}
+                                @if (!empty($post->attachments) && is_array($post->attachments))
+                                    <div class="mt-8 border-t border-black/5 dark:border-white/5 pt-6">
+                                        <h4 class="text-sm font-semibold text-black dark:text-white mb-3">Attachments</h4>
+                                        <div class="flex flex-wrap gap-2">
+                                            @foreach ($post->attachments as $file)
+                                                <a href="{{ Storage::url($file) }}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" />
+                                                    </svg>
+                                                    {{ basename($file) }}
+                                                </a>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+
+                                {{-- Metadata --}}
+                                <div class="mt-8 pt-6 border-t border-black/5 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-black/40 dark:text-white/40">
+                                    <div class="flex items-center gap-1.5">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <span>Created: {{ $post->created_at->format('M j, Y g:i A') }}</span>
+                                    </div>
+                                    
+                                    @if($post->updated_at->gt($post->created_at))
+                                        <div class="flex items-center gap-1.5">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                                            </svg>
+                                            <span>Updated: {{ $post->updated_at->format('M j, Y g:i A') }}</span>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            {{-- Footer Actions --}}
+                            <div class="bg-[#F7F5EF] dark:bg-[#3A3B3C] px-4 py-4 sm:px-6 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 border-t border-black/5 dark:border-white/5 rounded-b-2xl">
+                                <button type="button" @click="$wire.closePost()"
+                                    class="w-full sm:w-auto justify-center inline-flex rounded-lg bg-white dark:bg-[#242526] px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-white/10 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+                                    Close
+                                </button>
+                                @can('can_update')
+                                <a href="{{ route('super-admin.post.update', $post->id) }}" wire:navigate
+                                    class="w-full sm:w-auto justify-center inline-flex rounded-lg bg-[#123524] dark:bg-[#D4A537] px-4 py-2.5 text-sm font-semibold text-white dark:text-[#123524] shadow-sm hover:bg-[#0d2819] dark:hover:bg-[#E5B94A] transition">
+                                    Edit Post
+                                </a>
+                                @endcan
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
 </div>

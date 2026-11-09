@@ -4,7 +4,6 @@ namespace Database\Factories;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
 
 class UserFactory extends Factory
 {
@@ -13,14 +12,14 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'first_name'        => fake()->firstName(),
-            'middle_name'       => fake()->optional(0.7)->lastName(),
-            'last_name'         => fake()->lastName(),
-            'email'             => fake()->unique()->safeEmail(),
-            'school_id'         => fake()->unique()->numerify('####-####'),
+            'first_name' => fake()->firstName(),
+            'middle_name' => fake()->optional(0.7)->lastName(),
+            'last_name' => fake()->lastName(),
+            'email' => fake()->unique()->safeEmail(),
+            'school_id' => fake()->unique()->numerify('####-####'),
             'email_verified_at' => now(),
-            'password'          => 'password123', // auto-hashed by cast
-            'is_active'         => true,          // ← new: default everyone is active
+            'password' => 'password123', // auto-hashed by cast
+            'is_active' => true,          // ← new: default everyone is active
         ];
     }
 
@@ -64,5 +63,4 @@ class UserFactory extends Factory
     {
         return $this->afterCreating(fn (User $user) => $user->assignRole('alumni'));
     }
-
 }

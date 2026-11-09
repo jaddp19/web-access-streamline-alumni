@@ -41,6 +41,11 @@
                                     class="text-[#123524] focus:ring-[#D4A537] h-4 w-4">
                                 <span class="text-sm text-[#123524]">Female</span>
                             </label>
+                            <label class="flex items-center gap-2 cursor-pointer min-h-[44px]">
+                                    <input type="radio" wire:model="gender" value="Other"
+                                        class="text-[#123524] focus:ring-[#D4A537] h-4 w-4">
+                                    <span class="text-sm text-[#123524]">Other</span>
+                            </label>
                         </div>
                         @error('gender')
                             <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>

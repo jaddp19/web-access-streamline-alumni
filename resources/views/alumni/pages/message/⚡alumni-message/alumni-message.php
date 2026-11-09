@@ -18,6 +18,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
     use WithPagination;
 
     public string $search = '';
+
     public string $filter = 'all'; // all | pending | responded
 
     public function updatingSearch(): void
@@ -83,7 +84,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
         // v2 prefix so we never read stale data written by the old logic.
         // Shorter TTL — department assignments change more often than 1 hour.
-        $key = 'program_head_ids_by_dept_v2_' . implode('_', $deptIds);
+        $key = 'program_head_ids_by_dept_v2_'.implode('_', $deptIds);
 
         return Cache::remember($key, now()->addMinutes(15), function () use ($deptIds) {
             return User::query()
@@ -125,20 +126,18 @@ new #[Layout('layouts.app-alumni')] class extends Component
             ->whereIn('created_by', $this->allowedAuthorIds)
             ->when($this->search, function ($q) {
                 $q->where(function ($qq) {
-                    $qq->where('title', 'like', '%' . $this->search . '%')
-                       ->orWhere('description', 'like', '%' . $this->search . '%');
+                    $qq->where('title', 'like', '%'.$this->search.'%')
+                        ->orWhere('description', 'like', '%'.$this->search.'%');
                 });
             })
             ->when($this->filter === 'pending', function ($q) {
-                $q->whereDoesntHave('rsvps', fn ($qq) =>
-                    $qq->where('user_id', $this->alumni->id)
-                        ->whereIn('response', ['yes', 'maybe', 'no'])
+                $q->whereDoesntHave('rsvps', fn ($qq) => $qq->where('user_id', $this->alumni->id)
+                    ->whereIn('response', ['yes', 'maybe', 'no'])
                 );
             })
             ->when($this->filter === 'responded', function ($q) {
-                $q->whereHas('rsvps', fn ($qq) =>
-                    $qq->where('user_id', $this->alumni->id)
-                        ->whereIn('response', ['yes', 'maybe', 'no'])
+                $q->whereHas('rsvps', fn ($qq) => $qq->where('user_id', $this->alumni->id)
+                    ->whereIn('response', ['yes', 'maybe', 'no'])
                 );
             })
             ->latest()
@@ -156,9 +155,8 @@ new #[Layout('layouts.app-alumni')] class extends Component
         return Event::query()
             ->where('status', 'published')
             ->whereIn('created_by', $this->allowedAuthorIds)
-            ->whereDoesntHave('rsvps', fn ($q) =>
-                $q->where('user_id', $this->alumni->id)
-                    ->whereIn('response', ['yes', 'maybe', 'no'])
+            ->whereDoesntHave('rsvps', fn ($q) => $q->where('user_id', $this->alumni->id)
+                ->whereIn('response', ['yes', 'maybe', 'no'])
             )
             ->count();
     }

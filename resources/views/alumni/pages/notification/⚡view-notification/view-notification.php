@@ -84,7 +84,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
         // v2 prefix — bypasses any stale entries written by the old logic.
         // 15-minute TTL — department head reassignments should reach alumni
         // quickly without hammering the DB on every page render.
-        $key = 'program_head_ids_by_dept_v2_' . implode('_', $deptIds);
+        $key = 'program_head_ids_by_dept_v2_'.implode('_', $deptIds);
 
         return Cache::remember($key, now()->addMinutes(15), function () use ($deptIds) {
             return User::query()

@@ -28,7 +28,7 @@ return new class extends Migration
 
             // Lifecycle
             $table->enum('status', ['draft', 'published', 'cancelled', 'completed'])
-                  ->default('draft');
+                ->default('draft');
 
             // Owner
             $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();

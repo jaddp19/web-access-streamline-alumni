@@ -19,7 +19,8 @@ class SendEventInvitationEmail implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $tries   = 1;      // no retries — partial blasts shouldn't re-send
+    public int $tries = 1;      // no retries — partial blasts shouldn't re-send
+
     public int $timeout = 900;    // 15 minutes for large batches
 
     public function __construct(public int $eventId) {}
@@ -30,14 +31,16 @@ class SendEventInvitationEmail implements ShouldQueue
 
         if (! $event) {
             Log::warning('Event invitation: event not found', ['event_id' => $this->eventId]);
+
             return;
         }
 
         if ($event->status !== 'published') {
             Log::info('Event invitation: skipped (not published)', [
                 'event_id' => $event->id,
-                'status'   => $event->status,
+                'status' => $event->status,
             ]);
+
             return;
         }
 
@@ -49,8 +52,9 @@ class SendEventInvitationEmail implements ShouldQueue
         if (! $templateExists) {
             Log::error('Event invitation: template missing — no emails sent', [
                 'event_id' => $event->id,
-                'slug'     => 'youre-invited-event-invitation',
+                'slug' => 'youre-invited-event-invitation',
             ]);
+
             return;
         }
 
@@ -60,7 +64,7 @@ class SendEventInvitationEmail implements ShouldQueue
         //  · Program Head            → only their department(s) alumni
         // =========================================================
 
-        $creator       = $event->creator;
+        $creator = $event->creator;
         $isProgramHead = $creator?->hasRole('program head') ?? false;
         $departmentIds = [];
 
@@ -74,18 +78,19 @@ class SendEventInvitationEmail implements ShouldQueue
             // Program head without a department → nothing to send
             if (empty($departmentIds)) {
                 Log::warning('Event invitation: program head has no department — no emails sent', [
-                    'event_id'   => $event->id,
+                    'event_id' => $event->id,
                     'creator_id' => $creator->id,
                 ]);
+
                 return;
             }
         }
 
         Log::info('Event invitation: blast starting', [
-            'event_id'        => $event->id,
-            'created_by'      => $creator?->id,
+            'event_id' => $event->id,
+            'created_by' => $creator?->id,
             'is_program_head' => $isProgramHead,
-            'department_ids'  => $departmentIds,
+            'department_ids' => $departmentIds,
         ]);
 
         // =========================================================
@@ -107,15 +112,16 @@ class SendEventInvitationEmail implements ShouldQueue
 
         if ($recipientCount === 0) {
             Log::warning('Event invitation: zero recipients after scoping — no emails sent', [
-                'event_id'        => $event->id,
+                'event_id' => $event->id,
                 'is_program_head' => $isProgramHead,
-                'department_ids'  => $departmentIds,
+                'department_ids' => $departmentIds,
             ]);
+
             return;
         }
 
         Log::info('Event invitation: recipients ready', [
-            'event_id'        => $event->id,
+            'event_id' => $event->id,
             'recipient_count' => $recipientCount,
         ]);
 
@@ -123,8 +129,8 @@ class SendEventInvitationEmail implements ShouldQueue
         //  SEND
         // =========================================================
 
-        $sent       = 0;
-        $failed     = 0;
+        $sent = 0;
+        $failed = 0;
         $failedList = [];
 
         $recipients->chunkById(200, function ($alumni) use ($event, &$sent, &$failed, &$failedList) {
@@ -134,12 +140,12 @@ class SendEventInvitationEmail implements ShouldQueue
                         'youre-invited-event-invitation',
                         $u->email,
                         [
-                            'name'           => $u->name,
-                            'event_title'    => $event->title,
-                            'event_date'     => $event->starts_at->format('F j, Y \a\t g:i A'),
+                            'name' => $u->name,
+                            'event_title' => $event->title,
+                            'event_date' => $event->starts_at->format('F j, Y \a\t g:i A'),
                             'event_location' => $event->location ?? 'TBA',
-                            'event_excerpt'  => Str::limit(strip_tags($event->description ?? ''), 180),
-                            'rsvp_url'       => route('login'),
+                            'event_excerpt' => Str::limit(strip_tags($event->description ?? ''), 180),
+                            'rsvp_url' => route('login'),
                         ]
                     );
 
@@ -150,8 +156,8 @@ class SendEventInvitationEmail implements ShouldQueue
 
                     Log::warning('Event invitation: individual send failed', [
                         'event_id' => $event->id,
-                        'email'    => $u->email,
-                        'error'    => $e->getMessage(),
+                        'email' => $u->email,
+                        'error' => $e->getMessage(),
                     ]);
                 }
             }
@@ -159,24 +165,24 @@ class SendEventInvitationEmail implements ShouldQueue
             // Progress log every chunk of 200
             Log::info('Event invitation: progress', [
                 'event_id' => $event->id,
-                'sent'     => $sent,
-                'failed'   => $failed,
+                'sent' => $sent,
+                'failed' => $failed,
             ]);
         });
 
         // Final summary
         Log::info('Event invitation: blast complete', [
-            'event_id'      => $event->id,
-            'total_sent'    => $sent,
-            'total_failed'  => $failed,
+            'event_id' => $event->id,
+            'total_sent' => $sent,
+            'total_failed' => $failed,
             'failed_sample' => array_slice($failedList, 0, 10),
         ]);
 
         if ($failed > 0) {
             Log::error('Event invitation: SOME EMAILS FAILED', [
-                'event_id'     => $event->id,
+                'event_id' => $event->id,
                 'failed_count' => $failed,
-                'sent_count'   => $sent,
+                'sent_count' => $sent,
             ]);
         }
     }

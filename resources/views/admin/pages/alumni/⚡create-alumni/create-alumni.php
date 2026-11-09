@@ -3,11 +3,11 @@
 use App\Models\Batch;
 use App\Models\User;
 use App\Services\EmailTemplateService;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -18,10 +18,15 @@ new #[Layout('layouts.app-admin')] class extends Component
     private const DEFAULT_PASSWORD = 'csav.alumni';
 
     public string $first_name = '';
+
     public string $middle_name = '';
+
     public string $last_name = '';
+
     public string $email = '';
+
     public string $school_year = '';         // dropdown (from batches.batch_name)
+
     public string $school_id_suffix = '';    // 4-digit input
 
     public function mount(): void
@@ -61,7 +66,7 @@ new #[Layout('layouts.app-admin')] class extends Component
     #[Computed(persist: true)]
     public function batchYears()
     {
-        return \Illuminate\Support\Facades\Cache::remember('batches:years-list', now()->addMinutes(10), function () {
+        return Cache::remember('batches:years-list', now()->addMinutes(10), function () {
             return Batch::query()
                 ->orderByDesc('batch_name')
                 ->pluck('batch_name')
@@ -77,10 +82,10 @@ new #[Layout('layouts.app-admin')] class extends Component
     protected function rules(): array
     {
         return [
-            'first_name'  => ['required', 'string', 'min:2', 'max:255'],
+            'first_name' => ['required', 'string', 'min:2', 'max:255'],
             'middle_name' => ['nullable', 'string', 'max:255'],
-            'last_name'   => ['required', 'string', 'min:2', 'max:255'],
-            'email'       => ['required', 'email:rfc,dns', 'max:255', 'unique:users,email'],
+            'last_name' => ['required', 'string', 'min:2', 'max:255'],
+            'email' => ['required', 'email:rfc,dns', 'max:255', 'unique:users,email'],
 
             'school_year' => [
                 'required',
@@ -108,19 +113,19 @@ new #[Layout('layouts.app-admin')] class extends Component
     public function messages(): array
     {
         return [
-            'first_name.required'       => 'The first name is required.',
-            'first_name.min'            => 'The first name must be at least 2 characters.',
-            'first_name.max'            => 'The first name may not be greater than 255 characters.',
-            'last_name.required'        => 'The last name is required.',
-            'last_name.min'             => 'The last name must be at least 2 characters.',
-            'last_name.max'             => 'The last name may not be greater than 255 characters.',
-            'email.required'            => 'The email field is required.',
-            'email.email'               => 'The email must be a valid email address.',
-            'email.unique'              => 'This email is already registered.',
-            'school_year.required'      => 'Please select a batch year.',
-            'school_year.in'            => 'The selected batch year is invalid.',
+            'first_name.required' => 'The first name is required.',
+            'first_name.min' => 'The first name must be at least 2 characters.',
+            'first_name.max' => 'The first name may not be greater than 255 characters.',
+            'last_name.required' => 'The last name is required.',
+            'last_name.min' => 'The last name must be at least 2 characters.',
+            'last_name.max' => 'The last name may not be greater than 255 characters.',
+            'email.required' => 'The email field is required.',
+            'email.email' => 'The email must be a valid email address.',
+            'email.unique' => 'This email is already registered.',
+            'school_year.required' => 'Please select a batch year.',
+            'school_year.in' => 'The selected batch year is invalid.',
             'school_id_suffix.required' => 'Please enter the last 4 digits of the school ID.',
-            'school_id_suffix.digits'   => 'The last 4 digits must be numeric.',
+            'school_id_suffix.digits' => 'The last 4 digits must be numeric.',
         ];
     }
 
@@ -134,39 +139,42 @@ new #[Layout('layouts.app-admin')] class extends Component
 
         $validated = $this->validate();
 
-        $firstName  = $this->sanitize($validated['first_name']);
+        $firstName = $this->sanitize($validated['first_name']);
         $middleName = $validated['middle_name'] ? $this->sanitize($validated['middle_name']) : null;
-        $lastName   = $this->sanitize($validated['last_name']);
-        $email      = $this->sanitize($validated['email']);
-        $schoolId   = $this->schoolId;   // composed from school_year + school_id_suffix
-        $fullName   = trim(implode(' ', array_filter([$firstName, $middleName, $lastName])));
+        $lastName = $this->sanitize($validated['last_name']);
+        $email = $this->sanitize($validated['email']);
+        $schoolId = $this->schoolId;   // composed from school_year + school_id_suffix
+        $fullName = trim(implode(' ', array_filter([$firstName, $middleName, $lastName])));
 
         try {
             DB::transaction(function () use ($firstName, $middleName, $lastName, $email, $schoolId) {
                 $user = User::create([
-                    'first_name'  => $firstName,
+                    'first_name' => $firstName,
                     'middle_name' => $middleName,
-                    'last_name'   => $lastName,
-                    'email'       => $email,
-                    'school_id'   => $schoolId,
-                    'password'    => Hash::make(self::DEFAULT_PASSWORD),
+                    'last_name' => $lastName,
+                    'email' => $email,
+                    'school_id' => $schoolId,
+                    'password' => Hash::make(self::DEFAULT_PASSWORD),
                 ]);
 
                 $user->syncRoles(['alumni']);
             });
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             if ($e->getCode() === '23000') {
                 $field = str_contains($e->getMessage(), 'school_id') ? 'school_id_suffix' : 'email';
                 $this->addError($field, 'This value was just registered. Please refresh and try again.');
+
                 return;
             }
 
             report($e);
             session()->flash('error', 'Could not create the alumni account. Please try again.');
+
             return;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
             session()->flash('error', 'Could not create the alumni account. Please try again.');
+
             return;
         }
 
@@ -176,11 +184,11 @@ new #[Layout('layouts.app-admin')] class extends Component
                 'welcome-to-the-csav-alumni-network-name',
                 $email,
                 [
-                    'name'          => $fullName,
-                    'school_email'  => $email,
-                    'school_id'     => $schoolId,
+                    'name' => $fullName,
+                    'school_email' => $email,
+                    'school_id' => $schoolId,
                     'temp_password' => self::DEFAULT_PASSWORD,
-                    'login_url'     => route('login'),
+                    'login_url' => route('login'),
                 ]
             );
 
@@ -188,7 +196,7 @@ new #[Layout('layouts.app-admin')] class extends Component
                 'success',
                 "Alumni account created. A welcome email was sent to {$email}."
             );
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::warning('Alumni welcome email failed', [
                 'email' => $email,
                 'error' => $e->getMessage(),
@@ -196,7 +204,7 @@ new #[Layout('layouts.app-admin')] class extends Component
 
             session()->flash(
                 'warning',
-                "Alumni account created, but the welcome email could not be sent. Notify {$email} manually with the temp password: " . self::DEFAULT_PASSWORD
+                "Alumni account created, but the welcome email could not be sent. Notify {$email} manually with the temp password: ".self::DEFAULT_PASSWORD
             );
         }
 

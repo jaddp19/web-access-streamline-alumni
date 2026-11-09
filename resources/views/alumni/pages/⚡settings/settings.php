@@ -17,20 +17,27 @@ new #[Layout('layouts.app-settings')] class extends Component
     public string $activeTab = 'profile';
 
     // Profile info — split into parts
-    public string $first_name  = '';
+    public string $first_name = '';
+
     public string $middle_name = '';
-    public string $last_name   = '';
-    public string $email       = '';
+
+    public string $last_name = '';
+
+    public string $email = '';
 
     // Password
     public string $current_password = '';
+
     public string $new_password = '';
+
     public string $new_password_confirmation = '';
 
     // Preferences
     public bool $emailNotifications = true;
+
     public bool $eventNotifications = true;
-    public bool $profileVisible     = true;
+
+    public bool $profileVisible = true;
 
     #[Locked]
     public array $allowedTabs = ['profile', 'password', 'preferences', 'appearance'];
@@ -41,9 +48,9 @@ new #[Layout('layouts.app-settings')] class extends Component
 
         [$first, $middle, $last] = $this->resolveNameParts($user);
 
-        $this->first_name  = $first;
+        $this->first_name = $first;
         $this->middle_name = $middle;
-        $this->last_name   = $last;
+        $this->last_name = $last;
 
         $this->email = $user->email;
 
@@ -52,7 +59,7 @@ new #[Layout('layouts.app-settings')] class extends Component
         // `$profile` variable which silently fell back to defaults.)
         $profile = $this->userProfile;
 
-        $this->profileVisible     = ! ($profile?->is_private ?? false);
+        $this->profileVisible = ! ($profile?->is_private ?? false);
         $this->emailNotifications = $profile?->email_notifications ?? true;
     }
 
@@ -96,24 +103,24 @@ new #[Layout('layouts.app-settings')] class extends Component
             SettingsRules::messages()
         );
 
-        $first  = $this->sanitizeData($validated['first_name']);
+        $first = $this->sanitizeData($validated['first_name']);
         $middle = $validated['middle_name'] ? $this->sanitizeData($validated['middle_name']) : null;
-        $last   = $this->sanitizeData($validated['last_name']);
-        $email  = Str::lower($this->sanitizeData($validated['email']));
+        $last = $this->sanitizeData($validated['last_name']);
+        $email = Str::lower($this->sanitizeData($validated['email']));
 
         Auth::user()->update([
-            'first_name'  => $first,
+            'first_name' => $first,
             'middle_name' => $middle,
-            'last_name'   => $last,
-            'email'       => $email,
+            'last_name' => $last,
+            'email' => $email,
             // 'name' auto-fills via the User model's saving hook
         ]);
 
         // Refresh local form with sanitized values
-        $this->first_name  = $first;
+        $this->first_name = $first;
         $this->middle_name = $middle ?? '';
-        $this->last_name   = $last;
-        $this->email       = $email;
+        $this->last_name = $last;
+        $this->email = $email;
 
         session()->flash('profile_success', 'Profile updated successfully.');
     }
@@ -131,6 +138,7 @@ new #[Layout('layouts.app-settings')] class extends Component
 
         if (! Hash::check($validated['current_password'], $user->password)) {
             $this->addError('current_password', 'Your current password is incorrect.');
+
             return;
         }
 
@@ -155,7 +163,7 @@ new #[Layout('layouts.app-settings')] class extends Component
 
         if ($profile = $this->userProfile) {
             $profile->update([
-                'is_private'          => ! $validated['profileVisible'],
+                'is_private' => ! $validated['profileVisible'],
                 'email_notifications' => $validated['emailNotifications'],
             ]);
 
@@ -174,14 +182,14 @@ new #[Layout('layouts.app-settings')] class extends Component
      */
     protected function resolveNameParts($user): array
     {
-        $first  = $user->first_name;
+        $first = $user->first_name;
         $middle = $user->middle_name;
-        $last   = $user->last_name;
+        $last = $user->last_name;
 
         if (! $first && ! $last && $user->name) {
-            $split  = preg_split('/\s+/', trim($user->name));
-            $first  = $split[0] ?? '';
-            $last   = count($split) > 1 ? end($split) : '';
+            $split = preg_split('/\s+/', trim($user->name));
+            $first = $split[0] ?? '';
+            $last = count($split) > 1 ? end($split) : '';
             $middle = count($split) > 2 ? implode(' ', array_slice($split, 1, -1)) : '';
         }
 

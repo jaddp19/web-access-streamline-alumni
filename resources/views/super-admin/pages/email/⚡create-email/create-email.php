@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\EmailTemplate;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -11,7 +12,9 @@ use Livewire\Component;
 new #[Layout('layouts.app-super-admin')] class extends Component
 {
     public string $subject = '';
+
     public string $message = '';
+
     public bool $showPreview = false;
 
     public function mount(): void
@@ -46,15 +49,15 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         try {
             return view('emails.template', [
                 'emailSubject' => $this->subject !== '' ? $this->subject : 'Your subject here',
-                'bodyHtml'     => $this->message !== '' ? $this->message : 'Your message will appear here.',
+                'bodyHtml' => $this->message !== '' ? $this->message : 'Your message will appear here.',
             ])->render();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
 
             return '<div style="padding:24px;font-family:system-ui,sans-serif;color:#b91c1c;">'
-                . '<strong>Preview unavailable.</strong><br>'
-                . e($e->getMessage())
-                . '</div>';
+                .'<strong>Preview unavailable.</strong><br>'
+                .e($e->getMessage())
+                .'</div>';
         }
     }
 
@@ -74,11 +77,11 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     {
         return [
             'subject.required' => 'The subject field is required.',
-            'subject.min'      => 'The subject must be at least 3 characters.',
-            'subject.max'      => 'The subject must not exceed 255 characters.',
+            'subject.min' => 'The subject must be at least 3 characters.',
+            'subject.max' => 'The subject must not exceed 255 characters.',
             'message.required' => 'The message field is required.',
-            'message.min'      => 'The message must be at least 3 characters.',
-            'message.max'      => 'The message must not exceed 20,000 characters.',
+            'message.min' => 'The message must be at least 3 characters.',
+            'message.max' => 'The message must not exceed 20,000 characters.',
         ];
     }
 
@@ -102,11 +105,12 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         $subject = $this->sanitizeSubject($validated['subject']);
         $message = $this->sanitizeMessage($validated['message']);
-        $slug    = Str::slug($subject);
+        $slug = Str::slug($subject);
 
         // Duplicate slug check (JSON column).
         if (EmailTemplate::whereJsonContains('template->slug', $slug)->exists()) {
             $this->addError('subject', 'A template with this subject already exists.');
+
             return;
         }
 
@@ -114,24 +118,27 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             DB::transaction(function () use ($slug, $subject, $message) {
                 EmailTemplate::create([
                     'template' => [
-                        'slug'    => $slug,
+                        'slug' => $slug,
                         'subject' => $subject,
                         'message' => $message,
                     ],
                 ]);
             });
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             if ($e->getCode() === '23000') {
                 $this->addError('subject', 'This template was just created. Please try again.');
+
                 return;
             }
 
             report($e);
             session()->flash('error', 'Could not create email template. Please try again.');
+
             return;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
             session()->flash('error', 'Could not create email template. Please try again.');
+
             return;
         }
 
@@ -159,8 +166,8 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     protected function sanitizeMessage(string $message): string
     {
         $allowed = '<p><br><br/><a><b><strong><i><em><u><s><ul><ol><li>'
-            . '<h1><h2><h3><h4><h5><h6><img><table><thead><tbody><tr><td><th>'
-            . '<div><span><hr><blockquote><pre><code>';
+            .'<h1><h2><h3><h4><h5><h6><img><table><thead><tbody><tr><td><th>'
+            .'<div><span><hr><blockquote><pre><code>';
 
         $clean = strip_tags($message, $allowed);
 

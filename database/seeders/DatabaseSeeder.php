@@ -3,18 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Database\Seeders\BatchSeeder;
-use Database\Seeders\CategorySeeder;
-use Database\Seeders\CourseSeeder;
-use Database\Seeders\DemoSeeder;
-use Database\Seeders\DepartmentSeeder;
-use Database\Seeders\EmailSeeder;
-use Database\Seeders\EventRsvpSeeder;
-use Database\Seeders\EventSeeder;
-use Database\Seeders\PermissionSeeder;
-use Database\Seeders\PhAddressSeeder;
-use Database\Seeders\PostSeeder;
-use Database\Seeders\RoleSeeder;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\PermissionRegistrar;
@@ -45,27 +33,27 @@ class DatabaseSeeder extends Seeder
         // Seed the three default accounts. Roles are already created
         // by RoleSeeder, so we just assign by name.
         $this->seedDefaultAccount(
-            email:      'registrar@csav.edu.ph',
-            firstName:  'Registrar',
-            lastName:   'CSAV',
-            schoolId:   '0001-0001',
-            role:       'registrar',
+            email: 'registrar@csav.edu.ph',
+            firstName: 'Registrar',
+            lastName: 'CSAV',
+            schoolId: '0001-0001',
+            role: 'registrar',
         );
 
         $this->seedDefaultAccount(
-            email:      'program-head@csav.edu.ph',
-            firstName:  'Program Head',
-            lastName:   'CSAV',
-            schoolId:   '0001-0002',
-            role:       'program head',
+            email: 'program-head@csav.edu.ph',
+            firstName: 'Program Head',
+            lastName: 'CSAV',
+            schoolId: '0001-0002',
+            role: 'program head',
         );
 
         $this->seedDefaultAccount(
-            email:      'alumni@csav.edu.ph',
-            firstName:  'Alumni',
-            lastName:   'CSAV',
-            schoolId:   '0001-0003',
-            role:       'alumni',
+            email: 'alumni@csav.edu.ph',
+            firstName: 'Alumni',
+            lastName: 'CSAV',
+            schoolId: '0001-0003',
+            role: 'alumni',
         );
     }
 
@@ -82,11 +70,11 @@ class DatabaseSeeder extends Seeder
         $user = User::firstOrCreate(
             ['email' => $email],
             [
-                'first_name'  => $firstName,
+                'first_name' => $firstName,
                 'middle_name' => null,
-                'last_name'   => $lastName,
-                'school_id'   => $schoolId,
-                'password'    => Hash::make('password123'),
+                'last_name' => $lastName,
+                'school_id' => $schoolId,
+                'password' => Hash::make('password123'),
             ]
         );
 

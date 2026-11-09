@@ -155,7 +155,7 @@
 
                     @foreach ($statusTabs as $value => $tab)
                         @php $isActive = $statusFilter === $value; @endphp
-                        <button type="button" wire:click="$set('statusFilter', '{{ $value }}')"
+                        <button type="button" wire:key="status-tab-{{ $value }}" wire:click="$set('statusFilter', '{{ $value }}')"
                             class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition
                                 {{ $isActive
                                     ? $tab['accent'] . ' border-transparent'

@@ -19,12 +19,33 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public string $search = '';
 
     #[Url]
-    public string $statusFilter = 'all';   // all | draft | published | cancelled | completed
+    public string $statusFilter = 'all';
 
     #[Url]
-    public string $timeFilter = 'all';     // all | upcoming | past
+    public string $timeFilter = 'all';
 
     protected int $perPage = 10;
+
+    // --- ADD THESE ---
+    public ?int $viewingEventId = null;
+
+    public function openEvent(int $id): void
+    {
+        $this->viewingEventId = $id;
+    }
+
+    public function closeEvent(): void
+    {
+        $this->viewingEventId = null;
+    }
+
+    #[Computed]
+    public function viewingEvent(): ?Event
+    {
+        if (! $this->viewingEventId) return null;
+        return Event::with('creator:id,name')->find($this->viewingEventId);
+    }
+    // -----------------
 
     public function updatingSearch(): void
     {
@@ -90,8 +111,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             return;
         }
 
-        // Guard: published events must be cancelled first so attendees
-        // get a cancellation email before the record disappears.
         if ($event->status === 'published') {
             session()->flash(
                 'error',
@@ -106,6 +125,11 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         if ($imagePath) {
             Storage::disk('public')->delete($imagePath);
+        }
+
+        // Close modal if we deleted the one being viewed
+        if ($this->viewingEventId === $id) {
+            $this->closeEvent();
         }
 
         session()->flash('success', 'Event deleted successfully.');

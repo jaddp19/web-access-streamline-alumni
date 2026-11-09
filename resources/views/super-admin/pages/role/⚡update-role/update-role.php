@@ -10,7 +10,9 @@ use Spatie\Permission\Models\Role;
 new #[Layout('layouts.app-super-admin')] class extends Component
 {
     public Role $role;
+
     public string $name = '';
+
     public array $selectedPermissions = [];
 
     public function mount(Role $role)
@@ -29,8 +31,8 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     protected function rules()
     {
         return [
-            'name'                  => 'required|string|min:3|unique:roles,name,' . $this->role->id,
-            'selectedPermissions'   => 'required|array|min:1',
+            'name' => 'required|string|min:3|unique:roles,name,'.$this->role->id,
+            'selectedPermissions' => 'required|array|min:1',
             'selectedPermissions.*' => 'exists:permissions,name',
         ];
     }
@@ -38,11 +40,11 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public function messages()
     {
         return [
-            'name.required'                => 'The role name is required.',
-            'name.min'                     => 'The role name must be at least 3 characters.',
-            'name.unique'                  => 'The role name is already taken.',
+            'name.required' => 'The role name is required.',
+            'name.min' => 'The role name must be at least 3 characters.',
+            'name.unique' => 'The role name is already taken.',
             'selectedPermissions.required' => 'Please select at least one permission.',
-            'selectedPermissions.min'      => 'Please select at least one permission.',
+            'selectedPermissions.min' => 'Please select at least one permission.',
         ];
     }
 
@@ -57,6 +59,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $this->role->syncPermissions($validated['selectedPermissions']);
 
         session()->flash('success', 'Role updated successfully!');
+
         return redirect()->route('view-role');
     }
 };

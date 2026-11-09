@@ -7,7 +7,9 @@ use Livewire\Component;
 new class extends Component
 {
     public string $name = '';
+
     public string $email = '';
+
     public string $message = '';
 
     // =========================================================
@@ -17,8 +19,8 @@ new class extends Component
     protected function rules(): array
     {
         return [
-            'name'    => ['required', 'string', 'min:2', 'max:120'],
-            'email'   => ['required', 'email:rfc,dns', 'max:255'],
+            'name' => ['required', 'string', 'min:2', 'max:120'],
+            'email' => ['required', 'email:rfc,dns', 'max:255'],
             'message' => ['required', 'string', 'min:10', 'max:5000'],
         ];
     }
@@ -26,13 +28,13 @@ new class extends Component
     protected function messages(): array
     {
         return [
-            'name.required'    => 'Please enter your name.',
-            'name.min'         => 'Name must be at least 2 characters.',
-            'email.required'   => 'Please enter your email address.',
-            'email.email'      => 'Please enter a valid email address.',
+            'name.required' => 'Please enter your name.',
+            'name.min' => 'Name must be at least 2 characters.',
+            'email.required' => 'Please enter your email address.',
+            'email.email' => 'Please enter a valid email address.',
             'message.required' => 'Please write your message.',
-            'message.min'      => 'Message must be at least 10 characters.',
-            'message.max'      => 'Message cannot exceed 5000 characters.',
+            'message.min' => 'Message must be at least 10 characters.',
+            'message.max' => 'Message cannot exceed 5000 characters.',
         ];
     }
 
@@ -45,8 +47,8 @@ new class extends Component
         $validated = $this->validate();
 
         // Sanitize before passing along.
-        $name    = trim(strip_tags($validated['name']));
-        $email   = trim(strip_tags($validated['email']));
+        $name = trim(strip_tags($validated['name']));
+        $email = trim(strip_tags($validated['email']));
         $message = trim(strip_tags($validated['message']));
 
         // 🎯 Where the email lands — the CSAV inbox that reads these.
@@ -62,9 +64,10 @@ new class extends Component
                 'contact_success',
                 "Thanks, {$name}! We'll get back to you at {$email} within 1–2 business days."
             );
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
             $this->addError('message', 'Could not send your message. Please try again later.');
+
             return;
         }
 

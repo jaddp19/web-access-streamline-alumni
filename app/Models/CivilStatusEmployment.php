@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\TracerStudy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,12 +9,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class CivilStatusEmployment extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'tracer_study_id',
         'civil_status',
-        'employment_status',  
-        'employment_status_other',     
-        'current_job_position',       
+        'employment_status',
+        'employment_status_other',
+        'current_job_position',
         'employed_related_to_degree',
         'employment_type',
         'organization_type',

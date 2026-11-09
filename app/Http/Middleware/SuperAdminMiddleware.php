@@ -16,13 +16,14 @@ class SuperAdminMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!Auth::check()) { 
+        if (! Auth::check()) {
             return redirect()->route('login');
         }
 
         if (! $request->user() || ! $request->user()->hasRole('super-admin')) {
             abort(403, 'Unauthorized');
         }
+
         return $next($request);
     }
 }

@@ -15,7 +15,7 @@ new class extends Component
     public function departments(): array
     {
         $cacheKey = 'landing:departments:v1';
-        $cached   = Cache::get($cacheKey);
+        $cached = Cache::get($cacheKey);
 
         if (! is_array($cached)) {
             Cache::forget($cacheKey);
@@ -28,10 +28,10 @@ new class extends Component
                 ->select('id', 'dept_name', 'dept_desc', 'dept_logo')
                 ->selectSub(function ($q) {
                     $q->from('student_course')
-                      ->join('courses', 'courses.id', '=', 'student_course.course_id')
-                      ->whereColumn('courses.department_id', 'departments.id')
-                      ->where('courses.is_active', true)
-                      ->selectRaw('COUNT(DISTINCT student_course.user_profile_id)');
+                        ->join('courses', 'courses.id', '=', 'student_course.course_id')
+                        ->whereColumn('courses.department_id', 'departments.id')
+                        ->where('courses.is_active', true)
+                        ->selectRaw('COUNT(DISTINCT student_course.user_profile_id)');
                 }, 'students_count')
                 ->with([
                     'courses' => fn ($q) => $q
@@ -42,14 +42,14 @@ new class extends Component
                 ->orderBy('dept_name')
                 ->get()
                 ->map(fn ($dept) => [
-                    'id'             => (int) $dept->id,
-                    'dept_name'      => (string) $dept->dept_name,
-                    'dept_desc'      => $dept->dept_desc ? (string) $dept->dept_desc : null,
-                    'dept_logo'      => $dept->dept_logo ? (string) $dept->dept_logo : null,
+                    'id' => (int) $dept->id,
+                    'dept_name' => (string) $dept->dept_name,
+                    'dept_desc' => $dept->dept_desc ? (string) $dept->dept_desc : null,
+                    'dept_logo' => $dept->dept_logo ? (string) $dept->dept_logo : null,
                     'students_count' => (int) $dept->students_count,
-                    'courses'        => $dept->courses
+                    'courses' => $dept->courses
                         ->map(fn ($c) => [
-                            'id'           => (int) $c->id,
+                            'id' => (int) $c->id,
                             'course_title' => (string) $c->course_title,
                         ])
                         ->all(),

@@ -14,10 +14,10 @@ class WorkHistoryFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id'        => User::factory(),
-            'work_name'      => fake()->jobTitle(),
-            'company_id'     => Company::factory(),
-            'date_hired'     => fake()->dateTimeBetween('-5 years', 'now'),
+            'user_id' => User::factory(),
+            'work_name' => fake()->jobTitle(),
+            'company_id' => Company::factory(),
+            'date_hired' => fake()->dateTimeBetween('-5 years', 'now'),
             'is_current_job' => fake()->boolean(60),
         ];
     }

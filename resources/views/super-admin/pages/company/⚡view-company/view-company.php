@@ -14,6 +14,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     use WithPagination;
 
     public array $selectedCompanies = [];
+
     public bool $selectAllFiltered = false;
 
     protected int $perPage = 10;
@@ -75,6 +76,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     {
         if ($this->selectAllFiltered) {
             $this->clearSelection();
+
             return;
         }
 
@@ -155,6 +157,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         Gate::authorize('can_delete');
         if ($this->selectedCount <= 0) {
             session()->flash('error', 'Nothing is selected.');
+
             return;
         }
 
@@ -175,9 +178,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
                 return ['count' => $count, 'logos' => $logos];
             });
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
-            session()->flash('error', 'Delete failed: ' . $e->getMessage());
+            session()->flash('error', 'Delete failed. Please try again.');
+
             return;
         }
 
@@ -202,6 +206,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         if (! $company) {
             session()->flash('error', 'Company not found.');
+
             return;
         }
 
@@ -210,9 +215,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         try {
             DB::transaction(fn () => $company->delete());
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
             session()->flash('error', 'Delete failed. Please try again.');
+
             return;
         }
 
@@ -236,10 +242,16 @@ new #[Layout('layouts.app-super-admin')] class extends Component
      */
     protected function deleteLogoFile(?string $path, ?int $exceptId = null): void
     {
-        if (blank($path)) return;
+        if (blank($path)) {
+            return;
+        }
 
-        if (filter_var($path, FILTER_VALIDATE_URL)) return;
-        if (str_starts_with($path, '/imgs/') || str_starts_with($path, '/storage/')) return;
+        if (filter_var($path, FILTER_VALIDATE_URL)) {
+            return;
+        }
+        if (str_starts_with($path, '/imgs/') || str_starts_with($path, '/storage/')) {
+            return;
+        }
 
         $relative = ltrim($path, '/');
 
@@ -248,7 +260,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             ->where('company_logo', $path)
             ->exists();
 
-        if ($stillUsed) return;
+        if ($stillUsed) {
+            return;
+        }
 
         Storage::disk('public')->delete($relative);
     }

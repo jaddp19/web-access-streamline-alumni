@@ -166,7 +166,7 @@ new #[Layout('layouts.app-form')] class extends Component
 
             if ($latestAttempt) {
                 $this->board_taken = $latestAttempt->date_taken?->format('Y-m-d');
-                $this->board_rate  = $latestAttempt->rate !== null
+                $this->board_rate = $latestAttempt->rate !== null
                     ? (string) $latestAttempt->rate
                     : '';
             } else {

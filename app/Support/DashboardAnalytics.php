@@ -210,20 +210,20 @@ class DashboardAnalytics
         $this->requireActiveUser($q);
 
         return $q->select(
-                'departments.id as dept_id',
-                'departments.dept_name',
-                'departments.dept_code',
-                DB::raw('COUNT(DISTINCT user_profiles.user_id) as total')
-            )
+            'departments.id as dept_id',
+            'departments.dept_name',
+            'departments.dept_code',
+            DB::raw('COUNT(DISTINCT user_profiles.user_id) as total')
+        )
             ->groupBy('departments.id', 'departments.dept_name', 'departments.dept_code')
             ->orderBy('departments.dept_name')
             ->get()
             ->mapWithKeys(fn ($r) => [
-                $r->dept_code ?: "DEPT-{$r->dept_id}" => [
-                    'name' => $r->dept_name,
-                    'total' => (int) $r->total,
-                ],
-            ])
+            $r->dept_code ?: "DEPT-{$r->dept_id}" => [
+                'name' => $r->dept_name,
+                'total' => (int) $r->total,
+            ],
+        ])
             ->toArray();
     }
 
@@ -252,14 +252,14 @@ class DashboardAnalytics
         $this->requireActiveUser($q);
 
         $rows = $q->select(
-                'departments.id as dept_id',
-                'departments.dept_code',
-                'departments.dept_name',
-                'courses.id as course_id',
-                'courses.course_code',
-                'courses.course_title',
-                DB::raw('COUNT(DISTINCT user_profiles.user_id) as total')
-            )
+            'departments.id as dept_id',
+            'departments.dept_code',
+            'departments.dept_name',
+            'courses.id as course_id',
+            'courses.course_code',
+            'courses.course_title',
+            DB::raw('COUNT(DISTINCT user_profiles.user_id) as total')
+        )
             ->groupBy(
                 'departments.id',
                 'departments.dept_code',
@@ -326,19 +326,19 @@ class DashboardAnalytics
         $this->requireActiveUser($q);
 
         return $q->select(
-                'batches.id as batch_id',
-                'batches.batch_name',
-                DB::raw('COUNT(DISTINCT user_profiles.user_id) as total')
-            )
+            'batches.id as batch_id',
+            'batches.batch_name',
+            DB::raw('COUNT(DISTINCT user_profiles.user_id) as total')
+        )
             ->groupBy('batches.id', 'batches.batch_name')
             ->orderBy('batches.batch_name')
             ->get()
             ->mapWithKeys(fn ($r) => [
-                (string) $r->batch_id => [
-                    'batch_name' => $r->batch_name,
-                    'total' => (int) $r->total,
-                ],
-            ])
+            (string) $r->batch_id => [
+                'batch_name' => $r->batch_name,
+                'total' => (int) $r->total,
+            ],
+        ])
             ->toArray();
     }
 
@@ -366,13 +366,13 @@ class DashboardAnalytics
         $this->requireActiveUser($q);
 
         $rows = $q->select(
-                'batches.id as batch_id',
-                'batches.batch_name',
-                'courses.id as course_id',
-                'courses.course_code',
-                'courses.course_title',
-                DB::raw('COUNT(DISTINCT user_profiles.user_id) as total')
-            )
+            'batches.id as batch_id',
+            'batches.batch_name',
+            'courses.id as course_id',
+            'courses.course_code',
+            'courses.course_title',
+            DB::raw('COUNT(DISTINCT user_profiles.user_id) as total')
+        )
             ->groupBy(
                 'batches.id',
                 'batches.batch_name',
@@ -436,16 +436,16 @@ class DashboardAnalytics
         $this->requireActiveUser($q);
 
         $rows = $q->select(
-                'batches.id as batch_id',
-                'batches.batch_name',
-                'departments.id as dept_id',
-                'departments.dept_code',
-                'departments.dept_name',
-                'courses.id as course_id',
-                'courses.course_code',
-                'courses.course_title',
-                DB::raw('COUNT(DISTINCT user_profiles.user_id) as total')
-            )
+            'batches.id as batch_id',
+            'batches.batch_name',
+            'departments.id as dept_id',
+            'departments.dept_code',
+            'departments.dept_name',
+            'courses.id as course_id',
+            'courses.course_code',
+            'courses.course_title',
+            DB::raw('COUNT(DISTINCT user_profiles.user_id) as total')
+        )
             ->groupBy(
                 'batches.id',
                 'batches.batch_name',
@@ -517,12 +517,12 @@ class DashboardAnalytics
         $this->requireActiveUser($q);
 
         $rows = $q->select(
-                'courses.course_code',
-                DB::raw('COUNT(DISTINCT CASE
+            'courses.course_code',
+            DB::raw('COUNT(DISTINCT CASE
                     WHEN civil_status_employments.employed_related_to_degree IN (\'yes\', \'partially-related\')
                     THEN user_profiles.user_id END) as related_count'),
-                DB::raw('COUNT(DISTINCT user_profiles.user_id) as employed_total')
-            )
+            DB::raw('COUNT(DISTINCT user_profiles.user_id) as employed_total')
+        )
             ->groupBy('courses.id', 'courses.course_code')
             ->havingRaw('COUNT(DISTINCT user_profiles.user_id) > 0')
             ->orderBy('courses.course_code')
@@ -552,15 +552,15 @@ class DashboardAnalytics
         $this->requireActiveUser($q);
 
         $rows = $q->select(
-                'departments.id as dept_id',
-                'departments.dept_code',
-                'departments.dept_name',
-                'courses.id as course_id',
-                'courses.course_code',
-                'courses.course_title',
-                DB::raw("COUNT(DISTINCT CASE WHEN civil_status_employments.employed_related_to_degree IN ('yes', 'partially-related') THEN user_profiles.user_id END) as related_count"),
-                DB::raw('COUNT(DISTINCT user_profiles.user_id) as employed_total')
-            )
+            'departments.id as dept_id',
+            'departments.dept_code',
+            'departments.dept_name',
+            'courses.id as course_id',
+            'courses.course_code',
+            'courses.course_title',
+            DB::raw("COUNT(DISTINCT CASE WHEN civil_status_employments.employed_related_to_degree IN ('yes', 'partially-related') THEN user_profiles.user_id END) as related_count"),
+            DB::raw('COUNT(DISTINCT user_profiles.user_id) as employed_total')
+        )
             ->groupBy(
                 'departments.id',
                 'departments.dept_code',
@@ -869,15 +869,15 @@ class DashboardAnalytics
         $this->requireActiveUser($q);
 
         $rows = $q->select(
-                'departments.id as dept_id',
-                'departments.dept_code',
-                'departments.dept_name',
-                'courses.id as course_id',
-                'courses.course_code',
-                'courses.course_title',
-                DB::raw('COUNT(DISTINCT board_exams.id) as total'),
-                DB::raw('MIN(board_exams.top_notcher_rank) as best_rank'),
-            )
+            'departments.id as dept_id',
+            'departments.dept_code',
+            'departments.dept_name',
+            'courses.id as course_id',
+            'courses.course_code',
+            'courses.course_title',
+            DB::raw('COUNT(DISTINCT board_exams.id) as total'),
+            DB::raw('MIN(board_exams.top_notcher_rank) as best_rank'),
+        )
             ->groupBy(
                 'departments.id',
                 'departments.dept_code',
@@ -893,23 +893,23 @@ class DashboardAnalytics
         $result = [];
 
         foreach ($rows as $row) {
-            $deptKey   = $row->dept_code ?: "DEPT-{$row->dept_id}";
+            $deptKey = $row->dept_code ?: "DEPT-{$row->dept_id}";
             $courseKey = $row->course_code ?: "COURSE-{$row->course_id}";
-            $count     = (int) $row->total;
-            $bestRank  = $row->best_rank !== null ? (int) $row->best_rank : null;
+            $count = (int) $row->total;
+            $bestRank = $row->best_rank !== null ? (int) $row->best_rank : null;
 
             if (! isset($result[$deptKey])) {
                 $result[$deptKey] = [
-                    'name'      => $row->dept_name,
-                    'total'     => 0,
+                    'name' => $row->dept_name,
+                    'total' => 0,
                     'best_rank' => null,
-                    'courses'   => [],
+                    'courses' => [],
                 ];
             }
 
             $result[$deptKey]['courses'][$courseKey] = [
-                'name'      => $row->course_title,
-                'total'     => $count,
+                'name' => $row->course_title,
+                'total' => $count,
                 'best_rank' => $bestRank,
             ];
 
@@ -972,11 +972,11 @@ class DashboardAnalytics
         }
 
         return [
-            'name'   => $row->user_name,
-            'rank'   => (int) $row->top_notcher_rank,
-            'rate'   => (float) $row->rate,
+            'name' => $row->user_name,
+            'rank' => (int) $row->top_notcher_rank,
+            'rate' => (float) $row->rate,
             'course' => $row->course_title,
-            'dept'   => $row->dept_name,
+            'dept' => $row->dept_name,
             'dept_code' => $row->dept_code,
         ];
     }
@@ -1016,14 +1016,14 @@ class DashboardAnalytics
         $this->requireActiveUser($q);
 
         $rows = $q->select(
-                'departments.id as dept_id',
-                'departments.dept_code',
-                'departments.dept_name',
-                'courses.id as course_id',
-                'courses.course_code',
-                'courses.course_title',
-                DB::raw('COUNT(DISTINCT user_profiles.user_id) as total'),
-            )
+            'departments.id as dept_id',
+            'departments.dept_code',
+            'departments.dept_name',
+            'courses.id as course_id',
+            'courses.course_code',
+            'courses.course_title',
+            DB::raw('COUNT(DISTINCT user_profiles.user_id) as total'),
+        )
             ->groupBy(
                 'departments.id',
                 'departments.dept_code',
@@ -1039,20 +1039,20 @@ class DashboardAnalytics
         $result = [];
 
         foreach ($rows as $row) {
-            $deptKey   = $row->dept_code ?: "DEPT-{$row->dept_id}";
+            $deptKey = $row->dept_code ?: "DEPT-{$row->dept_id}";
             $courseKey = $row->course_code ?: "COURSE-{$row->course_id}";
-            $count     = (int) $row->total;
+            $count = (int) $row->total;
 
             if (! isset($result[$deptKey])) {
                 $result[$deptKey] = [
-                    'name'    => $row->dept_name,
-                    'total'   => 0,
+                    'name' => $row->dept_name,
+                    'total' => 0,
                     'courses' => [],
                 ];
             }
 
             $result[$deptKey]['courses'][$courseKey] = [
-                'name'  => $row->course_title,
+                'name' => $row->course_title,
                 'total' => $count,
             ];
 

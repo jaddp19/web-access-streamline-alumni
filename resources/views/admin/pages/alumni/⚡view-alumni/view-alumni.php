@@ -89,8 +89,12 @@ new #[Layout('layouts.app-admin')] class extends Component
     public function departmentIds(): array
     {
         $user = Auth::user();
-        if (! $user) return [];
-        if ($user->hasRole('registrar')) return [];
+        if (! $user) {
+            return [];
+        }
+        if ($user->hasRole('registrar')) {
+            return [];
+        }
 
         return Department::where('program_head_id', $user->id)
             ->pluck('id')
@@ -102,9 +106,15 @@ new #[Layout('layouts.app-admin')] class extends Component
     public function hasAccess(): bool
     {
         $user = Auth::user();
-        if (! $user) return false;
-        if ($user->hasRole('registrar')) return true;
-        if ($user->hasRole('program head')) return ! empty($this->departmentIds);
+        if (! $user) {
+            return false;
+        }
+        if ($user->hasRole('registrar')) {
+            return true;
+        }
+        if ($user->hasRole('program head')) {
+            return ! empty($this->departmentIds);
+        }
 
         return false;
     }
@@ -176,20 +186,20 @@ new #[Layout('layouts.app-admin')] class extends Component
         }
 
         if ($this->search !== '') {
-            $term = '%' . trim($this->search) . '%';
+            $term = '%'.trim($this->search).'%';
             $q->where(function ($q) use ($term) {
                 $q->whereHas('user', function ($u) use ($term) {
                     $u->where(function ($inner) use ($term) {
                         $inner->where('name', 'like', $term)
-                              ->orWhere('email', 'like', $term)
-                              ->orWhere('school_id', 'like', $term);
+                            ->orWhere('email', 'like', $term)
+                            ->orWhere('school_id', 'like', $term);
                     });
                 })
-                ->orWhereHas('batch', fn ($b) => $b->where('batch_name', 'like', $term))
-                ->orWhereHas('courses', function ($c) use ($term) {
-                    $c->where('course_title', 'like', $term)
-                      ->orWhere('course_code', 'like', $term);
-                });
+                    ->orWhereHas('batch', fn ($b) => $b->where('batch_name', 'like', $term))
+                    ->orWhereHas('courses', function ($c) use ($term) {
+                        $c->where('course_title', 'like', $term)
+                            ->orWhere('course_code', 'like', $term);
+                    });
             });
         }
 
@@ -205,21 +215,21 @@ new #[Layout('layouts.app-admin')] class extends Component
 
         $base = $this->countsBaseQuery();
 
-        $all      = (clone $base)->count();
+        $all = (clone $base)->count();
         $approved = (clone $base)->where('is_approved', true)->count();
         $rejected = (clone $base)
             ->where('is_approved', false)
             ->whereNotNull('last_rejection_reason')
             ->count();
-        $pending  = (clone $base)
+        $pending = (clone $base)
             ->where('is_approved', false)
             ->whereNull('last_rejection_reason')
             ->count();
 
         return [
-            'all'      => $all,
+            'all' => $all,
             'approved' => $approved,
-            'pending'  => $pending,
+            'pending' => $pending,
             'rejected' => $rejected,
         ];
     }
@@ -269,21 +279,21 @@ new #[Layout('layouts.app-admin')] class extends Component
         }
 
         if ($this->search !== '') {
-            $term = '%' . trim($this->search) . '%';
+            $term = '%'.trim($this->search).'%';
 
             $query->where(function ($q) use ($term) {
                 $q->whereHas('user', function ($u) use ($term) {
                     $u->where(function ($inner) use ($term) {
                         $inner->where('name', 'like', $term)
-                              ->orWhere('email', 'like', $term)
-                              ->orWhere('school_id', 'like', $term);
+                            ->orWhere('email', 'like', $term)
+                            ->orWhere('school_id', 'like', $term);
                     });
                 })
-                ->orWhereHas('batch', fn ($b) => $b->where('batch_name', 'like', $term))
-                ->orWhereHas('courses', function ($c) use ($term) {
-                    $c->where('course_title', 'like', $term)
-                      ->orWhere('course_code', 'like', $term);
-                });
+                    ->orWhereHas('batch', fn ($b) => $b->where('batch_name', 'like', $term))
+                    ->orWhereHas('courses', function ($c) use ($term) {
+                        $c->where('course_title', 'like', $term)
+                            ->orWhere('course_code', 'like', $term);
+                    });
             });
         }
 
@@ -312,7 +322,7 @@ new #[Layout('layouts.app-admin')] class extends Component
     {
         abort_unless($this->hasAccess, 403);
 
-        $filename = 'alumni-' . now()->format('Y-m-d_His') . '.csv';
+        $filename = 'alumni-'.now()->format('Y-m-d_His').'.csv';
 
         $query = $this->filteredQuery()
             ->with([

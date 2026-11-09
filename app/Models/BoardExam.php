@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class BoardExam extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'user_profile_id',
         'exam_name',
@@ -24,11 +25,11 @@ class BoardExam extends Model
     ];
 
     protected $casts = [
-        'date_taken'     => 'date',
-        'rate'           => 'decimal:2',
-        'passed'         => 'boolean',
-        'is_verified'    => 'boolean',
-        'verified_at'    => 'datetime',
+        'date_taken' => 'date',
+        'rate' => 'decimal:2',
+        'passed' => 'boolean',
+        'is_verified' => 'boolean',
+        'verified_at' => 'datetime',
         'is_top_notcher' => 'boolean',
     ];
 

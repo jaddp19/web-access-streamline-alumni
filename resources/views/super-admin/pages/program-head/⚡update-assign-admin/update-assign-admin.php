@@ -2,6 +2,7 @@
 
 use App\Models\Department;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -12,14 +13,16 @@ use Livewire\Component;
 new #[Layout('layouts.app-super-admin')] class extends Component
 {
     public Department $department;
+
     public ?int $user_id = null;
+
     public ?int $department_id = null;
 
     public function mount(Department $department): void
     {
         Gate::authorize('can_update');
-        $this->department    = $department;
-        $this->user_id       = $department->program_head_id;
+        $this->department = $department;
+        $this->user_id = $department->program_head_id;
         $this->department_id = $department->id;
     }
 
@@ -31,7 +34,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public function users(): array
     {
         $cacheKey = 'assign:program-head-users:v2';
-        $cached   = Cache::get($cacheKey);
+        $cached = Cache::get($cacheKey);
 
         if (! is_array($cached)) {
             Cache::forget($cacheKey);
@@ -55,7 +58,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public function departments(): array
     {
         $cacheKey = 'assign:active-departments:v2';
-        $cached   = Cache::get($cacheKey);
+        $cached = Cache::get($cacheKey);
 
         if (! is_array($cached)) {
             Cache::forget($cacheKey);
@@ -68,8 +71,8 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                 ->orderBy('dept_name')
                 ->get(['id', 'dept_name', 'program_head_id'])
                 ->map(fn ($d) => [
-                    'id'              => (int) $d->id,
-                    'dept_name'       => (string) $d->dept_name,
+                    'id' => (int) $d->id,
+                    'dept_name' => (string) $d->dept_name,
                     'program_head_id' => $d->program_head_id ? (int) $d->program_head_id : null,
                 ])
                 ->all();
@@ -121,7 +124,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     protected function rules(): array
     {
         return [
-            'user_id'       => ['required', 'integer', Rule::exists('users', 'id')],
+            'user_id' => ['required', 'integer', Rule::exists('users', 'id')],
             'department_id' => ['required', 'integer', Rule::exists('departments', 'id')],
         ];
     }
@@ -129,10 +132,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public function messages(): array
     {
         return [
-            'user_id.required'       => 'You must select a user.',
-            'user_id.exists'         => 'Selected user does not exist.',
+            'user_id.required' => 'You must select a user.',
+            'user_id.exists' => 'Selected user does not exist.',
             'department_id.required' => 'You must select a department.',
-            'department_id.exists'   => 'Selected department does not exist.',
+            'department_id.exists' => 'Selected department does not exist.',
         ];
     }
 
@@ -152,6 +155,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         if (! $hasRole) {
             $this->addError('user_id', 'Selected user must already have the Program Head role.');
+
             return;
         }
 
@@ -171,21 +175,24 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                     ->firstOrFail()
                     ->update(['program_head_id' => $validated['user_id']]);
             });
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             if ($e->getCode() === '23000' || str_contains($e->getMessage(), 'uniq_departments_program_head')) {
                 $this->addError(
                     'user_id',
                     'Assignment conflict — please refresh and try again.'
                 );
+
                 return;
             }
 
             report($e);
             session()->flash('error', 'Could not update program head. Please try again.');
+
             return;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
             session()->flash('error', 'Could not update program head. Please try again.');
+
             return;
         }
 

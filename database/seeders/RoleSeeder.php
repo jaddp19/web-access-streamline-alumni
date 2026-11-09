@@ -27,7 +27,7 @@ class RoleSeeder extends Seeder
      * Keys are role names, values are arrays of permission names.
      */
     protected array $rolePermissions = [
-        'registrar'    => [
+        'registrar' => [
             'can_view_any',
             'can_view',
             'can_create',
@@ -38,13 +38,13 @@ class RoleSeeder extends Seeder
             'can_view',
             'can_create',
             'can_update',
-            'can_delete'
+            'can_delete',
         ],
-        'alumni'       => [
+        'alumni' => [
             'can_view',
             'can_create',
             'can_update',
-            'can_delete'
+            'can_delete',
         ],
     ];
 
@@ -58,7 +58,7 @@ class RoleSeeder extends Seeder
         // ── 1. Permissions ────────────────────────────────────
         foreach ($this->permissions as $name) {
             Permission::firstOrCreate([
-                'name'       => $name,
+                'name' => $name,
                 'guard_name' => 'web',
             ]);
         }
@@ -66,7 +66,7 @@ class RoleSeeder extends Seeder
         // ── 2. Roles ──────────────────────────────────────────
         foreach (array_keys($this->rolePermissions) as $name) {
             Role::firstOrCreate([
-                'name'       => $name,
+                'name' => $name,
                 'guard_name' => 'web',
             ]);
         }

@@ -12,7 +12,9 @@ use Illuminate\Support\Facades\Storage;
 class Event extends Model
 {
     use HasFactory, LogsActivity;
+
     protected array $auditExclude = ['id', 'slug'];
+
     protected $fillable = [
         'title',
         'slug',
@@ -28,10 +30,10 @@ class Event extends Model
     ];
 
     protected $casts = [
-        'starts_at'             => 'datetime',
-        'ends_at'               => 'datetime',
+        'starts_at' => 'datetime',
+        'ends_at' => 'datetime',
         'registration_deadline' => 'datetime',
-        'capacity'              => 'integer',
+        'capacity' => 'integer',
     ];
 
     // =========================================================
@@ -98,8 +100,13 @@ class Event extends Model
 
     public function registrationOpen(): bool
     {
-        if ($this->status !== 'published') return false;
-        if ($this->registration_deadline && now()->isAfter($this->registration_deadline)) return false;
+        if ($this->status !== 'published') {
+            return false;
+        }
+        if ($this->registration_deadline && now()->isAfter($this->registration_deadline)) {
+            return false;
+        }
+
         return true;
     }
 
@@ -117,7 +124,10 @@ class Event extends Model
     /** Has this specific user RSVP'd? */
     public function rsvpFor(?int $userId): ?EventRsvp
     {
-        if (! $userId) return null;
+        if (! $userId) {
+            return null;
+        }
+
         return $this->rsvps()->where('user_id', $userId)->first();
     }
 
@@ -127,7 +137,9 @@ class Event extends Model
 
     public function getImageUrlAttribute(): ?string
     {
-        if (! $this->image) return null;
+        if (! $this->image) {
+            return null;
+        }
 
         return filter_var($this->image, FILTER_VALIDATE_URL)
             ? $this->image

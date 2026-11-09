@@ -151,7 +151,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         return $this->tracerBreakdowns['months_to_first_job'];
     }
 
-        // ===== Top Notchers =====
+    // ===== Top Notchers =====
 
     #[Computed]
     public function topNotchersByDeptAndCourse(): array
@@ -178,9 +178,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $key = array_key_first($items);
 
         return [
-            'code'      => $key,
-            'name'      => $items[$key]['name'],
-            'total'     => $items[$key]['total'],
+            'code' => $key,
+            'name' => $items[$key]['name'],
+            'total' => $items[$key]['total'],
             'best_rank' => $items[$key]['best_rank'] ?? null,
         ];
     }
@@ -199,7 +199,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $this->dispatch('batch-changed');
     }
 
-        // ===== Board Passers =====
+    // ===== Board Passers =====
 
     #[Computed]
     public function boardExamBreakdown(): array

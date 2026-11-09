@@ -67,12 +67,12 @@ new #[Layout('layouts.app-alumni')] class extends Component
             ->first();
 
         $payload = [
-            'exam_name'  => $examName,
+            'exam_name' => $examName,
             'date_taken' => $validated['board_taken'] ?: null,
-            'rate'       => filled($validated['board_rate'])
+            'rate' => filled($validated['board_rate'])
                 ? round((float) $validated['board_rate'], 2)
                 : null,
-            'passed'     => filled($validated['board_rate'])
+            'passed' => filled($validated['board_rate'])
                 ? ((float) $validated['board_rate'] >= UserProfile::BOARD_PASSING_RATE)
                 : false,
         ];
@@ -99,7 +99,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
         $isBoard = $this->targetIsBoardCourse();
 
         return [
-            'batch_id'  => ['required', 'integer', Rule::exists('batches', 'id')],
+            'batch_id' => ['required', 'integer', Rule::exists('batches', 'id')],
             'course_id' => ['required', 'integer', Rule::exists('courses', 'id')],
             'is_public' => ['boolean'],
 
@@ -242,40 +242,40 @@ new #[Layout('layouts.app-alumni')] class extends Component
         }
 
         $courseId = (int) $validated['course_id'];
-        $batchId  = (int) $validated['batch_id'];
+        $batchId = (int) $validated['batch_id'];
 
         $selectedCourse = Course::query()
             ->select('id', 'course_title', 'course_type', 'department_id')
             ->find($courseId);
 
         $isBoardCourse = $selectedCourse?->course_type === 'board';
-        $examName      = $selectedCourse?->course_title;
+        $examName = $selectedCourse?->course_title;
 
         $wasBoardCourse = $this->original_course_id
             ? (Course::whereKey($this->original_course_id)->value('course_type') === 'board')
             : false;
 
         $courseChanged = $courseId !== (int) $this->original_course_id;
-        $wasVerified   = (bool) $profile->is_verified;
+        $wasVerified = (bool) $profile->is_verified;
 
         // ── Build the profile payload ────────────────────────────────
         $profileData = [
-            'batch_id'   => $batchId,
+            'batch_id' => $batchId,
             'is_private' => ! $validated['is_public'],
         ];
 
         if ($isBoardCourse) {
             $profileData['board_taken'] = $validated['board_taken'] ?: null;
-            $profileData['board_rate']  = filled($validated['board_rate'])
+            $profileData['board_rate'] = filled($validated['board_rate'])
                 ? round((float) $validated['board_rate'], 2)
                 : null;
         } else {
             $profileData['board_taken'] = null;
-            $profileData['board_rate']  = null;
+            $profileData['board_rate'] = null;
         }
 
         if ($courseChanged) {
-            $profileData['is_approved']           = false;
+            $profileData['is_approved'] = false;
             $profileData['last_rejection_reason'] = null;
         }
 
@@ -300,7 +300,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
                     $profile->forceFill([
                         'board_taken' => null,
-                        'board_rate'  => null,
+                        'board_rate' => null,
                         'is_verified' => true,
                     ])->saveQuietly();
                 } else {
@@ -312,9 +312,9 @@ new #[Layout('layouts.app-alumni')] class extends Component
                         // board → DIFFERENT board: reset every existing attempt
                         // then treat the submission as "unverified edit in place".
                         $profile->boardExams()->reorder()->update([
-                            'is_verified'      => false,
-                            'verified_at'      => null,
-                            'is_top_notcher'   => false,
+                            'is_verified' => false,
+                            'verified_at' => null,
+                            'is_top_notcher' => false,
                             'top_notcher_rank' => null,
                         ]);
 
@@ -358,7 +358,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
                 $profile->courses()->sync([$courseId]);
             });
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
             session()->flash('error', 'Could not save changes. Please try again.');
 
@@ -373,23 +373,17 @@ new #[Layout('layouts.app-alumni')] class extends Component
         unset($this->selectedCourse, $this->courses);
 
         session()->flash('success', match (true) {
-            ! $isBoardCourse
-                => 'Educational background updated successfully.',
+            ! $isBoardCourse => 'Educational background updated successfully.',
 
-            $courseChanged
-                => 'Course updated. Your board exam details are now pending verification.',
+            $courseChanged => 'Course updated. Your board exam details are now pending verification.',
 
-            $wasVerified && $boardChanged && ($this->board_taken || $this->board_rate !== '')
-                => 'Educational background updated. A new board attempt has been recorded — please wait for the registrar to verify it.',
+            $wasVerified && $boardChanged && ($this->board_taken || $this->board_rate !== '') => 'Educational background updated. A new board attempt has been recorded — please wait for the registrar to verify it.',
 
-            ! $wasVerified && $boardChanged && ($this->board_taken || $this->board_rate !== '')
-                => 'Your board exam details have been updated — please wait for the registrar to verify them.',
+            ! $wasVerified && $boardChanged && ($this->board_taken || $this->board_rate !== '') => 'Your board exam details have been updated — please wait for the registrar to verify them.',
 
-            $boardChanged
-                => 'Educational background updated. Board exam details cleared.',
+            $boardChanged => 'Educational background updated. Board exam details cleared.',
 
-            default
-                => 'Educational background updated successfully.',
+            default => 'Educational background updated successfully.',
         });
 
         return redirect()->route('alumni.profile');

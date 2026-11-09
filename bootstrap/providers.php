@@ -1,8 +1,9 @@
 <?php
 
 use App\Providers\AppServiceProvider;
+use App\Providers\EnvKitTrustProxies;
 
 return [
-    App\Providers\EnvKitTrustProxies::class,
+    EnvKitTrustProxies::class,
     AppServiceProvider::class,
 ];

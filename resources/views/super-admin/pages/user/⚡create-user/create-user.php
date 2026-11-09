@@ -3,6 +3,7 @@
 use App\Models\Batch;
 use App\Models\User;
 use App\Services\EmailTemplateService;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -17,13 +18,18 @@ use Spatie\Permission\Models\Role;
 new #[Layout('layouts.app-super-admin')] class extends Component
 {
     public string $first_name = '';
-    public string $middle_name = '';
-    public string $last_name = '';
-    public string $email = '';
-    public string $school_year = '';         // dropdown (from batches.batch_name)
-    public string $school_id_suffix = '';    // 4-digit input
-    public string $selectedRole = '';
 
+    public string $middle_name = '';
+
+    public string $last_name = '';
+
+    public string $email = '';
+
+    public string $school_year = '';         // dropdown (from batches.batch_name)
+
+    public string $school_id_suffix = '';    // 4-digit input
+
+    public string $selectedRole = '';
 
     public function mount(): void
     {
@@ -44,7 +50,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             return null;
         }
 
-        return 'csav.' . Str::of($this->selectedRole)
+        return 'csav.'.Str::of($this->selectedRole)
             ->lower()
             ->replace(' ', '-')
             ->toString();
@@ -73,7 +79,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             return '';
         }
 
-        return $this->school_year . '-' . $this->school_id_suffix;
+        return $this->school_year.'-'.$this->school_id_suffix;
     }
 
     /**
@@ -113,13 +119,13 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     protected function rules(): array
     {
         return [
-            'first_name'  => 'required|string|min:2|max:255',
+            'first_name' => 'required|string|min:2|max:255',
             'middle_name' => 'nullable|string|max:255',
-            'last_name'   => 'required|string|min:2|max:255',
+            'last_name' => 'required|string|min:2|max:255',
 
             'email' => [
                 'required',
-                'email:rfc,',  
+                'email:rfc,',
                 'max:255',
                 Rule::unique('users', 'email'),
             ],
@@ -132,7 +138,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                     if (strlen($this->school_id_suffix) !== 4) {
                         return;
                     }
-                    $combined = $value . '-' . $this->school_id_suffix;
+                    $combined = $value.'-'.$this->school_id_suffix;
                     if (User::where('school_id', $combined)->exists()) {
                         $fail('This school ID is already registered to an account.');
                     }
@@ -155,21 +161,21 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public function messages(): array
     {
         return [
-            'first_name.required'         => 'The first name is required.',
-            'first_name.min'              => 'The first name must be at least 2 characters.',
-            'first_name.max'              => 'The first name may not be greater than 255 characters.',
-            'last_name.required'          => 'The last name is required.',
-            'last_name.min'               => 'The last name must be at least 2 characters.',
-            'last_name.max'               => 'The last name may not be greater than 255 characters.',
-            'school_year.required'        => 'Please select a batch year.',
-            'school_year.in'              => 'The selected batch year is invalid.',
-            'school_id_suffix.required'   => 'Please enter the last 4 digits of the school ID.',
-            'school_id_suffix.digits'     => 'The last 4 digits must be numeric.',
-            'email.unique'                => 'The email address is already registered.',
-            'email.required'              => 'The email address is required.',
-            'email.email'                 => 'The email address is invalid.',
-            'selectedRole.required'       => 'Please select a role.',
-            'selectedRole.in'             => 'The selected role is invalid.',
+            'first_name.required' => 'The first name is required.',
+            'first_name.min' => 'The first name must be at least 2 characters.',
+            'first_name.max' => 'The first name may not be greater than 255 characters.',
+            'last_name.required' => 'The last name is required.',
+            'last_name.min' => 'The last name must be at least 2 characters.',
+            'last_name.max' => 'The last name may not be greater than 255 characters.',
+            'school_year.required' => 'Please select a batch year.',
+            'school_year.in' => 'The selected batch year is invalid.',
+            'school_id_suffix.required' => 'Please enter the last 4 digits of the school ID.',
+            'school_id_suffix.digits' => 'The last 4 digits must be numeric.',
+            'email.unique' => 'The email address is already registered.',
+            'email.required' => 'The email address is required.',
+            'email.email' => 'The email address is invalid.',
+            'selectedRole.required' => 'Please select a role.',
+            'selectedRole.in' => 'The selected role is invalid.',
         ];
     }
 
@@ -183,35 +189,35 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $validated = $this->validate();
 
         // Sanitize once, into locals — no repeated Str::of allocations.
-        $firstName  = $this->sanitize($validated['first_name']);
+        $firstName = $this->sanitize($validated['first_name']);
         $middleName = $validated['middle_name'] ? $this->sanitize($validated['middle_name']) : null;
-        $lastName   = $this->sanitize($validated['last_name']);
-        $email      = $this->sanitize($validated['email']);
-        $schoolId   = $this->schoolId;   // composed from school_year + school_id_suffix
+        $lastName = $this->sanitize($validated['last_name']);
+        $email = $this->sanitize($validated['email']);
+        $schoolId = $this->schoolId;   // composed from school_year + school_id_suffix
 
         $plainPassword = $this->generatedPassword;
-        $role          = $validated['selectedRole'];
-        $fullName      = trim(implode(' ', array_filter([$firstName, $middleName, $lastName])));
+        $role = $validated['selectedRole'];
+        $fullName = trim(implode(' ', array_filter([$firstName, $middleName, $lastName])));
 
         try {
             $user = DB::transaction(function () use (
                 $firstName, $middleName, $lastName, $email, $schoolId, $plainPassword, $role
             ) {
                 $user = User::create([
-                    'first_name'  => $firstName,
+                    'first_name' => $firstName,
                     'middle_name' => $middleName,
-                    'last_name'   => $lastName,
+                    'last_name' => $lastName,
                     // 'name' auto-fills via User model's saving hook
-                    'email'       => $email,
-                    'school_id'   => $schoolId,
-                    'password'    => Hash::make($plainPassword),
+                    'email' => $email,
+                    'school_id' => $schoolId,
+                    'password' => Hash::make($plainPassword),
                 ]);
 
                 $user->syncRoles($role);
 
                 return $user;
             });
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             // Race condition — someone inserted the same email/school_id
             // between validation and this insert. Show a friendly error.
             if ($e->getCode() === '23000' || str_contains($e->getMessage(), 'Duplicate entry')) {
@@ -219,6 +225,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                     str_contains($e->getMessage(), 'school_id') ? 'school_id_suffix' : 'email',
                     'This value was just registered by another account. Please refresh and try again.'
                 );
+
                 return;
             }
 
@@ -245,10 +252,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     protected function templateSlugForRole(string $role): string
     {
         return match (Str::lower($role)) {
-            'alumni'       => 'welcome-to-the-csav-alumni-network-name',
+            'alumni' => 'welcome-to-the-csav-alumni-network-name',
             'program head' => 'welcome-program-head',
-            'registrar'    => 'welcome-registrar',
-            default        => 'your-csav-alumni-network-staff-account-has-been-created',
+            'registrar' => 'welcome-registrar',
+            default => 'your-csav-alumni-network-staff-account-has-been-created',
         };
     }
 
@@ -264,25 +271,25 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                 $this->templateSlugForRole($role),
                 $email,
                 [
-                    'name'          => $fullName,
-                    'school_email'  => $email,
-                    'login_url'     => route('login'),
+                    'name' => $fullName,
+                    'school_email' => $email,
+                    'login_url' => route('login'),
                     'temp_password' => $plainPassword,
-                    'role'          => Str::headline($role),
+                    'role' => Str::headline($role),
                 ]
             );
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // User is already created — don't 500 the page. Log and
             // surface a non-blocking warning.
             Log::error('Welcome email failed', [
                 'user_id' => $user->id,
-                'role'    => $role,
-                'error'   => $e->getMessage(),
+                'role' => $role,
+                'error' => $e->getMessage(),
             ]);
 
             session()->flash(
                 'warning',
-                "User was created, but the welcome email could not be sent. Please notify them manually."
+                'User was created, but the welcome email could not be sent. Please notify them manually.'
             );
         }
     }

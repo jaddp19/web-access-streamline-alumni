@@ -37,9 +37,9 @@ class UserProfileObserver
 
         try {
             EmailTemplateService::send($template, $user->email, [
-                'name'      => $user->name,
+                'name' => $user->name,
                 'login_url' => route('login'),
-                'changes'   => implode(', ', array_map(
+                'changes' => implode(', ', array_map(
                     fn ($f) => Str::headline($f),
                     $changed
                 )),

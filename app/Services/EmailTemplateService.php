@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Mail\TemplatedMail;
 use App\Models\EmailTemplate;
+use App\Models\UserProfile;
 use Illuminate\Support\Facades\Mail;
 
 class EmailTemplateService
@@ -22,11 +23,12 @@ class EmailTemplateService
 
         if (! $record) {
             logger()->warning("Email template not found for slug: {$slug}");
+
             return;
         }
 
         $subject = self::merge($record->template['subject'] ?? '', $placeholders);
-        $body    = self::merge($record->template['message'] ?? '', $placeholders);
+        $body = self::merge($record->template['message'] ?? '', $placeholders);
 
         Mail::to($toEmail)->queue(new TemplatedMail($subject, $body));
     }
@@ -41,7 +43,7 @@ class EmailTemplateService
             return true;
         }
 
-        $profile = \App\Models\UserProfile::query()
+        $profile = UserProfile::query()
             ->whereHas('user', fn ($q) => $q->where('email', $email))
             ->first();
 
@@ -68,7 +70,7 @@ class EmailTemplateService
     protected static function merge(string $text, array $placeholders): string
     {
         foreach ($placeholders as $key => $value) {
-            $text = str_replace('{{' . $key . '}}', $value, $text);
+            $text = str_replace('{{'.$key.'}}', $value, $text);
         }
 
         return $text;

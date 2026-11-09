@@ -14,7 +14,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     use WithPagination;
 
     public array $selectedPrograms = [];
+
     public bool $selectAllFiltered = false;
+
     public bool $selectAllOnPage = false;
 
     protected int $perPage = 10;
@@ -30,9 +32,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     protected function clearSelection(): void
     {
-        $this->selectedPrograms   = [];
-        $this->selectAllFiltered  = false;
-        $this->selectAllOnPage    = false;
+        $this->selectedPrograms = [];
+        $this->selectAllFiltered = false;
+        $this->selectAllOnPage = false;
 
         unset($this->selectedCount);
         unset($this->pageRowIds);
@@ -102,6 +104,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     {
         if ($this->allSelected) {
             $this->clearSelection();
+
             return;
         }
 
@@ -109,8 +112,8 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         // isRowSelected() both honor this flag, so every row everywhere
         // is treated as selected without needing to load all IDs.
         $this->selectAllFiltered = true;
-        $this->selectedPrograms  = [];
-        $this->selectAllOnPage   = true;
+        $this->selectedPrograms = [];
+        $this->selectAllOnPage = true;
 
         unset($this->selectedCount);
         unset($this->allSelected);
@@ -178,6 +181,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         if ($this->selectAllFiltered) {
             return true;
         }
+
         return in_array($id, $this->selectedPrograms, true);
     }
 
@@ -189,8 +193,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             && empty(array_diff($pageIds, $this->selectedPrograms));
     }
 
-    
-
     // =========================================================
     //  ACTIONS
     // =========================================================
@@ -200,6 +202,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         Gate::authorize('can_delete');
         if ($this->selectedCount <= 0) {
             session()->flash('error', 'Nothing is selected.');
+
             return;
         }
 
@@ -224,18 +227,19 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                     Course::whereIn('id', $targetIds)
                 );
             });
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
-            session()->flash('error', 'Delete failed: ' . $e->getMessage());
+            session()->flash('error', 'Delete failed. Please try again.');
+
             return;
         }
 
         Cache::forget('courses:count');
         Cache::forget('dashboard:course-analytics');
 
-        $this->selectedPrograms  = [];
+        $this->selectedPrograms = [];
         $this->selectAllFiltered = false;
-        $this->selectAllOnPage   = false;
+        $this->selectAllOnPage = false;
 
         unset($this->selectedCount);
         unset($this->totalProgramsCount);

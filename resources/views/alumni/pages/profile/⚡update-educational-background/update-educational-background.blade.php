@@ -92,7 +92,7 @@
                         @foreach ($recentYears as $year)
                             @if (isset($yearToBatch[$year]))
                                 @php $batchId = $yearToBatch[$year]; @endphp
-                                <button type="button" wire:click="$set('batch_id', {{ $batchId }})"
+                                <button type="button" wire:key="year-{{ $year }}" wire:click="$set('batch_id', {{ $batchId }})"
                                     class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition
                                             {{ (int) $batch_id === $batchId
                                                 ? 'bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524] border-[#123524] dark:border-[#D4A537]'

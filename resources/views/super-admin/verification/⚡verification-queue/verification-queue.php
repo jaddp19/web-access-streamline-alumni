@@ -133,12 +133,12 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         // Validate any top notcher ranks the registrar typed in.
         $this->validate([
-            'topNotcherRank'   => 'array',
+            'topNotcherRank' => 'array',
             'topNotcherRank.*' => 'nullable|integer|min:1|max:100',
         ], [
             'topNotcherRank.*.integer' => 'Top notcher rank must be a whole number.',
-            'topNotcherRank.*.min'     => 'Top notcher rank must be at least 1.',
-            'topNotcherRank.*.max'     => 'Top notcher rank cannot exceed 100.',
+            'topNotcherRank.*.min' => 'Top notcher rank must be at least 1.',
+            'topNotcherRank.*.max' => 'Top notcher rank cannot exceed 100.',
         ]);
 
         $user = User::with('userProfile.courses:id,course_title,course_type,department_id')->find($userId);
@@ -200,13 +200,13 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
                 foreach ($pendingAttempts as $attempt) {
                     $rawRank = $rankInput[$attempt->id] ?? null;
-                    $rank    = is_numeric($rawRank) ? (int) $rawRank : null;
-                    $isTop   = $rank !== null && $rank > 0;
+                    $rank = is_numeric($rawRank) ? (int) $rawRank : null;
+                    $isTop = $rank !== null && $rank > 0;
 
                     $attempt->update([
-                        'is_verified'      => true,
-                        'verified_at'      => now(),
-                        'is_top_notcher'   => $isTop,
+                        'is_verified' => true,
+                        'verified_at' => now(),
+                        'is_top_notcher' => $isTop,
                         'top_notcher_rank' => $isTop ? $rank : null,
                     ]);
                 }
@@ -228,23 +228,23 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         try {
             if ($profile->is_verified) {
                 EmailTemplateService::send('profile-approved', $user->email, [
-                    'name'        => $user->name,
+                    'name' => $user->name,
                     'approved_at' => now()->format('F j, Y · g:i A'),
                     'approved_by' => Auth::user()?->name ?? 'the registrar',
-                    'login_url'   => route('login'),
+                    'login_url' => route('login'),
                 ]);
             } else {
                 EmailTemplateService::send('profile-verified-not-passer', $user->email, [
-                    'name'        => $user->name,
+                    'name' => $user->name,
                     'verified_at' => now()->format('F j, Y · g:i A'),
                     'verified_by' => Auth::user()?->name ?? 'the registrar',
-                    'login_url'   => route('login'),
+                    'login_url' => route('login'),
                 ]);
             }
         } catch (\Throwable $e) {
             Log::warning('Approval email failed', [
                 'user_id' => $user->id,
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
         }
         // ────────────────────────────────────────────────────────────
@@ -255,10 +255,8 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         Cache::forget('verification:pending-count');
 
         session()->flash('status', match (true) {
-            $profile->is_verified
-                => "{$user->name} has been verified as a board passer.",
-            default
-                => "{$user->name}'s board records were verified, but no passing attempt was found — the profile stays unverified publicly.",
+            $profile->is_verified => "{$user->name} has been verified as a board passer.",
+            default => "{$user->name}'s board records were verified, but no passing attempt was found — the profile stays unverified publicly.",
         });
     }
 

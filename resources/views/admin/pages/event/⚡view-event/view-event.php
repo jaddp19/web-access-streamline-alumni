@@ -5,7 +5,6 @@ namespace App\Livewire\Admin;
 use App\Jobs\SendEventCancellationEmail;
 use App\Models\Event;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
@@ -16,15 +15,53 @@ new #[Layout('layouts.app-admin')] class extends Component
 {
     use WithPagination;
 
-    #[Url] public string $search = '';
-    #[Url] public string $statusFilter = 'all';   // all | draft | published | cancelled | completed
-    #[Url] public string $timeFilter = 'upcoming'; // upcoming | past | all
+    #[Url]
+    public string $search = '';
+
+    #[Url]
+    public string $statusFilter = 'all';   // all | draft | published | cancelled | completed
+
+    #[Url]
+    public string $timeFilter = 'upcoming'; // upcoming | past | all
 
     protected int $perPage = 10;
 
-    public function updatingSearch(): void { $this->resetPage(); }
-    public function updatingStatusFilter(): void { $this->resetPage(); }
-    public function updatingTimeFilter(): void { $this->resetPage(); }
+    // --- ADDED FOR MODAL ---
+    public ?int $viewingEventId = null;
+
+    public function openEvent(int $id): void
+    {
+        $this->viewingEventId = $id;
+    }
+
+    public function closeEvent(): void
+    {
+        $this->viewingEventId = null;
+    }
+
+    #[Computed]
+    public function viewingEvent(): ?Event
+    {
+        if (! $this->viewingEventId) return null;
+        
+        return Event::with('creator:id,name')->find($this->viewingEventId);
+    }
+    // -----------------------
+
+    public function updatingSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingStatusFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingTimeFilter(): void
+    {
+        $this->resetPage();
+    }
 
     public function clearFilters(): void
     {
@@ -58,11 +95,11 @@ new #[Layout('layouts.app-admin')] class extends Component
             ->when($this->timeFilter === 'upcoming', fn ($q) => $q->where('starts_at', '>=', now()))
             ->when($this->timeFilter === 'past', fn ($q) => $q->where('starts_at', '<', now()))
             ->when($this->search !== '', function ($q) {
-                $term = '%' . $this->search . '%';
+                $term = '%'.$this->search.'%';
                 $q->where(function ($inner) use ($term) {
                     $inner->where('title', 'like', $term)
-                          ->orWhere('location', 'like', $term)
-                          ->orWhere('description', 'like', $term);
+                        ->orWhere('location', 'like', $term)
+                        ->orWhere('description', 'like', $term);
                 });
             })
             ->orderByDesc('starts_at')
@@ -121,12 +158,9 @@ new #[Layout('layouts.app-admin')] class extends Component
         session()->flash(
             'success',
             match (true) {
-                $wasPublished && $attendeeCount > 0
-                    => "Event cancelled. {$attendeeCount} attendee(s) have been notified.",
-                $wasPublished
-                    => 'Event cancelled. No attendees to notify.',
-                default
-                    => 'Event cancelled.',
+                $wasPublished && $attendeeCount > 0 => "Event cancelled. {$attendeeCount} attendee(s) have been notified.",
+                $wasPublished => 'Event cancelled. No attendees to notify.',
+                default => 'Event cancelled.',
             }
         );
     }

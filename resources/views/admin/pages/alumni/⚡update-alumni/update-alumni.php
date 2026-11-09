@@ -2,60 +2,66 @@
 
 use App\Models\Batch;
 use App\Models\User;
-use App\Models\UserProfile;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 new #[Layout('layouts.app-admin')] class extends Component
 {
+    #[Locked]
     public User $user;
 
     public string $first_name = '';
+
     public string $middle_name = '';
+
     public string $last_name = '';
+
     public string $email = '';
+
     public string $school_year = '';         // dropdown (from batches.batch_name)
+
     public string $school_id_suffix = '';    // 4-digit input
 
     public function mount(User $user): void
     {
-        Gate::authorize('can_update');
+        Gate::authorize('update', $user);
         $this->user = $user->load([
             'userProfile:id,user_id,batch_id',
         ]);
 
         // Hydrate name parts. If empty (legacy user), split from `name`.
-        $first  = $user->first_name;
+        $first = $user->first_name;
         $middle = $user->middle_name;
-        $last   = $user->last_name;
+        $last = $user->last_name;
 
         if (! $first && ! $last && $user->name) {
-            $split  = preg_split('/\s+/', trim($user->name));
-            $first  = $split[0] ?? '';
-            $last   = count($split) > 1 ? end($split) : '';
+            $split = preg_split('/\s+/', trim($user->name));
+            $first = $split[0] ?? '';
+            $last = count($split) > 1 ? end($split) : '';
             $middle = count($split) > 2
                 ? implode(' ', array_slice($split, 1, -1))
                 : '';
         }
 
-        $this->first_name  = $first ?? '';
+        $this->first_name = $first ?? '';
         $this->middle_name = $middle ?? '';
-        $this->last_name   = $last ?? '';
+        $this->last_name = $last ?? '';
 
         $this->email = $user->email ?? '';
 
         // Split the stored "YYYY-NNNN" back into year + suffix.
-        $this->school_year      = '';
+        $this->school_year = '';
         $this->school_id_suffix = '';
 
         if ($user->school_id && str_contains($user->school_id, '-')) {
             [$year, $suffix] = explode('-', $user->school_id, 2);
-            $this->school_year      = $year;
+            $this->school_year = $year;
             $this->school_id_suffix = $suffix;
         }
 
@@ -111,9 +117,9 @@ new #[Layout('layouts.app-admin')] class extends Component
     protected function rules(): array
     {
         return [
-            'first_name'  => ['required', 'string', 'min:2', 'max:255'],
+            'first_name' => ['required', 'string', 'min:2', 'max:255'],
             'middle_name' => ['nullable', 'string', 'max:255'],
-            'last_name'   => ['required', 'string', 'min:2', 'max:255'],
+            'last_name' => ['required', 'string', 'min:2', 'max:255'],
 
             'email' => [
                 'required', 'email:rfc,dns', 'max:255',
@@ -144,19 +150,19 @@ new #[Layout('layouts.app-admin')] class extends Component
     public function messages(): array
     {
         return [
-            'first_name.required'        => 'The first name is required.',
-            'first_name.min'             => 'The first name must be at least 2 characters.',
-            'first_name.max'             => 'The first name may not be greater than 255 characters.',
-            'last_name.required'         => 'The last name is required.',
-            'last_name.min'              => 'The last name must be at least 2 characters.',
-            'last_name.max'              => 'The last name may not be greater than 255 characters.',
-            'email.required'             => 'The email field is required.',
-            'email.email'                => 'The email must be a valid email address.',
-            'email.unique'               => 'This email is already registered.',
-            'school_year.required'       => 'Please select a batch year.',
-            'school_year.in'             => 'The selected batch year is invalid.',
-            'school_id_suffix.required'  => 'Please enter the last 4 digits of the school ID.',
-            'school_id_suffix.digits'    => 'The last 4 digits must be numeric.',
+            'first_name.required' => 'The first name is required.',
+            'first_name.min' => 'The first name must be at least 2 characters.',
+            'first_name.max' => 'The first name may not be greater than 255 characters.',
+            'last_name.required' => 'The last name is required.',
+            'last_name.min' => 'The last name must be at least 2 characters.',
+            'last_name.max' => 'The last name may not be greater than 255 characters.',
+            'email.required' => 'The email field is required.',
+            'email.email' => 'The email must be a valid email address.',
+            'email.unique' => 'This email is already registered.',
+            'school_year.required' => 'Please select a batch year.',
+            'school_year.in' => 'The selected batch year is invalid.',
+            'school_id_suffix.required' => 'Please enter the last 4 digits of the school ID.',
+            'school_id_suffix.digits' => 'The last 4 digits must be numeric.',
         ];
     }
 
@@ -166,42 +172,45 @@ new #[Layout('layouts.app-admin')] class extends Component
 
     public function updateAlumni()
     {
-        Gate::authorize('can_update');
+        Gate::authorize('update', $this->user);
 
         $validated = $this->validate();
 
-        $firstName  = $this->sanitize($validated['first_name']);
+        $firstName = $this->sanitize($validated['first_name']);
         $middleName = $validated['middle_name'] ? $this->sanitize($validated['middle_name']) : null;
-        $lastName   = $this->sanitize($validated['last_name']);
-        $email      = $this->sanitize($validated['email']);
-        $schoolId   = $this->schoolId;   // composed from school_year + school_id_suffix
+        $lastName = $this->sanitize($validated['last_name']);
+        $email = $this->sanitize($validated['email']);
+        $schoolId = $this->schoolId;   // composed from school_year + school_id_suffix
 
         try {
             DB::transaction(function () use (
-                $firstName, $middleName, $lastName, $email, $schoolId, $validated
+                $firstName, $middleName, $lastName, $email, $schoolId
             ) {
                 // 1. Update the user record.
                 $this->user->update([
-                    'first_name'  => $firstName,
+                    'first_name' => $firstName,
                     'middle_name' => $middleName,
-                    'last_name'   => $lastName,
-                    'email'       => $email,
-                    'school_id'   => $schoolId,
+                    'last_name' => $lastName,
+                    'email' => $email,
+                    'school_id' => $schoolId,
                 ]);
             });
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             if ($e->getCode() === '23000') {
                 $field = str_contains($e->getMessage(), 'school_id') ? 'school_id_suffix' : 'email';
                 $this->addError($field, 'This value was just taken by another account. Please refresh and try again.');
+
                 return;
             }
 
             report($e);
             session()->flash('error', 'Could not update the alumni account. Please try again.');
+
             return;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
             session()->flash('error', 'Could not update the alumni account. Please try again.');
+
             return;
         }
 

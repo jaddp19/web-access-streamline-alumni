@@ -156,6 +156,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     {
         if ($this->allSelected) {
             $this->clearSelection();
+
             return;
         }
 
@@ -317,9 +318,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                     ->whereNotNull('program_head_id')
                     ->update(['program_head_id' => null]);
             });
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
-            session()->flash('error', 'Delete failed: '.$e->getMessage());
+            session()->flash('error', 'Delete failed. Please try again.');
 
             return;
         }

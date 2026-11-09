@@ -14,20 +14,49 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 {
     use WithPagination;
 
-    #[Url] public string $search = '';
-    #[Url] public string $actionFilter = 'all';
-    #[Url] public string $typeFilter = 'all';
-    #[Url] public string $userFilter = 'all';
-    #[Url] public string $dateRange = '30';
+    #[Url]
+    public string $search = '';
+
+    #[Url]
+    public string $actionFilter = 'all';
+
+    #[Url]
+    public string $typeFilter = 'all';
+
+    #[Url]
+    public string $userFilter = 'all';
+
+    #[Url]
+    public string $dateRange = '30';
 
     public ?int $viewingLogId = null;
+
     protected int $perPage = 20;
 
-    public function updatingSearch(): void { $this->resetPage(); }
-    public function updatingActionFilter(): void { $this->resetPage(); }
-    public function updatingTypeFilter(): void { $this->resetPage(); }
-    public function updatingUserFilter(): void { $this->resetPage(); }
-    public function updatingDateRange(): void { $this->resetPage(); }
+    public function updatingSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingActionFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingTypeFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingUserFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingDateRange(): void
+    {
+        $this->resetPage();
+    }
 
     public function clearFilters(): void
     {
@@ -46,18 +75,18 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             ->with('user:id,name')
             ->when($this->actionFilter !== 'all', fn ($q) => $q->where('action', $this->actionFilter))
             ->when($this->typeFilter !== 'all', function ($q) {
-                $q->where('auditable_type', 'App\\Models\\' . $this->typeFilter);
+                $q->where('auditable_type', 'App\\Models\\'.$this->typeFilter);
             })
             ->when($this->userFilter !== 'all', fn ($q) => $q->where('user_id', $this->userFilter))
             ->when($this->dateRange !== 'all', function ($q) {
                 $q->where('created_at', '>=', now()->subDays((int) $this->dateRange));
             })
             ->when($this->search !== '', function ($q) {
-                $term = '%' . trim($this->search) . '%';
+                $term = '%'.trim($this->search).'%';
                 // Search indexed/smaller columns only — type has its own filter.
                 $q->where(function ($inner) use ($term) {
                     $inner->where('user_name', 'like', $term)
-                          ->orWhere('auditable_id', 'like', $term);
+                        ->orWhere('auditable_id', 'like', $term);
                 });
             })
             ->latest('created_at')
@@ -122,15 +151,15 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         if (! $this->viewingLogId) {
             return null;
         }
-        
+
         return AuditLog::find($this->viewingLogId);
     }
-    
+
     #[Computed]
     public function currentModel(): ?Model
     {
         $log = $this->viewingLog;
-        
+
         if (! $log || ! $log->auditable_type || ! class_exists($log->auditable_type)) {
             return null;
         }

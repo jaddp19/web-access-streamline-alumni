@@ -27,6 +27,35 @@ new #[Layout('layouts.app-admin')] class extends Component
 
     protected int $perPage = 10;
 
+    // --- ADDED FOR MODAL ---
+    public ?int $viewingPostId = null;
+
+    public function openPost(int $id): void
+    {
+        $this->viewingPostId = $id;
+    }
+
+    public function closePost(): void
+    {
+        $this->viewingPostId = null;
+    }
+
+    #[Computed]
+    public function viewingPost(): ?Post
+    {
+        if (! $this->viewingPostId) return null;
+        
+        return Post::with([
+            'user:id,name',
+            'user.userProfile:id,user_id,avatar',
+            'user.roles:id,name',
+            'category:id,cat_name',
+        ])
+        ->where('user_id', Auth::id()) // Security: ensure they can only view their own
+        ->find($this->viewingPostId);
+    }
+    // -----------------------
+
     public function updatedSearch(): void
     {
         $this->resetPage();
@@ -58,7 +87,7 @@ new #[Layout('layouts.app-admin')] class extends Component
     public function categories(): array
     {
         $cacheKey = 'posts:categories:v1';
-        $cached   = Cache::get($cacheKey);
+        $cached = Cache::get($cacheKey);
 
         if (! is_array($cached)) {
             Cache::forget($cacheKey);
@@ -93,13 +122,13 @@ new #[Layout('layouts.app-admin')] class extends Component
             ->when($this->statusFilter !== 'all', fn ($q) => $q->where('status', $this->statusFilter))
             ->when($this->categoryFilter !== 'all', fn ($q) => $q->where('category_id', $this->categoryFilter))
             ->when($this->search !== '', function ($q) {
-                $term = '%' . $this->search . '%';
+                $term = '%'.$this->search.'%';
 
                 $q->where(function ($inner) use ($term) {
                     $inner->where('title', 'like', $term)
-                          ->orWhere('description', 'like', $term)
-                          ->orWhere('slug', 'like', $term)
-                          ->orWhereHas('category', fn ($c) => $c->where('cat_name', 'like', $term));
+                        ->orWhere('description', 'like', $term)
+                        ->orWhere('slug', 'like', $term)
+                        ->orWhereHas('category', fn ($c) => $c->where('cat_name', 'like', $term));
                 });
             })
             ->latest()
@@ -137,7 +166,7 @@ new #[Layout('layouts.app-admin')] class extends Component
 
         try {
             DB::transaction(fn () => $post->delete());
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
             session()->flash('error', 'Failed to delete post. Please try again.');
             return;
@@ -148,6 +177,11 @@ new #[Layout('layouts.app-admin')] class extends Component
             if (is_string($file) && ! filter_var($file, FILTER_VALIDATE_URL)) {
                 Storage::disk('public')->delete($file);
             }
+        }
+
+        // Close modal if we just deleted it
+        if ($this->viewingPostId === $id) {
+            $this->closePost();
         }
 
         session()->flash('success', 'Post deleted successfully.');
@@ -172,7 +206,7 @@ new #[Layout('layouts.app-admin')] class extends Component
 
                 return $post->status;
             });
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
             session()->flash('error', 'Failed to update status.');
             return;

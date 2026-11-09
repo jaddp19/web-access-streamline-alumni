@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Department;
-use App\Models\User;
 use App\Support\DashboardAnalytics;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
@@ -11,6 +10,7 @@ use Livewire\Component;
 new #[Layout('layouts.app-admin')] class extends Component
 {
     public $selectedBatchId = '';
+
     protected ?DashboardAnalytics $analyticsInstance = null;
 
     public function updatedSelectedBatchId(): void
@@ -23,8 +23,12 @@ new #[Layout('layouts.app-admin')] class extends Component
     public function scope(): int|false|null
     {
         $user = Auth::user();
-        if (! $user) return false;
-        if ($user->hasRole('registrar')) return null;
+        if (! $user) {
+            return false;
+        }
+        if ($user->hasRole('registrar')) {
+            return null;
+        }
 
         return Department::where('program_head_id', $user->id)->value('id') ?? false;
     }
@@ -64,7 +68,10 @@ new #[Layout('layouts.app-admin')] class extends Component
     #[Computed]
     public function batches(): array
     {
-        if ($this->hasNoDepartment) return [];
+        if ($this->hasNoDepartment) {
+            return [];
+        }
+
         return $this->analytics()->batches();
     }
 
@@ -73,42 +80,60 @@ new #[Layout('layouts.app-admin')] class extends Component
     #[Computed]
     public function users(): int
     {
-        if ($this->hasNoDepartment) return 0;
+        if ($this->hasNoDepartment) {
+            return 0;
+        }
+
         return $this->analytics()->users();
     }
 
     #[Computed]
     public function alumni(): int
     {
-        if ($this->hasNoDepartment) return 0;
+        if ($this->hasNoDepartment) {
+            return 0;
+        }
+
         return $this->analytics()->alumni();
     }
 
     #[Computed]
     public function boardPassers(): int
     {
-        if ($this->hasNoDepartment) return 0;
+        if ($this->hasNoDepartment) {
+            return 0;
+        }
+
         return $this->analytics()->boardPassers();
     }
 
     #[Computed]
     public function pendingVerification(): int
     {
-        if ($this->hasNoDepartment) return 0;
+        if ($this->hasNoDepartment) {
+            return 0;
+        }
+
         return $this->analytics()->pendingVerifications();
     }
 
     #[Computed]
     public function courses(): int
     {
-        if ($this->hasNoDepartment) return 0;
+        if ($this->hasNoDepartment) {
+            return 0;
+        }
+
         return $this->analytics()->courses();
     }
 
     #[Computed]
     public function programHeads(): int
     {
-        if ($this->hasNoDepartment) return 0;
+        if ($this->hasNoDepartment) {
+            return 0;
+        }
+
         return $this->analytics()->programHeads();
     }
 
@@ -155,8 +180,8 @@ new #[Layout('layouts.app-admin')] class extends Component
     {
         return $this->hasNoDepartment
             ? ['employment_status' => [], 'employment_type' => [], 'organization_type' => [],
-               'employment_area' => [], 'civil_status' => [], 'job_alignment' => [],
-               'months_to_first_job' => []]
+                'employment_area' => [], 'civil_status' => [], 'job_alignment' => [],
+                'months_to_first_job' => []]
             : $this->analytics()->tracerBreakdowns();
     }
 
@@ -266,9 +291,9 @@ new #[Layout('layouts.app-admin')] class extends Component
         $key = array_key_first($items);
 
         return [
-            'code'      => $key,
-            'name'      => $items[$key]['name'],
-            'total'     => $items[$key]['total'],
+            'code' => $key,
+            'name' => $items[$key]['name'],
+            'total' => $items[$key]['total'],
             'best_rank' => $items[$key]['best_rank'] ?? null,
         ];
     }

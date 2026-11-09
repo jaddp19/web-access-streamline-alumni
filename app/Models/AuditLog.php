@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -27,7 +26,7 @@ class AuditLog extends Model
     ];
 
     protected $casts = [
-        'changes'    => 'array',
+        'changes' => 'array',
         'created_at' => 'datetime',
     ];
 
@@ -54,7 +53,7 @@ class AuditLog extends Model
     public function scopeForModel($query, string $type, int $id)
     {
         return $query->where('auditable_type', $type)
-                     ->where('auditable_id', $id);
+            ->where('auditable_id', $id);
     }
 
     public function scopeAction($query, string $action)
@@ -74,15 +73,15 @@ class AuditLog extends Model
     /** Pre-formatted summary string, e.g. "Maria Santos updated a User". */
     public function getSummaryAttribute(): string
     {
-        $who  = $this->user_name ?? 'System';
+        $who = $this->user_name ?? 'System';
         $what = class_basename($this->auditable_type);
 
         return match ($this->action) {
-            'created'  => "{$who} created a {$what}",
-            'updated'  => "{$who} updated a {$what}",
-            'deleted'  => "{$who} deleted a {$what}",
+            'created' => "{$who} created a {$what}",
+            'updated' => "{$who} updated a {$what}",
+            'deleted' => "{$who} deleted a {$what}",
             'restored' => "{$who} restored a {$what}",
-            default    => "{$who} performed {$this->action} on a {$what}",
+            default => "{$who} performed {$this->action} on a {$what}",
         };
     }
 

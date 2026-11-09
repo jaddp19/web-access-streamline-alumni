@@ -10,6 +10,7 @@ use Spatie\Permission\Models\Role;
 new #[Layout('layouts.app-super-admin')] class extends Component
 {
     public $name = '';
+
     public $selectedPermissions = [];
 
     #[Computed]
@@ -21,8 +22,8 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public function rules()
     {
         return [
-            'name'                  => 'required|string|min:3|unique:roles,name',
-            'selectedPermissions'   => 'required|array|min:1',
+            'name' => 'required|string|min:3|unique:roles,name',
+            'selectedPermissions' => 'required|array|min:1',
             'selectedPermissions.*' => 'exists:permissions,name',
         ];
     }
@@ -30,11 +31,11 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public function messages()
     {
         return [
-            'name.required'                 => 'The role name is required.',
-            'name.min'                      => 'The role name must be at least 3 characters.',
-            'name.unique'                   => 'The role name is already taken.',
-            'selectedPermissions.required'  => 'Please select at least one permission.',
-            'selectedPermissions.min'       => 'Please select at least one permission.',
+            'name.required' => 'The role name is required.',
+            'name.min' => 'The role name must be at least 3 characters.',
+            'name.unique' => 'The role name is already taken.',
+            'selectedPermissions.required' => 'Please select at least one permission.',
+            'selectedPermissions.min' => 'Please select at least one permission.',
         ];
     }
 
@@ -45,7 +46,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $roleName = Str::of($this->name)->trim()->title()->lower()->toString();
 
         $role = Role::create([
-            'name'       => $roleName,
+            'name' => $roleName,
             'guard_name' => 'web',
         ]);
 

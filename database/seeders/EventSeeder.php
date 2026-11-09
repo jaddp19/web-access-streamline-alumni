@@ -22,11 +22,13 @@ class EventSeeder extends Seeder
 
         if ($authors->isEmpty()) {
             $this->command->error('→ Events: SKIPPED — no registrar or program head found.');
+
             return;
         }
 
         if (Event::query()->exists()) {
             $this->command->warn('→ Events: already seeded — skipping.');
+
             return;
         }
 
@@ -44,7 +46,7 @@ class EventSeeder extends Seeder
                 $roll <= 50 => 'upcoming',
                 $roll <= 80 => 'past',
                 $roll <= 90 => 'cancelled',
-                default     => 'draft',
+                default => 'draft',
             };
 
             $title = $titles[$i % count($titles)];
@@ -52,17 +54,17 @@ class EventSeeder extends Seeder
             [$startsAt, $endsAt, $deadline, $status] = $this->timingFor($state);
 
             Event::create([
-                'title'                 => $title,
-                'slug'                  => $this->uniqueSlug($title),
-                'description'           => $this->description($state),
-                'image'                 => null, // seeded events have no banner image
-                'starts_at'             => $startsAt,
-                'ends_at'               => $endsAt,
+                'title' => $title,
+                'slug' => $this->uniqueSlug($title),
+                'description' => $this->description($state),
+                'image' => null, // seeded events have no banner image
+                'starts_at' => $startsAt,
+                'ends_at' => $endsAt,
                 'registration_deadline' => $deadline,
-                'location'              => $this->location(),
-                'capacity'              => fake()->boolean(60) ? fake()->randomElement([30, 50, 75, 100, 150, 200]) : null,
-                'status'                => $status,
-                'created_by'            => $author->id,
+                'location' => $this->location(),
+                'capacity' => fake()->boolean(60) ? fake()->randomElement([30, 50, 75, 100, 150, 200]) : null,
+                'status' => $status,
+                'created_by' => $author->id,
             ]);
 
             $bar->advance();
@@ -85,17 +87,17 @@ class EventSeeder extends Seeder
     {
         return match ($state) {
             'upcoming' => $this->upcomingTiming(),
-            'past'     => $this->pastTiming(),
+            'past' => $this->pastTiming(),
             'cancelled' => $this->cancelledTiming(),
-            'draft'    => $this->draftTiming(),
-            default    => $this->upcomingTiming(),
+            'draft' => $this->draftTiming(),
+            default => $this->upcomingTiming(),
         };
     }
 
     protected function upcomingTiming(): array
     {
         $starts = fake()->dateTimeBetween('+3 days', '+6 months');
-        $ends   = (clone $starts)->modify('+'.fake()->numberBetween(2, 8).' hours');
+        $ends = (clone $starts)->modify('+'.fake()->numberBetween(2, 8).' hours');
         $deadline = (clone $starts)->modify('-'.fake()->numberBetween(1, 3).' days');
 
         return [$starts, $ends, $deadline, 'published'];
@@ -104,7 +106,7 @@ class EventSeeder extends Seeder
     protected function pastTiming(): array
     {
         $starts = fake()->dateTimeBetween('-1 year', '-7 days');
-        $ends   = (clone $starts)->modify('+'.fake()->numberBetween(2, 8).' hours');
+        $ends = (clone $starts)->modify('+'.fake()->numberBetween(2, 8).' hours');
         $deadline = (clone $starts)->modify('-2 days');
 
         return [$starts, $ends, $deadline, 'completed'];
@@ -113,7 +115,7 @@ class EventSeeder extends Seeder
     protected function cancelledTiming(): array
     {
         $starts = fake()->dateTimeBetween('-3 months', '+2 months');
-        $ends   = (clone $starts)->modify('+4 hours');
+        $ends = (clone $starts)->modify('+4 hours');
         $deadline = (clone $starts)->modify('-2 days');
 
         return [$starts, $ends, $deadline, 'cancelled'];
@@ -123,7 +125,7 @@ class EventSeeder extends Seeder
     {
         // Draft events don't show anywhere public — arbitrary future date.
         $starts = fake()->dateTimeBetween('+1 month', '+1 year');
-        $ends   = (clone $starts)->modify('+4 hours');
+        $ends = (clone $starts)->modify('+4 hours');
         $deadline = (clone $starts)->modify('-3 days');
 
         return [$starts, $ends, $deadline, 'draft'];
@@ -185,8 +187,8 @@ class EventSeeder extends Seeder
 
         $body = match ($state) {
             'cancelled' => 'Please note that this event has been cancelled. We apologize for any inconvenience. A rescheduled date will be announced soon.',
-            'draft'     => 'Details are still being finalized. This event is not yet open for registration.',
-            default     => 'Come reconnect with classmates, meet fellow alumni, and hear updates from the college. Refreshments will be served. Registration is required to reserve your slot.',
+            'draft' => 'Details are still being finalized. This event is not yet open for registration.',
+            default => 'Come reconnect with classmates, meet fellow alumni, and hear updates from the college. Refreshments will be served. Registration is required to reserve your slot.',
         };
 
         return fake()->randomElement($openers).' a meaningful gathering of the CSAV alumni community.'."\n\n".$body;

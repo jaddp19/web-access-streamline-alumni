@@ -46,9 +46,9 @@ class AlumniVerificationService
                         [
                             'type' => 'text',
                             'text' => 'This is a school ID, diploma, or yearbook photo submitted as proof of alumni status. '
-                                . 'Extract the full name, school name, and graduation year if visible. '
-                                . 'Respond ONLY with valid JSON, no other text, in this exact shape: '
-                                . '{"name": "", "school": "", "year": "", "document_looks_legitimate": true}',
+                                .'Extract the full name, school name, and graduation year if visible. '
+                                .'Respond ONLY with valid JSON, no other text, in this exact shape: '
+                                .'{"name": "", "school": "", "year": "", "document_looks_legitimate": true}',
                         ],
                     ],
                 ]],
@@ -56,6 +56,7 @@ class AlumniVerificationService
 
             if ($response->failed()) {
                 Log::error('Alumni verification API call failed', ['body' => $response->body()]);
+
                 return $this->failedResult();
             }
 
@@ -64,7 +65,8 @@ class AlumniVerificationService
             $extracted = json_decode($text, true) ?? [];
 
         } catch (\Throwable $e) {
-            Log::error('Alumni verification exception: ' . $e->getMessage());
+            Log::error('Alumni verification exception: '.$e->getMessage());
+
             return $this->failedResult();
         }
 

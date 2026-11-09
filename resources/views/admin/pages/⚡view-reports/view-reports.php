@@ -368,10 +368,10 @@ new #[Layout('layouts.app-admin')] class extends Component
     {
         if ($this->hasNoDepartment) {
             return [
-                'verified_alumni'    => 0,
-                'passed_alumni'      => 0,
+                'verified_alumni' => 0,
+                'passed_alumni' => 0,
                 'top_notcher_alumni' => 0,
-                'pass_rate'          => 0.0,
+                'pass_rate' => 0.0,
             ];
         }
 
@@ -384,11 +384,11 @@ new #[Layout('layouts.app-admin')] class extends Component
     public function reportLabel(): string
     {
         return match ($this->tab) {
-            'employment'    => 'Yearly Alumni Employment Statistics',
-            'industry'      => 'Top Industries & Employers of Alumni',
-            'engagement'    => 'Alumni Engagement Participation Rates',
+            'employment' => 'Yearly Alumni Employment Statistics',
+            'industry' => 'Top Industries & Employers of Alumni',
+            'engagement' => 'Alumni Engagement Participation Rates',
             'board_passers' => 'Alumni Board Passers & Top Notchers',
-            default         => 'Report',
+            default => 'Report',
         };
     }
 

@@ -14,29 +14,29 @@ class UserProfileFactory extends Factory
     public function definition(): array
     {
         $hasSecondContact = fake()->boolean(25);   // ~25% have a backup number
-        $isPrivate        = fake()->boolean(10);   // ~10% hide their profile
+        $isPrivate = fake()->boolean(10);   // ~10% hide their profile
 
         return [
-            'user_id'               => User::factory(),
-            'avatar'                => null,        // seeded alumni don't have real photos
-            'gender'                => fake()->randomElement(['male', 'female', 'other']),
-            'contact_number_1'      => fake()->unique()->numerify('09#########'),
-            'contact_number_2'      => $hasSecondContact ? fake()->numerify('09#########') : null,
-            'location'              => $this->sampleLocation(),
-            'batch_id'              => Batch::query()->inRandomOrder()->value('id') ?? Batch::factory(),
-            'is_private'            => $isPrivate,
+            'user_id' => User::factory(),
+            'avatar' => null,        // seeded alumni don't have real photos
+            'gender' => fake()->randomElement(['male', 'female', 'other']),
+            'contact_number_1' => fake()->unique()->numerify('09#########'),
+            'contact_number_2' => $hasSecondContact ? fake()->numerify('09#########') : null,
+            'location' => $this->sampleLocation(),
+            'batch_id' => Batch::query()->inRandomOrder()->value('id') ?? Batch::factory(),
+            'is_private' => $isPrivate,
 
             // Cached mirror — kept in sync by syncBoardMirrors().
             // Default false; real value is derived from board_exams by the seeder.
-            'is_verified'           => false,
+            'is_verified' => false,
 
             // Approval workflow — default is pending (matches migration default).
-            'is_approved'           => false,
+            'is_approved' => false,
             'last_rejection_reason' => null,
 
             // Mirror columns — filled by syncBoardMirrors() after attempts exist.
-            'board_taken'           => null,
-            'board_rate'            => null,
+            'board_taken' => null,
+            'board_rate' => null,
         ];
     }
 
@@ -48,7 +48,7 @@ class UserProfileFactory extends Factory
     public function approved(): static
     {
         return $this->state(fn () => [
-            'is_approved'           => true,
+            'is_approved' => true,
             'last_rejection_reason' => null,
             // is_verified is left to the seeder to derive from board_exams.
         ]);
@@ -58,7 +58,7 @@ class UserProfileFactory extends Factory
     public function pending(): static
     {
         return $this->state(fn () => [
-            'is_approved'           => false,
+            'is_approved' => false,
             'last_rejection_reason' => null,
         ]);
     }
@@ -67,8 +67,8 @@ class UserProfileFactory extends Factory
     public function rejected(?string $reason = null): static
     {
         return $this->state(fn () => [
-            'is_approved'           => false,
-            'is_verified'           => false,
+            'is_approved' => false,
+            'is_verified' => false,
             'last_rejection_reason' => $reason ?? fake()->randomElement([
                 'Board rating doesn\'t match the official PRC records. Please update and resubmit.',
                 'School ID appears incorrect. Please double-check and resubmit.',
@@ -118,20 +118,20 @@ class UserProfileFactory extends Factory
         $street = fake()->streetAddress();
 
         return [
-            'address_type'   => 'philippines',
+            'address_type' => 'philippines',
             'street_address' => $street,
-            'region_code'    => '0600000000',
-            'region_name'    => 'Region VI (Western Visayas)',
-            'province_code'  => '0604500000',
-            'province_name'  => 'Negros Occidental',
-            'city_code'      => '0604506000',
-            'city_name'      => 'Victorias City',
-            'barangay_code'  => '0604506001',
-            'barangay_name'  => 'Barangay I (Poblacion)',
-            'address'        => $street . ', Victorias City, Negros Occidental',
-            'intl_country'   => null,
-            'intl_state'     => null,
-            'intl_city'      => null,
+            'region_code' => '0600000000',
+            'region_name' => 'Region VI (Western Visayas)',
+            'province_code' => '0604500000',
+            'province_name' => 'Negros Occidental',
+            'city_code' => '0604506000',
+            'city_name' => 'Victorias City',
+            'barangay_code' => '0604506001',
+            'barangay_name' => 'Barangay I (Poblacion)',
+            'address' => $street.', Victorias City, Negros Occidental',
+            'intl_country' => null,
+            'intl_state' => null,
+            'intl_city' => null,
         ];
     }
 
@@ -151,46 +151,46 @@ class UserProfileFactory extends Factory
         $street = fake()->streetAddress();
 
         return [
-            'address_type'   => 'philippines',
+            'address_type' => 'philippines',
             'street_address' => $street,
-            'region_code'    => $region['code'],
-            'region_name'    => $region['name'],
-            'province_code'  => null,
-            'province_name'  => null,
-            'city_code'      => null,
-            'city_name'      => null,
-            'barangay_code'  => null,
-            'barangay_name'  => null,
-            'address'        => $street . ', ' . $region['name'],
-            'intl_country'   => null,
-            'intl_state'     => null,
-            'intl_city'      => null,
+            'region_code' => $region['code'],
+            'region_name' => $region['name'],
+            'province_code' => null,
+            'province_name' => null,
+            'city_code' => null,
+            'city_name' => null,
+            'barangay_code' => null,
+            'barangay_name' => null,
+            'address' => $street.', '.$region['name'],
+            'intl_country' => null,
+            'intl_state' => null,
+            'intl_city' => null,
         ];
     }
 
     protected function abroadLocation(): array
     {
         $countries = ['United States', 'Canada', 'United Arab Emirates', 'Saudi Arabia', 'Australia', 'Japan', 'Singapore', 'United Kingdom'];
-        $country   = fake()->randomElement($countries);
+        $country = fake()->randomElement($countries);
 
         $street = fake()->streetAddress();
-        $city   = fake()->city();
+        $city = fake()->city();
 
         return [
-            'address_type'   => 'abroad',
+            'address_type' => 'abroad',
             'street_address' => $street,
-            'region_code'    => null,
-            'region_name'    => null,
-            'province_code'  => null,
-            'province_name'  => null,
-            'city_code'      => null,
-            'city_name'      => null,
-            'barangay_code'  => null,
-            'barangay_name'  => null,
-            'address'        => $street . ', ' . $city . ', ' . $country,
-            'intl_country'   => $country,
-            'intl_state'     => null,
-            'intl_city'      => $city,
+            'region_code' => null,
+            'region_name' => null,
+            'province_code' => null,
+            'province_name' => null,
+            'city_code' => null,
+            'city_name' => null,
+            'barangay_code' => null,
+            'barangay_name' => null,
+            'address' => $street.', '.$city.', '.$country,
+            'intl_country' => $country,
+            'intl_state' => null,
+            'intl_city' => $city,
         ];
     }
-}   
+}

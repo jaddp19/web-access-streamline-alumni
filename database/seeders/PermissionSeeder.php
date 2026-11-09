@@ -25,7 +25,7 @@ class PermissionSeeder extends Seeder
 
         foreach ($this->defaultPermission as $permission) {
             Permission::firstOrCreate([
-                'name'       => $permission,
+                'name' => $permission,
                 'guard_name' => 'web',
             ]);
         }
@@ -33,4 +33,4 @@ class PermissionSeeder extends Seeder
         // Forget again so the next process reads from DB.
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
     }
-}   
+}

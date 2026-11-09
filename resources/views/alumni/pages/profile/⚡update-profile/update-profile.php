@@ -19,33 +19,45 @@ new #[Layout('layouts.app-alumni')] class extends Component
     use WithFileUploads;
 
     public string $gender = 'male';
+
     public string $contact_number_1 = '';
+
     public ?string $contact_number_2 = null;
 
     public $avatarFile = null;
+
     public ?string $currentAvatar = null;
 
     public string $address_type = 'philippines';
 
     public string $region_code = '';
+
     public string $province_code = '';
+
     public string $city_code = '';
+
     public string $barangay_code = '';
 
     public string $region_name = '';
+
     public string $province_name = '';
+
     public string $city_name = '';
+
     public string $barangay_name = '';
 
     public string $street_address = '';
 
     public string $intl_country = '';
-    public string $intl_state   = '';
-    public string $intl_city    = '';
+
+    public string $intl_state = '';
+
+    public string $intl_city = '';
 
     public bool $hasProfile = false;
 
     protected ?PhAddressService $addressService = null;
+
     protected ?int $cachedProfileId = null;
 
     protected function addressService(): PhAddressService
@@ -83,14 +95,14 @@ new #[Layout('layouts.app-alumni')] class extends Component
             'gender' => ['required', Rule::in(['male', 'female', 'other'])],
 
             'contact_number_1' => [
-                'required', 'string', 'max:20', new Phone(),
+                'required', 'string', 'max:20', new Phone,
                 function ($attribute, $value, $fail) {
                     $exists = UserProfile::where(function ($q) use ($value) {
                         $q->where('contact_number_1', $value)
-                          ->orWhere('contact_number_2', $value);
+                            ->orWhere('contact_number_2', $value);
                     })
-                    ->when($this->userProfileId(), fn ($q, $id) => $q->where('id', '!=', $id))
-                    ->exists();
+                        ->when($this->userProfileId(), fn ($q, $id) => $q->where('id', '!=', $id))
+                        ->exists();
 
                     if ($exists) {
                         $fail('This mobile number is already registered to another account.');
@@ -99,16 +111,18 @@ new #[Layout('layouts.app-alumni')] class extends Component
             ],
 
             'contact_number_2' => [
-                'nullable', 'string', 'max:20', new Phone(),
+                'nullable', 'string', 'max:20', new Phone,
                 function ($attribute, $value, $fail) {
-                    if (! $value) return;
+                    if (! $value) {
+                        return;
+                    }
 
                     $exists = UserProfile::where(function ($q) use ($value) {
                         $q->where('contact_number_1', $value)
-                          ->orWhere('contact_number_2', $value);
+                            ->orWhere('contact_number_2', $value);
                     })
-                    ->when($this->userProfileId(), fn ($q, $id) => $q->where('id', '!=', $id))
-                    ->exists();
+                        ->when($this->userProfileId(), fn ($q, $id) => $q->where('id', '!=', $id))
+                        ->exists();
 
                     if ($exists) {
                         $fail('This alternate number is already registered to another account.');
@@ -120,14 +134,14 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
             'address_type' => ['required', Rule::in(['philippines', 'abroad'])],
 
-            'region_code'   => ['required_if:address_type,philippines', 'nullable', 'string'],
+            'region_code' => ['required_if:address_type,philippines', 'nullable', 'string'],
             'province_code' => ['required_if:address_type,philippines', 'nullable', 'string'],
-            'city_code'     => ['required_if:address_type,philippines', 'nullable', 'string'],
+            'city_code' => ['required_if:address_type,philippines', 'nullable', 'string'],
             'barangay_code' => ['required_if:address_type,philippines', 'nullable', 'string'],
 
-            'intl_country'  => ['required_if:address_type,abroad', 'nullable', 'string', 'max:255'],
-            'intl_state'    => ['nullable', 'string', 'max:255'],
-            'intl_city'     => ['required_if:address_type,abroad', 'nullable', 'string', 'max:255'],
+            'intl_country' => ['required_if:address_type,abroad', 'nullable', 'string', 'max:255'],
+            'intl_state' => ['nullable', 'string', 'max:255'],
+            'intl_city' => ['required_if:address_type,abroad', 'nullable', 'string', 'max:255'],
 
             'street_address' => ['required', 'string', 'max:255'],
         ];
@@ -136,22 +150,22 @@ new #[Layout('layouts.app-alumni')] class extends Component
     protected function messages(): array
     {
         return [
-            'gender.required'           => 'Please select your gender.',
-            'gender.in'                 => 'Please select a valid gender.',
+            'gender.required' => 'Please select your gender.',
+            'gender.in' => 'Please select a valid gender.',
             'contact_number_1.required' => 'The mobile number is required.',
-            'contact_number_1.phone'    => 'Please enter a valid mobile number.',
-            'contact_number_2.phone'    => 'Please enter a valid alternate number.',
-            'avatarFile.image'          => 'The avatar must be an image file.',
-            'avatarFile.mimes'          => 'Avatar must be JPG, PNG, or WebP.',
-            'avatarFile.max'            => 'The avatar may not be larger than 2MB.',
-            'address_type.required'     => 'Please select whether you reside in the Philippines or abroad.',
-            'region_code.required'      => 'Please select a region.',
-            'province_code.required'    => 'Please select a province.',
-            'city_code.required'        => 'Please select a city or municipality.',
-            'barangay_code.required'    => 'Please select a barangay.',
-            'intl_country.required_if'  => 'Please enter your country.',
-            'intl_city.required_if'     => 'Please enter your city.',
-            'street_address.required'   => 'Please enter your street address.',
+            'contact_number_1.phone' => 'Please enter a valid mobile number.',
+            'contact_number_2.phone' => 'Please enter a valid alternate number.',
+            'avatarFile.image' => 'The avatar must be an image file.',
+            'avatarFile.mimes' => 'Avatar must be JPG, PNG, or WebP.',
+            'avatarFile.max' => 'The avatar may not be larger than 2MB.',
+            'address_type.required' => 'Please select whether you reside in the Philippines or abroad.',
+            'region_code.required' => 'Please select a region.',
+            'province_code.required' => 'Please select a province.',
+            'city_code.required' => 'Please select a city or municipality.',
+            'barangay_code.required' => 'Please select a barangay.',
+            'intl_country.required_if' => 'Please enter your country.',
+            'intl_city.required_if' => 'Please enter your city.',
+            'street_address.required' => 'Please enter your street address.',
         ];
     }
 
@@ -170,13 +184,13 @@ new #[Layout('layouts.app-alumni')] class extends Component
             return;
         }
 
-        $this->hasProfile       = true;
-        $this->cachedProfileId  = $profile->id;
+        $this->hasProfile = true;
+        $this->cachedProfileId = $profile->id;
 
-        $this->gender           = $profile->gender ?? 'male';
+        $this->gender = $profile->gender ?? 'male';
         $this->contact_number_1 = $profile->contact_number_1 ?? '';
         $this->contact_number_2 = $profile->contact_number_2 ?: null;
-        $this->currentAvatar    = $profile->avatar;
+        $this->currentAvatar = $profile->avatar;
 
         $location = $this->decodeLocation($profile);
 
@@ -186,18 +200,18 @@ new #[Layout('layouts.app-alumni')] class extends Component
             ?? (! empty($location['region_code']) ? 'philippines' : (empty($location['intl_country']) ? 'philippines' : 'abroad'));
 
         if ($this->address_type === 'philippines') {
-            $this->region_code   = $location['region_code'] ?? '';
-            $this->region_name   = $location['region_name'] ?? '';
+            $this->region_code = $location['region_code'] ?? '';
+            $this->region_name = $location['region_name'] ?? '';
             $this->province_code = $location['province_code'] ?? '';
             $this->province_name = $location['province_name'] ?? '';
-            $this->city_code     = $location['city_code'] ?? '';
-            $this->city_name     = $location['city_name'] ?? '';
+            $this->city_code = $location['city_code'] ?? '';
+            $this->city_name = $location['city_name'] ?? '';
             $this->barangay_code = $location['barangay_code'] ?? '';
             $this->barangay_name = $location['barangay_name'] ?? '';
         } else {
             $this->intl_country = $location['intl_country'] ?? '';
-            $this->intl_state   = $location['intl_state'] ?? '';
-            $this->intl_city    = $location['intl_city'] ?? '';
+            $this->intl_state = $location['intl_state'] ?? '';
+            $this->intl_city = $location['intl_city'] ?? '';
         }
     }
 
@@ -242,10 +256,10 @@ new #[Layout('layouts.app-alumni')] class extends Component
     public function updatedRegionCode($value): void
     {
         $this->province_code = '';
-        $this->city_code     = '';
+        $this->city_code = '';
         $this->barangay_code = '';
         $this->province_name = '';
-        $this->city_name     = '';
+        $this->city_name = '';
         $this->barangay_name = '';
 
         $this->region_name = optional($this->addressService()->findByCode($value))->name ?? '';
@@ -255,9 +269,9 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
     public function updatedProvinceCode($value): void
     {
-        $this->city_code     = '';
+        $this->city_code = '';
         $this->barangay_code = '';
-        $this->city_name     = '';
+        $this->city_name = '';
         $this->barangay_name = '';
 
         $this->province_name = optional($this->addressService()->findByCode($value))->name ?? '';
@@ -301,7 +315,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
         $validated['street_address'] = $this->sanitize($validated['street_address']);
 
-        $user    = Auth::user();
+        $user = Auth::user();
         $service = $this->addressService();
 
         $newAvatarPath = null;
@@ -313,9 +327,9 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
                 // ----- Build location payload -----
                 if ($this->address_type === 'philippines') {
-                    $region   = $service->findByCode($validated['region_code']);
+                    $region = $service->findByCode($validated['region_code']);
                     $province = $service->findByCode($validated['province_code']);
-                    $city     = $service->findByCode($validated['city_code']);
+                    $city = $service->findByCode($validated['city_code']);
                     $barangay = $service->findByCode($validated['barangay_code']);
 
                     $fullAddress = collect([
@@ -327,20 +341,20 @@ new #[Layout('layouts.app-alumni')] class extends Component
                     ])->filter()->implode(', ');
 
                     $location = array_merge($existing?->location ?? [], [
-                        'address_type'   => 'philippines',
+                        'address_type' => 'philippines',
                         'street_address' => $validated['street_address'],
-                        'region_code'    => $validated['region_code'],
-                        'region_name'    => $region->name ?? null,
-                        'province_code'  => $validated['province_code'],
-                        'province_name'  => $province->name ?? null,
-                        'city_code'      => $validated['city_code'],
-                        'city_name'      => $city->name ?? null,
-                        'barangay_code'  => $validated['barangay_code'],
-                        'barangay_name'  => $barangay->name ?? null,
-                        'address'        => $fullAddress,
-                        'intl_country'   => null,
-                        'intl_state'     => null,
-                        'intl_city'      => null,
+                        'region_code' => $validated['region_code'],
+                        'region_name' => $region->name ?? null,
+                        'province_code' => $validated['province_code'],
+                        'province_name' => $province->name ?? null,
+                        'city_code' => $validated['city_code'],
+                        'city_name' => $city->name ?? null,
+                        'barangay_code' => $validated['barangay_code'],
+                        'barangay_name' => $barangay->name ?? null,
+                        'address' => $fullAddress,
+                        'intl_country' => null,
+                        'intl_state' => null,
+                        'intl_city' => null,
                     ]);
                 } else {
                     $fullAddress = collect([
@@ -351,43 +365,43 @@ new #[Layout('layouts.app-alumni')] class extends Component
                     ])->filter()->implode(', ');
 
                     $location = array_merge($existing?->location ?? [], [
-                        'address_type'   => 'abroad',
+                        'address_type' => 'abroad',
                         'street_address' => $validated['street_address'],
-                        'intl_country'   => $this->intl_country,
-                        'intl_state'     => $this->intl_state,
-                        'intl_city'      => $this->intl_city,
-                        'address'        => $fullAddress,
-                        'region_code'    => null,
-                        'region_name'    => null,
-                        'province_code'  => null,
-                        'province_name'  => null,
-                        'city_code'      => null,
-                        'city_name'      => null,
-                        'barangay_code'  => null,
-                        'barangay_name'  => null,
+                        'intl_country' => $this->intl_country,
+                        'intl_state' => $this->intl_state,
+                        'intl_city' => $this->intl_city,
+                        'address' => $fullAddress,
+                        'region_code' => null,
+                        'region_name' => null,
+                        'province_code' => null,
+                        'province_name' => null,
+                        'city_code' => null,
+                        'city_name' => null,
+                        'barangay_code' => null,
+                        'barangay_name' => null,
                     ]);
                 }
 
                 // ----- Avatar -----
-                $avatarPath    = $existing?->avatar;
+                $avatarPath = $existing?->avatar;
                 $oldAvatarPath = $avatarPath;
 
                 if ($this->avatarFile) {
                     $newAvatarPath = $this->avatarFile->store('avatars', 'public');
-                    $avatarPath    = $newAvatarPath;
+                    $avatarPath = $newAvatarPath;
                 }
 
                 UserProfile::updateOrCreate(
                     ['user_id' => $user->id],
                     [
-                        'avatar'           => $avatarPath,
-                        'gender'           => $validated['gender'],
+                        'avatar' => $avatarPath,
+                        'gender' => $validated['gender'],
                         'contact_number_1' => $validated['contact_number_1'],
                         'contact_number_2' => $validated['contact_number_2'],
-                        'location'         => $location,
-                        'batch_id'         => $existing?->batch_id ?? $this->resolveBatchId(),
-                        'is_private'       => $existing?->is_private ?? false,
-                        'is_verified'      => $existing?->is_verified ?? false,
+                        'location' => $location,
+                        'batch_id' => $existing?->batch_id ?? $this->resolveBatchId(),
+                        'is_private' => $existing?->is_private ?? false,
+                        'is_verified' => $existing?->is_verified ?? false,
                     ]
                 );
 
@@ -395,20 +409,21 @@ new #[Layout('layouts.app-alumni')] class extends Component
                     Storage::disk('public')->delete($oldAvatarPath);
                 }
             });
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             if ($newAvatarPath && Storage::disk('public')->exists($newAvatarPath)) {
                 Storage::disk('public')->delete($newAvatarPath);
             }
 
             report($e);
             session()->flash('error', 'Could not save your profile. Please try again.');
+
             return;
         }
 
-        $this->avatarFile       = null;
-        $this->currentAvatar    = $newAvatarPath ?? $oldAvatarPath;
-        $this->hasProfile       = true;
-        $this->cachedProfileId  = $this->userProfileId();
+        $this->avatarFile = null;
+        $this->currentAvatar = $newAvatarPath ?? $oldAvatarPath;
+        $this->hasProfile = true;
+        $this->cachedProfileId = $this->userProfileId();
 
         session()->flash('success', 'Profile updated successfully.');
 
@@ -421,13 +436,18 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
     protected function decodeLocation($profile): array
     {
-        if (! $profile) return [];
+        if (! $profile) {
+            return [];
+        }
 
         $raw = $profile->location;
-        if (is_array($raw)) return $raw;
+        if (is_array($raw)) {
+            return $raw;
+        }
 
         if (is_string($raw) && $raw !== '') {
             $decoded = json_decode($raw, true);
+
             return is_array($decoded) ? $decoded : [];
         }
 
@@ -438,13 +458,15 @@ new #[Layout('layouts.app-alumni')] class extends Component
     {
         $batchId = Batch::query()->orderBy('id')->value('id');
 
-        if ($batchId) return $batchId;
+        if ($batchId) {
+            return $batchId;
+        }
 
         $numericTypes = ['integer', 'bigint', 'smallint', 'tinyint', 'decimal', 'float', 'double'];
 
         try {
             $columnType = Schema::getColumnType('batches', 'batch_name');
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $columnType = 'string';
         }
 

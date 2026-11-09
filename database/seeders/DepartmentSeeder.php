@@ -49,16 +49,16 @@ class DepartmentSeeder extends Seeder
             Department::updateOrCreate(
                 ['dept_slug' => Str::slug($dept['dept_name'])],
                 [
-                    'dept_name'       => $dept['dept_name'],
-                    'dept_code'       => $dept['dept_code'],
-                    'dept_desc'       => $dept['dept_desc'],
-                    'dept_logo'       => $logoUrl,
+                    'dept_name' => $dept['dept_name'],
+                    'dept_code' => $dept['dept_code'],
+                    'dept_desc' => $dept['dept_desc'],
+                    'dept_logo' => $logoUrl,
                     'program_head_id' => null,
-                    'is_active'       => true,
+                    'is_active' => true,
                 ]
             );
         }
 
-        $this->command->info('Departments seeded: ' . Department::count());
+        $this->command->info('Departments seeded: '.Department::count());
     }
 }

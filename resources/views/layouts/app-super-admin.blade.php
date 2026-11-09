@@ -29,7 +29,20 @@
                 document.documentElement.classList.remove('dark');
             }
         })();
+        
+        (function () {
+            let lastWidth = window.innerWidth;
+            window.addEventListener('resize', function (e) {
+                // Keyboard open/close only changes height, not width.
+                if (window.innerWidth === lastWidth) {
+                    e.stopImmediatePropagation();
+                } else {
+                    lastWidth = window.innerWidth;
+                }
+            }, true);
+        })();
     </script>
+    
     @livewireStyles
 </head>
 

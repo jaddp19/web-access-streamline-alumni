@@ -2,10 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\Category;
-use App\Models\PostRead;
-use App\Models\Tag;
-use App\Models\User;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -16,7 +12,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Post extends Model
 {
     use HasFactory, LogsActivity;
+
     protected array $auditExclude = ['id', 'user_id'];
+
     protected $fillable = [
         'user_id',
         'title',
@@ -25,11 +23,11 @@ class Post extends Model
         'image',
         'category_id',
         'status',
-        'attachments'
+        'attachments',
     ];
 
     protected $casts = [
-        'attachments' => 'array'
+        'attachments' => 'array',
     ];
 
     public function user(): BelongsTo

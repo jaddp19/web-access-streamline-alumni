@@ -16,7 +16,8 @@ class SendEventCancellationEmail implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $tries   = 1;
+    public int $tries = 1;
+
     public int $timeout = 900;
 
     public function __construct(public int $eventId) {}
@@ -27,14 +28,16 @@ class SendEventCancellationEmail implements ShouldQueue
 
         if (! $event) {
             Log::warning('Event cancellation: event not found', ['event_id' => $this->eventId]);
+
             return;
         }
 
         if ($event->status !== 'cancelled') {
             Log::info('Event cancellation: skipped (not cancelled)', [
                 'event_id' => $event->id,
-                'status'   => $event->status,
+                'status' => $event->status,
             ]);
+
             return;
         }
 
@@ -46,8 +49,9 @@ class SendEventCancellationEmail implements ShouldQueue
         if (! $templateExists) {
             Log::error('Event cancellation: template missing — no emails sent', [
                 'event_id' => $event->id,
-                'slug'     => 'event-has-been-cancelled',
+                'slug' => 'event-has-been-cancelled',
             ]);
+
             return;
         }
 
@@ -58,18 +62,19 @@ class SendEventCancellationEmail implements ShouldQueue
             ->get();
 
         Log::info('Event cancellation: blast starting', [
-            'event_id'        => $event->id,
-            'attendee_count'  => $attendees->count(),
+            'event_id' => $event->id,
+            'attendee_count' => $attendees->count(),
         ]);
 
         if ($attendees->isEmpty()) {
             Log::warning('Event cancellation: no attendees to notify', [
                 'event_id' => $event->id,
             ]);
+
             return;
         }
 
-        $sent   = 0;
+        $sent = 0;
         $failed = 0;
 
         foreach ($attendees as $rsvp) {
@@ -84,9 +89,9 @@ class SendEventCancellationEmail implements ShouldQueue
                     'event-has-been-cancelled',
                     $user->email,
                     [
-                        'name'        => $user->name,
+                        'name' => $user->name,
                         'event_title' => $event->title,
-                        'event_date'  => $event->starts_at
+                        'event_date' => $event->starts_at
                             ? $event->starts_at->format('F j, Y \a\t g:i A')
                             : 'TBA',
                     ]
@@ -98,23 +103,23 @@ class SendEventCancellationEmail implements ShouldQueue
 
                 Log::warning('Event cancellation: individual send failed', [
                     'event_id' => $event->id,
-                    'email'    => $user->email,
-                    'error'    => $e->getMessage(),
+                    'email' => $user->email,
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
 
         Log::info('Event cancellation: blast complete', [
-            'event_id'     => $event->id,
-            'total_sent'   => $sent,
+            'event_id' => $event->id,
+            'total_sent' => $sent,
             'total_failed' => $failed,
         ]);
 
         if ($failed > 0) {
             Log::error('Event cancellation: SOME EMAILS FAILED', [
-                'event_id'     => $event->id,
+                'event_id' => $event->id,
                 'failed_count' => $failed,
-                'sent_count'   => $sent,
+                'sent_count' => $sent,
             ]);
         }
     }
@@ -123,7 +128,7 @@ class SendEventCancellationEmail implements ShouldQueue
     {
         Log::error('Event cancellation: job-level failure', [
             'event_id' => $this->eventId,
-            'error'    => $e->getMessage(),
+            'error' => $e->getMessage(),
         ]);
     }
 }

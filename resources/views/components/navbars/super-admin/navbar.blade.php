@@ -1,4 +1,4 @@
-<div class="select-none">
+<div class="select-none" x-data="{ search: '' }">
     <div id="hs-pro-sidebar"
         class="hs-overlay [--body-scroll:true] lg:[--overlay-backdrop:false] [--is-layout-affect:true] [--opened:lg] [--auto-close:lg]
                hs-overlay-open:translate-x-0 lg:hs-overlay-layout-open:translate-x-0
@@ -26,7 +26,8 @@
                 </svg>
             </button>
 
-            <input id="sidebar-search" type="text" placeholder="Search"
+            {{-- Alpine-bound search input --}}
+            <input id="sidebar-search" type="text" placeholder="Search" x-model="search"
                 class="w-full py-1.5 px-2.5 mt-2 mb-2 rounded-lg
                        bg-gray-50 dark:bg-white/5
                        border border-gray-200 dark:border-white/10
@@ -88,11 +89,15 @@
             @endphp
 
             @foreach ($navGroups as $group => $items)
-                <div class="pt-2 mt-2 border-t border-gray-100 dark:border-white/5 first:border-t-0 first:pt-0 first:mt-0">
+                {{-- Wrap the group in a div that Alpine can hide if no items match --}}
+                <div x-show="search === '' || {{ Js::from(collect($items)->pluck('label')->map(fn($l) => str_contains(strtolower($l), strtolower('$search')))->contains(true)) }}"
+                    class="pt-2 mt-2 border-t border-gray-100 dark:border-white/5 first:border-t-0 first:pt-0 first:mt-0">
+                    
                     <span class="block ps-2 mb-1 font-bold text-[10px] uppercase tracking-wider
                                  text-gray-600 dark:text-white/60">
                         {{ $group }}
                     </span>
+
                     <ul class="flex flex-col gap-y-0.5">
                         @foreach ($items as $item)
                             @php
@@ -104,7 +109,8 @@
                                     request()->routeIs($item['route']) &&
                                     request()->query('roleFilter') === ($params['roleFilter'] ?? null);
                             @endphp
-                            <li>
+                            {{-- Hide the specific LI if it doesn't match the search --}}
+                            <li x-show="search === '' || '{{ strtolower($item['label']) }}'.includes(search.toLowerCase())">
                                 <a href="{{ $href }}"
                                     @unless (isset($item['params']))
                                         wire:current="bg-[#123524]/5 dark:bg-[#D4A537]/10 text-[#123524] dark:text-[#D4A537] ring-1 ring-[#123524]/10 dark:ring-[#D4A537]/20"
@@ -134,19 +140,4 @@
 
         </nav>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const input = document.getElementById('sidebar-search');
-            const links = document.querySelectorAll('#hs-pro-sidebar nav a');
-
-            input?.addEventListener('input', (e) => {
-                const q = e.target.value.toLowerCase().trim();
-                links.forEach(link => {
-                    link.closest('li').style.display = link.textContent.toLowerCase().includes(q) ?
-                        '' : 'none';
-                });
-            });
-        });
-    </script>
 </div>

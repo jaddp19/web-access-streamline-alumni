@@ -4,8 +4,6 @@ use App\Support\BadgeCounts;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
 
-
-
 Route::livewire('/', 'public::pages.index')->name('home');
 Route::livewire('/about', 'public::pages.about-page')->name('about');
 Route::livewire('/contact', 'public::pages.contact-page')->name('contact');
@@ -16,14 +14,13 @@ Route::livewire('/form', 'auth::form.form-answer')->name('form');
 Route::livewire('/privacy-policy', 'auth::privacy-policy')->name('privacy-policy');
 Route::livewire('/terms-and-condition', 'auth::terms-and-condition')->name('terms-and-conditions');
 
-Route::middleware('guest')->group(function (){
+Route::middleware('guest')->group(function () {
 
     Route::livewire('/reset-password/{token}', 'auth::reset-password')
-    ->name('password.reset');
+        ->name('password.reset');
 });
 
-
-//forms
+// forms
 Route::middleware('auth')->group(function () {
     Route::livewire('/form', 'auth::form.form-answer')->name('form');
     Route::livewire('/update-form', 'auth::form.update-form')->name('update-form');
@@ -42,7 +39,7 @@ Route::middleware(['auth', 'role:registrar'])->prefix('registrar')->group(functi
 
     Route::livewire('/user/view', 'super-admin::pages.user.view-user')->name('super-admin.user.view');
 
-    //single view alumni
+    // single view alumni
     Route::livewire('/alumni/view/{user}', 'super-admin::pages.user.view-single-user')->name('super-admin.alumni.view-single');
 
     Route::livewire('/user/create', 'super-admin::pages.user.create-user')->name('super-admin.user.create');
@@ -100,7 +97,6 @@ Route::middleware(['auth', 'role:program head|registrar'])->prefix('program-head
     Route::livewire('/post/create-post', 'admin::pages.post.create-post')->name('admin.post.create');
     Route::livewire('/post/update-post/{post}', 'admin::pages.post.update-post')->name('admin.post.update');
 
-
     Route::livewire('/verification-queue', 'admin::pages.verification-queue')->name('admin.verification-queue');
 
     Route::livewire('/events/view', 'admin::pages.event.view-event')->name('admin.events.view');
@@ -127,7 +123,7 @@ Route::middleware(['auth', 'role:alumni|registrar'])->prefix('alumni')->group(fu
     Route::livewire('/message/view/{event:slug}', 'alumni::pages.message.view-single-message')->name('alumni.view-single-message');
 
     Route::livewire('/view-event/{event:slug}', 'alumni::pages.event.event-detail')->name('view.event');
-    
+
     Route::livewire('/dashboard/view-event/{event:slug}', 'alumni::pages.view-single-event')->name('alumni.view-single-event');
     Route::livewire('/dashboard/view-post/{post:slug}', 'alumni::pages.view-single-post')->name('alumni.view-single-post');
 

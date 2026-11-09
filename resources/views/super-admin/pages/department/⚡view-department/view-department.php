@@ -14,7 +14,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     use WithPagination;
 
     public array $selectedDepartments = [];
+
     public bool $selectAllFiltered = false;
+
     public bool $selectAllOnPage = false;
 
     protected int $perPage = 10;
@@ -35,8 +37,8 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     protected function clearSelection(): void
     {
         $this->selectedDepartments = [];
-        $this->selectAllFiltered   = false;
-        $this->selectAllOnPage     = false;
+        $this->selectAllFiltered = false;
+        $this->selectAllOnPage = false;
 
         // Invalidate memoized computed props so the next render sees
         // the fresh state (Livewire 3 caches them per-request).
@@ -107,6 +109,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     {
         if ($this->allSelected) {
             $this->clearSelection();
+
             return;
         }
 
@@ -115,7 +118,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         // as selected without needing to load all IDs.
         $this->selectAllFiltered = true;
         $this->selectedDepartments = [];
-        $this->selectAllOnPage   = true;
+        $this->selectAllOnPage = true;
 
         unset($this->selectedCount);
         unset($this->allSelected);
@@ -185,6 +188,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         if ($this->selectAllFiltered) {
             return true;
         }
+
         return in_array($id, $this->selectedDepartments, true);
     }
 
@@ -205,6 +209,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         Gate::authorize('can_delete');
         if ($this->selectedCount <= 0) {
             session()->flash('error', 'Nothing is selected.');
+
             return;
         }
 
@@ -223,9 +228,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
                 return ['count' => $count, 'logos' => $logos];
             });
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
-            session()->flash('error', 'Delete failed: ' . $e->getMessage());
+            session()->flash('error', 'Delete failed. Please try again.');
+
             return;
         }
 
@@ -240,8 +246,8 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         // Reset internal state.
         $this->selectedDepartments = [];
-        $this->selectAllFiltered   = false;
-        $this->selectAllOnPage     = false;
+        $this->selectAllFiltered = false;
+        $this->selectAllOnPage = false;
 
         // Invalidate memoized computed props so the re-render:
         //   • hides the "N department(s) selected" bar (selectedCount → 0)
@@ -271,9 +277,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         try {
             DB::transaction(fn () => $department->delete());
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
             session()->flash('error', 'Delete failed. Please try again.');
+
             return;
         }
 
@@ -303,10 +310,16 @@ new #[Layout('layouts.app-super-admin')] class extends Component
      */
     protected function deleteLogoFile(?string $path, ?int $exceptId = null): void
     {
-        if (blank($path)) return;
+        if (blank($path)) {
+            return;
+        }
 
-        if (filter_var($path, FILTER_VALIDATE_URL)) return;
-        if (str_starts_with($path, '/imgs/')) return;
+        if (filter_var($path, FILTER_VALIDATE_URL)) {
+            return;
+        }
+        if (str_starts_with($path, '/imgs/')) {
+            return;
+        }
 
         $relative = ltrim($path, '/');
 
@@ -316,7 +329,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             ->where('dept_logo', $path)
             ->exists();
 
-        if ($stillUsed) return;
+        if ($stillUsed) {
+            return;
+        }
 
         // Single-filesystem-hit delete (delete() returns bool without exists check).
         Storage::disk('public')->delete($relative);

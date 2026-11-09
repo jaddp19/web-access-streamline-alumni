@@ -26,6 +26,33 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     protected int $perPage = 10;
 
+    // --- ADDED FOR MODAL ---
+    public ?int $viewingPostId = null;
+
+    public function openPost(int $id): void
+    {
+        $this->viewingPostId = $id;
+    }
+
+    public function closePost(): void
+    {
+        $this->viewingPostId = null;
+    }
+
+    #[Computed]
+    public function viewingPost(): ?Post
+    {
+        if (! $this->viewingPostId) return null;
+        
+        return Post::with([
+            'user:id,name',
+            'user.userProfile:id,user_id,avatar',
+            'user.roles:id,name',
+            'category:id,cat_name',
+        ])->find($this->viewingPostId);
+    }
+    // -----------------------
+
     public function updatedSearch(): void
     {
         $this->resetPage();
@@ -49,15 +76,11 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $this->resetPage();
     }
 
-    // =========================================================
-    //  COMPUTED — plain arrays, safe across cache boundary
-    // =========================================================
-
     #[Computed]
     public function categories(): array
     {
         $cacheKey = 'posts:categories:v1';
-        $cached   = Cache::get($cacheKey);
+        $cached = Cache::get($cacheKey);
 
         if (! is_array($cached)) {
             Cache::forget($cacheKey);
@@ -91,14 +114,14 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             ->when($this->statusFilter !== 'all', fn ($q) => $q->where('status', $this->statusFilter))
             ->when($this->categoryFilter !== 'all', fn ($q) => $q->where('category_id', $this->categoryFilter))
             ->when($this->search !== '', function ($q) {
-                $term = '%' . $this->search . '%';
+                $term = '%'.$this->search.'%';
 
                 $q->where(function ($inner) use ($term) {
                     $inner->where('title', 'like', $term)
-                          ->orWhere('description', 'like', $term)
-                          ->orWhere('slug', 'like', $term)
-                          ->orWhereHas('user', fn ($u) => $u->where('name', 'like', $term))
-                          ->orWhereHas('category', fn ($c) => $c->where('cat_name', 'like', $term));
+                        ->orWhere('description', 'like', $term)
+                        ->orWhere('slug', 'like', $term)
+                        ->orWhereHas('user', fn ($u) => $u->where('name', 'like', $term))
+                        ->orWhereHas('category', fn ($c) => $c->where('cat_name', 'like', $term));
                 });
             })
             ->latest()
@@ -113,10 +136,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             || $this->categoryFilter !== 'all';
     }
 
-    // =========================================================
-    //  ACTIONS
-    // =========================================================
-
     public function deletePost(int $id): void
     {
         Gate::authorize('can_delete');
@@ -128,7 +147,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             return;
         }
 
-        // Capture file paths BEFORE the DB delete.
         $files = array_filter([
             $post->image,
             ...((array) ($post->attachments ?? [])),
@@ -136,13 +154,12 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         try {
             DB::transaction(fn () => $post->delete());
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
             session()->flash('error', 'Failed to delete post. Please try again.');
             return;
         }
 
-        // Files are deleted AFTER the commit — DB is source of truth.
         foreach ($files as $file) {
             if (is_string($file) && ! filter_var($file, FILTER_VALIDATE_URL)) {
                 Storage::disk('public')->delete($file);
@@ -150,6 +167,11 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         }
 
         Cache::forget('posts:count');
+
+        // Close modal if we just deleted it
+        if ($this->viewingPostId === $id) {
+            $this->closePost();
+        }
 
         session()->flash('success', 'Post deleted successfully.');
     }
@@ -172,7 +194,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
                 return $post->status;
             });
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
             session()->flash('error', 'Failed to update status.');
             return;

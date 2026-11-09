@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\TracerStudy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -20,6 +19,6 @@ class FurtherStudy extends Model
     }
 
     protected $casts = [
-    'is_pursued_further_studies' => 'boolean',
+        'is_pursued_further_studies' => 'boolean',
     ];
 }

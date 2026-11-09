@@ -2,10 +2,12 @@
 
 use App\Models\Company;
 use App\Services\PhAddressService;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -18,26 +20,35 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public Company $company;
 
     public string $company_name = '';
+
     public string $company_desc = '';
+
     public $company_logo = null;
+
     public bool $remove_logo = false;
 
     // ---- Address (Philippines) ----
     public string $address_type = 'philippines';
+
     public string $regionCode = '';
+
     public string $provinceCode = '';
+
     public string $cityCode = '';
+
     public string $street_address = '';
 
     // ---- Address (Abroad) ----
     public string $intl_country = '';
+
     public string $intl_state = '';
+
     public string $intl_city = '';
 
     public function mount(Company $company): void
     {
         Gate::authorize('can_update');
-        $this->company      = $company;
+        $this->company = $company;
         $this->company_name = $company->company_name;
         $this->company_desc = $company->company_desc ?? '';
 
@@ -63,15 +74,15 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             return;
         }
 
-        $service     = app(PhAddressService::class);
+        $service = app(PhAddressService::class);
         $usedIndexes = [];
 
         $matchedRegion = null;
         foreach ($service->regions() as $region) {
             $idx = array_search($region->name, $segments, true);
             if ($idx !== false) {
-                $matchedRegion  = $region;
-                $usedIndexes[]  = $idx;
+                $matchedRegion = $region;
+                $usedIndexes[] = $idx;
                 break;
             }
         }
@@ -82,11 +93,11 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             $count = count($segments);
             if ($count >= 3) {
                 $this->intl_country = array_pop($segments);
-                $this->intl_state   = array_pop($segments);
-                $this->intl_city    = implode(', ', $segments);
+                $this->intl_state = array_pop($segments);
+                $this->intl_city = implode(', ', $segments);
             } elseif ($count === 2) {
                 $this->intl_country = $segments[1];
-                $this->intl_city    = $segments[0];
+                $this->intl_city = $segments[0];
             } else {
                 $this->intl_city = $segments[0];
             }
@@ -95,14 +106,14 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         }
 
         $this->address_type = 'philippines';
-        $this->regionCode   = $matchedRegion->code;
+        $this->regionCode = $matchedRegion->code;
 
         $matchedProvince = null;
         foreach ($service->provinces($matchedRegion->code) as $province) {
             $idx = array_search($province->name, $segments, true);
             if ($idx !== false) {
                 $matchedProvince = $province;
-                $usedIndexes[]   = $idx;
+                $usedIndexes[] = $idx;
                 break;
             }
         }
@@ -114,7 +125,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             foreach ($service->cities($matchedProvince->code) as $city) {
                 $idx = array_search($city->name, $segments, true);
                 if ($idx !== false) {
-                    $matchedCity  = $city;
+                    $matchedCity = $city;
                     $usedIndexes[] = $idx;
                     break;
                 }
@@ -157,14 +168,14 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
             'address_type' => ['required', 'in:philippines,abroad'],
 
-            'regionCode'     => ['required_if:address_type,philippines', 'nullable', 'string'],
-            'provinceCode'   => ['required_if:address_type,philippines', 'nullable', 'string'],
-            'cityCode'       => ['required_if:address_type,philippines', 'nullable', 'string'],
+            'regionCode' => ['required_if:address_type,philippines', 'nullable', 'string'],
+            'provinceCode' => ['required_if:address_type,philippines', 'nullable', 'string'],
+            'cityCode' => ['required_if:address_type,philippines', 'nullable', 'string'],
             'street_address' => ['nullable', 'string', 'max:500'],
 
             'intl_country' => ['required_if:address_type,abroad', 'nullable', 'string', 'max:255'],
-            'intl_state'   => ['nullable', 'string', 'max:255'],
-            'intl_city'    => ['required_if:address_type,abroad', 'nullable', 'string', 'max:255'],
+            'intl_state' => ['nullable', 'string', 'max:255'],
+            'intl_city' => ['required_if:address_type,abroad', 'nullable', 'string', 'max:255'],
         ];
     }
 
@@ -172,21 +183,21 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     {
         return [
             'company_name.required' => 'Company name is required.',
-            'company_name.min'      => 'Company name must be at least 2 characters.',
-            'company_name.unique'   => 'A company with this name already exists.',
-            'company_name.max'      => 'Company name cannot exceed 255 characters.',
-            'company_desc.max'      => 'Description cannot exceed 2000 characters.',
-            'company_logo.image'    => 'The logo must be a valid image file.',
-            'company_logo.mimes'    => 'The logo must be a JPG, PNG, WebP, or SVG file.',
-            'company_logo.max'      => 'The logo must not exceed 2MB.',
+            'company_name.min' => 'Company name must be at least 2 characters.',
+            'company_name.unique' => 'A company with this name already exists.',
+            'company_name.max' => 'Company name cannot exceed 255 characters.',
+            'company_desc.max' => 'Description cannot exceed 2000 characters.',
+            'company_logo.image' => 'The logo must be a valid image file.',
+            'company_logo.mimes' => 'The logo must be a JPG, PNG, WebP, or SVG file.',
+            'company_logo.max' => 'The logo must not exceed 2MB.',
             'company_logo.dimensions' => 'The logo must be between 32×32 and 2000×2000 pixels.',
 
-            'address_type.required'    => 'Please select the company location.',
-            'regionCode.required_if'   => 'Please select a region.',
+            'address_type.required' => 'Please select the company location.',
+            'regionCode.required_if' => 'Please select a region.',
             'provinceCode.required_if' => 'Please select a province.',
-            'cityCode.required_if'     => 'Please select a city / municipality.',
+            'cityCode.required_if' => 'Please select a city / municipality.',
             'intl_country.required_if' => 'Please enter the country.',
-            'intl_city.required_if'    => 'Please enter the city.',
+            'intl_city.required_if' => 'Please enter the city.',
         ];
     }
 
@@ -206,21 +217,23 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         try {
             $mime = (string) $this->company_logo->getMimeType();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->reset('company_logo');
             $this->addError('company_logo', 'Could not read the uploaded file. Please try another image.');
+
             return;
         }
 
         if (! str_starts_with($mime, 'image/')) {
             $this->reset('company_logo');
             $this->addError('company_logo', 'The logo must be an image file (JPG, PNG, WebP, or SVG).');
+
             return;
         }
 
         try {
             $this->validateOnly('company_logo');
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             $this->reset('company_logo');
             throw $e;
         }
@@ -245,7 +258,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public function updatedRegionCode(): void
     {
         $this->provinceCode = '';
-        $this->cityCode     = '';
+        $this->cityCode = '';
         $this->resetErrorBag(['provinceCode', 'cityCode']);
     }
 
@@ -294,13 +307,15 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         if ($this->company_logo) {
             try {
                 $mime = (string) $this->company_logo->getMimeType();
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $this->addError('company_logo', 'Could not read the uploaded file. Please try another image.');
+
                 return;
             }
 
             if (! str_starts_with($mime, 'image/')) {
                 $this->addError('company_logo', 'The logo must be an image file (JPG, PNG, WebP, or SVG).');
+
                 return;
             }
         }
@@ -308,9 +323,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $service = app(PhAddressService::class);
 
         if ($this->address_type === 'philippines') {
-            $region   = $service->findByCode($this->regionCode);
+            $region = $service->findByCode($this->regionCode);
             $province = $service->findByCode($this->provinceCode);
-            $city     = $service->findByCode($this->cityCode);
+            $city = $service->findByCode($this->cityCode);
 
             $companyAddress = collect([
                 $this->street_address,
@@ -328,12 +343,12 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         $oldLogoPath = $this->company->company_logo;
         $newLogoPath = null;
-        $clearLogo   = false;
+        $clearLogo = false;
 
         try {
             if ($this->company_logo) {
                 $newLogoPath = $this->company_logo->store('company-logos', 'public');
-                $finalLogo   = $newLogoPath;
+                $finalLogo = $newLogoPath;
             } elseif ($this->remove_logo) {
                 $finalLogo = null;
                 $clearLogo = true;
@@ -343,34 +358,37 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
             DB::transaction(function () use ($validated, $finalLogo, $companyAddress) {
                 $this->company->update([
-                    'company_name'    => trim(strip_tags($validated['company_name'])),
+                    'company_name' => trim(strip_tags($validated['company_name'])),
                     'company_address' => $companyAddress ?: null,
-                    'company_desc'    => filled($validated['company_desc'])
+                    'company_desc' => filled($validated['company_desc'])
                         ? trim(strip_tags($validated['company_desc']))
                         : null,
-                    'company_logo'    => $finalLogo,
+                    'company_logo' => $finalLogo,
                 ]);
             });
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             if ($newLogoPath) {
                 Storage::disk('public')->delete($newLogoPath);
             }
 
             if ($e->getCode() === '23000') {
                 $this->addError('company_name', 'This company name was just taken. Please try again.');
+
                 return;
             }
 
             report($e);
             session()->flash('error', 'Could not update company. Please try again.');
+
             return;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             if ($newLogoPath) {
                 Storage::disk('public')->delete($newLogoPath);
             }
 
             report($e);
             session()->flash('error', 'Could not update company. Please try again.');
+
             return;
         }
 
@@ -391,16 +409,24 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     protected function deleteLogoFile(?string $path, ?int $exceptId = null): void
     {
-        if (blank($path)) return;
-        if (filter_var($path, FILTER_VALIDATE_URL)) return;
-        if (str_starts_with($path, '/imgs/') || str_starts_with($path, '/storage/')) return;
+        if (blank($path)) {
+            return;
+        }
+        if (filter_var($path, FILTER_VALIDATE_URL)) {
+            return;
+        }
+        if (str_starts_with($path, '/imgs/') || str_starts_with($path, '/storage/')) {
+            return;
+        }
 
         $stillUsed = Company::query()
             ->when($exceptId, fn ($q) => $q->where('id', '!=', $exceptId))
             ->where('company_logo', $path)
             ->exists();
 
-        if ($stillUsed) return;
+        if ($stillUsed) {
+            return;
+        }
 
         $relative = ltrim($path, '/');
         Storage::disk('public')->delete($relative);

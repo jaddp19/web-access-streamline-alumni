@@ -340,11 +340,11 @@ new #[Title('Reports')] #[Layout('layouts.app-super-admin')] class extends Compo
     public function reportLabel(): string
     {
         return match ($this->tab) {
-            'employment'    => 'Yearly Alumni Employment Statistics',
-            'industry'      => 'Top Industries & Employers of Alumni',
-            'engagement'    => 'Alumni Engagement Participation Rates',
+            'employment' => 'Yearly Alumni Employment Statistics',
+            'industry' => 'Top Industries & Employers of Alumni',
+            'engagement' => 'Alumni Engagement Participation Rates',
             'board_passers' => 'Alumni Board Passers & Top Notchers',
-            default         => 'Report',
+            default => 'Report',
         };
     }
 

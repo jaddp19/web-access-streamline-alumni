@@ -1,4 +1,6 @@
-<div>
+<div x-data="{ modalOpen: @entangle('viewingEventId') }" 
+     @keydown.escape.window="$wire.closeEvent()">
+     
     <div class="max-w-[85rem] mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10 lg:py-14">
         <div class="flex flex-col rounded-2xl border border-black/5 dark:border-white/5 bg-white dark:bg-[#242526] shadow-sm overflow-hidden">
 
@@ -114,7 +116,7 @@
                             @endphp
                             <tr wire:key="event-{{ $event->id }}" class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
                                 <td class="ps-4 sm:ps-6 py-3">
-                                    <div class="flex items-center gap-3 min-w-0">
+                                    <div class="flex items-center gap-3 min-w-0 cursor-pointer group" wire:click="openEvent({{ $event->id }})">
                                         @if ($event->image)
                                             <img src="{{ $event->image_url }}" alt="" loading="lazy"
                                                 class="w-10 h-10 rounded-lg object-cover shrink-0 bg-[#F7F5EF] dark:bg-[#3A3B3C]">
@@ -127,7 +129,9 @@
                                             </div>
                                         @endif
                                         <div class="min-w-0">
-                                            <span class="font-semibold text-[#123524] dark:text-white block truncate">{{ $event->title }}</span>
+                                            <span class="font-semibold text-[#123524] dark:text-white block truncate group-hover:text-[#1877F2] dark:group-hover:text-[#D4A537] transition-colors">
+                                                {{ $event->title }}
+                                            </span>
                                             <span class="md:hidden text-black/50 dark:text-white/50 text-[11px] block truncate">
                                                 {{ $event->starts_at->format('M d, Y · g:i A') }}
                                             </span>
@@ -233,4 +237,159 @@
             </div>
         </div>
     </div>
+
+    {{-- ================= CENTERED SINGLE VIEW MODAL ================= --}}
+    <template x-teleport="body">
+        <div x-show="modalOpen" class="relative z-[100]" aria-labelledby="modal-title" role="dialog" aria-modal="true" x-cloak>
+            
+            {{-- Backdrop --}}
+            <div x-show="modalOpen" 
+                 x-transition:enter="ease-out duration-300" 
+                 x-transition:enter-start="opacity-0" 
+                 x-transition:enter-end="opacity-100" 
+                 x-transition:leave="ease-in duration-200" 
+                 x-transition:leave-start="opacity-100" 
+                 x-transition:leave-end="opacity-0" 
+                 class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" 
+                 @click="$wire.closeEvent()"></div>
+
+            <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+                <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                    
+                    {{-- Modal Panel --}}
+                    <div x-show="modalOpen" 
+                         x-transition:enter="ease-out duration-300" 
+                         x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+                         x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" 
+                         x-transition:leave="ease-in duration-200" 
+                         x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" 
+                         x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+                         class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-[#242526] text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-xl border border-black/5 dark:border-white/5">
+                        
+                        @if($this->viewingEvent)
+                            @php $ev = $this->viewingEvent; @endphp
+
+                            {{-- Header --}}
+                            <div class="px-4 py-5 sm:px-6 bg-[#F7F5EF] dark:bg-[#3A3B3C] border-b border-black/5 dark:border-white/5 flex items-start justify-between">
+                                <div>
+                                    <h2 class="text-lg font-bold text-[#123524] dark:text-white" id="modal-title" style="font-family: 'Fraunces', serif;">
+                                        Event Details
+                                    </h2>
+                                    <div class="mt-2">
+                                        <span class="inline-flex items-center text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wide 
+                                            {{ $ev->status === 'published' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400' : ($ev->status === 'cancelled' ? 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400' : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300') }}">
+                                            {{ $ev->status }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <button type="button" @click="$wire.closeEvent()" class="relative rounded-md bg-transparent text-gray-400 hover:text-gray-500 focus:outline-none">
+                                    <span class="sr-only">Close</span>
+                                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            {{-- Body --}}
+                            <div class="px-4 py-6 sm:px-6">
+                                
+                                {{-- Image --}}
+                                @if($ev->image)
+                                    <div class="mb-6 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800">
+                                        <img src="{{ $ev->image_url }}" alt="{{ $ev->title }}" class="w-full h-48 sm:h-64 object-cover">
+                                    </div>
+                                @endif
+
+                                {{-- Title & Desc --}}
+                                <h3 class="text-2xl font-bold text-[#123524] dark:text-white">{{ $ev->title }}</h3>
+                                <div class="mt-4 prose prose-sm text-black/70 dark:text-white/70">
+                                    <p>{{ $ev->description ?? 'No description provided.' }}</p>
+                                </div>
+
+                                {{-- Details List --}}
+                                <div class="mt-8 border-t border-black/5 dark:border-white/5 pt-6 grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-4">
+                                    <div class="flex gap-x-3">
+                                        <svg class="h-6 w-5 flex-none text-[#a97f1f] dark:text-[#D4A537]" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                                        </svg>
+                                        <div class="text-sm">
+                                            <p class="font-semibold text-black dark:text-white">Schedule</p>
+                                            <p class="text-black/60 dark:text-white/60">Starts: {{ $ev->starts_at->format('M j, Y g:i A') }}</p>
+                                            @if($ev->ends_at)
+                                                <p class="text-black/60 dark:text-white/60">Ends: {{ $ev->ends_at->format('M j, Y g:i A') }}</p>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    <div class="flex gap-x-3">
+                                        <svg class="h-6 w-5 flex-none text-[#a97f1f] dark:text-[#D4A537]" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                                        </svg>
+                                        <div class="text-sm">
+                                            <p class="font-semibold text-black dark:text-white">Location</p>
+                                            <p class="text-black/60 dark:text-white/60">{{ $ev->location ?? 'TBA' }}</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex gap-x-3">
+                                        <svg class="h-6 w-5 flex-none text-[#a97f1f] dark:text-[#D4A537]" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                                        </svg>
+                                        <div class="text-sm">
+                                            <p class="font-semibold text-black dark:text-white">Capacity</p>
+                                            <p class="text-black/60 dark:text-white/60">{{ $ev->capacity ? $ev->capacity . ' attendees max' : 'Unlimited' }}</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex gap-x-3">
+                                        <svg class="h-6 w-5 flex-none text-[#a97f1f] dark:text-[#D4A537]" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                                        </svg>
+                                        <div class="text-sm">
+                                            <p class="font-semibold text-black dark:text-white">Created By</p>
+                                            <p class="text-black/60 dark:text-white/60">{{ $ev->creator?->name ?? 'System' }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Metadata (Created/Updated) --}}
+                                <div class="mt-8 pt-6 border-t border-black/5 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-black/40 dark:text-white/40">
+                                    <div class="flex items-center gap-1.5">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <span>Created: {{ $ev->created_at->format('M j, Y g:i A') }}</span>
+                                    </div>
+                                    
+                                    @if($ev->updated_at->gt($ev->created_at))
+                                        <div class="flex items-center gap-1.5">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                                            </svg>
+                                            <span>Updated: {{ $ev->updated_at->format('M j, Y g:i A') }}</span>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            {{-- Footer Actions --}}
+                            <div class="bg-[#F7F5EF] dark:bg-[#3A3B3C] px-4 py-4 sm:px-6 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 border-t border-black/5 dark:border-white/5 rounded-b-2xl">
+                                <button type="button" @click="$wire.closeEvent()"
+                                    class="w-full sm:w-auto justify-center inline-flex rounded-lg bg-white dark:bg-[#242526] px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-white/10 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+                                    Close
+                                </button>
+                                @can('can_update')
+                                <a href="{{ route('admin.event.update', $ev->id) }}" wire:navigate
+                                    class="w-full sm:w-auto justify-center inline-flex rounded-lg bg-[#123524] dark:bg-[#D4A537] px-4 py-2.5 text-sm font-semibold text-white dark:text-[#123524] shadow-sm hover:bg-[#0d2819] dark:hover:bg-[#E5B94A] transition">
+                                    Edit Event
+                                </a>
+                                @endcan
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
 </div>

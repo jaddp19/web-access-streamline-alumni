@@ -15,13 +15,13 @@ class TemplatedMail extends Mailable
         public string $bodyHtml,
     ) {}
 
-     public function build()
+    public function build()
     {
         return $this->subject($this->emailSubject)
             ->view('emails.template')
             ->with([
                 'emailSubject' => $this->emailSubject,
-                'bodyHtml'     => $this->bodyHtml,
+                'bodyHtml' => $this->bodyHtml,
             ]);
     }
 }

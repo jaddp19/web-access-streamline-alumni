@@ -12,10 +12,10 @@ class CompanyFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_name'    => fake()->unique()->company(),
-            'company_logo'    => null,
+            'company_name' => fake()->unique()->company(),
+            'company_logo' => null,
             'company_address' => fake()->address(),
-            'company_desc'    => fake()->catchPhrase(),
+            'company_desc' => fake()->catchPhrase(),
         ];
     }
 }
