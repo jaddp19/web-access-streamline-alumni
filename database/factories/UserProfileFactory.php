@@ -70,10 +70,14 @@ class UserProfileFactory extends Factory
             'is_approved' => false,
             'is_verified' => false,
             'last_rejection_reason' => $reason ?? fake()->randomElement([
-                'Board rating doesn\'t match the official PRC records. Please update and resubmit.',
-                'School ID appears incorrect. Please double-check and resubmit.',
-                'Name in the profile does not match our records. Please correct it.',
-                'Contact number appears invalid. Please provide a reachable number.',
+                'The information you provided does not match our records. Please verify and resubmit.',
+                'Inaccurate details were detected in your submission. Please review and update them.',
+                'Some of the information provided appears to be outdated or incorrect. Please update and resubmit.',
+                'The details submitted are inconsistent with your profile. Please correct them and try again.',
+                'Your submission contains unverifiable information. Please provide accurate details and resubmit.',
+                'Discrepancies were found in the information you provided. Please correct and resubmit.',
+                'The details you entered do not appear to be valid. Please double-check and resubmit.',
+                'Incomplete or inaccurate information was submitted. Please review all fields and try again.',
             ]),
         ]);
     }

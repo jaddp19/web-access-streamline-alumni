@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -18,25 +19,15 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public Event $event;
 
     public string $title = '';
-
     public string $description = '';
-
     public string $location = '';
-
     public string $starts_at = '';
-
     public string $ends_at = '';
-
     public string $registration_deadline = '';
-
     public ?int $capacity = null;
-
     public string $status = 'draft';
-
     public $image = null;
-
     public ?string $currentImage = null;
-
     public bool $resendInvitation = false;
 
     public function mount(Event $event): void
@@ -68,36 +59,28 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                 'string',
                 'min:3',
                 'max:255',
-                // Reject whitespace-only titles
                 function ($attribute, $value, $fail) {
                     if (trim($value) === '') {
                         $fail('The title cannot be empty or whitespace.');
                     }
                 },
             ],
-
             'description' => ['nullable', 'string', 'max:5000'],
-
             'location' => [
                 'nullable',
                 'string',
                 'max:255',
-                // Reject whitespace-only location if provided
                 function ($attribute, $value, $fail) {
                     if ($value !== null && $value !== '' && trim($value) === '') {
                         $fail('The location cannot be whitespace only.');
                     }
                 },
             ],
-
-            // Must be a valid datetime, cannot be absurdly far out
             'starts_at' => [
                 'required',
                 'date',
-                'before:+5 years',   // no event 5+ years in the future
+                'before:+5 years',
             ],
-
-            // Ends after start, within 30 days of start
             'ends_at' => [
                 'nullable',
                 'date',
@@ -106,11 +89,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                     if (! $value || ! $this->starts_at) {
                         return;
                     }
-
                     try {
                         $start = Carbon::parse($this->starts_at);
                         $end = Carbon::parse($value);
-
                         if ($end->diffInDays($start) > 30) {
                             $fail('The end date cannot be more than 30 days after the start.');
                         }
@@ -119,8 +100,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                     }
                 },
             ],
-
-            // Deadline must be before start, and cannot be in the past (when publishing)
             'registration_deadline' => [
                 'nullable',
                 'date',
@@ -129,17 +108,13 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                     if (! $value) {
                         return;
                     }
-
                     try {
                         $deadline = Carbon::parse($value);
                         $start = $this->starts_at ? Carbon::parse($this->starts_at) : null;
 
-                        // Deadline cannot be in the past if the event is being published
                         if ($this->status === 'published' && $deadline->isPast()) {
                             $fail('The registration deadline cannot be in the past for a published event.');
                         }
-
-                        // Deadline cannot be more than 1 year before the start
                         if ($start && $deadline->diffInDays($start) > 365) {
                             $fail('The registration deadline is too far before the event start.');
                         }
@@ -148,8 +123,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                     }
                 },
             ],
-
-            // Capacity must be >= current attendee count
             'capacity' => [
                 'nullable',
                 'integer',
@@ -159,19 +132,14 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                     if (! $value) {
                         return;
                     }
-
                     $currentAttendees = $this->event->attendeeCount();
-
                     if ($value < $currentAttendees) {
                         $fail("Capacity cannot be less than the {$currentAttendees} alumni who already RSVP'd.");
                     }
                 },
             ],
-
             'status' => ['required', Rule::in(['draft', 'published', 'cancelled', 'completed'])],
-
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
-
             'resendInvitation' => ['boolean'],
         ];
     }
@@ -195,20 +163,56 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             'capacity.min' => 'Capacity must be at least 1.',
             'capacity.max' => 'Capacity cannot exceed 10,000.',
             'status.in' => 'The selected status is invalid.',
-            'image.image' => 'Cover image must be a valid image file.',
-            'image.mimes' => 'Cover image must be a JPG, PNG, or WebP file.',
+            // 👇 UPDATED MESSAGES HERE
+            'image.image' => 'Only image files can be uploaded.',
+            'image.mimes' => 'Only .png, .webp, .jpeg, and .jpg files are allowed for the cover image.',
             'image.max' => 'Cover image cannot exceed 5MB.',
         ];
     }
 
     // =========================================================
-    //  CROSS-FIELD VALIDATION (runs after rules pass)
+    //  FILE HANDLING
     // =========================================================
 
-    /**
-     * Extra logic that needs to consider multiple fields together —
-     * runs after individual rules pass.
-     */
+    public function updatedImage(): void
+    {
+        if (! $this->image) {
+            return;
+        }
+
+        try {
+            // Validate strictly on upload
+            $this->validateOnly('image', [
+                'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            ], [
+                'image.image' => 'Only image files can be uploaded.',
+                'image.mimes' => 'Only .png, .webp, .jpeg, and .jpg files are allowed for the cover image.',
+                'image.max' => 'Cover image cannot exceed 5MB.',
+            ]);
+        } catch (ValidationException $e) {
+            // Clear the invalid file so Blade doesn't crash trying to render a CSV preview
+            $this->reset('image');
+            
+            // Re-throw so Livewire displays the red error message
+            throw $e;
+        }
+    }
+
+    public function removeImage(): void
+    {
+        $this->image = null;
+        $this->resetErrorBag('image');
+    }
+
+    public function removeExistingImage(): void
+    {
+        $this->currentImage = null;
+    }
+
+    // =========================================================
+    //  SAVE
+    // =========================================================
+
     public function save()
     {
         Gate::authorize('can_update');
@@ -216,33 +220,25 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $this->validate();
 
         // --- Cross-field guards ---
-
-        // 1. Cannot publish an event whose start time is in the past
         if ($this->status === 'published' && Carbon::parse($this->starts_at)->isPast()) {
             $this->addError('starts_at', 'You cannot publish an event with a start date in the past.');
-
             return;
         }
 
-        // 2. Cannot set status to "completed" for an event that hasn't ended yet
         if ($this->status === 'completed') {
             $endOrStart = $this->ends_at ?: $this->starts_at;
-
             if (Carbon::parse($endOrStart)->isFuture()) {
                 $this->addError('status', 'You cannot mark an event as completed before it has ended.');
-
                 return;
             }
         }
 
-        // 3. Cannot cancel an event that already has attendees unless it's still upcoming
         if ($this->status === 'cancelled'
             && $this->event->status !== 'cancelled'
             && $this->event->attendeeCount() > 0
             && Carbon::parse($this->starts_at)->isPast()
         ) {
             $this->addError('status', 'You cannot cancel a past event with existing attendees.');
-
             return;
         }
 
@@ -253,7 +249,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         ]);
 
         $wasPublished = $this->event->status === 'published';
-
         $newImagePath = null;
         $finalImagePath = $this->currentImage;
 
@@ -282,10 +277,8 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             if ($newImagePath) {
                 Storage::disk('public')->delete($newImagePath);
             }
-
             report($e);
             session()->flash('error', 'Could not update event. Please try again.');
-
             return;
         }
 
@@ -297,12 +290,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         // Blast decision
         $justPublished = ! $wasPublished && $validated['status'] === 'published';
-
-        $adminRequestedResend = $wasPublished
-            && $validated['status'] === 'published'
-            && $this->resendInvitation;
-
-        // Fires only on the *transition* into 'cancelled', not on every save
+        $adminRequestedResend = $wasPublished && $validated['status'] === 'published' && $this->resendInvitation;
         $justCancelled = $wasPublished && $validated['status'] === 'cancelled';
 
         if ($justPublished || $adminRequestedResend) {
@@ -323,21 +311,5 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         });
 
         return redirect()->route('super-admin.events.view');
-    }
-
-    public function updatedImage(): void
-    {
-        $this->validateOnly('image');
-    }
-
-    public function removeImage(): void
-    {
-        $this->image = null;
-        $this->resetErrorBag('image');
-    }
-
-    public function removeExistingImage(): void
-    {
-        $this->currentImage = null;
     }
 };

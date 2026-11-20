@@ -416,4 +416,23 @@ new #[Title('Reports')] #[Layout('layouts.app-super-admin')] class extends Compo
             ['path' => request()->url(), 'query' => request()->query()]
         );
     }
+
+    // ===== PRINT-ONLY: full (un-paginated) datasets for each tab =====
+    #[Computed]
+    public function employmentRowsForPrint(): array
+    {
+        return $this->report()->employmentStats();
+    }
+
+    #[Computed]
+    public function engagementRowsForPrint(): array
+    {
+        return $this->report()->engagementRates($this->dateRange);
+    }
+
+    #[Computed]
+    public function boardPassersForPrint(): array
+    {
+        return $this->report()->boardPassers();
+    }
 };

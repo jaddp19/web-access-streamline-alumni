@@ -447,4 +447,22 @@ new #[Layout('layouts.app-admin')] class extends Component
             ['path' => request()->url(), 'query' => request()->query()]
         );
     }
+
+    #[Computed]
+    public function employmentRowsForPrint(): array
+    {
+        return $this->hasNoDepartment ? [] : $this->report()->employmentStats();
+    }
+
+    #[Computed]
+    public function engagementRowsForPrint(): array
+    {
+        return $this->hasNoDepartment ? [] : $this->report()->engagementRates($this->dateRange);
+    }
+
+    #[Computed]
+    public function boardPassersForPrint(): array
+    {
+        return $this->hasNoDepartment ? [] : $this->report()->boardPassers();
+    }
 };

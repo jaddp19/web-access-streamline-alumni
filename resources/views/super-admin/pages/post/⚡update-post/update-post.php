@@ -4,11 +4,13 @@ use App\Jobs\SendPostAnnouncementEmail;
 use App\Models\Category;
 use App\Models\Post;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -21,22 +23,16 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public Post $post;
 
     public string $title = '';
-
     public string $description = '';
-
     public ?int $category_id = null;
-
     public string $status = 'draft';
-
+    
     public $image = null;
-
     public ?string $currentImage = null;
-
+    
     public array $existingAttachments = [];
-
     public array $attachments = [];
-
-    /** Set by the "Resend announcement" checkbox — only applies to already-public posts. */
+    
     public bool $resendAnnouncement = false;
 
     public function mount(Post $post): void
@@ -44,12 +40,13 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         Gate::authorize('can_update');
 
         $this->post = $post;
-
         $this->title = $post->title;
         $this->description = $post->description ?? '';
         $this->category_id = $post->category_id;
         $this->status = $post->status;
         $this->currentImage = $post->image;
+        
+        // Ensure it's strictly an array
         $this->existingAttachments = is_array($post->attachments) ? $post->attachments : [];
     }
 
@@ -131,10 +128,11 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             'category_id.required' => 'Please select a category.',
             'category_id.exists' => 'The selected category no longer exists.',
             'status.in' => 'The selected status is invalid.',
-            'image.image' => 'Cover image must be a valid image file.',
-            'image.mimes' => 'Cover image must be a JPG, PNG, or WebP file.',
+            // 👇 UPDATED MESSAGES HERE
+            'image.image' => 'Only image files can be uploaded.',
+            'image.mimes' => 'Only .png, .webp, .jpeg, and .jpg files are allowed for the cover image.',
             'image.max' => 'Cover image cannot exceed 5MB.',
-            'attachments.max' => 'You can attach up to 5 files.',
+            'attachments.max' => 'You can attach up to 5 files total.',
             'attachments.*.max' => 'Each attachment cannot exceed 10MB.',
             'attachments.*.mimes' => 'One or more attachments have an unsupported file type.',
         ];
@@ -146,7 +144,26 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function updatedImage(): void
     {
-        $this->validateOnly('image');
+        if (! $this->image) {
+            return;
+        }
+
+        try {
+            // Validate strictly on upload
+            $this->validateOnly('image', [
+                'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            ], [
+                'image.image' => 'Only image files can be uploaded.',
+                'image.mimes' => 'Only .png, .webp, .jpeg, and .jpg files are allowed for the cover image.',
+                'image.max' => 'Cover image cannot exceed 5MB.',
+            ]);
+        } catch (ValidationException $e) {
+            // Clear the invalid file so Blade doesn't crash trying to render a CSV preview
+            $this->reset('image');
+            
+            // Re-throw so Livewire displays the red error message
+            throw $e;
+        }
     }
 
     public function updatedAttachments(): void
@@ -190,13 +207,16 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public function save()
     {
         Gate::authorize('can_update');
+
         $validated = $this->validate();
 
-        // Capture status BEFORE update — used to decide blast behavior.
         $wasPublic = $this->post->status === 'public';
-
         $newImagePath = null;
         $newAttachmentPaths = [];
+
+        // Store ORIGINAL paths before we modify the model
+        $originalImage = $this->post->image;
+        $originalAttachments = is_array($this->post->attachments) ? $this->post->attachments : [];
 
         try {
             // --- 1. Build the slug ---
@@ -207,7 +227,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
             // --- 2. Compute final image path ---
             $finalImagePath = $this->currentImage;
-
             if ($this->image) {
                 $newImagePath = $this->image->store('posts', 'public');
                 $finalImagePath = $newImagePath;
@@ -216,8 +235,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             }
 
             // --- 3. Compute final attachments list ---
+            // Start with existing attachments that were NOT removed
             $finalAttachments = $this->existingAttachments;
 
+            // Append newly uploaded files
             foreach ($this->attachments as $file) {
                 if ($file) {
                     $path = $file->store('posts/attachments', 'public');
@@ -242,68 +263,54 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                     'image' => $finalImagePath,
                     'category_id' => $validated['category_id'],
                     'status' => $validated['status'],
-                    'attachments' => array_values($finalAttachments) ?: null,
+                    'attachments' => array_values(array_unique($finalAttachments)) ?: null,
                 ]);
             });
+            
         } catch (QueryException $e) {
             $this->cleanupFiles($newImagePath, $newAttachmentPaths);
 
             if ($e->getCode() === '23000') {
                 $this->addError('title', 'This title was just taken. Please try again.');
-
                 return;
             }
 
             report($e);
             session()->flash('error', 'Could not update post. Please try again.');
-
             return;
         } catch (Throwable $e) {
             $this->cleanupFiles($newImagePath, $newAttachmentPaths);
-
             report($e);
             session()->flash('error', 'Could not update post. Please try again.');
-
             return;
         }
 
-        // --- 5. Cleanup OLD files AFTER successful commit ---
-        $originalImage = $this->post->getOriginal('image');
+        // --- 5. Safely Cleanup OLD files ---
+        // Delete old image ONLY if a new one was uploaded
         if ($originalImage && $originalImage !== $finalImagePath) {
             if (! $this->isSharedFile($originalImage, 'image')) {
                 Storage::disk('public')->delete($originalImage);
             }
         }
 
-        $originalAttachments = is_array($this->post->getOriginal('attachments'))
-            ? $this->post->getOriginal('attachments')
-            : [];
-
-        $removed = array_diff($originalAttachments, $this->existingAttachments);
-        foreach ($removed as $path) {
+        // Delete old attachments ONLY if they were explicitly removed by the user
+        $removedAttachments = array_diff($originalAttachments, $this->existingAttachments);
+        foreach ($removedAttachments as $path) {
             if ($path && ! $this->isSharedFile($path, 'attachment')) {
                 Storage::disk('public')->delete($path);
             }
         }
 
         // --- 6. Email blast decision ---
-        // Case A — first-time publish: draft/private → public.
         $justBecamePublic = ! $wasPublic && $validated['status'] === 'public';
+        $adminRequestedResend = $wasPublic && $validated['status'] === 'public' && $this->resendAnnouncement;
 
-        // Case B — already public, admin explicitly ticked "resend".
-        $adminRequestedResend = $wasPublic
-            && $validated['status'] === 'public'
-            && $this->resendAnnouncement;
-
-        $shouldBlast = $justBecamePublic || $adminRequestedResend;
-
-        if ($shouldBlast) {
-            SendPostAnnouncementEmail::dispatch($this->post->id)->afterCommit();
+        if ($justBecamePublic || $adminRequestedResend) {
+            // 👇 Note: Ensure your Job accepts the second argument (Auth::id()) if you updated it earlier!
+            SendPostAnnouncementEmail::dispatch($this->post->id, Auth::id())->afterCommit();
         }
 
         Cache::forget('posts:count');
-
-        // Reset the checkbox so it doesn't stay ticked on next edit.
         $this->resendAnnouncement = false;
 
         session()->flash('success', match (true) {
@@ -325,11 +332,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $slug = $base;
         $i = 2;
 
-        while (
-            Post::where('slug', $slug)
-                ->where('id', '!=', $this->post->id)
-                ->exists()
-        ) {
+        while (Post::where('slug', $slug)->where('id', '!=', $this->post->id)->exists()) {
             $slug = "{$base}-{$i}";
             $i++;
         }

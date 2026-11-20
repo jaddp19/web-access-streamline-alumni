@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -16,27 +17,20 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     use WithFileUploads;
 
     public string $title = '';
-
     public string $description = '';
-
     public string $location = '';
-
     public string $starts_at = '';
-
     public string $ends_at = '';
-
     public string $registration_deadline = '';
-
     public ?int $capacity = null;
-
     public string $status = 'draft';
-
     public $image = null;
 
     public function mount(): void
     {
         Gate::authorize('can_create');
     }
+
     // =========================================================
     //  VALIDATION
     // =========================================================
@@ -55,9 +49,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                     }
                 },
             ],
-
             'description' => ['nullable', 'string', 'max:5000'],
-
             'location' => [
                 'nullable',
                 'string',
@@ -68,15 +60,12 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                     }
                 },
             ],
-
-            // Must be valid, in the future, not absurdly far out
             'starts_at' => [
                 'required',
                 'date',
                 'after:now',
                 'before:+5 years',
             ],
-
             'ends_at' => [
                 'nullable',
                 'date',
@@ -85,11 +74,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                     if (! $value || ! $this->starts_at) {
                         return;
                     }
-
                     try {
                         $start = Carbon::parse($this->starts_at);
                         $end = Carbon::parse($value);
-
                         if ($end->diffInDays($start) > 30) {
                             $fail('The end date cannot be more than 30 days after the start.');
                         }
@@ -98,7 +85,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                     }
                 },
             ],
-
             'registration_deadline' => [
                 'nullable',
                 'date',
@@ -107,17 +93,13 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                     if (! $value) {
                         return;
                     }
-
                     try {
                         $deadline = Carbon::parse($value);
-
                         if ($this->status === 'published' && $deadline->isPast()) {
                             $fail('The registration deadline cannot be in the past for a published event.');
                         }
-
                         if ($this->starts_at) {
                             $start = Carbon::parse($this->starts_at);
-
                             if ($deadline->diffInDays($start) > 365) {
                                 $fail('The registration deadline is too far before the event start.');
                             }
@@ -127,11 +109,8 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                     }
                 },
             ],
-
             'capacity' => ['nullable', 'integer', 'min:1', 'max:10000'],
-
             'status' => ['required', 'in:draft,published'],
-
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ];
     }
@@ -156,8 +135,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             'capacity.min' => 'Capacity must be at least 1.',
             'capacity.max' => 'Capacity cannot exceed 10,000.',
             'status.in' => 'The selected status is invalid.',
-            'image.image' => 'Cover image must be a valid image file.',
-            'image.mimes' => 'Cover image must be a JPG, PNG, or WebP file.',
+            // 👇 UPDATED MESSAGES HERE
+            'image.image' => 'Only image files can be uploaded.',
+            'image.mimes' => 'Only .png, .webp, .jpeg, and .jpg files are allowed for the cover image.',
             'image.max' => 'Cover image cannot exceed 5MB.',
         ];
     }
@@ -168,7 +148,26 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function updatedImage(): void
     {
-        $this->validateOnly('image');
+        if (! $this->image) {
+            return;
+        }
+
+        try {
+            // Validate strictly on upload
+            $this->validateOnly('image', [
+                'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            ], [
+                'image.image' => 'Only image files can be uploaded.',
+                'image.mimes' => 'Only .png, .webp, .jpeg, and .jpg files are allowed for the cover image.',
+                'image.max' => 'Cover image cannot exceed 5MB.',
+            ]);
+        } catch (ValidationException $e) {
+            // Clear the invalid file so Blade doesn't crash trying to render a CSV preview
+            $this->reset('image');
+
+            // Re-throw so Livewire displays the red error message
+            throw $e;
+        }
     }
 
     public function removeImage(): void
@@ -187,14 +186,8 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         $this->validate();
 
-        // --- Cross-field guards ---
-
-        // 1. Cannot publish an event whose start time is in the past
-        if ($this->status === 'published'
-            && Carbon::parse($this->starts_at)->isPast()
-        ) {
+        if ($this->status === 'published' && Carbon::parse($this->starts_at)->isPast()) {
             $this->addError('starts_at', 'You cannot publish an event with a start date in the past.');
-
             return;
         }
 
@@ -230,14 +223,11 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             if ($imagePath) {
                 Storage::disk('public')->delete($imagePath);
             }
-
             report($e);
             session()->flash('error', 'Could not create event. Please try again.');
-
             return;
         }
 
-        // Fire invitation blast if published immediately
         if ($validated['status'] === 'published') {
             SendEventInvitationEmail::dispatch($event->id)->afterCommit();
         }

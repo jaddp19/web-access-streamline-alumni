@@ -207,118 +207,144 @@
                                     selected filters.</p>
                             </div>
                         @else
-                            <div class="overflow-x-auto">
-                                <table class="min-w-full text-xs sm:text-sm">
-                                    <thead class="bg-[#F7F5EF] dark:bg-[#3A3B3C]">
-                                        <tr>
-                                            <th
-                                                class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">
-                                                Batch</th>
-                                            <th
-                                                class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">
-                                                Total</th>
-                                            <th
-                                                class="px-4 py-3 text-end font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-400 text-[11px]">
-                                                Employed</th>
-                                            <th
-                                                class="px-4 py-3 text-end font-bold uppercase tracking-wide text-red-700 dark:text-red-400 text-[11px]">
-                                                Unemployed</th>
-                                            <th
-                                                class="px-4 py-3 text-end font-bold uppercase tracking-wide text-amber-700 dark:text-amber-400 text-[11px]">
-                                                Self-Emp.</th>
-                                            <th
-                                                class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">
-                                                Other</th>
-                                            <th
-                                                class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">
-                                                Rate</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-black/5 dark:divide-white/5">
-                                        @foreach ($this->employmentRows as $row)
-                                            <tr
-                                                class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
-                                                <td class="px-4 py-3 font-semibold text-[#123524] dark:text-white">
-                                                    {{ $row['batch_name'] }}</td>
-                                                <td class="px-4 py-3 text-end text-black/70 dark:text-white/70">
-                                                    {{ $row['total'] }}</td>
-                                                <td
-                                                    class="px-4 py-3 text-end text-emerald-700 dark:text-emerald-400 font-semibold">
-                                                    {{ $row['employed'] }}</td>
-                                                <td class="px-4 py-3 text-end text-red-700 dark:text-red-400">
-                                                    {{ $row['unemployed'] }}</td>
-                                                <td class="px-4 py-3 text-end text-amber-700 dark:text-amber-400">
-                                                    {{ $row['self_employed'] }}</td>
-                                                <td class="px-4 py-3 text-end text-black/70 dark:text-white/70">
-                                                    {{ $row['other'] }}</td>
-                                                <td class="px-4 py-3 text-end">
-                                                    <span
-                                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold
+                            {{-- ============ ON-SCREEN (paginated, hidden on print) ============ --}}
+                            <div class="no-print">
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full text-xs sm:text-sm">
+                                        <thead class="bg-[#F7F5EF] dark:bg-[#3A3B3C]">
+                                            <tr>
+                                                <th class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Batch</th>
+                                                <th class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Total</th>
+                                                <th class="px-4 py-3 text-end font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-400 text-[11px]">Employed</th>
+                                                <th class="px-4 py-3 text-end font-bold uppercase tracking-wide text-red-700 dark:text-red-400 text-[11px]">Unemployed</th>
+                                                <th class="px-4 py-3 text-end font-bold uppercase tracking-wide text-amber-700 dark:text-amber-400 text-[11px]">Self-Emp.</th>
+                                                <th class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Other</th>
+                                                <th class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Rate</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-black/5 dark:divide-white/5">
+                                            @foreach ($this->employmentRows as $row)
+                                                <tr class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
+                                                    <td class="px-4 py-3 font-semibold text-[#123524] dark:text-white">{{ $row['batch_name'] }}</td>
+                                                    <td class="px-4 py-3 text-end text-black/70 dark:text-white/70">{{ $row['total'] }}</td>
+                                                    <td class="px-4 py-3 text-end text-emerald-700 dark:text-emerald-400 font-semibold">{{ $row['employed'] }}</td>
+                                                    <td class="px-4 py-3 text-end text-red-700 dark:text-red-400">{{ $row['unemployed'] }}</td>
+                                                    <td class="px-4 py-3 text-end text-amber-700 dark:text-amber-400">{{ $row['self_employed'] }}</td>
+                                                    <td class="px-4 py-3 text-end text-black/70 dark:text-white/70">{{ $row['other'] }}</td>
+                                                    <td class="px-4 py-3 text-end">
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold
                                                         {{ $row['employment_rate'] >= 75
                                                             ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
                                                             : ($row['employment_rate'] >= 50
                                                                 ? 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400'
                                                                 : 'bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400') }}">
-                                                        {{ number_format($row['employment_rate'], 1) }}%
+                                                            {{ number_format($row['employment_rate'], 1) }}%
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                        <tfoot class="bg-[#F7F5EF] dark:bg-[#3A3B3C] border-t-2 border-black/10 dark:border-white/10">
+                                            @php $t = $this->employmentTotals; @endphp
+                                            <tr>
+                                                <td class="px-4 py-3 font-bold text-[#123524] dark:text-white uppercase text-[11px] tracking-wide">Total</td>
+                                                <td class="px-4 py-3 text-end font-bold text-[#123524] dark:text-white">{{ $t['total'] }}</td>
+                                                <td class="px-4 py-3 text-end font-bold text-emerald-700 dark:text-emerald-400">{{ $t['employed'] }}</td>
+                                                <td class="px-4 py-3 text-end font-bold text-red-700 dark:text-red-400">{{ $t['unemployed'] }}</td>
+                                                <td class="px-4 py-3 text-end font-bold text-amber-700 dark:text-amber-400">{{ $t['self_employed'] }}</td>
+                                                <td class="px-4 py-3 text-end font-bold text-black/70 dark:text-white/70">{{ $t['other'] }}</td>
+                                                <td class="px-4 py-3 text-end">
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#123524]/10 dark:bg-[#D4A537]/15 text-[#123524] dark:text-[#D4A537]">
+                                                        {{ number_format($t['employment_rate'], 1) }}%
                                                     </span>
                                                 </td>
                                             </tr>
-                                        @endforeach
-                                    </tbody>
-                                    <tfoot
-                                        class="bg-[#F7F5EF] dark:bg-[#3A3B3C] border-t-2 border-black/10 dark:border-white/10">
-                                        @php $t = $this->employmentTotals; @endphp
-                                        <tr>
-                                            <td
-                                                class="px-4 py-3 font-bold text-[#123524] dark:text-white uppercase text-[11px] tracking-wide">
-                                                Total</td>
-                                            <td class="px-4 py-3 text-end font-bold text-[#123524] dark:text-white">
-                                                {{ $t['total'] }}</td>
-                                            <td
-                                                class="px-4 py-3 text-end font-bold text-emerald-700 dark:text-emerald-400">
-                                                {{ $t['employed'] }}</td>
-                                            <td class="px-4 py-3 text-end font-bold text-red-700 dark:text-red-400">
-                                                {{ $t['unemployed'] }}</td>
-                                            <td
-                                                class="px-4 py-3 text-end font-bold text-amber-700 dark:text-amber-400">
-                                                {{ $t['self_employed'] }}</td>
-                                            <td class="px-4 py-3 text-end font-bold text-black/70 dark:text-white/70">
-                                                {{ $t['other'] }}</td>
-                                            <td class="px-4 py-3 text-end">
-                                                <span
-                                                    class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#123524]/10 dark:bg-[#D4A537]/15 text-[#123524] dark:text-[#D4A537]">
-                                                    {{ number_format($t['employment_rate'], 1) }}%
-                                                </span>
-                                            </td>
-                                        </tr>
-                                                                        </tfoot>
-                                </table>
+                                        </tfoot>
+                                    </table>
+                                </div>
+
+                                {{-- ===== PAGINATION FOOTER (no-print) ===== --}}
+                                <div class="px-4 sm:px-6 py-3 sm:py-4 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center border-t border-black/5 dark:border-white/5">
+                                    <p class="text-xs sm:text-sm text-black/60 dark:text-white/60 text-center sm:text-left">
+                                        Showing
+                                        <span class="font-semibold text-[#123524] dark:text-white">{{ $this->employmentRows->firstItem() ?? 0 }}</span>–<span class="font-semibold text-[#123524] dark:text-white">{{ $this->employmentRows->lastItem() ?? 0 }}</span>
+                                        of
+                                        <span class="font-semibold text-[#123524] dark:text-white">{{ $this->employmentRows->total() }}</span>
+                                        batches
+                                    </p>
+
+                                    <div class="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
+                                        @if ($this->employmentRows->onFirstPage())
+                                            <button disabled class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg border border-black/10 text-black/30 cursor-not-allowed">Prev</button>
+                                        @else
+                                            <button wire:click="previousPage" class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524]">Prev</button>
+                                        @endif
+
+                                        <span class="sm:hidden text-xs font-semibold text-black/60 dark:text-white/60">{{ $this->employmentRows->currentPage() }} / {{ $this->employmentRows->lastPage() }}</span>
+
+                                        @if ($this->employmentRows->hasMorePages())
+                                            <button wire:click="nextPage" class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524]">Next</button>
+                                        @else
+                                            <button disabled class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg border border-black/10 text-black/30 cursor-not-allowed">Next</button>
+                                        @endif
+                                    </div>
+                                </div>
                             </div>
 
-                            {{-- ===== PAGINATION FOOTER (no-print) ===== --}}
-                            <div class="no-print px-4 sm:px-6 py-3 sm:py-4 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center border-t border-black/5 dark:border-white/5">
-                                <p class="text-xs sm:text-sm text-black/60 dark:text-white/60 text-center sm:text-left">
-                                    Showing
-                                    <span class="font-semibold text-[#123524] dark:text-white">{{ $this->employmentRows->firstItem() ?? 0 }}</span>–<span class="font-semibold text-[#123524] dark:text-white">{{ $this->employmentRows->lastItem() ?? 0 }}</span>
-                                    of
-                                    <span class="font-semibold text-[#123524] dark:text-white">{{ $this->employmentRows->total() }}</span>
-                                    batches
-                                </p>
-
-                                <div class="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
-                                    @if ($this->employmentRows->onFirstPage())
-                                        <button disabled class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg border border-black/10 text-black/30 cursor-not-allowed">Prev</button>
-                                    @else
-                                        <button wire:click="previousPage" class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524]">Prev</button>
-                                    @endif
-
-                                    <span class="sm:hidden text-xs font-semibold text-black/60 dark:text-white/60">{{ $this->employmentRows->currentPage() }} / {{ $this->employmentRows->lastPage() }}</span>
-
-                                    @if ($this->employmentRows->hasMorePages())
-                                        <button wire:click="nextPage" class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524]">Next</button>
-                                    @else
-                                        <button disabled class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg border border-black/10 text-black/30 cursor-not-allowed">Next</button>
-                                    @endif
+                            {{-- ============ PRINT-ONLY (full, un-paginated) ============ --}}
+                            <div class="print-only">
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full text-xs sm:text-sm">
+                                        <thead class="bg-[#F7F5EF] dark:bg-[#3A3B3C]">
+                                            <tr>
+                                                <th class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Batch</th>
+                                                <th class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Total</th>
+                                                <th class="px-4 py-3 text-end font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-400 text-[11px]">Employed</th>
+                                                <th class="px-4 py-3 text-end font-bold uppercase tracking-wide text-red-700 dark:text-red-400 text-[11px]">Unemployed</th>
+                                                <th class="px-4 py-3 text-end font-bold uppercase tracking-wide text-amber-700 dark:text-amber-400 text-[11px]">Self-Emp.</th>
+                                                <th class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Other</th>
+                                                <th class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Rate</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-black/5 dark:divide-white/5">
+                                            @foreach ($this->employmentRowsForPrint as $row)
+                                                <tr>
+                                                    <td class="px-4 py-3 font-semibold text-[#123524] dark:text-white">{{ $row['batch_name'] }}</td>
+                                                    <td class="px-4 py-3 text-end text-black/70 dark:text-white/70">{{ $row['total'] }}</td>
+                                                    <td class="px-4 py-3 text-end text-emerald-700 dark:text-emerald-400 font-semibold">{{ $row['employed'] }}</td>
+                                                    <td class="px-4 py-3 text-end text-red-700 dark:text-red-400">{{ $row['unemployed'] }}</td>
+                                                    <td class="px-4 py-3 text-end text-amber-700 dark:text-amber-400">{{ $row['self_employed'] }}</td>
+                                                    <td class="px-4 py-3 text-end text-black/70 dark:text-white/70">{{ $row['other'] }}</td>
+                                                    <td class="px-4 py-3 text-end">
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold
+                                                        {{ $row['employment_rate'] >= 75
+                                                            ? 'bg-emerald-100 text-emerald-700'
+                                                            : ($row['employment_rate'] >= 50
+                                                                ? 'bg-amber-100 text-amber-700'
+                                                                : 'bg-red-100 text-red-700') }}">
+                                                            {{ number_format($row['employment_rate'], 1) }}%
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                        <tfoot class="bg-[#F7F5EF] dark:bg-[#3A3B3C] border-t-2 border-black/10 dark:border-white/10">
+                                            @php $t = $this->employmentTotals; @endphp
+                                            <tr>
+                                                <td class="px-4 py-3 font-bold text-[#123524] dark:text-white uppercase text-[11px] tracking-wide">Total</td>
+                                                <td class="px-4 py-3 text-end font-bold text-[#123524] dark:text-white">{{ $t['total'] }}</td>
+                                                <td class="px-4 py-3 text-end font-bold text-emerald-700 dark:text-emerald-400">{{ $t['employed'] }}</td>
+                                                <td class="px-4 py-3 text-end font-bold text-red-700 dark:text-red-400">{{ $t['unemployed'] }}</td>
+                                                <td class="px-4 py-3 text-end font-bold text-amber-700 dark:text-amber-400">{{ $t['self_employed'] }}</td>
+                                                <td class="px-4 py-3 text-end font-bold text-black/70 dark:text-white/70">{{ $t['other'] }}</td>
+                                                <td class="px-4 py-3 text-end">
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#123524]/10 text-[#123524]">
+                                                        {{ number_format($t['employment_rate'], 1) }}%
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
                                 </div>
                             </div>
                         @endif
@@ -350,15 +376,9 @@
                                     <table class="min-w-full text-xs sm:text-sm">
                                         <thead class="bg-[#F7F5EF] dark:bg-[#3A3B3C]">
                                             <tr>
-                                                <th
-                                                    class="px-4 py-2.5 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">
-                                                    Organization Type</th>
-                                                <th
-                                                    class="px-4 py-2.5 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">
-                                                    Alumni</th>
-                                                <th
-                                                    class="px-4 py-2.5 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">
-                                                    Share</th>
+                                                <th class="px-4 py-2.5 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Organization Type</th>
+                                                <th class="px-4 py-2.5 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Alumni</th>
+                                                <th class="px-4 py-2.5 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Share</th>
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-black/5 dark:divide-white/5">
@@ -366,19 +386,14 @@
                                                 @php
                                                     $label = str_replace('-', ' ', $type);
                                                     $label = ucwords($label);
-                                                    $share =
-                                                        $this->industryTotal > 0
-                                                            ? round(($count / $this->industryTotal) * 100, 1)
-                                                            : 0;
+                                                    $share = $this->industryTotal > 0
+                                                        ? round(($count / $this->industryTotal) * 100, 1)
+                                                        : 0;
                                                 @endphp
                                                 <tr>
-                                                    <td class="px-4 py-2.5 text-[#123524] dark:text-white font-medium">
-                                                        {{ $label }}</td>
-                                                    <td
-                                                        class="px-4 py-2.5 text-end text-black/70 dark:text-white/70 font-semibold">
-                                                        {{ $count }}</td>
-                                                    <td class="px-4 py-2.5 text-end text-black/60 dark:text-white/60">
-                                                        {{ number_format($share, 1) }}%</td>
+                                                    <td class="px-4 py-2.5 text-[#123524] dark:text-white font-medium">{{ $label }}</td>
+                                                    <td class="px-4 py-2.5 text-end text-black/70 dark:text-white/70 font-semibold">{{ $count }}</td>
+                                                    <td class="px-4 py-2.5 text-end text-black/60 dark:text-white/60">{{ number_format($share, 1) }}%</td>
                                                 </tr>
                                             @endforeach
                                         </tbody>
@@ -402,40 +417,22 @@
                                     <table class="min-w-full text-xs sm:text-sm">
                                         <thead class="bg-[#F7F5EF] dark:bg-[#3A3B3C]">
                                             <tr>
-                                                <th
-                                                    class="px-4 py-2.5 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px] w-12">
-                                                    #</th>
-                                                <th
-                                                    class="px-4 py-2.5 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">
-                                                    Company</th>
-                                                <th
-                                                    class="px-4 py-2.5 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px] hidden sm:table-cell">
-                                                    Location</th>
-                                                <th
-                                                    class="px-4 py-2.5 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">
-                                                    Alumni</th>
-                                                <th
-                                                    class="px-4 py-2.5 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">
-                                                    Share</th>
+                                                <th class="px-4 py-2.5 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px] w-12">#</th>
+                                                <th class="px-4 py-2.5 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Company</th>
+                                                <th class="px-4 py-2.5 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px] hidden sm:table-cell">Location</th>
+                                                <th class="px-4 py-2.5 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Alumni</th>
+                                                <th class="px-4 py-2.5 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Share</th>
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-black/5 dark:divide-white/5">
                                             @foreach ($this->topEmployers as $i => $row)
                                                 @php $share = $totalEmployers > 0 ? round(($row['total'] / $totalEmployers) * 100, 1) : 0; @endphp
                                                 <tr>
-                                                    <td
-                                                        class="px-4 py-2.5 font-bold text-[#123524]/40 dark:text-white/40">
-                                                        {{ $i + 1 }}</td>
-                                                    <td class="px-4 py-2.5 text-[#123524] dark:text-white font-medium">
-                                                        {{ $row['company_name'] }}</td>
-                                                    <td
-                                                        class="px-4 py-2.5 text-black/60 dark:text-white/60 text-xs hidden sm:table-cell">
-                                                        {{ $row['company_address'] ?: '—' }}</td>
-                                                    <td
-                                                        class="px-4 py-2.5 text-end text-black/70 dark:text-white/70 font-semibold">
-                                                        {{ $row['total'] }}</td>
-                                                    <td class="px-4 py-2.5 text-end text-black/60 dark:text-white/60">
-                                                        {{ number_format($share, 1) }}%</td>
+                                                    <td class="px-4 py-2.5 font-bold text-[#123524]/40 dark:text-white/40">{{ $i + 1 }}</td>
+                                                    <td class="px-4 py-2.5 text-[#123524] dark:text-white font-medium">{{ $row['company_name'] }}</td>
+                                                    <td class="px-4 py-2.5 text-black/60 dark:text-white/60 text-xs hidden sm:table-cell">{{ $row['company_address'] ?: '—' }}</td>
+                                                    <td class="px-4 py-2.5 text-end text-black/70 dark:text-white/70 font-semibold">{{ $row['total'] }}</td>
+                                                    <td class="px-4 py-2.5 text-end text-black/60 dark:text-white/60">{{ number_format($share, 1) }}%</td>
                                                 </tr>
                                             @endforeach
                                         </tbody>
@@ -484,128 +481,147 @@
                                     filters.</p>
                             </div>
                         @else
-                            <div class="overflow-x-auto">
-                                <table class="min-w-full text-xs sm:text-sm">
-                                    <thead class="bg-[#F7F5EF] dark:bg-[#3A3B3C]">
-                                        <tr>
-                                            <th
-                                                class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">
-                                                Event</th>
-                                            <th
-                                                class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px] hidden md:table-cell">
-                                                Date</th>
-                                            <th
-                                                class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">
-                                                Invited</th>
-                                            <th
-                                                class="px-4 py-3 text-end font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-400 text-[11px]">
-                                                Yes</th>
-                                            <th
-                                                class="px-4 py-3 text-end font-bold uppercase tracking-wide text-amber-700 dark:text-amber-400 text-[11px]">
-                                                Maybe</th>
-                                            <th
-                                                class="px-4 py-3 text-end font-bold uppercase tracking-wide text-red-700 dark:text-red-400 text-[11px]">
-                                                No</th>
-                                            <th
-                                                class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px] hidden sm:table-cell">
-                                                Pending</th>
-                                            <th
-                                                class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">
-                                                Rate</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-black/5 dark:divide-white/5">
-                                        @foreach ($this->engagementRows as $row)
-                                            <tr
-                                                class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
-                                                <td class="px-4 py-3">
-                                                    <p
-                                                        class="font-semibold text-[#123524] dark:text-white truncate max-w-[220px]">
-                                                        {{ $row['title'] }}</p>
-                                                    <p class="text-[11px] text-black/40 dark:text-white/40 md:hidden">
-                                                        {{ \Carbon\Carbon::parse($row['starts_at'])->format('M j, Y') }}
-                                                    </p>
-                                                </td>
-                                                <td
-                                                    class="px-4 py-3 text-black/60 dark:text-white/60 hidden md:table-cell whitespace-nowrap">
-                                                    {{ \Carbon\Carbon::parse($row['starts_at'])->format('M j, Y') }}
-                                                </td>
-                                                <td class="px-4 py-3 text-end text-black/70 dark:text-white/70">
-                                                    {{ $row['invited'] }}</td>
-                                                <td
-                                                    class="px-4 py-3 text-end text-emerald-700 dark:text-emerald-400 font-semibold">
-                                                    {{ $row['yes'] }}</td>
-                                                <td class="px-4 py-3 text-end text-amber-700 dark:text-amber-400">
-                                                    {{ $row['maybe'] }}</td>
-                                                <td class="px-4 py-3 text-end text-red-700 dark:text-red-400">
-                                                    {{ $row['no'] }}</td>
-                                                <td
-                                                    class="px-4 py-3 text-end text-black/50 dark:text-white/50 hidden sm:table-cell">
-                                                    {{ $row['pending'] }}</td>
-                                                <td class="px-4 py-3 text-end">
-                                                    <span
-                                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold
+                            {{-- ============ ON-SCREEN (paginated, hidden on print) ============ --}}
+                            <div class="no-print">
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full text-xs sm:text-sm">
+                                        <thead class="bg-[#F7F5EF] dark:bg-[#3A3B3C]">
+                                            <tr>
+                                                <th class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Event</th>
+                                                <th class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px] hidden md:table-cell">Date</th>
+                                                <th class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Invited</th>
+                                                <th class="px-4 py-3 text-end font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-400 text-[11px]">Yes</th>
+                                                <th class="px-4 py-3 text-end font-bold uppercase tracking-wide text-amber-700 dark:text-amber-400 text-[11px]">Maybe</th>
+                                                <th class="px-4 py-3 text-end font-bold uppercase tracking-wide text-red-700 dark:text-red-400 text-[11px]">No</th>
+                                                <th class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px] hidden sm:table-cell">Pending</th>
+                                                <th class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Rate</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-black/5 dark:divide-white/5">
+                                            @foreach ($this->engagementRows as $row)
+                                                <tr class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
+                                                    <td class="px-4 py-3">
+                                                        <p class="font-semibold text-[#123524] dark:text-white truncate max-w-[220px]">{{ $row['title'] }}</p>
+                                                        <p class="text-[11px] text-black/40 dark:text-white/40 md:hidden">{{ \Carbon\Carbon::parse($row['starts_at'])->format('M j, Y') }}</p>
+                                                    </td>
+                                                    <td class="px-4 py-3 text-black/60 dark:text-white/60 hidden md:table-cell whitespace-nowrap">{{ \Carbon\Carbon::parse($row['starts_at'])->format('M j, Y') }}</td>
+                                                    <td class="px-4 py-3 text-end text-black/70 dark:text-white/70">{{ $row['invited'] }}</td>
+                                                    <td class="px-4 py-3 text-end text-emerald-700 dark:text-emerald-400 font-semibold">{{ $row['yes'] }}</td>
+                                                    <td class="px-4 py-3 text-end text-amber-700 dark:text-amber-400">{{ $row['maybe'] }}</td>
+                                                    <td class="px-4 py-3 text-end text-red-700 dark:text-red-400">{{ $row['no'] }}</td>
+                                                    <td class="px-4 py-3 text-end text-black/50 dark:text-white/50 hidden sm:table-cell">{{ $row['pending'] }}</td>
+                                                    <td class="px-4 py-3 text-end">
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold
                                                         {{ $row['participation'] >= 50
                                                             ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
                                                             : ($row['participation'] >= 25
                                                                 ? 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400'
                                                                 : 'bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400') }}">
-                                                        {{ number_format($row['participation'], 1) }}%
-                                                    </span>
-                                                </td>
+                                                            {{ number_format($row['participation'], 1) }}%
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                        <tfoot class="bg-[#F7F5EF] dark:bg-[#3A3B3C] border-t-2 border-black/10 dark:border-white/10">
+                                            @php $e = $this->engagementTotals; @endphp
+                                            <tr>
+                                                <td class="px-4 py-3 font-bold text-[#123524] dark:text-white uppercase text-[11px] tracking-wide">{{ $e['events'] }} events</td>
+                                                <td class="px-4 py-3 hidden md:table-cell"></td>
+                                                <td class="px-4 py-3 text-end text-black/50 dark:text-white/50">—</td>
+                                                <td class="px-4 py-3 text-end font-bold text-emerald-700 dark:text-emerald-400">{{ $e['yes'] }}</td>
+                                                <td class="px-4 py-3 text-end font-bold text-amber-700 dark:text-amber-400">{{ $e['maybe'] }}</td>
+                                                <td class="px-4 py-3 text-end font-bold text-red-700 dark:text-red-400">{{ $e['no'] }}</td>
+                                                <td class="px-4 py-3 text-end font-bold text-black/50 dark:text-white/50 hidden sm:table-cell">{{ $e['pending'] }}</td>
+                                                <td class="px-4 py-3"></td>
                                             </tr>
-                                        @endforeach
-                                    </tbody>
-                                    <tfoot
-                                        class="bg-[#F7F5EF] dark:bg-[#3A3B3C] border-t-2 border-black/10 dark:border-white/10">
-                                        @php $e = $this->engagementTotals; @endphp
-                                        <tr>
-                                            <td
-                                                class="px-4 py-3 font-bold text-[#123524] dark:text-white uppercase text-[11px] tracking-wide">
-                                                {{ $e['events'] }} events</td>
-                                            <td class="px-4 py-3 hidden md:table-cell"></td>
-                                            <td class="px-4 py-3 text-end text-black/50 dark:text-white/50">—</td>
-                                            <td
-                                                class="px-4 py-3 text-end font-bold text-emerald-700 dark:text-emerald-400">
-                                                {{ $e['yes'] }}</td>
-                                            <td
-                                                class="px-4 py-3 text-end font-bold text-amber-700 dark:text-amber-400">
-                                                {{ $e['maybe'] }}</td>
-                                            <td class="px-4 py-3 text-end font-bold text-red-700 dark:text-red-400">
-                                                {{ $e['no'] }}</td>
-                                            <td
-                                                class="px-4 py-3 text-end font-bold text-black/50 dark:text-white/50 hidden sm:table-cell">
-                                                {{ $e['pending'] }}</td>
-                                            <td class="px-4 py-3"></td>
-                                        </tr>
-                                                                        </tfoot>
-                                </table>
+                                        </tfoot>
+                                    </table>
+                                </div>
+
+                                {{-- ===== PAGINATION FOOTER (no-print) ===== --}}
+                                <div class="px-4 sm:px-6 py-3 sm:py-4 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center border-t border-black/5 dark:border-white/5">
+                                    <p class="text-xs sm:text-sm text-black/60 dark:text-white/60 text-center sm:text-left">
+                                        Showing
+                                        <span class="font-semibold text-[#123524] dark:text-white">{{ $this->engagementRows->firstItem() ?? 0 }}</span>–<span class="font-semibold text-[#123524] dark:text-white">{{ $this->engagementRows->lastItem() ?? 0 }}</span>
+                                        of
+                                        <span class="font-semibold text-[#123524] dark:text-white">{{ $this->engagementRows->total() }}</span>
+                                        events
+                                    </p>
+
+                                    <div class="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
+                                        @if ($this->engagementRows->onFirstPage())
+                                            <button disabled class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg border border-black/10 text-black/30 cursor-not-allowed">Prev</button>
+                                        @else
+                                            <button wire:click="previousPage" class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524]">Prev</button>
+                                        @endif
+
+                                        <span class="sm:hidden text-xs font-semibold text-black/60 dark:text-white/60">{{ $this->engagementRows->currentPage() }} / {{ $this->engagementRows->lastPage() }}</span>
+
+                                        @if ($this->engagementRows->hasMorePages())
+                                            <button wire:click="nextPage" class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524]">Next</button>
+                                        @else
+                                            <button disabled class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg border border-black/10 text-black/30 cursor-not-allowed">Next</button>
+                                        @endif
+                                    </div>
+                                </div>
                             </div>
 
-                            {{-- ===== PAGINATION FOOTER (no-print) ===== --}}
-                            <div class="no-print px-4 sm:px-6 py-3 sm:py-4 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center border-t border-black/5 dark:border-white/5">
-                                <p class="text-xs sm:text-sm text-black/60 dark:text-white/60 text-center sm:text-left">
-                                    Showing
-                                    <span class="font-semibold text-[#123524] dark:text-white">{{ $this->engagementRows->firstItem() ?? 0 }}</span>–<span class="font-semibold text-[#123524] dark:text-white">{{ $this->engagementRows->lastItem() ?? 0 }}</span>
-                                    of
-                                    <span class="font-semibold text-[#123524] dark:text-white">{{ $this->engagementRows->total() }}</span>
-                                    events
-                                </p>
-
-                                <div class="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
-                                    @if ($this->engagementRows->onFirstPage())
-                                        <button disabled class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg border border-black/10 text-black/30 cursor-not-allowed">Prev</button>
-                                    @else
-                                        <button wire:click="previousPage" class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524]">Prev</button>
-                                    @endif
-
-                                    <span class="sm:hidden text-xs font-semibold text-black/60 dark:text-white/60">{{ $this->engagementRows->currentPage() }} / {{ $this->engagementRows->lastPage() }}</span>
-
-                                    @if ($this->engagementRows->hasMorePages())
-                                        <button wire:click="nextPage" class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524]">Next</button>
-                                    @else
-                                        <button disabled class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg border border-black/10 text-black/30 cursor-not-allowed">Next</button>
-                                    @endif
+                            {{-- ============ PRINT-ONLY (full, un-paginated) ============ --}}
+                            <div class="print-only">
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full text-xs sm:text-sm">
+                                        <thead class="bg-[#F7F5EF] dark:bg-[#3A3B3C]">
+                                            <tr>
+                                                <th class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Event</th>
+                                                <th class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Date</th>
+                                                <th class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Invited</th>
+                                                <th class="px-4 py-3 text-end font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-400 text-[11px]">Yes</th>
+                                                <th class="px-4 py-3 text-end font-bold uppercase tracking-wide text-amber-700 dark:text-amber-400 text-[11px]">Maybe</th>
+                                                <th class="px-4 py-3 text-end font-bold uppercase tracking-wide text-red-700 dark:text-red-400 text-[11px]">No</th>
+                                                <th class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Pending</th>
+                                                <th class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Rate</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-black/5 dark:divide-white/5">
+                                            @foreach ($this->engagementRowsForPrint as $row)
+                                                <tr>
+                                                    <td class="px-4 py-3">
+                                                        <p class="font-semibold text-[#123524] dark:text-white">{{ $row['title'] }}</p>
+                                                    </td>
+                                                    <td class="px-4 py-3 text-black/60 dark:text-white/60 whitespace-nowrap">{{ \Carbon\Carbon::parse($row['starts_at'])->format('M j, Y') }}</td>
+                                                    <td class="px-4 py-3 text-end text-black/70 dark:text-white/70">{{ $row['invited'] }}</td>
+                                                    <td class="px-4 py-3 text-end text-emerald-700 dark:text-emerald-400 font-semibold">{{ $row['yes'] }}</td>
+                                                    <td class="px-4 py-3 text-end text-amber-700 dark:text-amber-400">{{ $row['maybe'] }}</td>
+                                                    <td class="px-4 py-3 text-end text-red-700 dark:text-red-400">{{ $row['no'] }}</td>
+                                                    <td class="px-4 py-3 text-end text-black/50 dark:text-white/50">{{ $row['pending'] }}</td>
+                                                    <td class="px-4 py-3 text-end">
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold
+                                                        {{ $row['participation'] >= 50
+                                                            ? 'bg-emerald-100 text-emerald-700'
+                                                            : ($row['participation'] >= 25
+                                                                ? 'bg-amber-100 text-amber-700'
+                                                                : 'bg-red-100 text-red-700') }}">
+                                                            {{ number_format($row['participation'], 1) }}%
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                        <tfoot class="bg-[#F7F5EF] dark:bg-[#3A3B3C] border-t-2 border-black/10 dark:border-white/10">
+                                            @php $e = $this->engagementTotals; @endphp
+                                            <tr>
+                                                <td class="px-4 py-3 font-bold text-[#123524] dark:text-white uppercase text-[11px] tracking-wide">{{ $e['events'] }} events</td>
+                                                <td class="px-4 py-3"></td>
+                                                <td class="px-4 py-3 text-end text-black/50 dark:text-white/50">—</td>
+                                                <td class="px-4 py-3 text-end font-bold text-emerald-700 dark:text-emerald-400">{{ $e['yes'] }}</td>
+                                                <td class="px-4 py-3 text-end font-bold text-amber-700 dark:text-amber-400">{{ $e['maybe'] }}</td>
+                                                <td class="px-4 py-3 text-end font-bold text-red-700 dark:text-red-400">{{ $e['no'] }}</td>
+                                                <td class="px-4 py-3 text-end font-bold text-black/50 dark:text-white/50">{{ $e['pending'] }}</td>
+                                                <td class="px-4 py-3"></td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
                                 </div>
                             </div>
                         @endif
@@ -684,35 +700,19 @@
                                 </p>
                             </div>
                         @else
-                            <div class="px-4 sm:px-6 py-5">
+                            {{-- ============ ON-SCREEN (paginated, hidden on print) ============ --}}
+                            <div class="no-print px-4 sm:px-6 py-5">
                                 <div class="overflow-x-auto border border-black/5 dark:border-white/5 rounded-xl">
                                     <table class="min-w-full text-xs sm:text-sm">
                                         <thead class="bg-[#F7F5EF] dark:bg-[#3A3B3C]">
                                             <tr>
-                                                <th
-                                                    class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px] w-12">
-                                                    #</th>
-                                                <th
-                                                    class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">
-                                                    Name</th>
-                                                <th
-                                                    class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px] hidden sm:table-cell">
-                                                    Batch</th>
-                                                <th
-                                                    class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px] hidden md:table-cell">
-                                                    Course</th>
-                                                <th
-                                                    class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">
-                                                    Rating</th>
-                                                <th
-                                                    class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px] hidden sm:table-cell">
-                                                    Attempt</th>
-                                                <th
-                                                    class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px] hidden lg:table-cell">
-                                                    Date Taken</th>
-                                                <th
-                                                    class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">
-                                                    Status</th>
+                                                <th class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Name</th>
+                                                <th class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px] hidden sm:table-cell">Batch</th>
+                                                <th class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px] hidden md:table-cell">Course</th>
+                                                <th class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Rating</th>
+                                                <th class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px] hidden sm:table-cell">Attempt</th>
+                                                <th class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px] hidden lg:table-cell">Date Taken</th>
+                                                <th class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Status</th>
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-black/5 dark:divide-white/5">
@@ -724,84 +724,40 @@
                                                         ($row['last_name'] ?? '')
                                                     );
                                                     $isTop = ! empty($row['is_top_notcher']);
-                                                    $rowNumber = ($this->boardPassers->currentPage() - 1) * $this->boardPassers->perPage() + $i + 1;
+                                                    
                                                 @endphp
-                                                <tr
-                                                    class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors
-                                                        {{ $isTop ? 'bg-[#D4A537]/5 dark:bg-[#D4A537]/10' : '' }}">
+                                                <tr class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors {{ $isTop ? 'bg-[#D4A537]/5 dark:bg-[#D4A537]/10' : '' }}">
                                                     <td class="px-4 py-3">
-                                                        @if ($isTop)
-                                                            <span
-                                                                class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#D4A537] text-[#123524] font-bold text-[10px]">
-                                                                {{ $row['top_notcher_rank'] ?? '★' }}
-                                                            </span>
-                                                        @else
-                                                            <span class="text-[#123524]/40 dark:text-white/40 font-bold">
-                                                                {{ $rowNumber }}
-                                                            </span>
-                                                        @endif
+                                                        <p class="font-semibold text-[#123524] dark:text-white truncate max-w-[220px]">{{ $fullName }}</p>
+                                                        <p class="text-[11px] text-black/40 dark:text-white/40 truncate max-w-[220px]">{{ $row['email'] ?? '' }}</p>
+                                                        <p class="text-[11px] text-black/40 dark:text-white/40 sm:hidden">{{ $row['batch_name'] ?? '—' }}</p>
                                                     </td>
-                                                    <td class="px-4 py-3">
-                                                        <p class="font-semibold text-[#123524] dark:text-white truncate max-w-[220px]">
-                                                            {{ $fullName }}
-                                                        </p>
-                                                        <p class="text-[11px] text-black/40 dark:text-white/40 truncate max-w-[220px]">
-                                                            {{ $row['email'] ?? '' }}
-                                                        </p>
-                                                        <p class="text-[11px] text-black/40 dark:text-white/40 sm:hidden">
-                                                            {{ $row['batch_name'] ?? '—' }}
-                                                        </p>
+                                                    <td class="px-4 py-3 text-black/70 dark:text-white/70 hidden sm:table-cell whitespace-nowrap">{{ $row['batch_name'] ?? '—' }}</td>
+                                                    <td class="px-4 py-3 text-black/70 dark:text-white/70 hidden md:table-cell">
+                                                        <p class="font-semibold text-[#123524] dark:text-white truncate max-w-[200px]">{{ $row['course_code'] ?? '—' }}</p>
+                                                        <p class="text-[11px] text-black/40 dark:text-white/40 truncate max-w-[200px]">{{ $row['dept_name'] ?? '' }}</p>
                                                     </td>
-                                                    <td
-                                                        class="px-4 py-3 text-black/70 dark:text-white/70 hidden sm:table-cell whitespace-nowrap">
-                                                        {{ $row['batch_name'] ?? '—' }}</td>
-                                                    <td
-                                                        class="px-4 py-3 text-black/70 dark:text-white/70 hidden md:table-cell">
-                                                        <p class="font-semibold text-[#123524] dark:text-white truncate max-w-[200px]">
-                                                            {{ $row['course_code'] ?? '—' }}
-                                                        </p>
-                                                        <p class="text-[11px] text-black/40 dark:text-white/40 truncate max-w-[200px]">
-                                                            {{ $row['dept_name'] ?? '' }}
-                                                        </p>
-                                                    </td>
-                                                    <td
-                                                        class="px-4 py-3 text-end font-semibold text-[#123524] dark:text-white whitespace-nowrap">
-                                                        {{ $row['rate'] !== null ? number_format((float) $row['rate'], 2) . '%' : '—' }}
-                                                    </td>
-                                                    <td
-                                                        class="px-4 py-3 text-end text-black/70 dark:text-white/70 hidden sm:table-cell">
-                                                        {{ $row['attempt_number'] ?? '—' }}
-                                                    </td>
-                                                    <td
-                                                        class="px-4 py-3 text-black/60 dark:text-white/60 hidden lg:table-cell whitespace-nowrap">
-                                                        {{ $row['date_taken'] ? \Carbon\Carbon::parse($row['date_taken'])->format('M j, Y') : '—' }}
-                                                    </td>
+                                                    <td class="px-4 py-3 text-end font-semibold text-[#123524] dark:text-white whitespace-nowrap">{{ $row['rate'] !== null ? number_format((float) $row['rate'], 2) . '%' : '—' }}</td>
+                                                    <td class="px-4 py-3 text-end text-black/70 dark:text-white/70 hidden sm:table-cell">{{ $row['attempt_number'] ?? '—' }}</td>
+                                                    <td class="px-4 py-3 text-black/60 dark:text-white/60 hidden lg:table-cell whitespace-nowrap">{{ $row['date_taken'] ? \Carbon\Carbon::parse($row['date_taken'])->format('M j, Y') : '—' }}</td>
                                                     <td class="px-4 py-3 text-end">
                                                         @if ($isTop)
-                                                            <span
-                                                                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#D4A537] text-[#123524]">
-                                                                <svg class="w-3 h-3" fill="currentColor"
-                                                                    viewBox="0 0 24 24">
-                                                                    <path
-                                                                        d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4-6.2-4.5-6.2 4.5 2.4-7.4L2 9.4h7.6z" />
-                                                                </svg>
+                                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#D4A537] text-[#123524]">
+                                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4-6.2-4.5-6.2 4.5 2.4-7.4L2 9.4h7.6z" /></svg>
                                                                 Top {{ $row['top_notcher_rank'] ?? '' }}
                                                             </span>
                                                         @else
-                                                            <span
-                                                                class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">
-                                                                Passed
-                                                            </span>
+                                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">Passed</span>
                                                         @endif
                                                     </td>
                                                 </tr>
                                             @endforeach
                                         </tbody>
-                                                                        </table>
+                                    </table>
                                 </div>
 
                                 {{-- ===== PAGINATION FOOTER (no-print) ===== --}}
-                                <div class="no-print mt-4 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center border-t border-black/5 dark:border-white/5 pt-4">
+                                <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center border-t border-black/5 dark:border-white/5 pt-4">
                                     <p class="text-xs sm:text-sm text-black/60 dark:text-white/60 text-center sm:text-left">
                                         Showing
                                         <span class="font-semibold text-[#123524] dark:text-white">{{ $this->boardPassers->firstItem() ?? 0 }}</span>–<span class="font-semibold text-[#123524] dark:text-white">{{ $this->boardPassers->lastItem() ?? 0 }}</span>
@@ -827,6 +783,61 @@
                                     </div>
                                 </div>
                             </div>
+
+                            {{-- ============ PRINT-ONLY (full, un-paginated) ============ --}}
+                            <div class="print-only px-4 sm:px-6 py-5">
+                                <div class="overflow-x-auto border border-black/5 dark:border-white/5 rounded-xl">
+                                    <table class="min-w-full text-xs sm:text-sm">
+                                        <thead class="bg-[#F7F5EF] dark:bg-[#3A3B3C]">
+                                            <tr>
+                                                <th class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Name</th>
+                                                <th class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Batch</th>
+                                                <th class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Course</th>
+                                                <th class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Rating</th>
+                                                <th class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Attempt</th>
+                                                <th class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Date Taken</th>
+                                                <th class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-black/5 dark:divide-white/5">
+                                            @foreach ($this->boardPassersForPrint as $i => $row)
+                                                @php
+                                                    $fullName = trim(
+                                                        ($row['first_name'] ?? '') . ' ' .
+                                                        ($row['middle_name'] ?? '') . ' ' .
+                                                        ($row['last_name'] ?? '')
+                                                    );
+                                                    $isTop = ! empty($row['is_top_notcher']);
+                                                @endphp
+                                                <tr class="{{ $isTop ? 'bg-[#D4A537]/5' : '' }}">
+                                                    <td class="px-4 py-3">
+                                                        <p class="font-semibold text-[#123524] dark:text-white">{{ $fullName }}</p>
+                                                        <p class="text-[11px] text-black/40 dark:text-white/40">{{ $row['email'] ?? '' }}</p>
+                                                    </td>
+                                                    <td class="px-4 py-3 text-black/70 dark:text-white/70 whitespace-nowrap">{{ $row['batch_name'] ?? '—' }}</td>
+                                                    <td class="px-4 py-3 text-black/70 dark:text-white/70">
+                                                        <p class="font-semibold text-[#123524] dark:text-white">{{ $row['course_code'] ?? '—' }}</p>
+                                                        <p class="text-[11px] text-black/40 dark:text-white/40">{{ $row['dept_name'] ?? '' }}</p>
+                                                    </td>
+                                                    <td class="px-4 py-3 text-end font-semibold text-[#123524] dark:text-white whitespace-nowrap">{{ $row['rate'] !== null ? number_format((float) $row['rate'], 2) . '%' : '—' }}</td>
+                                                    <td class="px-4 py-3 text-end text-black/70 dark:text-white/70">{{ $row['attempt_number'] ?? '—' }}</td>
+                                                    <td class="px-4 py-3 text-black/60 dark:text-white/60 whitespace-nowrap">{{ $row['date_taken'] ? \Carbon\Carbon::parse($row['date_taken'])->format('M j, Y') : '—' }}</td>
+                                                    <td class="px-4 py-3 text-end">
+                                                        @if ($isTop)
+                                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#D4A537] text-[#123524]">
+                                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4-6.2-4.5-6.2 4.5 2.4-7.4L2 9.4h7.6z" /></svg>
+                                                                Top {{ $row['top_notcher_rank'] ?? '' }}
+                                                            </span>
+                                                        @else
+                                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700">Passed</span>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         @endif
                     @endif
 
@@ -850,10 +861,8 @@
         }
 
         @media print {
-            /* Margin 0 removes the browser's own date/title header and footer.
-               The real document margin comes from the padding on .print-area. */
             @page {
-                size: A4 portrait;   /* use "A4 landscape" for wider tables */
+                size: A4 portrait;
                 margin: 0;
             }
 
@@ -886,7 +895,7 @@
                 width: 100%;
                 box-sizing: border-box;
                 margin: 0 !important;
-                padding: 18mm 15mm !important;   /* document margin */
+                padding: 18mm 15mm !important;
                 border: none !important;
                 box-shadow: none !important;
                 border-radius: 0 !important;
@@ -895,7 +904,6 @@
                 overflow: visible !important;
             }
 
-            /* Inner sections shouldn't add extra side padding */
             .print-area > div,
             .print-area .print-only {
                 padding-left: 0 !important;
@@ -929,24 +937,20 @@
                 gap: 0 !important;
             }
 
-            /* Show every column regardless of paper width */
             .print-area th.hidden,
             .print-area td.hidden {
                 display: table-cell !important;
             }
 
-            /* Hide the mobile-only duplicate lines */
             .print-area .sm\:hidden,
             .print-area .md\:hidden {
                 display: none !important;
             }
 
-            /* Keep the 4 summary cards in one row */
             .print-area .grid {
                 grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
             }
 
-            /* Let text wrap instead of being cut off */
             .print-area .truncate {
                 overflow: visible !important;
                 text-overflow: clip !important;
@@ -958,7 +962,6 @@
                 overflow: visible !important;
             }
 
-            /* Force light colors even in dark mode */
             .print-area thead,
             .print-area tfoot {
                 background: #F7F5EF !important;
@@ -972,7 +975,6 @@
                 color: #000 !important;
             }
 
-            /* Tables */
             table {
                 width: 100% !important;
                 font-size: 11px !important;

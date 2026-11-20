@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -21,23 +22,18 @@ new #[Layout('layouts.app-admin')] class extends Component
     use WithFileUploads;
 
     public string $title = '';
-
     public string $description = '';
-
     public ?int $category_id = null;
-
     public string $status = 'draft';
-
     public $image = null;
-
     public array $attachments = [];
-
     public bool $showPreview = false;
 
     public function mount(): void
     {
         Gate::authorize('can_create');
     }
+
     // =========================================================
     //  COMPUTED
     // =========================================================
@@ -109,8 +105,9 @@ new #[Layout('layouts.app-admin')] class extends Component
             'category_id.required' => 'Please select a category.',
             'category_id.exists' => 'The selected category no longer exists.',
             'status.in' => 'The selected status is invalid.',
-            'image.image' => 'Cover image must be a valid image file.',
-            'image.mimes' => 'Cover image must be a JPG, PNG, or WebP file.',
+            // 👇 UPDATED MESSAGES HERE
+            'image.image' => 'Only image files can be uploaded.',
+            'image.mimes' => 'Only .png, .webp, .jpeg, and .jpg files are allowed for the cover image.',
             'image.max' => 'Cover image cannot exceed 5MB.',
             'attachments.max' => 'You can attach up to 5 files.',
             'attachments.*.max' => 'Each attachment cannot exceed 10MB.',
@@ -124,7 +121,22 @@ new #[Layout('layouts.app-admin')] class extends Component
 
     public function updatedImage(): void
     {
-        $this->validateOnly('image');
+        if (! $this->image) {
+            return;
+        }
+
+        try {
+            $this->validateOnly('image', [
+                'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            ], [
+                'image.image' => 'Only image files can be uploaded.',
+                'image.mimes' => 'Only .png, .webp, .jpeg, and .jpg files are allowed for the cover image.',
+                'image.max' => 'Cover image cannot exceed 5MB.',
+            ]);
+        } catch (ValidationException $e) {
+            $this->reset('image');
+            throw $e;
+        }
     }
 
     public function updatedAttachments(): void
@@ -175,7 +187,6 @@ new #[Layout('layouts.app-admin')] class extends Component
             }
 
             // --- 2. Insert into DB inside a transaction ---
-            // 👇 Now returns the created Post model
             $post = DB::transaction(function () use ($validated, $imagePath, $attachmentPaths) {
                 return Post::create([
                     'user_id' => Auth::id(),
@@ -195,27 +206,22 @@ new #[Layout('layouts.app-admin')] class extends Component
 
             if ($e->getCode() === '23000') {
                 $this->addError('title', 'This title was just taken. Please try again.');
-
                 return;
             }
 
             report($e);
             session()->flash('error', 'Could not create post. Please try again.');
-
             return;
         } catch (Throwable $e) {
             $this->cleanupFiles($imagePath, $attachmentPaths);
-
             report($e);
             session()->flash('error', 'Could not create post. Please try again.');
-
             return;
         }
 
         // --- 3. Email blast to alumni if the post is public ---
-        // Runs AFTER the transaction commits. Queued — doesn't block the response.
         if ($validated['status'] === 'public') {
-            SendPostAnnouncementEmail::dispatch($post->id)->afterCommit();
+            SendPostAnnouncementEmail::dispatch($post->id, Auth::id())->afterCommit();
         }
 
         Cache::forget('posts:count');

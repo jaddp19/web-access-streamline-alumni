@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -17,27 +18,16 @@ new #[Layout('layouts.app-admin')] class extends Component
     use WithFileUploads;
 
     public Event $event;
-
     public string $title = '';
-
     public string $description = '';
-
     public string $location = '';
-
     public string $starts_at = '';
-
     public string $ends_at = '';
-
     public string $registration_deadline = '';
-
     public ?int $capacity = null;
-
     public string $status = 'draft';
-
     public $image = null;
-
     public ?string $currentImage = null;
-
     public bool $resendInvitation = false;
 
     // =========================================================
@@ -47,16 +37,13 @@ new #[Layout('layouts.app-admin')] class extends Component
     public function mount(Event $event): void
     {
         $user = Auth::user();
-
         Gate::authorize('can_update');
 
-        // Program heads can only edit their own events
         if ($user->hasRole('program head') && $event->created_by !== $user->id) {
             abort(403, 'You can only edit your own events.');
         }
 
         $this->event = $event;
-
         $this->title = $event->title;
         $this->description = $event->description ?? '';
         $this->location = $event->location ?? '';
@@ -86,9 +73,7 @@ new #[Layout('layouts.app-admin')] class extends Component
                     }
                 },
             ],
-
             'description' => ['nullable', 'string', 'max:5000'],
-
             'location' => [
                 'nullable',
                 'string',
@@ -99,13 +84,11 @@ new #[Layout('layouts.app-admin')] class extends Component
                     }
                 },
             ],
-
             'starts_at' => [
                 'required',
                 'date',
                 'before:+5 years',
             ],
-
             'ends_at' => [
                 'nullable',
                 'date',
@@ -114,11 +97,9 @@ new #[Layout('layouts.app-admin')] class extends Component
                     if (! $value || ! $this->starts_at) {
                         return;
                     }
-
                     try {
                         $start = \Carbon\Carbon::parse($this->starts_at);
                         $end = \Carbon\Carbon::parse($value);
-
                         if ($end->diffInDays($start) > 30) {
                             $fail('The end date cannot be more than 30 days after the start.');
                         }
@@ -127,7 +108,6 @@ new #[Layout('layouts.app-admin')] class extends Component
                     }
                 },
             ],
-
             'registration_deadline' => [
                 'nullable',
                 'date',
@@ -136,7 +116,6 @@ new #[Layout('layouts.app-admin')] class extends Component
                     if (! $value) {
                         return;
                     }
-
                     try {
                         $deadline = \Carbon\Carbon::parse($value);
                         $start = $this->starts_at ? \Carbon\Carbon::parse($this->starts_at) : null;
@@ -144,7 +123,6 @@ new #[Layout('layouts.app-admin')] class extends Component
                         if ($this->status === 'published' && $deadline->isPast()) {
                             $fail('The registration deadline cannot be in the past for a published event.');
                         }
-
                         if ($start && $deadline->diffInDays($start) > 365) {
                             $fail('The registration deadline is too far before the event start.');
                         }
@@ -153,7 +131,6 @@ new #[Layout('layouts.app-admin')] class extends Component
                     }
                 },
             ],
-
             'capacity' => [
                 'nullable',
                 'integer',
@@ -163,19 +140,14 @@ new #[Layout('layouts.app-admin')] class extends Component
                     if (! $value) {
                         return;
                     }
-
                     $currentAttendees = $this->event->attendeeCount();
-
                     if ($value < $currentAttendees) {
                         $fail("Capacity cannot be less than the {$currentAttendees} alumni who already RSVP'd.");
                     }
                 },
             ],
-
             'status' => ['required', 'in:draft,published,cancelled,completed'],
-
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
-
             'resendInvitation' => ['boolean'],
         ];
     }
@@ -199,8 +171,9 @@ new #[Layout('layouts.app-admin')] class extends Component
             'capacity.min' => 'Capacity must be at least 1.',
             'capacity.max' => 'Capacity cannot exceed 10,000.',
             'status.in' => 'The selected status is invalid.',
-            'image.image' => 'Cover image must be a valid image file.',
-            'image.mimes' => 'Cover image must be a JPG, PNG, or WebP file.',
+            // 👇 UPDATED MESSAGES HERE
+            'image.image' => 'Only image files can be uploaded.',
+            'image.mimes' => 'Only .png, .webp, .jpeg, and .jpg files are allowed for the cover image.',
             'image.max' => 'Cover image cannot exceed 5MB.',
         ];
     }
@@ -211,7 +184,22 @@ new #[Layout('layouts.app-admin')] class extends Component
 
     public function updatedImage(): void
     {
-        $this->validateOnly('image');
+        if (! $this->image) {
+            return;
+        }
+
+        try {
+            $this->validateOnly('image', [
+                'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            ], [
+                'image.image' => 'Only image files can be uploaded.',
+                'image.mimes' => 'Only .png, .webp, .jpeg, and .jpg files are allowed for the cover image.',
+                'image.max' => 'Cover image cannot exceed 5MB.',
+            ]);
+        } catch (ValidationException $e) {
+            $this->reset('image');
+            throw $e;
+        }
     }
 
     public function removeImage(): void
@@ -236,33 +224,24 @@ new #[Layout('layouts.app-admin')] class extends Component
 
         abort_unless($user?->hasAnyRole(['registrar', 'program head']), 403);
 
-        // Ownership guard (re-check on save)
         if ($user->hasRole('program head') && $this->event->created_by !== $user->id) {
             abort(403, 'You can only edit your own events.');
         }
 
         $this->validate();
 
-        // --- Cross-field guards ---
-
-        // 1. Cannot publish an event whose start time is in the past
-        //    (unless it was already published in the past — allows editing)
         if ($this->status === 'published'
             && \Carbon\Carbon::parse($this->starts_at)->isPast()
             && ! $this->event->starts_at?->isPast()
         ) {
             $this->addError('starts_at', 'You cannot publish an event with a start date in the past.');
-
             return;
         }
 
-        // 2. Cannot mark as completed before it has ended
         if ($this->status === 'completed') {
             $endOrStart = $this->ends_at ?: $this->starts_at;
-
             if (\Carbon\Carbon::parse($endOrStart)->isFuture()) {
                 $this->addError('status', 'You cannot mark an event as completed before it has ended.');
-
                 return;
             }
         }
@@ -274,7 +253,6 @@ new #[Layout('layouts.app-admin')] class extends Component
         ]);
 
         $wasPublished = $this->event->status === 'published';
-
         $newImagePath = null;
         $finalImagePath = $this->currentImage;
 
@@ -303,10 +281,8 @@ new #[Layout('layouts.app-admin')] class extends Component
             if ($newImagePath) {
                 Storage::disk('public')->delete($newImagePath);
             }
-
             report($e);
             session()->flash('error', 'Could not update event. Please try again.');
-
             return;
         }
 
@@ -316,15 +292,10 @@ new #[Layout('layouts.app-admin')] class extends Component
             Storage::disk('public')->delete($originalImage);
         }
 
-        // Blast decision
         $justPublished = ! $wasPublished && $validated['status'] === 'published';
-        $adminRequestedResend = $wasPublished
-            && $validated['status'] === 'published'
-            && $this->resendInvitation;
+        $adminRequestedResend = $wasPublished && $validated['status'] === 'published' && $this->resendInvitation;
 
-        $shouldBlast = $justPublished || $adminRequestedResend;
-
-        if ($shouldBlast) {
+        if ($justPublished || $adminRequestedResend) {
             SendEventInvitationEmail::dispatch($this->event->id)->afterCommit();
         }
 

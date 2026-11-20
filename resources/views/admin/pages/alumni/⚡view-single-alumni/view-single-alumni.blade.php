@@ -653,7 +653,7 @@
                         </label>
 
                         <textarea wire:model="rejectionReason" rows="5" maxlength="1000"
-                            placeholder="e.g. Board rating doesn't match the official PRC records. Please update your board exam details and resubmit."
+                            placeholder="e.g. The information you provided does not match our records. Please verify and resubmit."
                             class="w-full px-3 py-2.5 text-sm rounded-xl border bg-[#F7F5EF] dark:bg-[#3A3B3C] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:ring-1 transition resize-none
                             @error('rejectionReason') border-red-400 dark:border-red-500/50 @else border-black/10 dark:border-white/10 focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537] @enderror"></textarea>
 
