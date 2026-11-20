@@ -291,8 +291,35 @@
                                                 </span>
                                             </td>
                                         </tr>
-                                    </tfoot>
+                                                                        </tfoot>
                                 </table>
+                            </div>
+
+                            {{-- ===== PAGINATION FOOTER (no-print) ===== --}}
+                            <div class="no-print px-4 sm:px-6 py-3 sm:py-4 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center border-t border-black/5 dark:border-white/5">
+                                <p class="text-xs sm:text-sm text-black/60 dark:text-white/60 text-center sm:text-left">
+                                    Showing
+                                    <span class="font-semibold text-[#123524] dark:text-white">{{ $this->employmentRows->firstItem() ?? 0 }}</span>–<span class="font-semibold text-[#123524] dark:text-white">{{ $this->employmentRows->lastItem() ?? 0 }}</span>
+                                    of
+                                    <span class="font-semibold text-[#123524] dark:text-white">{{ $this->employmentRows->total() }}</span>
+                                    batches
+                                </p>
+
+                                <div class="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
+                                    @if ($this->employmentRows->onFirstPage())
+                                        <button disabled class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg border border-black/10 text-black/30 cursor-not-allowed">Prev</button>
+                                    @else
+                                        <button wire:click="previousPage" class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524]">Prev</button>
+                                    @endif
+
+                                    <span class="sm:hidden text-xs font-semibold text-black/60 dark:text-white/60">{{ $this->employmentRows->currentPage() }} / {{ $this->employmentRows->lastPage() }}</span>
+
+                                    @if ($this->employmentRows->hasMorePages())
+                                        <button wire:click="nextPage" class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524]">Next</button>
+                                    @else
+                                        <button disabled class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg border border-black/10 text-black/30 cursor-not-allowed">Next</button>
+                                    @endif
+                                </div>
                             </div>
                         @endif
                     @endif
@@ -551,8 +578,35 @@
                                                 {{ $e['pending'] }}</td>
                                             <td class="px-4 py-3"></td>
                                         </tr>
-                                    </tfoot>
+                                                                        </tfoot>
                                 </table>
+                            </div>
+
+                            {{-- ===== PAGINATION FOOTER (no-print) ===== --}}
+                            <div class="no-print px-4 sm:px-6 py-3 sm:py-4 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center border-t border-black/5 dark:border-white/5">
+                                <p class="text-xs sm:text-sm text-black/60 dark:text-white/60 text-center sm:text-left">
+                                    Showing
+                                    <span class="font-semibold text-[#123524] dark:text-white">{{ $this->engagementRows->firstItem() ?? 0 }}</span>–<span class="font-semibold text-[#123524] dark:text-white">{{ $this->engagementRows->lastItem() ?? 0 }}</span>
+                                    of
+                                    <span class="font-semibold text-[#123524] dark:text-white">{{ $this->engagementRows->total() }}</span>
+                                    events
+                                </p>
+
+                                <div class="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
+                                    @if ($this->engagementRows->onFirstPage())
+                                        <button disabled class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg border border-black/10 text-black/30 cursor-not-allowed">Prev</button>
+                                    @else
+                                        <button wire:click="previousPage" class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524]">Prev</button>
+                                    @endif
+
+                                    <span class="sm:hidden text-xs font-semibold text-black/60 dark:text-white/60">{{ $this->engagementRows->currentPage() }} / {{ $this->engagementRows->lastPage() }}</span>
+
+                                    @if ($this->engagementRows->hasMorePages())
+                                        <button wire:click="nextPage" class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524]">Next</button>
+                                    @else
+                                        <button disabled class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg border border-black/10 text-black/30 cursor-not-allowed">Next</button>
+                                    @endif
+                                </div>
                             </div>
                         @endif
                     @endif
@@ -670,6 +724,7 @@
                                                         ($row['last_name'] ?? '')
                                                     );
                                                     $isTop = ! empty($row['is_top_notcher']);
+                                                    $rowNumber = ($this->boardPassers->currentPage() - 1) * $this->boardPassers->perPage() + $i + 1;
                                                 @endphp
                                                 <tr
                                                     class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors
@@ -682,7 +737,7 @@
                                                             </span>
                                                         @else
                                                             <span class="text-[#123524]/40 dark:text-white/40 font-bold">
-                                                                {{ $i + 1 }}
+                                                                {{ $rowNumber }}
                                                             </span>
                                                         @endif
                                                     </td>
@@ -742,7 +797,34 @@
                                                 </tr>
                                             @endforeach
                                         </tbody>
-                                    </table>
+                                                                        </table>
+                                </div>
+
+                                {{-- ===== PAGINATION FOOTER (no-print) ===== --}}
+                                <div class="no-print mt-4 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center border-t border-black/5 dark:border-white/5 pt-4">
+                                    <p class="text-xs sm:text-sm text-black/60 dark:text-white/60 text-center sm:text-left">
+                                        Showing
+                                        <span class="font-semibold text-[#123524] dark:text-white">{{ $this->boardPassers->firstItem() ?? 0 }}</span>–<span class="font-semibold text-[#123524] dark:text-white">{{ $this->boardPassers->lastItem() ?? 0 }}</span>
+                                        of
+                                        <span class="font-semibold text-[#123524] dark:text-white">{{ $this->boardPassers->total() }}</span>
+                                        board passers
+                                    </p>
+
+                                    <div class="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
+                                        @if ($this->boardPassers->onFirstPage())
+                                            <button disabled class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg border border-black/10 text-black/30 cursor-not-allowed">Prev</button>
+                                        @else
+                                            <button wire:click="previousPage" class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524]">Prev</button>
+                                        @endif
+
+                                        <span class="sm:hidden text-xs font-semibold text-black/60 dark:text-white/60">{{ $this->boardPassers->currentPage() }} / {{ $this->boardPassers->lastPage() }}</span>
+
+                                        @if ($this->boardPassers->hasMorePages())
+                                            <button wire:click="nextPage" class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524]">Next</button>
+                                        @else
+                                            <button disabled class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg border border-black/10 text-black/30 cursor-not-allowed">Next</button>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                         @endif

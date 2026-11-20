@@ -4,15 +4,19 @@ namespace App\Livewire\Admin;
 
 use App\Models\Department;
 use App\Support\ReportsAnalytics;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Livewire\WithPagination;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 new #[Layout('layouts.app-admin')] class extends Component
 {
+    use WithPagination;
+
     #[Url]
     public string $tab = 'employment';
 
@@ -25,6 +29,8 @@ new #[Layout('layouts.app-admin')] class extends Component
     #[Url]
     public $selectedCourseId = '';
 
+    protected int $perPage = 10;
+
     protected ?ReportsAnalytics $reportInstance = null;
 
     public function setTab(string $tab): void
@@ -34,16 +40,24 @@ new #[Layout('layouts.app-admin')] class extends Component
         }
 
         $this->tab = $tab;
+        $this->resetPage();
     }
 
     public function updatedSelectedBatchId(): void
     {
         $this->reportInstance = null;
+        $this->resetPage();
     }
 
     public function updatedDateRange(): void
     {
-        // Only engagement uses this; no need to reset the whole thing
+        $this->resetPage();
+    }
+
+    public function updatedSelectedCourseId(): void
+    {
+        $this->reportInstance = null;
+        $this->resetPage();
     }
 
     #[Computed]
@@ -237,11 +251,6 @@ new #[Layout('layouts.app-admin')] class extends Component
         ]);
     }
 
-    public function updatedSelectedCourseId(): void
-    {
-        $this->reportInstance = null;
-    }
-
     // ===== Filters =====
 
     #[Computed]
@@ -264,16 +273,16 @@ new #[Layout('layouts.app-admin')] class extends Component
         return $this->report()->totalAlumni();
     }
 
-    // ===== Report 1 — Employment Stats =====
+    // ===== Report 1 — Employment Stats (PAGINATED) =====
 
     #[Computed]
-    public function employmentRows(): array
+    public function employmentRows(): LengthAwarePaginator
     {
         if ($this->hasNoDepartment) {
-            return [];
+            return $this->paginateArray([]);
         }
 
-        return $this->report()->employmentStats();
+        return $this->paginateArray($this->report()->employmentStats());
     }
 
     #[Computed]
@@ -292,7 +301,8 @@ new #[Layout('layouts.app-admin')] class extends Component
             ];
         }
 
-        return $this->report()->employmentStatsTotals($this->employmentRows);
+        // Totals must use the FULL dataset, not the paginated slice.
+        return $this->report()->employmentStatsTotals($this->report()->employmentStats());
     }
 
     // ===== Report 2 — Industry / Employers =====
@@ -323,22 +333,25 @@ new #[Layout('layouts.app-admin')] class extends Component
         return array_sum($this->industryDistribution);
     }
 
-    // ===== Report 3 — Engagement =====
+    // ===== Report 3 — Engagement (PAGINATED) =====
 
     #[Computed]
-    public function engagementRows(): array
+    public function engagementRows(): LengthAwarePaginator
     {
         if ($this->hasNoDepartment) {
-            return [];
+            return $this->paginateArray([]);
         }
 
-        return $this->report()->engagementRates($this->dateRange);
+        return $this->paginateArray($this->report()->engagementRates($this->dateRange));
     }
 
     #[Computed]
     public function engagementTotals(): array
     {
-        $rows = $this->engagementRows;
+        // Totals must use the FULL dataset, not the paginated slice.
+        $rows = $this->hasNoDepartment
+            ? []
+            : $this->report()->engagementRates($this->dateRange);
 
         $t = ['events' => count($rows), 'yes' => 0, 'maybe' => 0, 'no' => 0, 'pending' => 0];
         foreach ($rows as $r) {
@@ -351,16 +364,16 @@ new #[Layout('layouts.app-admin')] class extends Component
         return $t;
     }
 
-    // ===== Report 4 — Board Passers & Top Notchers =====
+    // ===== Report 4 — Board Passers & Top Notchers (PAGINATED) =====
 
     #[Computed]
-    public function boardPassers(): array
+    public function boardPassers(): LengthAwarePaginator
     {
         if ($this->hasNoDepartment) {
-            return [];
+            return $this->paginateArray([]);
         }
 
-        return $this->report()->boardPassers();
+        return $this->paginateArray($this->report()->boardPassers());
     }
 
     #[Computed]
@@ -375,6 +388,7 @@ new #[Layout('layouts.app-admin')] class extends Component
             ];
         }
 
+        // Summary stats come from the FULL dataset, not the page.
         return $this->report()->boardPasserSummary();
     }
 
@@ -400,5 +414,37 @@ new #[Layout('layouts.app-admin')] class extends Component
         }
 
         return collect($this->batches)->firstWhere('id', (int) $this->selectedBatchId)['batch_name'] ?? null;
+    }
+
+    /**
+     * Wraps a plain array into a LengthAwarePaginator for the current page.
+     * Employment, Engagement, and Board Passers all use this so they share
+     * the same per-page config and page-count logic.
+     *
+     * Also clamps the current page into the valid range so that if the
+     * underlying data shrinks (live filter change, department unassigned,
+     * or a bookmark to ?page=5 that no longer exists), the user lands on
+     * the last valid page instead of seeing an empty table.
+     */
+    protected function paginateArray(array $rows): LengthAwarePaginator
+    {
+        $total = count($rows);
+        $lastPage = max(1, (int) ceil($total / $this->perPage));
+
+        $page = max(1, min($this->getPage(), $lastPage));
+
+        if ($page !== $this->getPage()) {
+            $this->setPage($page);
+        }
+
+        $offset = ($page - 1) * $this->perPage;
+
+        return new LengthAwarePaginator(
+            collect($rows)->slice($offset, $this->perPage)->values(),
+            $total,
+            $this->perPage,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
     }
 };

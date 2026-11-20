@@ -386,11 +386,26 @@ new #[Title('Reports')] #[Layout('layouts.app-super-admin')] class extends Compo
      * Wraps a plain array into a LengthAwarePaginator for the current page.
      * Employment, Engagement, and Board Passers all use this so they share
      * the same per-page config and page-count logic.
+     *
+     * Also clamps the current page into the valid range so that if the
+     * underlying data shrinks (e.g. a live filter change, an event being
+     * deleted, or a bookmark to ?page=5 that no longer exists), the user
+     * lands on the last valid page instead of seeing an empty table.
      */
     protected function paginateArray(array $rows): LengthAwarePaginator
     {
-        $page = $this->getPage();
         $total = count($rows);
+        $lastPage = max(1, (int) ceil($total / $this->perPage));
+
+        // Clamp the requested page into the valid range.
+        $page = max(1, min($this->getPage(), $lastPage));
+
+        // If Livewire's internal page drifted out of range, sync it back
+        // so the Prev/Next footers report the correct page number too.
+        if ($page !== $this->getPage()) {
+            $this->setPage($page);
+        }
+
         $offset = ($page - 1) * $this->perPage;
 
         return new LengthAwarePaginator(
