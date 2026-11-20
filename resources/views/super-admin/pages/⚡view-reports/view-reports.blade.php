@@ -434,7 +434,7 @@
                             </button>
                         </div>
 
-                        @if (empty($this->engagementRows))
+                                                @if (empty($this->engagementRows))
                             <div class="px-6 py-16 text-center">
                                 <p class="text-sm text-black/40 dark:text-white/40">No events found for the selected
                                     filters.</p>
@@ -534,6 +534,33 @@
                                     </tfoot>
                                 </table>
                             </div>
+
+                            {{-- ===== PAGINATION FOOTER (no-print) ===== --}}
+                            <div class="no-print px-4 sm:px-6 py-3 sm:py-4 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center border-t border-black/5 dark:border-white/5">
+                                <p class="text-xs sm:text-sm text-black/60 dark:text-white/60 text-center sm:text-left">
+                                    Showing
+                                    <span class="font-semibold text-[#123524] dark:text-white">{{ $this->engagementRows->firstItem() ?? 0 }}</span>–<span class="font-semibold text-[#123524] dark:text-white">{{ $this->engagementRows->lastItem() ?? 0 }}</span>
+                                    of
+                                    <span class="font-semibold text-[#123524] dark:text-white">{{ $this->engagementRows->total() }}</span>
+                                    events
+                                </p>
+
+                                <div class="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
+                                    @if ($this->engagementRows->onFirstPage())
+                                        <button disabled class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg border border-black/10 text-black/30 cursor-not-allowed">Prev</button>
+                                    @else
+                                        <button wire:click="previousPage" class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524]">Prev</button>
+                                    @endif
+
+                                    <span class="sm:hidden text-xs font-semibold text-black/60 dark:text-white/60">{{ $this->engagementRows->currentPage() }} / {{ $this->engagementRows->lastPage() }}</span>
+
+                                    @if ($this->engagementRows->hasMorePages())
+                                        <button wire:click="nextPage" class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524]">Next</button>
+                                    @else
+                                        <button disabled class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg border border-black/10 text-black/30 cursor-not-allowed">Next</button>
+                                    @endif
+                                </div>
+                            </div>
                         @endif
                     @endif
 
@@ -615,36 +642,20 @@
                                     No verified board passers found for the selected filters.
                                 </p>
                             </div>
-                        @else
+                                                @else
                             <div class="px-4 sm:px-6 py-5">
                                 <div class="overflow-x-auto border border-black/5 dark:border-white/5 rounded-xl">
                                     <table class="min-w-full text-xs sm:text-sm">
                                         <thead class="bg-[#F7F5EF] dark:bg-[#3A3B3C]">
                                             <tr>
-                                                <th
-                                                    class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px] w-12">
-                                                    #</th>
-                                                <th
-                                                    class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">
-                                                    Name</th>
-                                                <th
-                                                    class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px] hidden sm:table-cell">
-                                                    Batch</th>
-                                                <th
-                                                    class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px] hidden md:table-cell">
-                                                    Course</th>
-                                                <th
-                                                    class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">
-                                                    Rating</th>
-                                                <th
-                                                    class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px] hidden sm:table-cell">
-                                                    Attempt</th>
-                                                <th
-                                                    class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px] hidden lg:table-cell">
-                                                    Date Taken</th>
-                                                <th
-                                                    class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">
-                                                    Status</th>
+                                                <th class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px] w-12">#</th>
+                                                <th class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Name</th>
+                                                <th class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px] hidden sm:table-cell">Batch</th>
+                                                <th class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px] hidden md:table-cell">Course</th>
+                                                <th class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Rating</th>
+                                                <th class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px] hidden sm:table-cell">Attempt</th>
+                                                <th class="px-4 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px] hidden lg:table-cell">Date Taken</th>
+                                                <th class="px-4 py-3 text-end font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Status</th>
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-black/5 dark:divide-white/5">
@@ -658,6 +669,7 @@
                                                             ($row['last_name'] ?? ''),
                                                     );
                                                     $isTop = !empty($row['is_top_notcher']);
+                                                    $rowNumber = ($this->boardPassers->currentPage() - 1) * $this->boardPassers->perPage() + $i + 1;
                                                 @endphp
                                                 <tr
                                                     class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors
@@ -670,7 +682,7 @@
                                                             </span>
                                                         @else
                                                             <span class="text-[#123524]/40 dark:text-white/40 font-bold">
-                                                                {{ $i + 1 }}
+                                                                {{ $rowNumber }}
                                                             </span>
                                                         @endif
                                                     </td>
@@ -735,6 +747,33 @@
                                             @endforeach
                                         </tbody>
                                     </table>
+                                </div>
+
+                                {{-- ===== PAGINATION FOOTER (no-print) ===== --}}
+                                <div class="no-print mt-4 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center border-t border-black/5 dark:border-white/5 pt-4">
+                                    <p class="text-xs sm:text-sm text-black/60 dark:text-white/60 text-center sm:text-left">
+                                        Showing
+                                        <span class="font-semibold text-[#123524] dark:text-white">{{ $this->boardPassers->firstItem() ?? 0 }}</span>–<span class="font-semibold text-[#123524] dark:text-white">{{ $this->boardPassers->lastItem() ?? 0 }}</span>
+                                        of
+                                        <span class="font-semibold text-[#123524] dark:text-white">{{ $this->boardPassers->total() }}</span>
+                                        board passers
+                                    </p>
+
+                                    <div class="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
+                                        @if ($this->boardPassers->onFirstPage())
+                                            <button disabled class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg border border-black/10 text-black/30 cursor-not-allowed">Prev</button>
+                                        @else
+                                            <button wire:click="previousPage" class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524]">Prev</button>
+                                        @endif
+
+                                        <span class="sm:hidden text-xs font-semibold text-black/60 dark:text-white/60">{{ $this->boardPassers->currentPage() }} / {{ $this->boardPassers->lastPage() }}</span>
+
+                                        @if ($this->boardPassers->hasMorePages())
+                                            <button wire:click="nextPage" class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-[#123524] dark:bg-[#D4A537] text-white dark:text-[#123524]">Next</button>
+                                        @else
+                                            <button disabled class="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg border border-black/10 text-black/30 cursor-not-allowed">Next</button>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                         @endif

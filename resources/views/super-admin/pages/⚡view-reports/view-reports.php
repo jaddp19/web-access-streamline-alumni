@@ -4,15 +4,19 @@ namespace App\Livewire\SuperAdmin;
 
 use App\Models\Course;
 use App\Support\ReportsAnalytics;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Livewire\WithPagination;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 new #[Title('Reports')] #[Layout('layouts.app-super-admin')] class extends Component
 {
+    use WithPagination;
+
     #[Url]
     public string $tab = 'employment';
 
@@ -28,6 +32,8 @@ new #[Title('Reports')] #[Layout('layouts.app-super-admin')] class extends Compo
     #[Url]
     public $selectedCourseId = '';
 
+    protected int $perPage = 10;
+
     protected ?ReportsAnalytics $reportInstance = null;
 
     public function setTab(string $tab): void
@@ -37,11 +43,13 @@ new #[Title('Reports')] #[Layout('layouts.app-super-admin')] class extends Compo
         }
 
         $this->tab = $tab;
+        $this->resetPage();
     }
 
     public function updatedSelectedBatchId(): void
     {
         $this->reportInstance = null;
+        $this->resetPage();
     }
 
     protected function report(): ReportsAnalytics
@@ -214,6 +222,7 @@ new #[Title('Reports')] #[Layout('layouts.app-super-admin')] class extends Compo
         }
 
         $this->reportInstance = null;
+        $this->resetPage();
     }
 
     /**
@@ -234,6 +243,12 @@ new #[Title('Reports')] #[Layout('layouts.app-super-admin')] class extends Compo
         }
 
         $this->reportInstance = null;
+        $this->resetPage();
+    }
+
+    public function updatedDateRange(): void
+    {
+        $this->resetPage();
     }
 
     // ===== Filters =====
@@ -250,12 +265,14 @@ new #[Title('Reports')] #[Layout('layouts.app-super-admin')] class extends Compo
         return $this->report()->totalAlumni();
     }
 
-    // ===== Report 1 — Employment Stats =====
+    // ===== Report 1 — Employment Stats (PAGINATED) =====
 
     #[Computed]
-    public function employmentRows(): array
+    public function employmentRows(): LengthAwarePaginator
     {
-        return $this->report()->employmentStats();
+        $rows = $this->report()->employmentStats();
+
+        return $this->paginateArray($rows);
     }
 
     #[Computed]
@@ -273,7 +290,8 @@ new #[Title('Reports')] #[Layout('layouts.app-super-admin')] class extends Compo
     #[Computed]
     public function employmentTotals(): array
     {
-        return $this->report()->employmentStatsTotals($this->employmentRows);
+        // Totals must use the FULL dataset, not the paginated slice.
+        return $this->report()->employmentStatsTotals($this->report()->employmentStats());
     }
 
     // ===== Report 2 — Industry / Employers =====
@@ -296,18 +314,21 @@ new #[Title('Reports')] #[Layout('layouts.app-super-admin')] class extends Compo
         return array_sum($this->industryDistribution);
     }
 
-    // ===== Report 3 — Engagement =====
+    // ===== Report 3 — Engagement (PAGINATED) =====
 
     #[Computed]
-    public function engagementRows(): array
+    public function engagementRows(): LengthAwarePaginator
     {
-        return $this->report()->engagementRates($this->dateRange);
+        $rows = $this->report()->engagementRates($this->dateRange);
+
+        return $this->paginateArray($rows);
     }
 
     #[Computed]
     public function engagementTotals(): array
     {
-        $rows = $this->engagementRows;
+        // Totals must use the FULL dataset, not the paginated slice.
+        $rows = $this->report()->engagementRates($this->dateRange);
 
         $t = ['events' => count($rows), 'yes' => 0, 'maybe' => 0, 'no' => 0, 'pending' => 0];
         foreach ($rows as $r) {
@@ -320,17 +341,20 @@ new #[Title('Reports')] #[Layout('layouts.app-super-admin')] class extends Compo
         return $t;
     }
 
-    // ===== Report 4 — Board Passers & Top Notchers =====
+    // ===== Report 4 — Board Passers & Top Notchers (PAGINATED) =====
 
     #[Computed]
-    public function boardPassers(): array
+    public function boardPassers(): LengthAwarePaginator
     {
-        return $this->report()->boardPassers();
+        $rows = $this->report()->boardPassers();
+
+        return $this->paginateArray($rows);
     }
 
     #[Computed]
     public function boardPasserSummary(): array
     {
+        // Summary stats come from the FULL dataset, not the page.
         return $this->report()->boardPasserSummary();
     }
 
@@ -356,5 +380,25 @@ new #[Title('Reports')] #[Layout('layouts.app-super-admin')] class extends Compo
         }
 
         return collect($this->batches)->firstWhere('id', (int) $this->selectedBatchId)['batch_name'] ?? null;
+    }
+
+    /**
+     * Wraps a plain array into a LengthAwarePaginator for the current page.
+     * Employment, Engagement, and Board Passers all use this so they share
+     * the same per-page config and page-count logic.
+     */
+    protected function paginateArray(array $rows): LengthAwarePaginator
+    {
+        $page = $this->getPage();
+        $total = count($rows);
+        $offset = ($page - 1) * $this->perPage;
+
+        return new LengthAwarePaginator(
+            collect($rows)->slice($offset, $this->perPage)->values(),
+            $total,
+            $this->perPage,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
     }
 };
