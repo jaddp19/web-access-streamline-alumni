@@ -72,7 +72,7 @@
                             ->sortByDesc('id')
                             ->values();
 
-                        // Verified history — shown so the registrar can see how many times this
+                        // Verified history — shown so the alumni coordinator can see how many times this
                         // alumni has taken the board exam before.
                         $historyAttempts = ($profile?->boardExams?->where('is_verified', true) ?? collect())
                             ->sortByDesc('id')

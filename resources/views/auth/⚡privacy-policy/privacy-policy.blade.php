@@ -205,7 +205,7 @@
                 style="font-family: 'Fraunces', serif;">7. Data Sharing and Disclosure</h2>
             <p class="text-sm text-black/80 dark:text-white/80">Your personal data may be shared only with:</p>
             <ul class="space-y-2 text-sm text-black/80 dark:text-white/80 list-disc pl-5 mt-2">
-                <li>Registrar and program heads, within the scope of their duties</li>
+                <li>Alumni Coordinator and program heads, within the scope of their duties</li>
                 <li>CHED, PRC, and government agencies, when legally required</li>
                 <li>Accreditation bodies, during institutional reviews</li>
             </ul>

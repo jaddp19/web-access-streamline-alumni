@@ -237,7 +237,7 @@
                         <p class="text-black/50 dark:text-white/50 text-sm mt-1 max-w-xs mx-auto">
                             {{ $filter === 'unread'
                                 ? "You've read all your notifications."
-                                : 'Announcements from the registrar and program heads will appear here.' }}
+                                : 'Announcements from the alumni coordinator and program heads will appear here.' }}
                         </p>
                     </div>
                 @endforelse

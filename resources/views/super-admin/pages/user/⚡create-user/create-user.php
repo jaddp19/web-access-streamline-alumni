@@ -254,7 +254,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         return match (Str::lower($role)) {
             'alumni' => 'welcome-to-the-csav-alumni-network-name',
             'program head' => 'welcome-program-head',
-            'registrar' => 'welcome-registrar',
+            'alumni coordinator' => 'welcome-alumni-coordinator',
             default => 'your-csav-alumni-network-staff-account-has-been-created',
         };
     }

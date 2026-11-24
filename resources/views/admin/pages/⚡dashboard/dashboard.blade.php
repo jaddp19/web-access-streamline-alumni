@@ -15,7 +15,7 @@
                         @elseif ($selectedBatchId)
                             Showing analytics for Batch
                             {{ collect($this->batches)->firstWhere('id', (int) $selectedBatchId)['batch_name'] ?? '—' }}.
-                        @elseif ($this->isRegistrar)
+                        @elseif ($this->isAlumniCoordinator)
                             A snapshot of the alumni network across all batches.
                         @else
                             A snapshot of {{ $this->myDepartmentName }} alumni.
@@ -67,7 +67,7 @@
                     <h2 class="text-lg font-bold text-amber-900 dark:text-amber-300"
                         style="font-family: 'Fraunces', serif;">No department assigned yet</h2>
                     <p class="text-sm text-amber-800/80 dark:text-amber-200/70 mt-2 max-w-md mx-auto">
-                        You don't have access to any alumni data until the registrar assigns you to a department.
+                        You don't have access to any alumni data until the alumni coordinator assigns you to a department.
                     </p>
                 </div>
             @else
@@ -170,7 +170,7 @@
                                 <div class="min-w-0">
                                     <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white">Alumni Graduates</h2>
                                     <p id="dept-subtitle" class="text-xs text-black/40 dark:text-white/40 mt-0.5">
-                                        @if ($this->isRegistrar)
+                                        @if ($this->isAlumniCoordinator)
                                             Breakdown by department · click a bar to see courses
                                         @else
                                             Breakdown by course
@@ -244,7 +244,7 @@
                     @if ($this->topNotcherTotal > 0)
                         @php
                             $championCard = $this->topNotcherChampion;
-                            if ($championCard && !$this->isRegistrar) {
+                            if ($championCard && !$this->isAlumniCoordinator) {
                                 $deptData = $this->topNotchersByDeptAndCourse[$championCard['code']] ?? null;
                                 $courses = collect($deptData['courses'] ?? [])->sortByDesc('total');
 
@@ -268,7 +268,7 @@
                                     </h2>
                                     <p id="topnotcher-subtitle"
                                         class="text-xs text-black/40 dark:text-white/40 mt-0.5">
-                                        @if ($this->isRegistrar)
+                                        @if ($this->isAlumniCoordinator)
                                             Top-notcher attempts by department · click a bar to see courses
                                         @else
                                             Top-notcher attempts by course
@@ -300,7 +300,7 @@
                                         class="rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 p-3 transition-colors">
                                         <p data-dept-accent
                                             class="text-[10px] uppercase tracking-wide font-bold text-emerald-700 dark:text-emerald-400">
-                                            {{ $this->isRegistrar ? 'Top Department' : 'Top Course' }}</p>
+                                            {{ $this->isAlumniCoordinator ? 'Top Department' : 'Top Course' }}</p>
                                         <p class="text-sm font-bold text-[#0f2b1c] dark:text-white mt-0.5 truncate">
                                             {{ $championCard['name'] }}</p>
                                         <p data-dept-accent
@@ -356,7 +356,7 @@
                                     <p id="board-passers-subtitle"
                                         class="text-xs text-black/40 dark:text-white/40 mt-0.5">
                                         Overall pass rate · click the Passed slice to see
-                                        {{ $this->isRegistrar ? 'departments' : 'courses' }}
+                                        {{ $this->isAlumniCoordinator ? 'departments' : 'courses' }}
                                     </p>
                                 </div>
                                 <button type="button" id="board-passers-back-btn"
@@ -596,7 +596,7 @@
     @unless ($this->hasNoDepartment)
         <script type="application/json" id="analytics-payload">
             {!! json_encode([
-                'isRegistrar'             => $this->isRegistrar,
+                'isAlumniCoordinator'             => $this->isAlumniCoordinator,
                 'alumniByDept'            => $this->alumniByDept,
                 'alumniByDeptAndCourse'   => $this->alumniByDeptAndCourse,
                 'alumniByBatch'           => $this->alumniByBatch,
@@ -938,7 +938,7 @@
             const renderDeptChart = (ChartLib) => {
                 const p = window.__payload;
                 const state = drillState.dept;
-                const drillable = p.isRegistrar;
+                const drillable = p.isAlumniCoordinator;
                 const t = theme();
 
                 let labels = [], totals = [], names = [];
@@ -964,10 +964,10 @@
                     names = codes.map(c => dept.courses[c]?.name || c);
                     totals = codes.map(c => dept.courses[c]?.total || 0);
                     clickable = false;
-                    subtitleText = p.isRegistrar
+                    subtitleText = p.isAlumniCoordinator
                         ? `${dept.name} · breakdown by course`
                         : `Breakdown by course within ${dept.name}`;
-                    backBtnVisible = p.isRegistrar;
+                    backBtnVisible = p.isAlumniCoordinator;
                 }
 
                 const subEl = document.getElementById('dept-subtitle');
@@ -1154,7 +1154,7 @@
                 const t = theme();
                 const state = drillState.topNotcher;
                 const source = p.topNotchers || {};
-                const drillable = p.isRegistrar;
+                const drillable = p.isAlumniCoordinator;
 
                 let labels = [], totals = [], names = [], ranks = [];
                 let clickable = false;
@@ -1266,7 +1266,7 @@
                 const state = drillState.boardPassers;
                 const overall = p.boardExam || { Passed: 0, Failed: 0 };
                 const deptTree = p.boardPassers || {};
-                const drillable = p.isRegistrar;
+                const drillable = p.isAlumniCoordinator;
                 const firstDeptKey = Object.keys(deptTree)[0];
 
                 const subEl = document.getElementById('board-passers-subtitle');
@@ -1461,7 +1461,7 @@
                     if (!btn || !ChartLibRef) return;
 
                     if (drillState.boardPassers.view === 'courses') {
-                        if (window.__payload.isRegistrar) {
+                        if (window.__payload.isAlumniCoordinator) {
                             drillState.boardPassers.view = 'departments';
                             drillState.boardPassers.selected = null;
                         } else {
@@ -1498,11 +1498,11 @@
                 buildCourseDeptMap();
                 paintTopNotcherCards();
 
-                drillState.dept = p.isRegistrar
+                drillState.dept = p.isAlumniCoordinator
                     ? { view: 'departments', selected: null }
                     : { view: 'courses', selected: null };
                 drillState.batch = { view: 'batches', selected: null };
-                drillState.topNotcher = p.isRegistrar
+                drillState.topNotcher = p.isAlumniCoordinator
                     ? { view: 'departments', selected: null }
                     : { view: 'courses', selected: null };
                 drillState.boardPassers = { view: 'overview', selected: null };

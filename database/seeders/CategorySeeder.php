@@ -16,7 +16,7 @@ class CategorySeeder extends Seeder
     protected array $categories = [
         [
             'cat_name' => 'Announcements',
-            'cat_desc' => 'Official announcements from the registrar and program heads.',
+            'cat_desc' => 'Official announcements from the alumni coordinator and program heads.',
         ],
         [
             'cat_name' => 'Events',

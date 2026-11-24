@@ -7,7 +7,7 @@ use Spatie\Permission\Models\Role;
 
 class RolePolicy
 {
-    protected array $protected = ['registrar', 'program head', 'alumni'];
+    protected array $protected = ['alumni coordinator', 'program head', 'alumni'];
 
     public function viewAny(User $user): bool
     {

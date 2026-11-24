@@ -377,9 +377,9 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
             $courseChanged => 'Course updated. Your board exam details are now pending verification.',
 
-            $wasVerified && $boardChanged && ($this->board_taken || $this->board_rate !== '') => 'Educational background updated. A new board attempt has been recorded — please wait for the registrar to verify it.',
+            $wasVerified && $boardChanged && ($this->board_taken || $this->board_rate !== '') => 'Educational background updated. A new board attempt has been recorded — please wait for the alumni coordinator to verify it.',
 
-            ! $wasVerified && $boardChanged && ($this->board_taken || $this->board_rate !== '') => 'Your board exam details have been updated — please wait for the registrar to verify them.',
+            ! $wasVerified && $boardChanged && ($this->board_taken || $this->board_rate !== '') => 'Your board exam details have been updated — please wait for the alumni coordinator to verify them.',
 
             $boardChanged => 'Educational background updated. Board exam details cleared.',
 

@@ -120,7 +120,7 @@ new #[Layout('layouts.auth')] class extends Component
                 'ip' => request()->ip(),
             ]);
 
-            $this->addError('email', 'This account has been deactivated. Please contact the registrar.');
+            $this->addError('email', 'This account has been deactivated. Please contact the alumni coordinator.');
 
             return;
         }
@@ -139,7 +139,7 @@ new #[Layout('layouts.auth')] class extends Component
         // but this avoids repeated `hasRole()` lookups.
         $roles = $user->getRoleNames();
 
-        if ($roles->contains('registrar')) {
+        if ($roles->contains('alumni coordinator')) {
             return redirect()->route('super-admin.dashboard');
         }
 
@@ -157,7 +157,7 @@ new #[Layout('layouts.auth')] class extends Component
         request()->session()->invalidate();
         request()->session()->regenerateToken();
 
-        $this->addError('email', 'This account has no assigned role. Please contact the registrar.');
+        $this->addError('email', 'This account has no assigned role. Please contact the alumni coordinator.');
     }
 
     protected function throttleKey(): string

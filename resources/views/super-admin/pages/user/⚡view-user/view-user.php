@@ -47,6 +47,11 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public function mount(): void
     {
         Gate::authorize('viewAny', User::class);
+
+        // Old bookmarks may still carry the pre-rename filter value.
+        if ($this->roleFilter === 'registrar') {
+            $this->roleFilter = 'alumni coordinator';
+        }
     }
 
     // =========================================================
@@ -147,7 +152,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             return $this->filteredQueryCache;
         }
 
-        $query = User::role(['alumni', 'registrar', 'program head'])
+        $query = User::role(['alumni', 'alumni coordinator', 'program head'])
             ->when($this->roleFilter === 'pending', function ($q) {
                 $q->role('alumni')->whereDoesntHave('tracerStudy');
             })
@@ -202,7 +207,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             return $this->filteredQuery();
         }
 
-        return User::role(['alumni', 'registrar', 'program head'])
+        return User::role(['alumni', 'alumni coordinator', 'program head'])
             ->whereIn('id', $this->selectedUsers);
     }
 

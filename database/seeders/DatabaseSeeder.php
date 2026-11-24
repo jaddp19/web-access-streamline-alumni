@@ -33,11 +33,11 @@ class DatabaseSeeder extends Seeder
         // Seed the three default accounts. Roles are already created
         // by RoleSeeder, so we just assign by name.
         $this->seedDefaultAccount(
-            email: 'registrar@csav.edu.ph',
-            firstName: 'Registrar',
+            email: 'alumni-coordinator@csav.edu.ph',
+            firstName: 'Alumni Coordinator',
             lastName: 'CSAV',
             schoolId: '0001-0001',
-            role: 'registrar',
+            role: 'alumni coordinator',
         );
 
         $this->seedDefaultAccount(

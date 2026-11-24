@@ -60,7 +60,7 @@ class SendEventInvitationEmail implements ShouldQueue
 
         // =========================================================
         //  RECIPIENT SCOPING
-        //  · Registrar / Super Admin → all alumni
+        //  · Alumni Coordinator / Super Admin → all alumni
         //  · Program Head            → only their department(s) alumni
         // =========================================================
 

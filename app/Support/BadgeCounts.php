@@ -70,16 +70,16 @@ class BadgeCounts
     protected static function allowedAuthorIds(int $userId): array
     {
         return array_values(array_unique(array_merge(
-            self::registrarIds(),
+            self::alumniCoordinatorIds(),
             self::programHeadIdsForUser($userId),
         )));
     }
 
-    protected static function registrarIds(): array
+    protected static function alumniCoordinatorIds(): array
     {
-        return Cache::remember('registrar_user_ids', now()->addHour(), function () {
+        return Cache::remember('alumni_coordinator_user_ids', now()->addHour(), function () {
             return User::query()
-                ->whereHas('roles', fn ($q) => $q->where('name', 'registrar'))
+                ->whereHas('roles', fn ($q) => $q->where('name', 'alumni coordinator'))
                 ->pluck('id')
                 ->map(fn ($id) => (int) $id)
                 ->all();

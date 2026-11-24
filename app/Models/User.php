@@ -73,7 +73,8 @@ class User extends Authenticatable
     public const DEFAULT_PASSWORDS = [
         'csav.alumni',
         'csav.program-head',
-        'csav.registrar',
+        'csav.alumni-coordinator',
+        'csav.registrar', // legacy default for accounts created before the rename
     ];
 
     public function usesDefaultPassword(): bool

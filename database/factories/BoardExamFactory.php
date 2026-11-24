@@ -18,7 +18,7 @@ class BoardExamFactory extends Factory
     protected function topNotcherBand(int $rank): array
     {
         $high = 100.00 - (($rank - 1) * 1.0);
-        $low  = $high - 0.99;
+        $low = $high - 0.99;
 
         return [round($low, 2), round($high, 2)];
     }

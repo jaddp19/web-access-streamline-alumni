@@ -71,16 +71,16 @@ class EmailSeeder extends Seeder
                     .'— Colegio de Sta. Ana de Victorias',
             ],
 
-            // ---------- Registrar welcome ----------
+            // ---------- Alumni Coordinator welcome ----------
             [
-                'slug' => 'welcome-registrar',
-                'subject' => 'Your CSAV Registrar account is ready, {{name}}',
+                'slug' => 'welcome-alumni-coordinator',
+                'subject' => 'Your CSAV Alumni Coordinator account is ready, {{name}}',
                 'message' => "Hi {{name}},\n\n"
-                    ."A Registrar account has been created for you on the CSAV Alumni Network.\n\n"
+                    ."An Alumni Coordinator account has been created for you on the CSAV Alumni Network.\n\n"
                     ."Login details:\n"
                     ."• Email: {{school_email}}\n"
                     ."• Temporary password: {{temp_password}}\n\n"
-                    .'As a Registrar, you have institution-wide access to all alumni records, '
+                    .'As an Alumni Coordinator, you have institution-wide access to all alumni records, '
                     ."tracer study submissions, and reporting tools.\n\n"
                     ."Please log in at https://web-access-streamline-alumni.test/login and change your password immediately.\n\n"
                     .'— Colegio de Sta. Ana de Victorias',
@@ -92,7 +92,7 @@ class EmailSeeder extends Seeder
                 'subject' => 'Your CSAV Alumni Network staff account has been created',
                 'message' => "Hi {{name}},\n\n"
                     ."An account has been created for you on the CSAV Alumni Network using this login email: {{school_email}}.\n\n"
-                    .'Please contact the registrar office to receive your login password, '
+                    .'Please contact the alumni coordinator\'s office to receive your login password, '
                     ."then log in here: https://web-access-streamline-alumni.test/login.\n\n"
                     .'— Colegio de Sta. Ana de Victorias',
             ],
@@ -255,10 +255,10 @@ class EmailSeeder extends Seeder
             ],
 
             [
-                'slug' => 'password-reset-by-registrar',
+                'slug' => 'password-reset-by-alumni-coordinator',
                 'subject' => 'Your CSAV Alumni password has been reset',
                 'message' => "Hi {{name}},\n\n"
-                    ."Your CSAV Alumni Network password has been reset by the registrar.\n\n"
+                    ."Your CSAV Alumni Network password has been reset by the alumni coordinator.\n\n"
                     .'Your new temporary password: '
                     ."{{temp_password}}\n\n"
                     ."Please log in at {{login_url}} and change it immediately.\n\n"

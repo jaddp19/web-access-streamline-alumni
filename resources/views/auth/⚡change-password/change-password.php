@@ -103,7 +103,7 @@ new #[Layout('layouts.auth')] class extends Component
 
         $roles = $user->getRoleNames();
 
-        if ($roles->contains('registrar')) {
+        if ($roles->contains('alumni coordinator')) {
             return redirect()->route('super-admin.dashboard');
         }
 

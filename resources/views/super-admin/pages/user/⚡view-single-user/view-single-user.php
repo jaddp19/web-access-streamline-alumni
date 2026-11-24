@@ -68,7 +68,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         EmailTemplateService::send('profile-approved', $this->user->email, [
             'name' => $this->user->name,
             'approved_at' => now()->format('F j, Y · g:i A'),
-            'approved_by' => Auth::user()?->name ?? 'the registrar',
+            'approved_by' => Auth::user()?->name ?? 'the alumni coordinator',
         ]);
 
         session()->flash('success', 'Profile approved. An email has been sent to the alumni.');
@@ -119,7 +119,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             'name' => $this->user->name,
             'reason' => $reason,
             'rejected_at' => now()->format('F j, Y · g:i A'),
-            'rejected_by' => Auth::user()?->name ?? 'the registrar',
+            'rejected_by' => Auth::user()?->name ?? 'the alumni coordinator',
         ]);
 
         $this->showRejectModal = false;

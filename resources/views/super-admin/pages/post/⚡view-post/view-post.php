@@ -42,8 +42,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     #[Computed]
     public function viewingPost(): ?Post
     {
-        if (! $this->viewingPostId) return null;
-        
+        if (! $this->viewingPostId) {
+            return null;
+        }
+
         return Post::with([
             'user:id,name',
             'user.userProfile:id,user_id,avatar',
@@ -144,6 +146,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         if (! $post) {
             session()->flash('error', 'Post not found.');
+
             return;
         }
 
@@ -157,6 +160,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         } catch (Throwable $e) {
             report($e);
             session()->flash('error', 'Failed to delete post. Please try again.');
+
             return;
         }
 
@@ -197,11 +201,13 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         } catch (Throwable $e) {
             report($e);
             session()->flash('error', 'Failed to update status.');
+
             return;
         }
 
         if ($newStatus === null) {
             session()->flash('error', 'Post not found.');
+
             return;
         }
 

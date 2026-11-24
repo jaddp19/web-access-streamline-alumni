@@ -37,8 +37,8 @@ class DemoSeeder extends Seeder
     {
         $this->command->info('→ Seeding demo data...');
 
-        // Registrar must exist before other seeded content can reference it.
-        $this->seedRegistrarIfMissing();
+        // Alumni Coordinator must exist before other seeded content can reference it.
+        $this->seedAlumniCoordinatorIfMissing();
 
         // Only skip the alumni-heavy part on re-runs.
         $hasAlumni = User::role('alumni')->count() > 100;
@@ -64,21 +64,21 @@ class DemoSeeder extends Seeder
     }
 
     // =========================================================
-    //  0. REGISTRAR (created on demand if missing)
+    //  0. ALUMNI COORDINATOR (created on demand if missing)
     // =========================================================
 
-    protected function seedRegistrarIfMissing(): void
+    protected function seedAlumniCoordinatorIfMissing(): void
     {
-        if (User::role('registrar')->exists()) {
+        if (User::role('alumni coordinator')->exists()) {
             return;
         }
 
-        $registrar = User::factory()->registrar()->create();
+        $alumniCoordinator = User::factory()->alumniCoordinator()->create();
 
         // Staff profiles are approved by default — they're not in the review pipeline.
-        UserProfile::factory()->approved()->create(['user_id' => $registrar->id]);
+        UserProfile::factory()->approved()->create(['user_id' => $alumniCoordinator->id]);
 
-        $this->command->info('→ Registrar: created (was missing)');
+        $this->command->info('→ Alumni Coordinator: created (was missing)');
     }
 
     // =========================================================
@@ -187,7 +187,7 @@ class DemoSeeder extends Seeder
      *
      * Rule: only ONE unverified row per alumni at any time. If an alumni
      * retook the exam, the earlier attempts were already reviewed by the
-     * registrar — they MUST be is_verified = true so the queue shows one
+     * alumni coordinator — they MUST be is_verified = true so the queue shows one
      * row, not the entire attempt chain.
      */
     protected function seedBoardAttemptsFor(UserProfile $profile, Course $course, string $approvalState): void
@@ -221,7 +221,7 @@ class DemoSeeder extends Seeder
 
             // ── Pending / rejected ─────────────────────────────────────
             if ($isFinalAttempt) {
-                // The ONE pending row awaiting registrar review.
+                // The ONE pending row awaiting alumni coordinator review.
                 $passing = fake()->boolean(85);
 
                 BoardExam::factory()->state(array_merge($baseState, [
@@ -247,7 +247,7 @@ class DemoSeeder extends Seeder
         $profile->refresh();
         $profile->syncBoardMirrors();
 
-        // Approved board alumni are always "verified" — the registrar
+        // Approved board alumni are always "verified" — the alumni coordinator
         // already reviewed them, pass or fail. Without this, failed-only
         // alumni end up with is_verified = false after syncBoardMirrors()
         // (which keys off "has a verified PASSING attempt") and they vanish

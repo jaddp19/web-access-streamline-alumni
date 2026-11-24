@@ -26,7 +26,7 @@ class DashboardAnalytics
 {
     public function __construct(
         protected ?int $batchId = null,
-        /** null → global (registrar) · int → scoped to a department */
+        /** null → global (alumni coordinator) · int → scoped to a department */
         protected ?int $departmentId = null,
     ) {}
 
@@ -110,7 +110,7 @@ class DashboardAnalytics
      * Alumni who have submitted board data but haven't been verified yet.
      * This is a WORKFLOW counter — it deliberately excludes BOTH the
      * is_approved and is_active filters, because pending items must be
-     * visible to the registrar regardless of the user's current state.
+     * visible to the alumni coordinator regardless of the user's current state.
      */
     public function pendingVerifications(): int
     {
@@ -219,11 +219,11 @@ class DashboardAnalytics
             ->orderBy('departments.dept_name')
             ->get()
             ->mapWithKeys(fn ($r) => [
-            $r->dept_code ?: "DEPT-{$r->dept_id}" => [
-                'name' => $r->dept_name,
-                'total' => (int) $r->total,
-            ],
-        ])
+                $r->dept_code ?: "DEPT-{$r->dept_id}" => [
+                    'name' => $r->dept_name,
+                    'total' => (int) $r->total,
+                ],
+            ])
             ->toArray();
     }
 
@@ -334,11 +334,11 @@ class DashboardAnalytics
             ->orderBy('batches.batch_name')
             ->get()
             ->mapWithKeys(fn ($r) => [
-            (string) $r->batch_id => [
-                'batch_name' => $r->batch_name,
-                'total' => (int) $r->total,
-            ],
-        ])
+                (string) $r->batch_id => [
+                    'batch_name' => $r->batch_name,
+                    'total' => (int) $r->total,
+                ],
+            ])
             ->toArray();
     }
 

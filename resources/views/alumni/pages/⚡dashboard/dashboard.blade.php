@@ -124,7 +124,7 @@
                 </div>
             @endif
 
-            {{-- Feed: official posts from registrar / program head --}}
+            {{-- Feed: official posts from alumni coordinator / program head --}}
             @forelse ($this->recentPosts as $post)
                 @php
                     // 1. Date Logic
@@ -267,7 +267,7 @@
                         No posts yet
                     </p>
                     <p class="text-black/50 dark:text-white/50 text-sm mt-1 max-w-xs mx-auto">
-                        Official announcements from the registrar and program heads will appear here.
+                        Official announcements from the alumni coordinator and program heads will appear here.
                     </p>
                 </div>
             @endforelse

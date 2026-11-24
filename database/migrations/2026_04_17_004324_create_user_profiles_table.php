@@ -28,7 +28,7 @@ return new class extends Migration
 
             $table->boolean('is_verified')->default(false);
 
-            // Registrar approval workflow
+            // Alumni Coordinator approval workflow
             $table->boolean('is_approved')->default(false);
             $table->text('last_rejection_reason')->nullable();
 

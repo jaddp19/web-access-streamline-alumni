@@ -43,16 +43,18 @@ new #[Layout('layouts.app-admin')] class extends Component
     #[Computed]
     public function viewingPost(): ?Post
     {
-        if (! $this->viewingPostId) return null;
-        
+        if (! $this->viewingPostId) {
+            return null;
+        }
+
         return Post::with([
             'user:id,name',
             'user.userProfile:id,user_id,avatar',
             'user.roles:id,name',
             'category:id,cat_name',
         ])
-        ->where('user_id', Auth::id()) // Security: ensure they can only view their own
-        ->find($this->viewingPostId);
+            ->where('user_id', Auth::id()) // Security: ensure they can only view their own
+            ->find($this->viewingPostId);
     }
     // -----------------------
 
@@ -156,6 +158,7 @@ new #[Layout('layouts.app-admin')] class extends Component
 
         if (! $post) {
             session()->flash('error', 'Post not found or you do not have permission to delete it.');
+
             return;
         }
 
@@ -169,6 +172,7 @@ new #[Layout('layouts.app-admin')] class extends Component
         } catch (Throwable $e) {
             report($e);
             session()->flash('error', 'Failed to delete post. Please try again.');
+
             return;
         }
 
@@ -209,11 +213,13 @@ new #[Layout('layouts.app-admin')] class extends Component
         } catch (Throwable $e) {
             report($e);
             session()->flash('error', 'Failed to update status.');
+
             return;
         }
 
         if ($newStatus === null) {
             session()->flash('error', 'Post not found or you do not have permission to modify it.');
+
             return;
         }
 

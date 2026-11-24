@@ -14,14 +14,14 @@ class EventSeeder extends Seeder
 
     public function run(): void
     {
-        // Only registrar + program head can author events.
+        // Only alumni coordinator + program head can author events.
         $authors = User::query()
-            ->whereHas('roles', fn ($q) => $q->whereIn('name', ['registrar', 'program head']))
+            ->whereHas('roles', fn ($q) => $q->whereIn('name', ['alumni coordinator', 'program head']))
             ->where('is_active', true)
             ->get();
 
         if ($authors->isEmpty()) {
-            $this->command->error('→ Events: SKIPPED — no registrar or program head found.');
+            $this->command->error('→ Events: SKIPPED — no alumni coordinator or program head found.');
 
             return;
         }

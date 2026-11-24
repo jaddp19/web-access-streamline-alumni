@@ -40,14 +40,14 @@ new #[Layout('layouts.app-alumni')] class extends Component
             return false;
         }
 
-        $registrarIds = Cache::remember('registrar_user_ids', now()->addHour(), function () {
+        $alumniCoordinatorIds = Cache::remember('alumni_coordinator_user_ids', now()->addHour(), function () {
             return User::query()
-                ->whereHas('roles', fn ($q) => $q->where('name', 'registrar'))
+                ->whereHas('roles', fn ($q) => $q->where('name', 'alumni coordinator'))
                 ->pluck('id')
                 ->all();
         });
 
-        if (in_array($event->created_by, $registrarIds)) {
+        if (in_array($event->created_by, $alumniCoordinatorIds)) {
             return true;
         }
 

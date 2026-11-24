@@ -10,7 +10,9 @@ class UserFactory extends Factory
     protected $model = User::class;
 
     protected const SCHOOL_ID_MIN_YEAR = 2011;
+
     protected const SCHOOL_ID_MAX_YEAR = 2023;
+
     protected const SCHOOL_ID_PER_YEAR = 9999;
 
     /** Static in-memory counter: [year => last_used_number]. */
@@ -85,9 +87,9 @@ class UserFactory extends Factory
 
     // ===== Role states =====
 
-    public function registrar(): static
+    public function alumniCoordinator(): static
     {
-        return $this->afterCreating(fn (User $user) => $user->assignRole('registrar'));
+        return $this->afterCreating(fn (User $user) => $user->assignRole('alumni coordinator'));
     }
 
     public function programHead(): static

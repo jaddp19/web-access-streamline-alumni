@@ -519,7 +519,7 @@
                                                 class="font-semibold text-sm text-black dark:text-white group-hover:text-[#1C6B45] dark:group-hover:text-[#D4A537] transition">
                                                 Show my profile to other alumni</p>
                                             <p class="text-xs text-black/60 dark:text-white/60 mt-0.5">
-                                                When turned off, your profile stays visible to the registrar, but
+                                                When turned off, your profile stays visible to the alumni coordinator, but
                                                 other alumni won't see your details.
                                             </p>
                                             @error('profileVisible')

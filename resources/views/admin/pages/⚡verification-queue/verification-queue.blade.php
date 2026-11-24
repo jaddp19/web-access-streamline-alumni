@@ -60,7 +60,7 @@
                     No department assigned yet
                 </h2>
                 <p class="text-sm text-amber-800/80 dark:text-amber-200/70 mt-2 max-w-md mx-auto">
-                    You don't have access to any verification queue until the registrar assigns you to a department.
+                    You don't have access to any verification queue until the alumni coordinator assigns you to a department.
                 </p>
             </div>
         @else

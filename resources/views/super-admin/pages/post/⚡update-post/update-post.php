@@ -23,16 +23,21 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public Post $post;
 
     public string $title = '';
+
     public string $description = '';
+
     public ?int $category_id = null;
+
     public string $status = 'draft';
-    
+
     public $image = null;
+
     public ?string $currentImage = null;
-    
+
     public array $existingAttachments = [];
+
     public array $attachments = [];
-    
+
     public bool $resendAnnouncement = false;
 
     public function mount(Post $post): void
@@ -45,7 +50,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $this->category_id = $post->category_id;
         $this->status = $post->status;
         $this->currentImage = $post->image;
-        
+
         // Ensure it's strictly an array
         $this->existingAttachments = is_array($post->attachments) ? $post->attachments : [];
     }
@@ -160,7 +165,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         } catch (ValidationException $e) {
             // Clear the invalid file so Blade doesn't crash trying to render a CSV preview
             $this->reset('image');
-            
+
             // Re-throw so Livewire displays the red error message
             throw $e;
         }
@@ -266,22 +271,25 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                     'attachments' => array_values(array_unique($finalAttachments)) ?: null,
                 ]);
             });
-            
+
         } catch (QueryException $e) {
             $this->cleanupFiles($newImagePath, $newAttachmentPaths);
 
             if ($e->getCode() === '23000') {
                 $this->addError('title', 'This title was just taken. Please try again.');
+
                 return;
             }
 
             report($e);
             session()->flash('error', 'Could not update post. Please try again.');
+
             return;
         } catch (Throwable $e) {
             $this->cleanupFiles($newImagePath, $newAttachmentPaths);
             report($e);
             session()->flash('error', 'Could not update post. Please try again.');
+
             return;
         }
 

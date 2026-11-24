@@ -19,15 +19,25 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public Event $event;
 
     public string $title = '';
+
     public string $description = '';
+
     public string $location = '';
+
     public string $starts_at = '';
+
     public string $ends_at = '';
+
     public string $registration_deadline = '';
+
     public ?int $capacity = null;
+
     public string $status = 'draft';
+
     public $image = null;
+
     public ?string $currentImage = null;
+
     public bool $resendInvitation = false;
 
     public function mount(Event $event): void
@@ -192,7 +202,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         } catch (ValidationException $e) {
             // Clear the invalid file so Blade doesn't crash trying to render a CSV preview
             $this->reset('image');
-            
+
             // Re-throw so Livewire displays the red error message
             throw $e;
         }
@@ -222,6 +232,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         // --- Cross-field guards ---
         if ($this->status === 'published' && Carbon::parse($this->starts_at)->isPast()) {
             $this->addError('starts_at', 'You cannot publish an event with a start date in the past.');
+
             return;
         }
 
@@ -229,6 +240,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             $endOrStart = $this->ends_at ?: $this->starts_at;
             if (Carbon::parse($endOrStart)->isFuture()) {
                 $this->addError('status', 'You cannot mark an event as completed before it has ended.');
+
                 return;
             }
         }
@@ -239,6 +251,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             && Carbon::parse($this->starts_at)->isPast()
         ) {
             $this->addError('status', 'You cannot cancel a past event with existing attendees.');
+
             return;
         }
 
@@ -279,6 +292,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             }
             report($e);
             session()->flash('error', 'Could not update event. Please try again.');
+
             return;
         }
 

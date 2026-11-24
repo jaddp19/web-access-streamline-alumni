@@ -42,8 +42,10 @@ new #[Layout('layouts.app-admin')] class extends Component
     #[Computed]
     public function viewingEvent(): ?Event
     {
-        if (! $this->viewingEventId) return null;
-        
+        if (! $this->viewingEventId) {
+            return null;
+        }
+
         return Event::with('creator:id,name')->find($this->viewingEventId);
     }
     // -----------------------
@@ -123,12 +125,13 @@ new #[Layout('layouts.app-admin')] class extends Component
         Gate::authorize('can_update');
         $user = Auth::user();
 
-        abort_unless($user?->hasAnyRole(['registrar', 'program head']), 403);
+        abort_unless($user?->hasAnyRole(['alumni coordinator', 'program head']), 403);
 
         $event = Event::find($id);
 
         if (! $event) {
             session()->flash('error', 'Event not found.');
+
             return;
         }
 
@@ -139,6 +142,7 @@ new #[Layout('layouts.app-admin')] class extends Component
 
         if ($event->status === 'cancelled') {
             session()->flash('error', 'This event is already cancelled.');
+
             return;
         }
 

@@ -35,7 +35,7 @@ class UserPolicy
         }
 
         // Editing someone else's account is staff-only.
-        return $user->hasAnyRole(['registrar', 'program head'])
+        return $user->hasAnyRole(['alumni coordinator', 'program head'])
             && $user->hasPermissionTo('can_update');
     }
 
@@ -51,7 +51,7 @@ class UserPolicy
         }
 
         // Deleting someone else's account is staff-only.
-        return $user->hasAnyRole(['registrar', 'program head'])
+        return $user->hasAnyRole(['alumni coordinator', 'program head'])
             && $user->hasPermissionTo('can_delete');
     }
 

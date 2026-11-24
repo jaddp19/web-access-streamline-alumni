@@ -8,7 +8,7 @@
                     <h1 class="text-xl font-bold text-black dark:text-white leading-tight"
                         style="font-family: 'Fraunces', serif;">Inbox</h1>
                     <p class="text-xs text-black/50 dark:text-white/50">
-                        Messages from your department head or from the registrar
+                        Messages from your department head or from the alumni coordinator
                     </p>
                 </div>
             </div>
@@ -97,7 +97,7 @@
                                     </span>
                                 </div>
                                 <p class="text-sm text-black/70 dark:text-white/70 mt-1 leading-relaxed">
-                                    Your alumni profile has been reviewed and approved by the registrar/program head.
+                                    Your alumni profile has been reviewed and approved by the alumni coordinator/program head.
                                     Thank you for keeping your information up to date.
                                 </p>
                             </div>
@@ -126,7 +126,7 @@
                                 </div>
 
                                 <p class="text-sm text-black/70 dark:text-white/70 mt-1 leading-relaxed">
-                                    The registrar/program head was unable to approve your alumni profile for the following reason:
+                                    The alumni coordinator/program head was unable to approve your alumni profile for the following reason:
                                 </p>
 
                                 <div class="mt-3 p-3 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20">
@@ -161,7 +161,7 @@
                                     </span>
                                 </div>
                                 <p class="text-sm text-black/70 dark:text-white/70 mt-1 leading-relaxed">
-                                    Your profile is currently being reviewed by the registrar.
+                                    Your profile is currently being reviewed by the alumni coordinator.
                                     You'll receive an update here once a decision has been made.
                                 </p>
                             </div>
@@ -308,7 +308,7 @@
                         @elseif ($filter === 'pending')
                             You've responded to every message so far.
                         @else
-                            Messages from the registrar and your department head will appear here.
+                            Messages from the alumni coordinator and your department head will appear here.
                         @endif
                     </p>
                 </div>

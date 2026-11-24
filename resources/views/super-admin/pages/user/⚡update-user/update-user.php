@@ -328,7 +328,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         string $plainPassword
     ): void {
         try {
-            EmailTemplateService::send('password-reset-by-registrar', $email, [
+            EmailTemplateService::send('password-reset-by-alumni-coordinator', $email, [
                 'name' => $fullName,
                 'temp_password' => $plainPassword,
                 'login_url' => route('login'),

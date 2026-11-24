@@ -81,13 +81,13 @@ new #[Layout('layouts.app-alumni')] class extends Component
         });
     }
 
-    /** Registrar user IDs — cached (small, stable, role-driven). */
+    /** Alumni Coordinator user IDs — cached (small, stable, role-driven). */
     #[Computed]
-    public function registrarIds(): array
+    public function alumniCoordinatorIds(): array
     {
-        return Cache::remember('registrar_user_ids', now()->addHour(), function () {
+        return Cache::remember('alumni_coordinator_user_ids', now()->addHour(), function () {
             return User::query()
-                ->whereHas('roles', fn ($q) => $q->where('name', 'registrar'))
+                ->whereHas('roles', fn ($q) => $q->where('name', 'alumni coordinator'))
                 ->pluck('id')
                 ->all();
         });
@@ -97,7 +97,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
     public function upcomingEvents()
     {
         $allowedCreatorIds = array_values(array_unique(array_merge(
-            $this->registrarIds,
+            $this->alumniCoordinatorIds,
             $this->programHeadIdsForMyDepartments,
         )));
 
@@ -173,7 +173,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
     public function recentPosts()
     {
         $allowedAuthorIds = array_values(array_unique(array_merge(
-            $this->registrarIds,
+            $this->alumniCoordinatorIds,
             $this->programHeadIdsForMyDepartments,
         )));
 

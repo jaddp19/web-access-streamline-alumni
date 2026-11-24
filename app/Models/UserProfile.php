@@ -116,7 +116,7 @@ class UserProfile extends Model
      * Cached mirror of "does this profile have at least one verified PASSING
      * board attempt?".
      *
-     * Note: an attempt can be verified (registrar confirms the data matches
+     * Note: an attempt can be verified (alumni coordinator confirms the data matches
      * PRC records) but still FAILED — that does NOT promote the profile.
      * The public "Verified Board Passer" badge, the board data visibility,
      * and the congrats email all key off this flag.

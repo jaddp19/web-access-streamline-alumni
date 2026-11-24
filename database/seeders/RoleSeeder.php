@@ -27,7 +27,7 @@ class RoleSeeder extends Seeder
      * Keys are role names, values are arrays of permission names.
      */
     protected array $rolePermissions = [
-        'registrar' => [
+        'alumni coordinator' => [
             'can_view_any',
             'can_view',
             'can_create',

@@ -60,10 +60,10 @@ class EmailTemplateService
         return [
             'welcome-to-the-csav-alumni-network-name',
             'welcome-program-head',
-            'welcome-registrar',
+            'welcome-alumni-coordinator',
             'your-csav-alumni-network-staff-account-has-been-created',
             'password-reset',
-            'password-reset-by-registrar',
+            'password-reset-by-alumni-coordinator',
         ];
     }
 

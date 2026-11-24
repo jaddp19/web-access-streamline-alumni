@@ -92,7 +92,7 @@ new #[Layout('layouts.app-admin')] class extends Component
         if (! $user) {
             return [];
         }
-        if ($user->hasRole('registrar')) {
+        if ($user->hasRole('alumni coordinator')) {
             return [];
         }
 
@@ -109,7 +109,7 @@ new #[Layout('layouts.app-admin')] class extends Component
         if (! $user) {
             return false;
         }
-        if ($user->hasRole('registrar')) {
+        if ($user->hasRole('alumni coordinator')) {
             return true;
         }
         if ($user->hasRole('program head')) {
@@ -126,9 +126,9 @@ new #[Layout('layouts.app-admin')] class extends Component
     }
 
     #[Computed]
-    public function isRegistrar(): bool
+    public function isAlumniCoordinator(): bool
     {
-        return Auth::user()?->hasRole('registrar') ?? false;
+        return Auth::user()?->hasRole('alumni coordinator') ?? false;
     }
 
     #[Computed]

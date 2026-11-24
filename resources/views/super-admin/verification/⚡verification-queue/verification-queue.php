@@ -25,7 +25,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public ?int $rejectingUserId = null;
 
     /**
-     * Registrar-entered top notcher ranks, keyed by board_exam id.
+     * Alumni Coordinator-entered top notcher ranks, keyed by board_exam id.
      * e.g. [12 => 3, 15 => null] means attempt #12 is Top 3, #15 is not a top notcher.
      */
     public array $topNotcherRank = [];
@@ -46,7 +46,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         if (! $user) {
             return false;
         }
-        if ($user->hasRole('registrar')) {
+        if ($user->hasRole('alumni coordinator')) {
             return null;
         }
 
@@ -131,7 +131,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             abort(403, 'You do not have a department assigned.');
         }
 
-        // Validate any top notcher ranks the registrar typed in.
+        // Validate any top notcher ranks the alumni coordinator typed in.
         $this->validate([
             'topNotcherRank' => 'array',
             'topNotcherRank.*' => 'nullable|integer|min:1|max:100',
@@ -149,7 +149,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             return;
         }
 
-        if ($user->hasAnyRole(['program head', 'registrar'])) {
+        if ($user->hasAnyRole(['program head', 'alumni coordinator'])) {
             abort(403, 'Cannot modify staff accounts from this queue.');
         }
 
@@ -165,7 +165,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             return;
         }
 
-        // Snapshot the ranks the registrar entered (keyed by board_exam id).
+        // Snapshot the ranks the alumni coordinator entered (keyed by board_exam id).
         $rankInput = $this->topNotcherRank;
 
         try {
@@ -230,14 +230,14 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                 EmailTemplateService::send('profile-approved', $user->email, [
                     'name' => $user->name,
                     'approved_at' => now()->format('F j, Y · g:i A'),
-                    'approved_by' => Auth::user()?->name ?? 'the registrar',
+                    'approved_by' => Auth::user()?->name ?? 'the alumni coordinator',
                     'login_url' => route('login'),
                 ]);
             } else {
                 EmailTemplateService::send('profile-verified-not-passer', $user->email, [
                     'name' => $user->name,
                     'verified_at' => now()->format('F j, Y · g:i A'),
-                    'verified_by' => Auth::user()?->name ?? 'the registrar',
+                    'verified_by' => Auth::user()?->name ?? 'the alumni coordinator',
                     'login_url' => route('login'),
                 ]);
             }
@@ -304,7 +304,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             return;
         }
 
-        if ($user->hasAnyRole(['program head', 'registrar'])) {
+        if ($user->hasAnyRole(['program head', 'alumni coordinator'])) {
             abort(403, 'Cannot modify staff accounts from this queue.');
         }
 

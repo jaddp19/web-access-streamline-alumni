@@ -223,7 +223,7 @@
                                 'all' => 'All Users',
                                 'alumni' => 'Alumni',
                                 'program head' => 'Program Head',
-                                'registrar' => 'Registrar',
+                                'alumni coordinator' => 'Alumni Coordinator',
                                 'pending' => 'Pending Tracer',
                             ];
                         @endphp

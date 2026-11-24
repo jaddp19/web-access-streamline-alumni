@@ -42,7 +42,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     #[Computed]
     public function viewingEvent(): ?Event
     {
-        if (! $this->viewingEventId) return null;
+        if (! $this->viewingEventId) {
+            return null;
+        }
+
         return Event::with('creator:id,name')->find($this->viewingEventId);
     }
     // -----------------
@@ -102,12 +105,13 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public function deleteEvent(int $id): void
     {
         Gate::authorize('can_delete');
-        abort_unless(Auth::user()?->hasAnyRole(['registrar']), 403);
+        abort_unless(Auth::user()?->hasAnyRole(['alumni coordinator']), 403);
 
         $event = Event::find($id);
 
         if (! $event) {
             session()->flash('error', 'Event not found.');
+
             return;
         }
 
@@ -116,6 +120,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                 'error',
                 'Cancel this event first — attendees must be notified before it can be deleted.'
             );
+
             return;
         }
 
@@ -138,17 +143,19 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public function cancelEvent(int $id): void
     {
         Gate::authorize('can_update');
-        abort_unless(Auth::user()?->hasAnyRole(['registrar']), 403);
+        abort_unless(Auth::user()?->hasAnyRole(['alumni coordinator']), 403);
 
         $event = Event::find($id);
 
         if (! $event) {
             session()->flash('error', 'Event not found.');
+
             return;
         }
 
         if ($event->status === 'cancelled') {
             session()->flash('error', 'This event is already cancelled.');
+
             return;
         }
 

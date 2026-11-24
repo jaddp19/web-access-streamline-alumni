@@ -12,7 +12,7 @@
                     <p class="text-sm text-black/50 dark:text-white/50 mt-0.5">
                         @if ($this->hasNoDepartment)
                             Waiting for department assignment.
-                        @elseif ($this->isRegistrar)
+                        @elseif ($this->isAlumniCoordinator)
                             Generate institutional reports across all batches.
                         @else
                             Reports for {{ $this->myDepartmentName }}.
@@ -30,7 +30,7 @@
                         No department assigned yet
                     </h2>
                     <p class="text-sm text-amber-800/80 dark:text-amber-200/70 mt-2 max-w-md mx-auto">
-                        You can't generate reports until the registrar assigns you to a department.
+                        You can't generate reports until the alumni coordinator assigns you to a department.
                     </p>
                 </div>
             @else
@@ -147,7 +147,7 @@
                             <h1 class="text-base font-bold text-black uppercase tracking-wide">
                                 Colegio de Sta. Ana de Victorias, Inc.
                             </h1>
-                            <p class="text-xs text-black mt-1">Office of the Registrar</p>
+                            <p class="text-xs text-black mt-1">Office of the Alumni Coordinator</p>
                             <p class="text-xs text-black">Osmeña Ave., Victorias City, Negros Occidental, 6119</p>
                         </div>
 
@@ -160,7 +160,7 @@
                         <div class="mt-3 text-xs text-black text-center space-y-0.5">
                             <p class="font-semibold">{{ $this->reportLabel }}</p>
                             <p>
-                                Department: {{ $this->isRegistrar ? 'All Departments' : $this->myDepartmentName }}
+                                Department: {{ $this->isAlumniCoordinator ? 'All Departments' : $this->myDepartmentName }}
                                 @if ($this->batchLabel)
                                     · Batch: {{ $this->batchLabel }}
                                 @endif

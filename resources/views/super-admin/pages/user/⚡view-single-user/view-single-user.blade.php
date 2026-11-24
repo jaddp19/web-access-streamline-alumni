@@ -395,7 +395,7 @@
                                 </dd>
                             </div>
                         @elseif ($profile->board_taken || $profile->board_rate !== null)
-                            {{-- Unverified board data → hidden from public view; registrar sees a notice --}}
+                            {{-- Unverified board data → hidden from public view; alumni coordinator sees a notice --}}
                             <div class="sm:col-span-2 min-w-0">
                                 <dt
                                     class="text-[10px] sm:text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">
@@ -408,7 +408,7 @@
                                     </svg>
                                     <span>
                                         <span class="font-semibold">Awaiting verification</span>
-                                        &mdash; submitted board details are hidden from public view until the registrar
+                                        &mdash; submitted board details are hidden from public view until the alumni coordinator
                                         approves this profile.
                                     </span>
                                 </dd>

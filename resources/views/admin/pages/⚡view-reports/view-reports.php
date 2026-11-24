@@ -67,7 +67,7 @@ new #[Layout('layouts.app-admin')] class extends Component
         if (! $user) {
             return false;
         }
-        if ($user->hasRole('registrar')) {
+        if ($user->hasRole('alumni coordinator')) {
             return null;
         }
 
@@ -75,9 +75,9 @@ new #[Layout('layouts.app-admin')] class extends Component
     }
 
     #[Computed]
-    public function isRegistrar(): bool
+    public function isAlumniCoordinator(): bool
     {
-        return Auth::user()?->hasRole('registrar') ?? false;
+        return Auth::user()?->hasRole('alumni coordinator') ?? false;
     }
 
     #[Computed]

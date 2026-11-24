@@ -738,7 +738,7 @@ new #[Layout('layouts.app-form')] class extends Component
             // ─── Re-enter the review queue if anything meaningful changed ─────
             // Any edit to alumni-editable fields, a course switch, or a change
             // to the board data sends the profile back to "Awaiting Review" so
-            // the registrar can re-verify it.
+            // the alumni coordinator can re-verify it.
             $profileFieldsChanged = $profile->wasChanged([
                 'gender',
                 'contact_number_1',
@@ -756,7 +756,7 @@ new #[Layout('layouts.app-form')] class extends Component
                 ])->saveQuietly();
 
                 // Optional but recommended: drop the cached "verified board passer"
-                // badge until the registrar re-approves. Comment out if you want the
+                // badge until the alumni coordinator re-approves. Comment out if you want the
                 // old verified attempt to keep counting.
                 // $profile->forceFill(['is_verified' => false])->saveQuietly();
             }
@@ -902,7 +902,7 @@ new #[Layout('layouts.app-form')] class extends Component
         // ─── Send update confirmation email ──────────────────────────
         $updater = Auth::user();
         $isSelfUpdate = $updater->id === $user->id;
-        $isRegistrar = ! $isSelfUpdate && $updater->hasRole('registrar');
+        $isAlumniCoordinator = ! $isSelfUpdate && $updater->hasRole('alumni coordinator');
 
         EmailTemplateService::send('tracer-study-updated', $user->email, [
             'name' => $user->name,
@@ -912,7 +912,7 @@ new #[Layout('layouts.app-form')] class extends Component
             'is_self_update' => $isSelfUpdate,
             'updater_label' => match (true) {
                 $isSelfUpdate => $user->name,
-                $isRegistrar => 'the registrar',
+                $isAlumniCoordinator => 'the alumni coordinator',
                 default => 'an administrator',
             },
         ]);

@@ -4,6 +4,7 @@ namespace App\Livewire\Admin;
 
 use App\Jobs\SendEventInvitationEmail;
 use App\Models\Event;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -19,20 +20,28 @@ new #[Layout('layouts.app-admin')] class extends Component
     use WithFileUploads;
 
     public string $title = '';
+
     public string $description = '';
+
     public string $location = '';
+
     public string $starts_at = '';
+
     public string $ends_at = '';
+
     public string $registration_deadline = '';
+
     public ?int $capacity = null;
+
     public string $status = 'draft';
+
     public $image = null;
 
     public function mount(): void
     {
         Gate::authorize('can_create');
     }
-    
+
     // =========================================================
     //  VALIDATION
     // =========================================================
@@ -77,8 +86,8 @@ new #[Layout('layouts.app-admin')] class extends Component
                         return;
                     }
                     try {
-                        $start = \Carbon\Carbon::parse($this->starts_at);
-                        $end = \Carbon\Carbon::parse($value);
+                        $start = Carbon::parse($this->starts_at);
+                        $end = Carbon::parse($value);
                         if ($end->diffInDays($start) > 30) {
                             $fail('The end date cannot be more than 30 days after the start.');
                         }
@@ -96,12 +105,12 @@ new #[Layout('layouts.app-admin')] class extends Component
                         return;
                     }
                     try {
-                        $deadline = \Carbon\Carbon::parse($value);
+                        $deadline = Carbon::parse($value);
                         if ($this->status === 'published' && $deadline->isPast()) {
                             $fail('The registration deadline cannot be in the past for a published event.');
                         }
                         if ($this->starts_at) {
-                            $start = \Carbon\Carbon::parse($this->starts_at);
+                            $start = Carbon::parse($this->starts_at);
                             if ($deadline->diffInDays($start) > 365) {
                                 $fail('The registration deadline is too far before the event start.');
                             }
@@ -184,8 +193,9 @@ new #[Layout('layouts.app-admin')] class extends Component
 
         $this->validate();
 
-        if ($this->status === 'published' && \Carbon\Carbon::parse($this->starts_at)->isPast()) {
+        if ($this->status === 'published' && Carbon::parse($this->starts_at)->isPast()) {
             $this->addError('starts_at', 'You cannot publish an event with a start date in the past.');
+
             return;
         }
 
@@ -223,6 +233,7 @@ new #[Layout('layouts.app-admin')] class extends Component
             }
             report($e);
             session()->flash('error', 'Could not create event. Please try again.');
+
             return;
         }
 

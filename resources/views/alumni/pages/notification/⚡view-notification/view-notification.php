@@ -33,11 +33,11 @@ new #[Layout('layouts.app-alumni')] class extends Component
     }
 
     #[Computed]
-    public function registrarIds(): array
+    public function alumniCoordinatorIds(): array
     {
-        return Cache::remember('registrar_user_ids', now()->addHour(), function () {
+        return Cache::remember('alumni_coordinator_user_ids', now()->addHour(), function () {
             return User::query()
-                ->whereHas('roles', fn ($q) => $q->where('name', 'registrar'))
+                ->whereHas('roles', fn ($q) => $q->where('name', 'alumni coordinator'))
                 ->pluck('id')
                 ->all();
         });
@@ -100,7 +100,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
     public function allowedAuthorIds(): array
     {
         return array_values(array_unique(array_merge(
-            $this->registrarIds,
+            $this->alumniCoordinatorIds,
             $this->programHeadIdsForMyDepartments,
         )));
     }

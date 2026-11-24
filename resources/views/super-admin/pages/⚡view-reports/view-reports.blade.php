@@ -143,7 +143,7 @@
                             <h1 class="text-base font-bold text-black uppercase tracking-wide">
                                 Colegio de Sta. Ana de Victorias, Inc.
                             </h1>
-                            <p class="text-xs text-black mt-1">Office of the Registrar</p>
+                            <p class="text-xs text-black mt-1">Office of the Alumni Coordinator</p>
                             <p class="text-xs text-black">Osmeña Ave., Victorias City, Negros Occidental, 6119</p>
                         </div>
 

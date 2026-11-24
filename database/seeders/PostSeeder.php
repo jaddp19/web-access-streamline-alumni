@@ -15,14 +15,14 @@ class PostSeeder extends Seeder
 
     public function run(): void
     {
-        // Only registrar + program head can author posts.
+        // Only alumni coordinator + program head can author posts.
         $authors = User::query()
-            ->whereHas('roles', fn ($q) => $q->whereIn('name', ['registrar', 'program head']))
+            ->whereHas('roles', fn ($q) => $q->whereIn('name', ['alumni coordinator', 'program head']))
             ->where('is_active', true)
             ->get();
 
         if ($authors->isEmpty()) {
-            $this->command->error('→ Posts: SKIPPED — no registrar or program head found.');
+            $this->command->error('→ Posts: SKIPPED — no alumni coordinator or program head found.');
 
             return;
         }
@@ -150,7 +150,7 @@ class PostSeeder extends Seeder
             'CSAV Alumni Association Elects New Officers',
             'Graduate School Now Accepting Applications',
             'Guidelines for Requesting Official Transcripts (Alumni)',
-            'Welcome Message from the New Registrar',
+            'Welcome Message from the New Alumni Coordinator',
             'Alumni Feedback Survey — Your Voice Matters',
             'CSAV Foundation Launches Endowment Fund',
             'Three CSAV Graduates Top the 2026 Nursing Licensure Exam',
@@ -171,7 +171,7 @@ class PostSeeder extends Seeder
         ];
 
         $mid = fake()->randomElement([
-            'For more details, please visit the alumni portal or contact the registrar\'s office.',
+            'For more details, please visit the alumni portal or contact the alumni coordinator\'s office.',
             'Kindly check the attached document for complete guidelines and requirements.',
             'Should you have any questions, feel free to reach out to your batch representative.',
             'We appreciate your continued support and engagement with the college.',

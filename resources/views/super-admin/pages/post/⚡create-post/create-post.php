@@ -21,11 +21,17 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     use WithFileUploads;
 
     public string $title = '';
+
     public string $description = '';
+
     public ?int $category_id = null;
+
     public string $status = 'draft';
+
     public $image = null;
+
     public array $attachments = [];
+
     public bool $showPreview = false;
 
     public function mount(): void
@@ -136,7 +142,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         } catch (ValidationException $e) {
             // Clear the invalid file so Blade doesn't crash trying to render a CSV preview
             $this->reset('image');
-            
+
             // Re-throw so Livewire displays the red error message
             throw $e;
         }
@@ -171,7 +177,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public function save()
     {
         Gate::authorize('can_create');
-        abort_unless(Auth::user()?->hasAnyRole(['registrar', 'program head']), 403);
+        abort_unless(Auth::user()?->hasAnyRole(['alumni coordinator', 'program head']), 403);
 
         $validated = $this->validate();
 
@@ -210,16 +216,19 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
             if ($e->getCode() === '23000') {
                 $this->addError('title', 'This title was just taken. Please try again.');
+
                 return;
             }
 
             report($e);
             session()->flash('error', 'Could not create post. Please try again.');
+
             return;
         } catch (Throwable $e) {
             $this->cleanupFiles($imagePath, $attachmentPaths);
             report($e);
             session()->flash('error', 'Could not create post. Please try again.');
+
             return;
         }
 

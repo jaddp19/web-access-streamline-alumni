@@ -565,7 +565,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
                 // ── Re-enter the review queue ────────────────────────────
                 // Any real change to the alumni's employment or civil status
-                // data must be re-reviewed by the registrar. Flip
+                // data must be re-reviewed by the alumni coordinator. Flip
                 // is_approved = false and clear any stale rejection reason
                 // so the status shows "Awaiting Review".
                 if ($employmentChanged) {

@@ -19,6 +19,7 @@ class SendPostAnnouncementEmail implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 3;
+
     public int $timeout = 120;
 
     // 1. Add $senderId to the constructor
@@ -33,7 +34,7 @@ class SendPostAnnouncementEmail implements ShouldQueue
         }
 
         $sender = User::find($this->senderId);
-        
+
         // Default query: all alumni
         $alumniQuery = User::role('alumni')->whereNotNull('email');
 
@@ -77,4 +78,4 @@ class SendPostAnnouncementEmail implements ShouldQueue
 
         Log::info('Post announcement blast complete', ['post_id' => $post->id]);
     }
-}   
+}

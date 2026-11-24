@@ -40,14 +40,14 @@ new #[Layout('layouts.app-alumni')] class extends Component
             return false;
         }
 
-        $registrarIds = Cache::remember('registrar_user_ids', now()->addHour(), function () {
+        $alumniCoordinatorIds = Cache::remember('alumni_coordinator_user_ids', now()->addHour(), function () {
             return User::query()
-                ->whereHas('roles', fn ($q) => $q->where('name', 'registrar'))
+                ->whereHas('roles', fn ($q) => $q->where('name', 'alumni coordinator'))
                 ->pluck('id')
                 ->all();
         });
 
-        if (in_array($post->user_id, $registrarIds)) {
+        if (in_array($post->user_id, $alumniCoordinatorIds)) {
             return true;
         }
 
@@ -153,15 +153,15 @@ new #[Layout('layouts.app-alumni')] class extends Component
     #[Computed]
     public function relatedPosts()
     {
-        $registrarIds = Cache::remember('registrar_user_ids', now()->addHour(), function () {
+        $alumniCoordinatorIds = Cache::remember('alumni_coordinator_user_ids', now()->addHour(), function () {
             return User::query()
-                ->whereHas('roles', fn ($q) => $q->where('name', 'registrar'))
+                ->whereHas('roles', fn ($q) => $q->where('name', 'alumni coordinator'))
                 ->pluck('id')
                 ->all();
         });
 
         $allowed = array_values(array_unique(array_merge(
-            $registrarIds,
+            $alumniCoordinatorIds,
             $this->programHeadIdsForMyDepartments(),
         )));
 

@@ -17,13 +17,21 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     use WithFileUploads;
 
     public string $title = '';
+
     public string $description = '';
+
     public string $location = '';
+
     public string $starts_at = '';
+
     public string $ends_at = '';
+
     public string $registration_deadline = '';
+
     public ?int $capacity = null;
+
     public string $status = 'draft';
+
     public $image = null;
 
     public function mount(): void
@@ -188,6 +196,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         if ($this->status === 'published' && Carbon::parse($this->starts_at)->isPast()) {
             $this->addError('starts_at', 'You cannot publish an event with a start date in the past.');
+
             return;
         }
 
@@ -225,6 +234,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             }
             report($e);
             session()->flash('error', 'Could not create event. Please try again.');
+
             return;
         }
 

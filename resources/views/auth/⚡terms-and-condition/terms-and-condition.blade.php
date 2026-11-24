@@ -46,7 +46,7 @@
                 style="font-family: 'Fraunces', serif;">2. Eligibility and Account Provisioning</h2>
             <ul class="space-y-2 text-sm text-black/80 dark:text-white/80 list-disc pl-5">
                 <li>The System is available only to verified alumni of the Institution. Accounts are provisioned by
-                    authorized personnel (Super Admin, Registrar, or Program Head).</li>
+                    authorized personnel (Super Admin, Alumni Coordinator, or Program Head).</li>
                 <li>Upon account creation, you will receive an email containing your login credentials and a default
                     password. <strong>You are required to change your password immediately after first login.</strong>
                 </li>
@@ -98,7 +98,7 @@
                 By using the System, you consent to receive these communications at the email address registered to your
                 account. <strong>Transactional emails</strong> (account security, password resets) cannot be opted out
                 of. <strong>Informational and survey emails</strong> may be unsubscribed from at any time by contacting
-                the Registrar's Office or the DPO.
+                the Alumni Coordinator's Office or the DPO.
             </p>
         </section>
 
@@ -141,7 +141,7 @@
             <h2 class="text-lg font-bold text-[#123524] dark:text-[#D4A537] mb-3"
                 style="font-family: 'Fraunces', serif;">7. Data Export and Research Use</h2>
             <p class="text-sm text-black/80 dark:text-white/80 mb-3">
-                Authorized users (Registrar, Program Heads) may export selected datasets for research, reporting, or
+                Authorized users (Alumni Coordinator, Program Heads) may export selected datasets for research, reporting, or
                 institutional planning purposes. All exported data is subject to the following restrictions:
             </p>
             <ul class="space-y-2 text-sm text-black/80 dark:text-white/80 list-disc pl-5">

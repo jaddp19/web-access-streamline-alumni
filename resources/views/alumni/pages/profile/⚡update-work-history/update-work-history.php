@@ -597,7 +597,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
                 // ── Re-enter the review queue ────────────────────────────
                 // Any real change to the alumni's employment or civil status
-                // data must be re-reviewed by the registrar.
+                // data must be re-reviewed by the alumni coordinator.
                 if ($employmentChanged) {
                     UserProfile::query()
                         ->where('user_id', Auth::id())

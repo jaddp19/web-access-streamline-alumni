@@ -28,7 +28,7 @@ Route::middleware('auth')->group(function () {
     Route::livewire('/change-password', 'auth::change-password')->name('password.change');
 });
 
-Route::middleware(['auth', 'role:registrar'])->prefix('registrar')->group(function () {
+Route::middleware(['auth', 'role:alumni coordinator'])->prefix('alumni-coordinator')->group(function () {
     Route::livewire('/dashboard', 'super-admin::pages.dashboard')->name('super-admin.dashboard');
     Route::livewire('/settings', 'super-admin::pages.settings')->name('super-admin.settings');
     Route::livewire('view-reports', 'super-admin::pages.view-reports')->name('super-admin.reports');
@@ -83,7 +83,17 @@ Route::middleware(['auth', 'role:registrar'])->prefix('registrar')->group(functi
 
 });
 
-Route::middleware(['auth', 'role:program head|registrar'])->prefix('program-head')->group(function () {
+// Legacy URLs: the panel used to live under /registrar before the role rename.
+Route::middleware(['auth', 'role:alumni coordinator'])->prefix('registrar')->group(function () {
+    Route::get('/{path?}', function (?string $path = null) {
+        $target = '/alumni-coordinator'.($path ? '/'.$path : '');
+        $query = request()->getQueryString();
+
+        return redirect($query ? $target.'?'.$query : $target);
+    })->where('path', '.*');
+});
+
+Route::middleware(['auth', 'role:program head|alumni coordinator'])->prefix('program-head')->group(function () {
     Route::livewire('/dashboard', 'admin::pages.dashboard')->name('admin.dashboard');
     Route::livewire('/view-reports', 'admin::pages.view-reports')->name('admin.reports');
     Route::livewire('/settings', 'admin::pages.settings')->name('admin.settings');
@@ -105,7 +115,7 @@ Route::middleware(['auth', 'role:program head|registrar'])->prefix('program-head
 
 });
 
-Route::middleware(['auth', 'role:alumni|registrar'])->prefix('alumni')->group(function () {
+Route::middleware(['auth', 'role:alumni|alumni coordinator'])->prefix('alumni')->group(function () {
 
     // ========== PAGES ==========
     Route::livewire('/dashboard', 'alumni::pages.dashboard')->name('alumni.dashboard');
