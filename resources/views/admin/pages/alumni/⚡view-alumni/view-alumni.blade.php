@@ -252,12 +252,6 @@
                                     </a>
                                     @endcan
                                     <span class="text-black/20 dark:text-white/20">|</span>
-                                    @can('can_update')
-                                    <a href="{{ route('admin.alumni.update', $profile->user_id) }}"
-                                        class="text-xs font-semibold text-black/50 dark:text-white/50 hover:underline">
-                                        Edit
-                                    </a>
-                                    @endcan
                                 </div>
                             </div>
 
@@ -268,7 +262,7 @@
                                 @if ($profile->courses->count())
                                     <span
                                         class="text-[10px] px-2 py-0.5 rounded-full bg-[#D4A537]/15 text-[#a97f1f] dark:text-[#E5B94A] font-semibold">
-                                        {{ $profile->courses->pluck('course_title')->filter()->first() }}
+                                        {{ $profile->courses->pluck('course_code')->filter()->first() }}
                                     </span>
                                 @endif
                                 @if ($profile->batch)
@@ -408,7 +402,7 @@
                                 </td>
                                 <td class="hidden md:table-cell px-3 lg:px-6 py-3">
                                     <span class="text-black/70 dark:text-white/70 block truncate max-w-[200px]">
-                                        {{ $profile->courses->pluck('course_title')->filter()->join(', ') ?: 'N/A' }}
+                                        {{ $profile->courses->pluck('course_code')->filter()->join(', ') ?: 'N/A' }}
                                     </span>
                                 </td>
                                 <td class="hidden lg:table-cell px-3 lg:px-6 py-3">
@@ -429,12 +423,6 @@
                                         <a href="{{ route('admin.alumni.view-single', $profile->user_id) }}"
                                             class="inline-flex items-center gap-1 text-[#123524] dark:text-[#D4A537] hover:text-[#0d2819] dark:hover:text-[#E5B94A] font-semibold hover:underline whitespace-nowrap">
                                             View
-                                        </a>
-                                        @endcan
-                                        @can('can_update')
-                                        <a href="{{ route('admin.alumni.update', $profile->user_id) }}"
-                                            class="inline-flex items-center gap-1 text-black/50 dark:text-white/50 hover:text-[#123524] dark:hover:text-[#D4A537] font-semibold hover:underline whitespace-nowrap">
-                                            Edit
                                         </a>
                                         @endcan
                                     </div>

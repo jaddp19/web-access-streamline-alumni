@@ -44,9 +44,9 @@
 
                     <!-- CTA Buttons -->
                     <div class="flex flex-wrap items-center gap-3 sm:gap-5 pt-1">
-                        <a href="{{ route('login') }}"
+                        <a href="{{ route('register') }}"
                             class="group inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-3.5 bg-[#123524] hover:bg-[#0d2819] text-white text-sm sm:text-base font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300">
-                            Login Now
+                            Register Now
                             <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none"
                                 stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />

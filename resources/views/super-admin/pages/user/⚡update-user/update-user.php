@@ -123,45 +123,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     protected function rules(): array
     {
         return [
-            'first_name' => 'required|string|min:2|max:255',
-            'middle_name' => 'nullable|string|max:255',
-            'last_name' => 'required|string|min:2|max:255',
-
-            'email' => [
-                'required',
-                'email:rfc,',
-                'max:255',
-                Rule::unique('users', 'email')->ignore($this->user->id),
-            ],
-
-            'school_year' => [
-                'required',
-                Rule::in($this->batchYears),
-                function ($attribute, $value, $fail) {
-                    if (strlen($this->school_id_suffix) !== 4) {
-                        return;
-                    }
-                    $combined = $value.'-'.$this->school_id_suffix;
-                    if (User::where('school_id', $combined)
-                        ->where('id', '!=', $this->user->id)
-                        ->exists()) {
-                        $fail('This school ID is already registered to an account.');
-                    }
-                },
-            ],
-
-            'school_id_suffix' => [
-                'required',
-                'string',
-                'digits:4',
-            ],
-
-            'selectedRole' => [
-                'nullable',
-                'string',
-                Rule::in($this->roles),
-            ],
-
             'resetPassword' => 'boolean',
             'is_active' => 'boolean',
         ];
@@ -170,20 +131,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public function messages(): array
     {
         return [
-            'first_name.required' => 'The first name is required.',
-            'first_name.min' => 'The first name must be at least 2 characters.',
-            'first_name.max' => 'The first name may not be greater than 255 characters.',
-            'last_name.required' => 'The last name is required.',
-            'last_name.min' => 'The last name must be at least 2 characters.',
-            'last_name.max' => 'The last name may not be greater than 255 characters.',
-            'school_year.required' => 'Please select a batch year.',
-            'school_year.in' => 'The selected batch year is invalid.',
-            'school_id_suffix.required' => 'Please enter the last 4 digits of the school ID.',
-            'school_id_suffix.digits' => 'The last 4 digits must be numeric.',
-            'email.unique' => 'The email address is already registered.',
-            'email.required' => 'The email address is required.',
-            'email.email' => 'The email address is invalid.',
-            'selectedRole.in' => 'The selected role is invalid.',
         ];
     }
 
@@ -232,46 +179,27 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     //  UPDATE
     // =========================================================
 
-    public function update()
+        public function update()
     {
         Gate::authorize('can_update');
-        $validated = $this->validate();
+        $this->validate();
 
         if ($this->isSelf && blank($this->selectedRole)) {
             $this->addError('selectedRole', 'You cannot remove your own role.');
-
             return;
         }
 
         if ($this->resetPassword && blank($this->selectedRole)) {
             $this->addError('selectedRole', 'Select a role first — the password is generated from it.');
-
             return;
         }
-
-        $firstName = $this->sanitize($validated['first_name']);
-        $middleName = $validated['middle_name'] ? $this->sanitize($validated['middle_name']) : null;
-        $lastName = $this->sanitize($validated['last_name']);
-        $email = $this->sanitize($validated['email']);
-        $schoolId = $this->schoolId;
 
         $newPassword = $this->resetPassword ? $this->generatedPassword : null;
 
         try {
-            DB::transaction(function () use (
-                $firstName,
-                $middleName,
-                $lastName,
-                $email,
-                $schoolId,
-                $newPassword
-            ) {
+            DB::transaction(function () use ($newPassword) {
+                // Only update is_active and password (if requested)
                 $payload = [
-                    'first_name' => $firstName,
-                    'middle_name' => $middleName,
-                    'last_name' => $lastName,
-                    'email' => $email,
-                    'school_id' => $schoolId,
                     'is_active' => $this->is_active,
                 ];
 
@@ -280,28 +208,22 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                 }
 
                 $this->user->update($payload);
-
-                $currentRole = $this->user->roles->pluck('name')->first();
-
-                if ($this->selectedRole !== $currentRole) {
-                    $this->user->syncRoles($this->selectedRole ? [$this->selectedRole] : []);
-                }
             });
         } catch (QueryException $e) {
-            if ($e->getCode() === '23000' || str_contains($e->getMessage(), 'Duplicate entry')) {
-                $field = str_contains($e->getMessage(), 'school_id') ? 'school_id_suffix' : 'email';
-                $this->addError($field, 'This value was just taken by another account. Please refresh and try again.');
-
-                return;
-            }
-
-            throw $e;
+            report($e);
+            session()->flash('error', 'Could not update the user. Please try again.');
+            return;
         }
 
-        // ← THE MISSING PIECE: send the reset email when the flag was on.
+        // Send the reset email when the flag was on.
         if ($this->resetPassword && $newPassword) {
-            $fullName = trim(implode(' ', array_filter([$firstName, $middleName, $lastName])));
-            $this->sendPasswordResetEmail($this->user, $fullName, $email, $newPassword);
+            $fullName = trim(implode(' ', array_filter([
+                $this->user->first_name,
+                $this->user->middle_name,
+                $this->user->last_name,
+            ])));
+            
+            $this->sendPasswordResetEmail($this->user, $fullName, $this->user->email, $newPassword);
         }
 
         $message = $this->resetPassword && $newPassword

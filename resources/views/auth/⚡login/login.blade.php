@@ -149,6 +149,11 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                     </svg>
                 </button>
+
+                <p class="text-center text-sm text-[#123524]/60 pt-2">
+                    Don't have an account?
+                    <a href="{{ route('register') }}" class="font-semibold text-[#123524] hover:text-[#D4A537] transition-colors">Register</a>
+                </p>
             </form>
         </div>
     </div>

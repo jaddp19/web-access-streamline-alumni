@@ -25,10 +25,10 @@
                 </svg>
             </div>
             <div class="min-w-0">
-                <p class="text-white/50 text-xs sm:text-sm">Admin</p>
+                <p class="text-white/50 text-xs sm:text-sm">Program Head</p>
                 <h1 class="text-lg sm:text-xl lg:text-2xl font-bold text-white truncate"
                     style="font-family: 'Fraunces', serif;">
-                    Update Alumni Account
+                    View Alumni Account
                 </h1>
             </div>
         </div>
@@ -52,65 +52,39 @@
             <path stroke-linecap="round" stroke-linejoin="round"
                 d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
         </svg>
-        <span>Only the name, email, school ID, and batch are set here. The alumni will complete their own avatar, contact info, and location after logging in and using "Forgot Password" to set their password.</span>
+        <span>You are viewing this alumni's information. Name, email, and school ID cannot be changed here.</span>
     </div>
 
     <!-- ========== FORM CARD ========== -->
     <div class="bg-white dark:bg-[#242526] border border-black/10 dark:border-white/5 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8">
         <form wire:submit="updateAlumni" class="space-y-4 sm:space-y-5">
 
-            <!-- Names -->
+            <!-- Names (Read-Only) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                 <div class="min-w-0">
-                    <label for="first_name"
-                        class="block text-[11px] sm:text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
-                        First Name <span class="text-red-500">*</span>
+                    <label class="block text-[11px] sm:text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
+                        First Name
                     </label>
-                    <input type="text" wire:model="first_name" id="first_name" autocomplete="given-name"
-                        maxlength="255" placeholder="Juan"
-                        class="w-full px-3 sm:px-4 py-2.5 rounded-xl border bg-[#F1EFE7] dark:bg-[#3A3B3C] text-sm text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:ring-1 transition
-                        @error('first_name')
-                            border-red-400 dark:border-red-500/50
-                        @else
-                            border-black/10 dark:border-white/10 focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537]
-                        @enderror">
-                    @error('first_name')
-                        <span class="block mt-1 text-red-500 dark:text-red-400 text-xs">{{ $message }}</span>
-                    @enderror
+                    <input type="text" wire:model="first_name" disabled
+                        class="w-full px-3 sm:px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 text-sm text-black/50 dark:text-white/50 cursor-not-allowed">
                 </div>
 
                 <div class="min-w-0">
-                    <label for="last_name"
-                        class="block text-[11px] sm:text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
-                        Last Name <span class="text-red-500">*</span>
+                    <label class="block text-[11px] sm:text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
+                        Last Name
                     </label>
-                    <input type="text" wire:model="last_name" id="last_name" autocomplete="family-name"
-                        maxlength="255" placeholder="Dela Cruz"
-                        class="w-full px-3 sm:px-4 py-2.5 rounded-xl border bg-[#F1EFE7] dark:bg-[#3A3B3C] text-sm text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:ring-1 transition
-                        @error('last_name')
-                            border-red-400 dark:border-red-500/50
-                        @else
-                            border-black/10 dark:border-white/10 focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537]
-                        @enderror">
-                    @error('last_name')
-                        <span class="block mt-1 text-red-500 dark:text-red-400 text-xs">{{ $message }}</span>
-                    @enderror
+                    <input type="text" wire:model="last_name" disabled
+                        class="w-full px-3 sm:px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 text-sm text-black/50 dark:text-white/50 cursor-not-allowed">
                 </div>
             </div>
 
-            <!-- Middle Name -->
+            <!-- Middle Name (Read-Only) -->
             <div>
-                <label for="middle_name"
-                    class="block text-[11px] sm:text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
+                <label class="block text-[11px] sm:text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
                     Middle Name
-                    <span class="text-black/40 dark:text-white/40 text-[10px] font-normal normal-case">(optional)</span>
                 </label>
-                <input type="text" wire:model="middle_name" id="middle_name" autocomplete="additional-name"
-                    maxlength="255" placeholder="Martinez"
-                    class="w-full px-3 sm:px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-sm text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition">
-                @error('middle_name')
-                    <span class="block mt-1 text-red-500 dark:text-red-400 text-xs">{{ $message }}</span>
-                @enderror
+                <input type="text" wire:model="middle_name" disabled
+                    class="w-full px-3 sm:px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 text-sm text-black/50 dark:text-white/50 cursor-not-allowed">
             </div>
 
             <!-- Full name preview -->
@@ -120,75 +94,34 @@
                 </p>
             @endif
 
-            <!-- Email -->
+            <!-- Email (Read-Only) -->
             <div>
-                <label for="email"
-                    class="block text-[11px] sm:text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
-                    Email <span class="text-red-500">*</span>
+                <label class="block text-[11px] sm:text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
+                    Email
                 </label>
-                <input type="email" wire:model="email" id="email" autocomplete="email"
-                    maxlength="255" placeholder="juandelacruz@gmail.com"
-                    class="w-full px-3 sm:px-4 py-2.5 rounded-xl border bg-[#F1EFE7] dark:bg-[#3A3B3C] text-sm text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:ring-1 transition
-                    @error('email')
-                        border-red-400 dark:border-red-500/50
-                    @else
-                        border-black/10 dark:border-white/10 focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-[#123524] dark:focus:ring-[#D4A537]
-                    @enderror">
-                @error('email')
-                    <span class="block mt-1 text-red-500 dark:text-red-400 text-xs">{{ $message }}</span>
-                @enderror
+                <input type="email" wire:model="email" disabled
+                    class="w-full px-3 sm:px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 text-sm text-black/50 dark:text-white/50 cursor-not-allowed">
             </div>
 
-            <!-- School ID -->
+            <!-- School ID (Read-Only) -->
             <div>
-                <label for="school_year"
-                    class="block text-[11px] sm:text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
-                    School ID <span class="text-red-500">*</span>
+                <label class="block text-[11px] sm:text-xs text-black/60 dark:text-white/60 uppercase tracking-wide font-semibold mb-2">
+                    School ID
                 </label>
                 <div class="grid grid-cols-[1fr_auto_1fr] gap-2 items-center">
-                    {{-- Year dropdown --}}
-                    <select wire:model="school_year" id="school_year"
-                        class="w-full px-3 sm:px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-sm text-black dark:text-white focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition @error('school_year') border-red-400 dark:border-red-500/50 @enderror">
-                        <option value="" disabled>Year</option>
-                        @foreach ($this->batchYears as $year)
-                            <option value="{{ $year }}">{{ $year }}</option>
-                        @endforeach
-                    </select>
-
-                    {{-- Dash --}}
+                    <input wire:model="school_year" type="text" disabled
+                        class="w-full px-3 sm:px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 text-sm text-black/50 dark:text-white/50 cursor-not-allowed">
                     <span class="text-black/40 dark:text-white/40 font-bold select-none">-</span>
-
-                    {{-- 4-digit suffix --}}
-                    <input wire:model="school_id_suffix" type="text" id="school_id_suffix"
-                        inputmode="numeric" autocomplete="off"
-                        maxlength="4" placeholder="0000"
-                        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 4)"
-                        class="w-full px-3 sm:px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-sm text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition @error('school_id_suffix') border-red-400 dark:border-red-500/50 @enderror">
+                    <input wire:model="school_id_suffix" type="text" disabled
+                        class="w-full px-3 sm:px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 text-sm text-black/50 dark:text-white/50 cursor-not-allowed">
                 </div>
-
-                @error('school_year')
-                    <span class="block mt-1 text-red-500 dark:text-red-400 text-xs">{{ $message }}</span>
-                @enderror
-                @error('school_id_suffix')
-                    <span class="block mt-1 text-red-500 dark:text-red-400 text-xs">{{ $message }}</span>
-                @enderror
             </div>
 
             <!-- Actions -->
             <div class="flex flex-col sm:flex-row sm:flex-wrap gap-3 pt-4 border-t border-black/5 dark:border-white/10">
-                <button type="submit"
-                    wire:loading.attr="disabled"
-                    wire:target="updateAlumni"
-                    class="w-full sm:w-auto inline-flex items-center justify-center gap-x-2 text-sm font-semibold rounded-xl bg-[#D4A537] text-[#123524] hover:bg-[#E5B94A] transition py-2.5 px-5 disabled:opacity-50 disabled:cursor-not-allowed">
-                    <span wire:loading.remove wire:target="updateAlumni">Update Alumni</span>
-                    <span wire:loading wire:target="updateAlumni">Updating…</span>
-                    <svg wire:loading.remove wire:target="updateAlumni" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
-                </button>
                 <a href="{{ route('admin.alumni.view') }}"
-                    class="w-full sm:w-auto inline-flex items-center justify-center gap-x-2 text-sm font-semibold rounded-xl bg-white dark:bg-[#3A3B3C] border border-black/10 dark:border-white/10 text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition py-2.5 px-5">
-                    Cancel
+                    class="w-full sm:w-auto inline-flex items-center justify-center gap-x-2 text-sm font-semibold rounded-xl bg-[#D4A537] text-[#123524] hover:bg-[#E5B94A] transition py-2.5 px-5">
+                    Back to Alumni List
                 </a>
             </div>
         </form>

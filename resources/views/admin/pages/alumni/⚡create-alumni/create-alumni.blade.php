@@ -25,7 +25,7 @@
                 </svg>
             </div>
             <div class="min-w-0">
-                <p class="text-white/50 text-xs sm:text-sm">Admin</p>
+                <p class="text-white/50 text-xs sm:text-sm">Program Head</p>
                 <h1 class="text-lg sm:text-xl lg:text-2xl font-bold text-white truncate"
                     style="font-family: 'Fraunces', serif;">
                     Create Alumni Account
