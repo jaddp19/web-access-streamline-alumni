@@ -150,9 +150,11 @@
                     </svg>
                 </button>
 
-                <p class="text-center text-sm text-[#123524]/60 pt-2">
-                    Don't have an account?
-                    <a href="{{ route('register') }}" class="font-semibold text-[#123524] hover:text-[#D4A537] transition-colors">Register</a>
+                <p class="mt-6 text-center text-sm text-[#123524]/60">
+                    New alumni?
+                    <a href="{{ route('register') }}" class="font-semibold text-[#123524] hover:text-[#D4A537] transition-colors">
+                        Create an account
+                    </a>
                 </p>
             </form>
         </div>

@@ -82,6 +82,8 @@ class TracerStudyRules
             // Employment
             'employment_status.required' => 'Please select your employment status.',
             'employment_status_other.required_if' => 'Please specify your employment status.',
+            'employment_type_other.required_if' => 'Please specify your employment type.',
+            'organization_type_other.required_if' => 'Please specify your organization type.',
             'current_job_position.required_if' => 'Job position is required.',
             'company_id.required_if' => 'Please select a company.',
             'date_hired.required_if' => 'Please enter the date you were hired.',
@@ -190,7 +192,7 @@ class TracerStudyRules
         $batchYear = $minDate ? (int) substr($minDate, 0, 4) : null;
 
         return [
-            'employment_status' => 'required|in:employed,unemployed,self-employed,other',
+            'employment_status' => 'required|in:employed,unemployed,self-employed,other,prefer-not-to-say',
             'employment_status_other' => 'required_if:employment_status,other|nullable|string|max:255',
 
             'current_job_position' => 'required_if:employment_status,employed|nullable|string|max:255',
@@ -217,8 +219,10 @@ class TracerStudyRules
             ],
 
             'employed_related_to_degree' => 'required_if:employment_status,employed|nullable|in:yes,no,partially-related',
-            'employment_type' => 'required_if:employment_status,employed|nullable|in:full-time,part-time,contractual-project-based,freelance,other',
-            'organization_type' => 'required_if:employment_status,employed|nullable|in:private-company,government-agency,non-government-organization,educational-institution,self-employed-business,other',
+            'employment_type' => 'required_if:employment_status,employed|nullable|in:full-time,part-time,contractual-project-based,freelance,other,prefer-not-to-say',
+            'employment_type_other' => 'required_if:employment_type,other|nullable|string|max:255',
+            'organization_type' => 'required_if:employment_status,employed|nullable|in:private-company,government-agency,non-government-organization,educational-institution,self-employed-business,other,prefer-not-to-say',
+            'organization_type_other' => 'required_if:organization_type,other|nullable|string|max:255',
             'employment_area' => 'required_if:employment_status,employed|nullable|in:philippines,abroad',
             'abroad_country' => 'required_if:employment_area,abroad|nullable|string|max:255',
             'months_to_first_job' => 'required_if:employment_status,employed|nullable|in:1-3-months,4-6-months,more-than-6-months,more-than-1-year,not-yet-employed',

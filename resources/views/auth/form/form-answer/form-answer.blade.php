@@ -503,7 +503,7 @@
                             <label class="block text-sm font-semibold text-[#123524] mb-2">Current Employment Status
                                 <span class="text-red-500">*</span></label>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                @foreach (['employed' => 'Employed', 'unemployed' => 'Unemployed', 'self-employed' => 'Self-employed', 'other' => 'Other'] as $value => $label)
+                                @foreach (['employed' => 'Employed', 'unemployed' => 'Unemployed', 'self-employed' => 'Self-employed', 'other' => 'Other', 'prefer-not-to-say' => 'Prefer not to say'] as $value => $label)
                                     <label class="flex items-center gap-2 cursor-pointer min-h-[40px]">
                                         <input type="radio" wire:model.live="employment_status"
                                             value="{{ $value }}"
@@ -798,9 +798,9 @@
                                 <label class="block text-sm font-semibold text-[#123524] mb-2">Type of
                                     Employment</label>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                    @foreach (['full-time' => 'Full-time', 'part-time' => 'Part-time', 'contractual-project-based' => 'Contractual/Project-based', 'freelance' => 'Freelance', 'other' => 'Other'] as $value => $label)
+                                    @foreach (['full-time' => 'Full-time', 'part-time' => 'Part-time', 'contractual-project-based' => 'Contractual/Project-based', 'freelance' => 'Freelance', 'other' => 'Other', 'prefer-not-to-say' => 'Prefer not to say'] as $value => $label)
                                         <label class="flex items-center gap-2 cursor-pointer min-h-[40px]">
-                                            <input type="radio" wire:model="employment_type"
+                                            <input type="radio" wire:model.live="employment_type"
                                                 value="{{ $value }}"
                                                 class="text-[#123524] focus:ring-[#D4A537] h-4 w-4">
                                             <span class="text-sm text-[#123524]">{{ $label }}</span>
@@ -810,6 +810,24 @@
                                 @error('employment_type')
                                     <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
                                 @enderror
+
+                                @if ($employment_type === 'other')
+                                    <div class="mt-3">
+                                        <label for="employment_type_other"
+                                            class="block text-sm font-semibold text-[#123524] mb-2">
+                                            Please specify <span class="text-red-500">*</span>
+                                        </label>
+                                        <input type="text"
+                                            id="employment_type_other"
+                                            wire:model.blur="employment_type_other"
+                                            maxlength="255"
+                                            placeholder="e.g. Seasonal, Internship, Volunteer, etc."
+                                            class="w-full px-4 py-3 rounded-xl border border-[#123524]/15 text-[#123524] text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
+                                        @error('employment_type_other')
+                                            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                @endif
                             </div>
 
                             {{-- Type of Organization --}}
@@ -817,9 +835,9 @@
                                 <label class="block text-sm font-semibold text-[#123524] mb-2">Type of
                                     Organization/Company</label>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                    @foreach (['private-company' => 'Private company', 'government-agency' => 'Government agency', 'non-government-organization' => 'Non-government organization', 'educational-institution' => 'Educational institution', 'self-employed-business' => 'Self-employed/business', 'other' => 'Other'] as $value => $label)
+                                    @foreach (['private-company' => 'Private company', 'government-agency' => 'Government agency', 'non-government-organization' => 'Non-government organization', 'educational-institution' => 'Educational institution', 'self-employed-business' => 'Self-employed/business', 'other' => 'Other', 'prefer-not-to-say' => 'Prefer not to say'] as $value => $label)
                                         <label class="flex items-center gap-2 cursor-pointer min-h-[40px]">
-                                            <input type="radio" wire:model="organization_type"
+                                            <input type="radio" wire:model.live="organization_type"
                                                 value="{{ $value }}"
                                                 class="text-[#123524] focus:ring-[#D4A537] h-4 w-4">
                                             <span class="text-sm text-[#123524]">{{ $label }}</span>
@@ -829,6 +847,24 @@
                                 @error('organization_type')
                                     <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
                                 @enderror
+
+                                @if ($organization_type === 'other')
+                                    <div class="mt-3">
+                                        <label for="organization_type_other"
+                                            class="block text-sm font-semibold text-[#123524] mb-2">
+                                            Please specify <span class="text-red-500">*</span>
+                                        </label>
+                                        <input type="text"
+                                            id="organization_type_other"
+                                            wire:model.blur="organization_type_other"
+                                            maxlength="255"
+                                            placeholder="e.g. Cooperative, Foundation, Startup, etc."
+                                            class="w-full px-4 py-3 rounded-xl border border-[#123524]/15 text-[#123524] text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition">
+                                        @error('organization_type_other')
+                                            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                @endif
                             </div>
 
                             {{-- Employment Area --}}

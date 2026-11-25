@@ -83,7 +83,11 @@ new #[Layout('layouts.app-form')] class extends Component
 
     public string $employment_type = '';
 
+    public string $employment_type_other = '';
+
     public string $organization_type = '';
+
+    public string $organization_type_other = '';
 
     public string $employment_area = '';
 
@@ -457,7 +461,9 @@ new #[Layout('layouts.app-form')] class extends Component
                 'date_hired',
                 'employed_related_to_degree',
                 'employment_type',
+                'employment_type_other',
                 'organization_type',
+                'organization_type_other',
                 'employment_area',
                 'abroad_country',
             ]);
@@ -468,7 +474,9 @@ new #[Layout('layouts.app-form')] class extends Component
                 'date_hired',
                 'employed_related_to_degree',
                 'employment_type',
+                'employment_type_other',
                 'organization_type',
+                'organization_type_other',
                 'employment_area',
                 'abroad_country',
             ]);
@@ -483,6 +491,22 @@ new #[Layout('layouts.app-form')] class extends Component
                 ]);
                 $this->new_company_address_type = 'philippines';
             }
+        }
+    }
+
+    public function updatedEmploymentType(): void
+    {
+        if ($this->employment_type !== 'other') {
+            $this->employment_type_other = '';
+            $this->resetErrorBag('employment_type_other');
+        }
+    }
+
+    public function updatedOrganizationType(): void
+    {
+        if ($this->organization_type !== 'other') {
+            $this->organization_type_other = '';
+            $this->resetErrorBag('organization_type_other');
         }
     }
 
@@ -638,7 +662,13 @@ new #[Layout('layouts.app-form')] class extends Component
                     'current_job_position' => $this->current_job_position ?: null,
                     'employed_related_to_degree' => $this->employed_related_to_degree ?: null,
                     'employment_type' => $this->employment_type ?: null,
+                    'employment_type_other' => $this->employment_type === 'other'
+                        ? ($this->employment_type_other ?: null)
+                        : null,
                     'organization_type' => $this->organization_type ?: null,
+                    'organization_type_other' => $this->organization_type === 'other'
+                        ? ($this->organization_type_other ?: null)
+                        : null,
                     'employment_area' => $this->employment_area ?: null,
                     'abroad_country' => $this->abroad_country ?: null,
                     'months_to_first_job' => $this->months_to_first_job ?: null,

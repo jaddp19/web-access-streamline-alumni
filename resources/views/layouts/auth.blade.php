@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>{{ $title ?? 'Log In' }}</title>
+    <title>{{ $title ?? 'Register | Log In' }}</title>
 
     <link rel="icon" type="image/png" href="https://upload.wikimedia.org/wikipedia/commons/5/55/LogoCSAV.png">
     <link rel="stylesheet" href="https://unpkg.com/intl-tel-input@17.0.19/build/css/intlTelInput.css">

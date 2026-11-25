@@ -140,6 +140,24 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     }
 
     #[Computed]
+    public function employmentStatusOtherBreakdown(): array
+    {
+        return $this->analytics()->employmentStatusOtherBreakdown();
+    }
+
+    #[Computed]
+    public function employmentTypeOtherBreakdown(): array
+    {
+        return $this->analytics()->employmentTypeOtherBreakdown();
+    }
+
+    #[Computed]
+    public function organizationTypeOtherBreakdown(): array
+    {
+        return $this->analytics()->organizationTypeOtherBreakdown();
+    }
+
+    #[Computed]
     public function employmentAreaBreakdown(): array
     {
         return $this->tracerBreakdowns['employment_area'];

@@ -266,7 +266,7 @@ class DemoSeeder extends Seeder
     {
         $employmentStatus = fake()->randomElement([
             'employed', 'employed', 'employed', 'employed', 'employed',
-            'self-employed', 'unemployed', 'other',
+            'self-employed', 'unemployed', 'other', 'prefer-not-to-say',
         ]);
 
         $isEmployed = in_array($employmentStatus, ['employed', 'self-employed'], true);
@@ -282,6 +282,42 @@ class DemoSeeder extends Seeder
                 'Volunteering abroad',
             ])
             : null;
+
+        // ── Employment type (employed/self-employed only) ──────────
+        $employmentType = $isEmployed
+            ? fake()->randomElement([
+                'full-time', 'full-time', 'part-time',
+                'contractual-project-based', 'freelance',
+                'other', 'prefer-not-to-say',
+            ])
+            : null;
+
+        $employmentTypeOther = $employmentType === 'other'
+            ? fake()->randomElement([
+                'Seasonal internship',
+                'Project-based consultancy',
+                'Apprenticeship',
+                'Volunteer staff',
+            ])
+            : null;
+
+        // ── Organization type (employed/self-employed only) ────────
+        $organizationType = $isEmployed
+            ? fake()->randomElement([
+                'private-company', 'private-company', 'government-agency',
+                'non-government-organization', 'educational-institution',
+                'self-employed-business', 'other', 'prefer-not-to-say',
+            ])
+            : null;
+
+        $organizationTypeOther = $organizationType === 'other'
+            ? fake()->randomElement([
+                'Cooperative foundation',
+                'Startup incubator',
+                'Religious organization',
+                'International volunteer network',
+            ])
+            : null;
         // ────────────────────────────────────────────────────────────
 
         $tracer = TracerStudy::create(['user_id' => $user->id]);
@@ -293,8 +329,10 @@ class DemoSeeder extends Seeder
             'employment_status_other' => $employmentStatusOther,
             'current_job_position' => $isEmployed ? fake()->jobTitle() : null,
             'employed_related_to_degree' => $isEmployed ? fake()->randomElement(['yes', 'no', 'partially-related']) : null,
-            'employment_type' => $isEmployed ? fake()->randomElement(['full-time', 'part-time', 'contractual-project-based', 'freelance', 'other']) : null,
-            'organization_type' => $isEmployed ? fake()->randomElement(['private-company', 'government-agency', 'non-government-organization', 'educational-institution', 'self-employed-business', 'other']) : null,
+            'employment_type' => $employmentType,
+            'employment_type_other' => $employmentTypeOther,
+            'organization_type' => $organizationType,
+            'organization_type_other' => $organizationTypeOther,
             'employment_area' => $isEmployed ? fake()->randomElement(['philippines', 'philippines', 'philippines', 'abroad']) : null,
             'abroad_country' => $isEmployed && fake()->boolean(20) ? fake()->country() : null,
             'months_to_first_job' => $isEmployed ? fake()->randomElement(['1-3-months', '4-6-months', 'more-than-6-months', 'more-than-1-year']) : null,

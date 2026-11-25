@@ -631,6 +631,47 @@ class DashboardAnalytics
             'months_to_first_job' => $this->monthsBreakdown(),
         ];
     }
+    public function employmentStatusOtherBreakdown(): array
+    {
+        return $this->otherBreakdown('employment_status', 'employment_status_other');
+    }
+
+    public function employmentTypeOtherBreakdown(): array
+    {
+        return $this->otherBreakdown('employment_type', 'employment_type_other');
+    }
+
+    public function organizationTypeOtherBreakdown(): array
+    {
+        return $this->otherBreakdown('organization_type', 'organization_type_other');
+    }
+
+    /**
+     * Counts the free-text "please specify" values for rows where the
+     * selected type is "other".
+     */
+    protected function otherBreakdown(string $typeColumn, string $otherColumn): array
+    {
+        $rows = $this->tracerQuery()
+            ->select($otherColumn, DB::raw('COUNT(*) as total'))
+            ->where($typeColumn, 'other')
+            ->groupBy($otherColumn)
+            ->pluck('total', $otherColumn)
+            ->toArray();
+
+        $out = [];
+
+        foreach ($rows as $label => $total) {
+            $label = trim((string) $label);
+            $label = $label !== '' ? $label : 'Not specified';
+
+            $out[$label] = ($out[$label] ?? 0) + (int) $total;
+        }
+
+        arsort($out);
+
+        return $out;
+    }
 
     protected function tracerQuery(): Builder
     {

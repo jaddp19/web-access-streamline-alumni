@@ -42,7 +42,11 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
     public string $employment_type = '';
 
+    public string $employment_type_other = '';
+
     public string $organization_type = '';
+
+    public string $organization_type_other = '';
 
     public string $months_to_first_job = '';
 
@@ -100,8 +104,26 @@ new #[Layout('layouts.app-alumni')] class extends Component
         $this->abroad_country = $employment->abroad_country ?? '';
         $this->employed_related_to_degree = $employment->employed_related_to_degree ?? '';
         $this->employment_type = $employment->employment_type ?? '';
+        $this->employment_type_other = $employment->employment_type_other ?? '';
         $this->organization_type = $employment->organization_type ?? '';
+        $this->organization_type_other = $employment->organization_type_other ?? '';
         $this->months_to_first_job = $employment->months_to_first_job ?? '';
+    }
+
+    public function updatedEmploymentType(): void
+    {
+        if ($this->employment_type !== 'other') {
+            $this->employment_type_other = '';
+            $this->resetErrorBag('employment_type_other');
+        }
+    }
+
+    public function updatedOrganizationType(): void
+    {
+        if ($this->organization_type !== 'other') {
+            $this->organization_type_other = '';
+            $this->resetErrorBag('organization_type_other');
+        }
     }
 
     // =========================================================
@@ -217,8 +239,10 @@ new #[Layout('layouts.app-alumni')] class extends Component
         return [
             'civil_status' => ['required', 'in:single,married,widowed,separated,single-parent'],
             'employed_related_to_degree' => ['required', 'in:yes,no,partially-related'],
-            'employment_type' => ['required', 'in:full-time,part-time,contractual-project-based,freelance,other'],
-            'organization_type' => ['required', 'in:private-company,government-agency,non-government-organization,educational-institution,self-employed-business,other'],
+            'employment_type' => ['required', 'in:full-time,part-time,contractual-project-based,freelance,other,prefer-not-to-say'],
+            'employment_type_other' => ['required_if:employment_type,other', 'nullable', 'string', 'max:255'],
+            'organization_type' => ['required', 'in:private-company,government-agency,non-government-organization,educational-institution,self-employed-business,other,prefer-not-to-say'],
+            'organization_type_other' => ['required_if:organization_type,other', 'nullable', 'string', 'max:255'],
             'employment_area' => ['required', 'in:philippines,abroad'],
             'abroad_country' => ['required_if:employment_area,abroad', 'nullable', 'string', 'max:255'],
             'months_to_first_job' => ['required', 'in:1-3-months,4-6-months,more-than-6-months,more-than-1-year'],
@@ -257,7 +281,9 @@ new #[Layout('layouts.app-alumni')] class extends Component
             'civil_status.required' => 'Please select your civil status.',
             'employed_related_to_degree.required' => 'Please answer if your job is related to your degree.',
             'employment_type.required' => 'Please select type of employment.',
+            'employment_type_other.required_if' => 'Please specify your employment type.',
             'organization_type.required' => 'Please select type of organization.',
+            'organization_type_other.required_if' => 'Please specify your organization type.',
             'employment_area.required' => 'Please select employment area.',
             'abroad_country.required_if' => 'Please specify the country.',
             'months_to_first_job.required' => 'Please select how long it took to get your first job.',
@@ -542,7 +568,13 @@ new #[Layout('layouts.app-alumni')] class extends Component
                         'current_job_position' => $workName,
                         'employed_related_to_degree' => $this->employed_related_to_degree ?: null,
                         'employment_type' => $this->employment_type ?: null,
+                        'employment_type_other' => $this->employment_type === 'other'
+                            ? ($this->employment_type_other ?: null)
+                            : null,
                         'organization_type' => $this->organization_type ?: null,
+                        'organization_type_other' => $this->organization_type === 'other'
+                            ? ($this->organization_type_other ?: null)
+                            : null,
                         'employment_area' => $this->employment_area ?: null,
                         'abroad_country' => $this->employment_area === 'abroad'
                             ? ($abroadCountry ?: null)

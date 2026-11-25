@@ -123,14 +123,12 @@
                         School ID
                     </label>
                     <div class="grid grid-cols-[1fr_auto_1fr] gap-2 items-center">
-                        {{-- Year dropdown --}}
-                        <select wire:model="school_year" id="school_year"
+                        {{-- 4-digit year --}}
+                        <input wire:model="school_year" type="text" id="school_year"
+                            inputmode="numeric" autocomplete="off"
+                            maxlength="4" placeholder="0000"
+                            oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 4)"
                             class="w-full px-3 sm:px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F1EFE7] dark:bg-[#3A3B3C] text-sm text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-[#123524] dark:focus:border-[#D4A537] focus:ring-1 focus:ring-[#123524] dark:focus:ring-[#D4A537] transition @error('school_year') border-red-400 dark:border-red-500/50 @enderror">
-                            <option value="" disabled>Year</option>
-                            @foreach ($this->batchYears as $year)
-                                <option value="{{ $year }}">{{ $year }}</option>
-                            @endforeach
-                        </select>
 
                         {{-- Dash --}}
                         <span class="text-black/40 dark:text-white/40 font-bold select-none">-</span>

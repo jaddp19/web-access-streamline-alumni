@@ -25,7 +25,7 @@ new #[Layout('layouts.app-admin')] class extends Component
 
     public string $email = '';
 
-    public string $school_year = '';         // dropdown (from batches.batch_name)
+    public string $school_year = '';         // 4-digit year (validated against batches)
 
     public string $school_id_suffix = '';    // 4-digit input
 
@@ -61,7 +61,7 @@ new #[Layout('layouts.app-admin')] class extends Component
     }
 
     /**
-     * Batch years for the school-ID dropdown.
+     * Batch years used to validate the school-ID year.
      */
     #[Computed(persist: true)]
     public function batchYears()
@@ -89,6 +89,7 @@ new #[Layout('layouts.app-admin')] class extends Component
 
             'school_year' => [
                 'required',
+                'digits:4',
                 Rule::in($this->batchYears),
                 function ($attribute, $value, $fail) {
                     // Only validate uniqueness once the suffix is fully typed.
@@ -122,8 +123,9 @@ new #[Layout('layouts.app-admin')] class extends Component
             'email.required' => 'The email field is required.',
             'email.email' => 'The email must be a valid email address.',
             'email.unique' => 'This email is already registered.',
-            'school_year.required' => 'Please select a batch year.',
-            'school_year.in' => 'The selected batch year is invalid.',
+            'school_year.required' => 'Please enter the batch year.',
+            'school_year.digits' => 'The batch year must be exactly 4 digits.',
+            'school_year.in' => 'The batch year is invalid.',
             'school_id_suffix.required' => 'Please enter the last 4 digits of the school ID.',
             'school_id_suffix.digits' => 'The last 4 digits must be numeric.',
         ];

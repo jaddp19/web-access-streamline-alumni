@@ -657,7 +657,11 @@
                                 class="text-[10px] sm:text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">
                                 Employment Type</dt>
                             <dd class="text-sm sm:text-base text-black dark:text-white mt-1">
-                                {{ $cse->employment_type ? \Illuminate\Support\Str::headline($cse->employment_type) : '—' }}
+                                @if ($cse->employment_type === 'other' && filled($cse->employment_type_other))
+                                    Other ({{ $cse->employment_type_other }})
+                                @else
+                                    {{ $cse->employment_type ? \Illuminate\Support\Str::headline($cse->employment_type) : '—' }}
+                                @endif
                             </dd>
                         </div>
                         <div class="min-w-0">
@@ -665,7 +669,11 @@
                                 class="text-[10px] sm:text-xs text-black/50 dark:text-white/50 uppercase tracking-wide font-semibold">
                                 Organization Type</dt>
                             <dd class="text-sm sm:text-base text-black dark:text-white mt-1">
-                                {{ $cse->organization_type ? \Illuminate\Support\Str::headline($cse->organization_type) : '—' }}
+                                @if ($cse->organization_type === 'other' && filled($cse->organization_type_other))
+                                    Other ({{ $cse->organization_type_other }})
+                                @else
+                                    {{ $cse->organization_type ? \Illuminate\Support\Str::headline($cse->organization_type) : '—' }}
+                                @endif
                             </dd>
                         </div>
                         <div class="min-w-0">

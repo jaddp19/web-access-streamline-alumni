@@ -89,7 +89,11 @@ new #[Layout('layouts.app-form')] class extends Component
 
     public string $employment_type = '';
 
+    public string $employment_type_other = '';
+
     public string $organization_type = '';
+
+    public string $organization_type_other = '';
 
     public string $employment_area = '';
 
@@ -212,7 +216,9 @@ new #[Layout('layouts.app-form')] class extends Component
                 $this->current_job_position = $employment->current_job_position ?? '';
                 $this->employed_related_to_degree = $employment->employed_related_to_degree ?? '';
                 $this->employment_type = $employment->employment_type ?? '';
+                $this->employment_type_other = $employment->employment_type_other ?? '';
                 $this->organization_type = $employment->organization_type ?? '';
+                $this->organization_type_other = $employment->organization_type_other ?? '';
                 $this->employment_area = $employment->employment_area ?? '';
                 $this->abroad_country = $employment->abroad_country ?? '';
                 $this->months_to_first_job = $employment->months_to_first_job ?? '';
@@ -453,7 +459,9 @@ new #[Layout('layouts.app-form')] class extends Component
                 'date_hired',
                 'employed_related_to_degree',
                 'employment_type',
+                'employment_type_other',
                 'organization_type',
+                'organization_type_other',
                 'employment_area',
                 'abroad_country',
             ]);
@@ -464,7 +472,9 @@ new #[Layout('layouts.app-form')] class extends Component
                 'date_hired',
                 'employed_related_to_degree',
                 'employment_type',
+                'employment_type_other',
                 'organization_type',
+                'organization_type_other',
                 'employment_area',
                 'abroad_country',
             ]);
@@ -479,6 +489,22 @@ new #[Layout('layouts.app-form')] class extends Component
                 ]);
                 $this->new_company_address_type = 'philippines';
             }
+        }
+    }
+
+    public function updatedEmploymentType(): void
+    {
+        if ($this->employment_type !== 'other') {
+            $this->employment_type_other = '';
+            $this->resetErrorBag('employment_type_other');
+        }
+    }
+
+    public function updatedOrganizationType(): void
+    {
+        if ($this->organization_type !== 'other') {
+            $this->organization_type_other = '';
+            $this->resetErrorBag('organization_type_other');
         }
     }
 
@@ -850,7 +876,13 @@ new #[Layout('layouts.app-form')] class extends Component
                     'current_job_position' => $isEmployed ? ($this->current_job_position ?: null) : null,
                     'employed_related_to_degree' => $isEmployed ? ($this->employed_related_to_degree ?: null) : null,
                     'employment_type' => $isEmployed ? ($this->employment_type ?: null) : null,
+                    'employment_type_other' => $isEmployed && $this->employment_type === 'other'
+                        ? ($this->employment_type_other ?: null)
+                        : null,
                     'organization_type' => $isEmployed ? ($this->organization_type ?: null) : null,
+                    'organization_type_other' => $isEmployed && $this->organization_type === 'other'
+                        ? ($this->organization_type_other ?: null)
+                        : null,
                     'employment_area' => $isEmployed ? ($this->employment_area ?: null) : null,
                     'abroad_country' => $isEmployed && $this->employment_area === 'abroad'
                         ? ($this->abroad_country ?: null)

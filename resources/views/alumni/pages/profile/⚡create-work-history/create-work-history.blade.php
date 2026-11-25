@@ -385,7 +385,7 @@
                             <label class="block text-sm font-semibold text-black dark:text-white mb-2">
                                 Type of Employment <span class="text-red-500">*</span>
                             </label>
-                            <select wire:model="employment_type"
+                            <select wire:model.live="employment_type"
                                 class="w-full px-4 py-3 rounded-xl border bg-white dark:bg-[#242526] text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:border-transparent transition
                                 @error('employment_type') border-red-400 focus:ring-red-400/50 @else border-black/10 dark:border-white/10 focus:ring-[#1877F2] @enderror">
                                 <option value="">Select type</option>
@@ -394,10 +394,28 @@
                                 <option value="contractual-project-based">Contractual / Project-based</option>
                                 <option value="freelance">Freelance</option>
                                 <option value="other">Other</option>
+                                <option value="prefer-not-to-say">Prefer not to say</option>
                             </select>
                             @error('employment_type')
                                 <span class="block mt-1 text-red-500 text-sm">{{ $message }}</span>
                             @enderror
+
+                            @if ($employment_type === 'other')
+                                <div class="mt-3">
+                                    <label for="employment_type_other"
+                                        class="block text-sm font-semibold text-black dark:text-white mb-2">
+                                        Please specify <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" id="employment_type_other"
+                                        wire:model.blur="employment_type_other" maxlength="255"
+                                        placeholder="e.g. Seasonal, Internship, Volunteer, etc."
+                                        class="w-full px-4 py-3 rounded-xl border bg-white dark:bg-[#242526] text-black dark:text-white text-sm placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:border-transparent transition
+                                        @error('employment_type_other') border-red-400 focus:ring-red-400/50 @else border-black/10 dark:border-white/10 focus:ring-[#1877F2] @enderror">
+                                    @error('employment_type_other')
+                                        <span class="block mt-1 text-red-500 text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            @endif
                         </div>
 
                         {{-- Organization Type --}}
@@ -405,7 +423,7 @@
                             <label class="block text-sm font-semibold text-black dark:text-white mb-2">
                                 Type of Organization <span class="text-red-500">*</span>
                             </label>
-                            <select wire:model="organization_type"
+                            <select wire:model.live="organization_type"
                                 class="w-full px-4 py-3 rounded-xl border bg-white dark:bg-[#242526] text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:border-transparent transition
                                 @error('organization_type') border-red-400 focus:ring-red-400/50 @else border-black/10 dark:border-white/10 focus:ring-[#1877F2] @enderror">
                                 <option value="">Select organization type</option>
@@ -415,10 +433,28 @@
                                 <option value="educational-institution">Educational institution</option>
                                 <option value="self-employed-business">Self-employed / Business</option>
                                 <option value="other">Other</option>
+                                <option value="prefer-not-to-say">Prefer not to say</option>
                             </select>
                             @error('organization_type')
                                 <span class="block mt-1 text-red-500 text-sm">{{ $message }}</span>
                             @enderror
+
+                            @if ($organization_type === 'other')
+                                <div class="mt-3">
+                                    <label for="organization_type_other"
+                                        class="block text-sm font-semibold text-black dark:text-white mb-2">
+                                        Please specify <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" id="organization_type_other"
+                                        wire:model.blur="organization_type_other" maxlength="255"
+                                        placeholder="e.g. Cooperative, Foundation, Startup, etc."
+                                        class="w-full px-4 py-3 rounded-xl border bg-white dark:bg-[#242526] text-black dark:text-white text-sm placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:border-transparent transition
+                                        @error('organization_type_other') border-red-400 focus:ring-red-400/50 @else border-black/10 dark:border-white/10 focus:ring-[#1877F2] @enderror">
+                                    @error('organization_type_other')
+                                        <span class="block mt-1 text-red-500 text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            @endif
                         </div>
 
                         {{-- Employment Area --}}

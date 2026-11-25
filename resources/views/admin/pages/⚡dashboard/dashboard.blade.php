@@ -418,9 +418,25 @@
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                         <div
                             class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
-                            <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Employment Status</h2>
-                            <p class="text-xs text-black/40 dark:text-white/40 mb-3">Employed, unemployed,
-                                self-employed</p>
+                            <div class="flex items-start justify-between gap-3 mb-3">
+                                <div class="min-w-0">
+                                    <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white">Employment Status
+                                    </h2>
+                                    <p id="employment-status-subtitle"
+                                        class="text-xs text-black/40 dark:text-white/40 mt-0.5">
+                                        Employed, unemployed, self-employed
+                                    </p>
+                                </div>
+                                <button type="button" id="employment-status-back-btn"
+                                    class="hidden shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold text-[#1877F2] hover:underline">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                                    </svg>
+                                    Back
+                                </button>
+                            </div>
                             @if (empty($this->employmentStatusBreakdown))
                                 <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No tracer
                                     employment data yet.</p>
@@ -431,9 +447,24 @@
 
                         <div
                             class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
-                            <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Employment Type</h2>
-                            <p class="text-xs text-black/40 dark:text-white/40 mb-3">Full-time, part-time, freelance,
-                                etc.</p>
+                            <div class="flex items-start justify-between gap-3 mb-3">
+                                <div class="min-w-0">
+                                    <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white">Employment Type</h2>
+                                    <p id="employment-type-subtitle"
+                                        class="text-xs text-black/40 dark:text-white/40 mt-0.5">
+                                        Full-time, part-time, freelance, etc.
+                                    </p>
+                                </div>
+                                <button type="button" id="employment-type-back-btn"
+                                    class="hidden shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold text-[#1877F2] hover:underline">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                                    </svg>
+                                    Back
+                                </button>
+                            </div>
                             @if (empty($this->employmentTypeBreakdown))
                                 <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No employment
                                     type yet.</p>
@@ -446,8 +477,25 @@
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                         <div
                             class="bg-white dark:bg-[#242526] border border-black/5 dark:border-white/5 shadow-sm rounded-2xl p-4 md:p-5">
-                            <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white mb-1">Organization Type</h2>
-                            <p class="text-xs text-black/40 dark:text-white/40 mb-3">Where alumni currently work</p>
+                            <div class="flex items-start justify-between gap-3 mb-3">
+                                <div class="min-w-0">
+                                    <h2 class="text-sm font-bold text-[#0f2b1c] dark:text-white">Organization Type
+                                    </h2>
+                                    <p id="organization-type-subtitle"
+                                        class="text-xs text-black/40 dark:text-white/40 mt-0.5">
+                                        Where alumni currently work
+                                    </p>
+                                </div>
+                                <button type="button" id="organization-type-back-btn"
+                                    class="hidden shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold text-[#1877F2] hover:underline">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                                    </svg>
+                                    Back
+                                </button>
+                            </div>
                             @if (empty($this->organizationTypeBreakdown))
                                 <p class="text-sm text-black/40 dark:text-white/40 py-16 text-center">No organization
                                     type yet.</p>
@@ -603,8 +651,11 @@
                 'alumniByBatchAndCourse'  => $this->alumniByBatchAndCourse,
                 'courseAnalytics'         => $this->courseAnalytics,
                 'employmentStatus'        => $this->employmentStatusBreakdown,
+                'employmentStatusOther'   => $this->employmentStatusOtherBreakdown,
                 'employmentType'          => $this->employmentTypeBreakdown,
+                'employmentTypeOther'     => $this->employmentTypeOtherBreakdown,
                 'organizationType'        => $this->organizationTypeBreakdown,
+                'organizationTypeOther'   => $this->organizationTypeOtherBreakdown,
                 'employmentArea'          => $this->employmentAreaBreakdown,
                 'monthsToFirstJob'        => $this->monthsToFirstJobBreakdown,
                 'gender'                  => $this->genderBreakdown,
@@ -756,6 +807,9 @@
                 batch: { view: 'batches', selected: null },
                 topNotcher: { view: 'departments', selected: null },
                 boardPassers: { view: 'overview', selected: null },
+                employmentStatus: { view: 'main' },
+                employmentType: { view: 'main' },
+                organizationType: { view: 'main' },
             };
 
             const isDark = () => document.documentElement.classList.contains('dark');
@@ -1419,6 +1473,310 @@
             };
 
             // =====================================================================
+            // Employment Status renderer (doughnut → other specifications)
+            // =====================================================================
+            const renderEmploymentStatusChart = (ChartLib) => {
+                const p = window.__payload || {};
+                const t = theme();
+                const state = drillState.employmentStatus;
+                const mainData = p.employmentStatus || {};
+                const otherData = p.employmentStatusOther || {};
+                const hasOther = Object.keys(otherData).length > 0;
+
+                const subEl = document.getElementById('employment-status-subtitle');
+                const backBtn = document.getElementById('employment-status-back-btn');
+
+                if (state.view === 'other') {
+                    const labels = Object.keys(otherData);
+                    const values = Object.values(otherData);
+
+                    if (subEl) subEl.textContent = 'Other · specifications entered by alumni';
+                    if (backBtn) {
+                        backBtn.classList.remove('hidden');
+                        backBtn.classList.add('inline-flex');
+                    }
+
+                    makeChart(ChartLib, 'employmentStatusChart', {
+                        type: 'bar',
+                        data: {
+                            labels,
+                            datasets: [{
+                                data: values,
+                                backgroundColor: (ctx) => {
+                                    const { ctx: c, chartArea } = ctx.chart;
+                                    return barGradient(c, chartArea, PALETTE.greenMid);
+                                },
+                                hoverBackgroundColor: PALETTE.greenDark,
+                                borderRadius: 8,
+                                borderSkipped: false,
+                                maxBarThickness: 44,
+                            }],
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            layout: { padding: { top: 18 } },
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: {
+                                    backgroundColor: t.tooltipBg,
+                                    padding: 10,
+                                    cornerRadius: 8,
+                                    displayColors: false,
+                                },
+                            },
+                            scales: {
+                                y: integerTicks(Math.max(0, ...values)),
+                                x: {
+                                    ticks: { color: t.mutedText, font: { weight: '600' }, autoSkip: true, maxRotation: 45 },
+                                    grid: { display: false },
+                                    border: { display: false },
+                                },
+                            },
+                        },
+                        plugins: [barValueLabelPlugin],
+                    });
+
+                    return;
+                }
+
+                if (subEl) {
+                    subEl.textContent = hasOther
+                        ? 'Employed, unemployed, self-employed · click "Other" to see specifications'
+                        : 'Employed, unemployed, self-employed';
+                }
+                if (backBtn) {
+                    backBtn.classList.add('hidden');
+                    backBtn.classList.remove('inline-flex');
+                }
+
+                const keys = Object.keys(mainData);
+
+                makeChart(ChartLib, 'employmentStatusChart', {
+                    type: 'doughnut',
+                    data: {
+                        labels: keys.map(pretty),
+                        datasets: [{
+                            data: Object.values(mainData),
+                            backgroundColor: PIE_PALETTE,
+                            borderWidth: 3,
+                            borderColor: t.borderColor,
+                            hoverOffset: 6,
+                        }],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '60%',
+                        onClick: (event, els) => {
+                            if (els.length === 0) return;
+                            const key = keys[els[0].index];
+                            if (key === 'other' && hasOther) {
+                                drillState.employmentStatus.view = 'other';
+                                renderEmploymentStatusChart(ChartLib);
+                            }
+                        },
+                        onHover: (event, els) => {
+                            const key = els.length > 0 ? keys[els[0].index] : null;
+                            event.native.target.style.cursor = key === 'other' && hasOther ? 'pointer' : 'default';
+                        },
+                        plugins: { legend: pieLegend, tooltip: pieTooltip },
+                    },
+                    plugins: [pieLabelPlugin],
+                });
+            };
+
+            // =====================================================================
+            // Employment Type renderer (bar → other specifications)
+            // =====================================================================
+            const renderEmploymentTypeChart = (ChartLib) => {
+                const p = window.__payload || {};
+                const t = theme();
+                const state = drillState.employmentType;
+                const mainData = p.employmentType || {};
+                const otherData = p.employmentTypeOther || {};
+                const hasOther = Object.keys(otherData).length > 0;
+                const isOtherView = state.view === 'other';
+                const source = isOtherView ? otherData : mainData;
+                const keys = Object.keys(source);
+                const values = Object.values(source);
+
+                const subEl = document.getElementById('employment-type-subtitle');
+                const backBtn = document.getElementById('employment-type-back-btn');
+
+                if (subEl) {
+                    subEl.textContent = isOtherView
+                        ? 'Other · specifications entered by alumni'
+                        : (hasOther
+                            ? 'Full-time, part-time, freelance, etc. · click "Other" to see specifications'
+                            : 'Full-time, part-time, freelance, etc.');
+                }
+                if (backBtn) {
+                    backBtn.classList.toggle('hidden', !isOtherView);
+                    backBtn.classList.toggle('inline-flex', isOtherView);
+                }
+
+                makeChart(ChartLib, 'employmentTypeChart', {
+                    type: 'bar',
+                    data: {
+                        labels: isOtherView ? keys : keys.map(pretty),
+                        datasets: [{
+                            data: values,
+                            backgroundColor: (ctx) => {
+                                const { ctx: c, chartArea } = ctx.chart;
+                                return barGradient(c, chartArea, PALETTE.greenMid);
+                            },
+                            hoverBackgroundColor: PALETTE.greenDark,
+                            borderRadius: 8,
+                            borderSkipped: false,
+                            maxBarThickness: 44,
+                        }],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        layout: { padding: { top: 18 } },
+                        onClick: (event, els) => {
+                            if (isOtherView || els.length === 0) return;
+                            const key = keys[els[0].index];
+                            if (key === 'other' && hasOther) {
+                                drillState.employmentType.view = 'other';
+                                renderEmploymentTypeChart(ChartLib);
+                            }
+                        },
+                        onHover: (event, els) => {
+                            if (isOtherView) return;
+                            const key = els.length > 0 ? keys[els[0].index] : null;
+                            event.native.target.style.cursor = key === 'other' && hasOther ? 'pointer' : 'default';
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: t.tooltipBg,
+                                padding: 10,
+                                cornerRadius: 8,
+                                displayColors: false,
+                                callbacks: {
+                                    afterLabel: (ctx) => {
+                                        if (isOtherView) return '';
+                                        return keys[ctx.dataIndex] === 'other' && hasOther
+                                            ? 'Click to see specifications'
+                                            : '';
+                                    },
+                                },
+                            },
+                        },
+                        scales: {
+                            y: integerTicks(Math.max(0, ...values)),
+                            x: {
+                                ticks: { color: t.mutedText, font: { weight: '600' }, autoSkip: true, maxRotation: 45 },
+                                grid: { display: false },
+                                border: { display: false },
+                            },
+                        },
+                    },
+                    plugins: [barValueLabelPlugin],
+                });
+            };
+
+            // =====================================================================
+            // Organization Type renderer (bar → other specifications)
+            // =====================================================================
+            const renderOrganizationTypeChart = (ChartLib) => {
+                const p = window.__payload || {};
+                const t = theme();
+                const state = drillState.organizationType;
+                const mainData = p.organizationType || {};
+                const otherData = p.organizationTypeOther || {};
+                const hasOther = Object.keys(otherData).length > 0;
+                const isOtherView = state.view === 'other';
+                const source = isOtherView ? otherData : mainData;
+                const keys = Object.keys(source);
+                const values = Object.values(source);
+
+                const subEl = document.getElementById('organization-type-subtitle');
+                const backBtn = document.getElementById('organization-type-back-btn');
+
+                if (subEl) {
+                    subEl.textContent = isOtherView
+                        ? 'Other · specifications entered by alumni'
+                        : (hasOther
+                            ? 'Where alumni currently work · click "Other" to see specifications'
+                            : 'Where alumni currently work');
+                }
+                if (backBtn) {
+                    backBtn.classList.toggle('hidden', !isOtherView);
+                    backBtn.classList.toggle('inline-flex', isOtherView);
+                }
+
+                makeChart(ChartLib, 'organizationTypeChart', {
+                    type: 'bar',
+                    data: {
+                        labels: isOtherView ? keys : keys.map(pretty),
+                        datasets: [{
+                            data: values,
+                            backgroundColor: (ctx) => {
+                                const { ctx: c, chartArea } = ctx.chart;
+                                if (!chartArea) return PALETTE.gold;
+                                const g = c.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
+                                g.addColorStop(0, PALETTE.gold);
+                                g.addColorStop(1, PALETTE.goldLight);
+                                return g;
+                            },
+                            hoverBackgroundColor: PALETTE.goldDeep,
+                            borderRadius: 8,
+                            borderSkipped: false,
+                            maxBarThickness: 32,
+                        }],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        layout: { padding: { left: 4, right: 28 } },
+                        onClick: (event, els) => {
+                            if (isOtherView || els.length === 0) return;
+                            const key = keys[els[0].index];
+                            if (key === 'other' && hasOther) {
+                                drillState.organizationType.view = 'other';
+                                renderOrganizationTypeChart(ChartLib);
+                            }
+                        },
+                        onHover: (event, els) => {
+                            if (isOtherView) return;
+                            const key = els.length > 0 ? keys[els[0].index] : null;
+                            event.native.target.style.cursor = key === 'other' && hasOther ? 'pointer' : 'default';
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: t.tooltipBg,
+                                padding: 10,
+                                cornerRadius: 8,
+                                displayColors: false,
+                                callbacks: {
+                                    afterLabel: (ctx) => {
+                                        if (isOtherView) return '';
+                                        return keys[ctx.dataIndex] === 'other' && hasOther
+                                            ? 'Click to see specifications'
+                                            : '';
+                                    },
+                                },
+                            },
+                        },
+                        scales: {
+                            x: integerTicks(Math.max(0, ...values)),
+                            y: {
+                                grid: { display: false },
+                                ticks: { color: t.mutedText, font: { weight: '600' } },
+                            },
+                        },
+                    },
+                    plugins: [barValueLabelPlugin],
+                });
+            };
+
+            // =====================================================================
             // Back-button handlers
             // =====================================================================
             if (!window.__adminDeptBack) {
@@ -1477,6 +1835,36 @@
                 });
             }
 
+            if (!window.__adminEmploymentStatusBack) {
+                window.__adminEmploymentStatusBack = true;
+                document.addEventListener('click', (e) => {
+                    const btn = e.target.closest('#employment-status-back-btn');
+                    if (!btn || !ChartLibRef) return;
+                    drillState.employmentStatus.view = 'main';
+                    renderEmploymentStatusChart(ChartLibRef);
+                });
+            }
+
+            if (!window.__adminEmploymentTypeBack) {
+                window.__adminEmploymentTypeBack = true;
+                document.addEventListener('click', (e) => {
+                    const btn = e.target.closest('#employment-type-back-btn');
+                    if (!btn || !ChartLibRef) return;
+                    drillState.employmentType.view = 'main';
+                    renderEmploymentTypeChart(ChartLibRef);
+                });
+            }
+
+            if (!window.__adminOrganizationTypeBack) {
+                window.__adminOrganizationTypeBack = true;
+                document.addEventListener('click', (e) => {
+                    const btn = e.target.closest('#organization-type-back-btn');
+                    if (!btn || !ChartLibRef) return;
+                    drillState.organizationType.view = 'main';
+                    renderOrganizationTypeChart(ChartLibRef);
+                });
+            }
+
             // =====================================================================
             // Init
             // =====================================================================
@@ -1506,6 +1894,9 @@
                     ? { view: 'departments', selected: null }
                     : { view: 'courses', selected: null };
                 drillState.boardPassers = { view: 'overview', selected: null };
+                drillState.employmentStatus = { view: 'main' };
+                drillState.employmentType = { view: 'main' };
+                drillState.organizationType = { view: 'main' };
 
                 renderDeptChart(ChartLib);
 
@@ -1651,7 +2042,7 @@
                     return PALETTE.greenMid;
                 };
 
-                pieConfig('employmentStatusChart', p.employmentStatus);
+                renderEmploymentStatusChart(ChartLib);
                 pieConfig('employmentAreaChart', p.employmentArea, [PALETTE.greenBright, PALETTE.gold]);
                 pieConfig('genderChart', p.gender, [PALETTE.greenMid, PALETTE.gold]);
                 pieConfig('civilStatusChart', p.civilStatus);
@@ -1703,8 +2094,8 @@
                     });
                 };
 
-                barConfig('employmentTypeChart', p.employmentType, PALETTE.greenMid);
-                barConfig('organizationTypeChart', p.organizationType, PALETTE.gold, true);
+                renderEmploymentTypeChart(ChartLib);
+                renderOrganizationTypeChart(ChartLib);
                 barConfig('monthsToFirstJobChart', p.monthsToFirstJob, PALETTE.greenBright);
                 barConfig('furtherStudiesChart', p.furtherStudies, PALETTE.goldLight);
                 barConfig('topEmployersChart', p.topEmployers, PALETTE.goldDeep, true);

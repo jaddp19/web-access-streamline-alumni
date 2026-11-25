@@ -10,7 +10,7 @@ Route::livewire('/contact', 'public::pages.contact-page')->name('contact');
 Route::livewire('/departments', 'public::pages.department-page')->name('departments');
 
 Route::livewire('/login', 'auth::login')->name('login');
-Route::livewire('/register', 'auth::register')->name('register');
+Route::livewire('/register', 'auth::register')->middleware(['guest', 'throttle:10,1'])->name('register');
 Route::livewire('/form', 'auth::form.form-answer')->name('form');
 Route::livewire('/privacy-policy', 'auth::privacy-policy')->name('privacy-policy');
 Route::livewire('/terms-and-condition', 'auth::terms-and-condition')->name('terms-and-conditions');

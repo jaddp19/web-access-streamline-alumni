@@ -206,6 +206,24 @@ new #[Layout('layouts.app-admin')] class extends Component
     }
 
     #[Computed]
+    public function employmentStatusOtherBreakdown(): array
+    {
+        return $this->hasNoDepartment ? [] : $this->analytics()->employmentStatusOtherBreakdown();
+    }
+
+    #[Computed]
+    public function employmentTypeOtherBreakdown(): array
+    {
+        return $this->hasNoDepartment ? [] : $this->analytics()->employmentTypeOtherBreakdown();
+    }
+
+    #[Computed]
+    public function organizationTypeOtherBreakdown(): array
+    {
+        return $this->hasNoDepartment ? [] : $this->analytics()->organizationTypeOtherBreakdown();
+    }
+
+    #[Computed]
     public function employmentAreaBreakdown(): array
     {
         return $this->tracerBreakdowns['employment_area'];
