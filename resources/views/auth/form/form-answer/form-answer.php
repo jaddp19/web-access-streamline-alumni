@@ -27,6 +27,11 @@ new #[Layout('layouts.app-form')] class extends Component
 
     public bool $alreadyFilled = false;
 
+    #[Locked]
+    public bool $fresh = false;
+
+    public bool $hasExistingProfile = false;
+
     public int $step = 1;
 
     #[Locked]
@@ -139,11 +144,18 @@ new #[Layout('layouts.app-form')] class extends Component
         Gate::authorize('can_create');
         $user = Auth::user();
 
-        if (UserProfile::where('user_id', $user->id)->exists()) {
+        $this->fresh = request()->boolean('fresh');
+        $hasProfile = UserProfile::where('user_id', $user->id)->exists();
+
+        // "Update New Form" opens /form?fresh=1. It deliberately skips the
+        // one-submission lock so the alumni can describe a new life situation.
+        if ($hasProfile && ! $this->fresh) {
             $this->alreadyFilled = true;
 
             return;
         }
+
+        $this->hasExistingProfile = $hasProfile;
 
         $this->courses = Course::orderBy('course_title')->pluck('course_title', 'id');
         $this->batches = Batch::orderBy('batch_name', 'desc')->pluck('batch_name', 'id');
@@ -583,6 +595,7 @@ new #[Layout('layouts.app-form')] class extends Component
             $isBoardCourse, $examName
         ) {
             $existingProfile = UserProfile::where('user_id', $user->id)->first();
+            $isFreshSubmission = $existingProfile !== null;
 
             $location = $this->address_type === 'philippines'
                 ? array_merge($existingProfile->location ?? [], [
@@ -647,6 +660,39 @@ new #[Layout('layouts.app-form')] class extends Component
                 );
             }
 
+            if ($isFreshSubmission) {
+                $previousCourse = $existingProfile->courses()->first();
+                $courseChanged = (int) ($previousCourse?->id ?? 0) !== (int) $this->course_id;
+
+                if (! $isBoardCourse) {
+                    // New program is non-board: old board attempts no longer
+                    // belong to the current form.
+                    $profile->boardExams()->reorder()->delete();
+                    $profile->forceFill([
+                        'board_taken' => null,
+                        'board_rate' => null,
+                        'is_verified' => true,
+                    ])->saveQuietly();
+                } elseif ($courseChanged && $previousCourse?->course_type === 'board') {
+                    // Different board program: every old attempt must be
+                    // re-verified against the new program.
+                    $profile->boardExams()->reorder()->update([
+                        'is_verified' => false,
+                        'verified_at' => null,
+                        'is_top_notcher' => false,
+                        'top_notcher_rank' => null,
+                    ]);
+                    $profile->forceFill(['is_verified' => false])->saveQuietly();
+                }
+
+                // A new form always starts a new review cycle, even when the
+                // previous form had already been accepted.
+                $profile->forceFill([
+                    'is_approved' => false,
+                    'last_rejection_reason' => null,
+                ])->saveQuietly();
+            }
+
             $profile->courses()->sync([$this->course_id]);
 
             $tracerStudy = TracerStudy::firstOrCreate(['user_id' => $user->id]);
@@ -688,13 +734,22 @@ new #[Layout('layouts.app-form')] class extends Component
                     ->where('is_current_job', true)
                     ->first();
 
-                if ($existingCurrent) {
+                $sameJob = $existingCurrent
+                    && (int) $existingCurrent->company_id === (int) $this->company_id
+                    && $existingCurrent->date_hired?->format('Y-m-d') === $this->date_hired;
+
+                if ($sameJob) {
+                    // Same employer and hire date: keep the row, refresh title.
                     $existingCurrent->update([
                         'work_name' => $this->current_job_position ?: 'Position not specified',
-                        'company_id' => $this->company_id,
-                        'date_hired' => $this->date_hired,
                     ]);
                 } else {
+                    // A different job means a new life situation. Retire the
+                    // previous current row and add a fresh one.
+                    if ($existingCurrent) {
+                        $existingCurrent->update(['is_current_job' => false]);
+                    }
+
                     WorkHistory::create([
                         'user_id' => $user->id,
                         'work_name' => $this->current_job_position ?: 'Position not specified',
@@ -703,6 +758,11 @@ new #[Layout('layouts.app-form')] class extends Component
                         'is_current_job' => true,
                     ]);
                 }
+            } elseif ($isFreshSubmission) {
+                // New form says the alumni is not currently employed.
+                WorkHistory::where('user_id', $user->id)
+                    ->where('is_current_job', true)
+                    ->update(['is_current_job' => false]);
             }
         });
 

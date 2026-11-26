@@ -10,6 +10,25 @@
                 {{ $totalSteps }} · Editing your submission</p>
         </div>
 
+        <div class="flex flex-wrap items-center justify-center gap-2 mb-8">
+            <a href="{{ route('form-history') }}" target="_blank"
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-[#123524]/15 bg-white text-[#123524] text-sm font-semibold hover:bg-[#123524]/5 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Form History
+            </a>
+            <a href="{{ route('form', ['fresh' => 1]) }}" target="_blank"
+                onclick="return confirm('Start a new tracer form? Your current details stay visible until you submit the new form, then they will be replaced and sent for review.')"
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#D4A537] hover:bg-[#c2942f] text-[#123524] text-sm font-semibold transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                Update New Form
+            </a>
+        </div>
+
         <div class="flex items-center gap-2 mb-8">
             @for ($i = 1; $i <= $totalSteps; $i++)
                 <div class="flex-1 h-1.5 rounded-full {{ $i <= $step ? 'bg-[#123524]' : 'bg-[#123524]/15' }}"></div>

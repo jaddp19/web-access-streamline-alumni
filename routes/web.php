@@ -16,16 +16,14 @@ Route::livewire('/privacy-policy', 'auth::privacy-policy')->name('privacy-policy
 Route::livewire('/terms-and-condition', 'auth::terms-and-condition')->name('terms-and-conditions');
 
 Route::middleware('guest')->group(function () {
-
-    Route::livewire('/reset-password/{token}', 'auth::reset-password')
-        ->name('password.reset');
+    Route::livewire('/reset-password/{token}', 'auth::reset-password')->name('password.reset');
 });
 
 // forms
 Route::middleware('auth')->group(function () {
     Route::livewire('/form', 'auth::form.form-answer')->name('form');
     Route::livewire('/update-form', 'auth::form.update-form')->name('update-form');
-
+    Route::livewire('/form-history', 'auth::form.form-history')->name('form-history');
     Route::livewire('/change-password', 'auth::change-password')->name('password.change');
 });
 
@@ -38,11 +36,10 @@ Route::middleware(['auth', 'role:alumni coordinator'])->prefix('alumni-coordinat
     Route::livewire('/roles/create', 'super-admin::pages.role.create-role')->name('create-role');
     Route::livewire('/roles/update/{role}', 'super-admin::pages.role.update-role')->name('update-role');
 
-    Route::livewire('/user/view', 'super-admin::pages.user.view-user')->name('super-admin.user.view');
-
     // single view alumni
     Route::livewire('/alumni/view/{user}', 'super-admin::pages.user.view-single-user')->name('super-admin.alumni.view-single');
-
+    
+    Route::livewire('/user/view', 'super-admin::pages.user.view-user')->name('super-admin.user.view');
     Route::livewire('/user/create', 'super-admin::pages.user.create-user')->name('super-admin.user.create');
     Route::livewire('/users/update/{user}', 'super-admin::pages.user.update-user')->name('super-admin.user.update');
 
@@ -145,9 +142,7 @@ Route::middleware(['auth', 'role:alumni|alumni coordinator'])->prefix('alumni')-
      * Returns { "messages": N, "notifications": M } — safe, cached 20s.
      */
     Route::get('/badges.json', function () {
-        return response()
-            ->json(BadgeCounts::forCurrentUser())
-            ->header('Cache-Control', 'no-store');
+        return response()->json(BadgeCounts::forCurrentUser())->header('Cache-Control', 'no-store');
     })->name('alumni.badges');
 });
 

@@ -761,10 +761,10 @@ new #[Layout('layouts.app-form')] class extends Component
                 ]
             );
 
-            // ─── Re-enter the review queue if anything meaningful changed ─────
-            // Any edit to alumni-editable fields, a course switch, or a change
-            // to the board data sends the profile back to "Awaiting Review" so
-            // the alumni coordinator can re-verify it.
+            // ─── Detect meaningful changes for the review queue ──────────────
+            // The final is_approved reset happens after the tracer sections
+            // below, so civil status / employment / further study / work
+            // changes also send the form back to "Awaiting Review".
             $profileFieldsChanged = $profile->wasChanged([
                 'gender',
                 'contact_number_1',
@@ -774,18 +774,6 @@ new #[Layout('layouts.app-form')] class extends Component
                 'board_taken',
                 'board_rate',
             ]);
-
-            if ($profileFieldsChanged || $courseChanged || $boardChanged) {
-                $profile->forceFill([
-                    'is_approved' => false,
-                    'last_rejection_reason' => null,   // clears "Rejected" → shows "Awaiting Review"
-                ])->saveQuietly();
-
-                // Optional but recommended: drop the cached "verified board passer"
-                // badge until the alumni coordinator re-approves. Comment out if you want the
-                // old verified attempt to keep counting.
-                // $profile->forceFill(['is_verified' => false])->saveQuietly();
-            }
             // ──────────────────────────────────────────────────────────────────
 
             // ── Board exam history handling ──────────────────────────────
@@ -864,7 +852,7 @@ new #[Layout('layouts.app-form')] class extends Component
             $tracerStudy = TracerStudy::firstOrCreate(['user_id' => $user->id]);
             $isEmployed = $this->employment_status === 'employed';
 
-            CivilStatusEmployment::updateOrCreate(
+            $employment = CivilStatusEmployment::updateOrCreate(
                 ['tracer_study_id' => $tracerStudy->id],
                 [
                     'civil_status' => $this->civil_status,
@@ -891,13 +879,15 @@ new #[Layout('layouts.app-form')] class extends Component
                 ]
             );
 
-            FurtherStudy::updateOrCreate(
+            $further = FurtherStudy::updateOrCreate(
                 ['tracer_study_id' => $tracerStudy->id],
                 [
                     'is_pursued_further_studies' => $this->is_pursued_further_studies,
                     'level_of_study' => $this->is_pursued_further_studies ? $this->level_of_study : null,
                 ]
             );
+
+            $workChanged = false;
 
             if ($this->employment_status === 'employed' && $this->company_id && $this->date_hired) {
                 $existingCurrent = WorkHistory::where('user_id', $user->id)
@@ -910,6 +900,12 @@ new #[Layout('layouts.app-form')] class extends Component
                         'company_id' => $this->company_id,
                         'date_hired' => $this->date_hired,
                     ]);
+
+                    $workChanged = $existingCurrent->wasChanged([
+                        'work_name',
+                        'company_id',
+                        'date_hired',
+                    ]);
                 } else {
                     WorkHistory::create([
                         'user_id' => $user->id,
@@ -918,12 +914,43 @@ new #[Layout('layouts.app-form')] class extends Component
                         'date_hired' => $this->date_hired,
                         'is_current_job' => true,
                     ]);
+
+                    $workChanged = true;
                 }
             } else {
-                WorkHistory::where('user_id', $user->id)
+                $workChanged = WorkHistory::where('user_id', $user->id)
                     ->where('is_current_job', true)
-                    ->update(['is_current_job' => false]);
+                    ->update(['is_current_job' => false]) > 0;
             }
+
+            // ─── Re-enter the review queue if anything meaningful changed ─────
+            // Personal details, course/board data, and every tracer section
+            // (civil status, employment, further study, work history) count.
+            $tracerChanged = $employment->wasChanged([
+                'civil_status',
+                'employment_status',
+                'employment_status_other',
+                'current_job_position',
+                'employed_related_to_degree',
+                'employment_type',
+                'employment_type_other',
+                'organization_type',
+                'organization_type_other',
+                'employment_area',
+                'abroad_country',
+                'months_to_first_job',
+            ]) || $further->wasChanged([
+                'is_pursued_further_studies',
+                'level_of_study',
+            ]) || $workChanged;
+
+            if ($profileFieldsChanged || $courseChanged || $boardChanged || $tracerChanged) {
+                $profile->forceFill([
+                    'is_approved' => false,
+                    'last_rejection_reason' => null,   // clears "Rejected" → shows "Awaiting Review"
+                ])->saveQuietly();
+            }
+            // ──────────────────────────────────────────────────────────────────
         });
 
         // ── Refresh snapshots so a second save has correct baseline ──

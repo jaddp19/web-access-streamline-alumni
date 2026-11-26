@@ -22,7 +22,7 @@
     @include('components.headers.alumni.header')
 
     <main>
-        <div class="select-none">
+        <div>
         {{ $slot }}
         </div>
     </main>

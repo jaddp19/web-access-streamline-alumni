@@ -2,7 +2,9 @@
 
 use App\Models\User;
 use App\Services\EmailTemplateService;
+use App\Services\FormHistoryService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
@@ -55,11 +57,17 @@ new #[Layout('layouts::app-admin')] class extends Component
             return;
         }
 
-        $profile->update([
-            'is_approved' => true,
-            'is_verified' => true,
-            'last_rejection_reason' => null,
-        ]);
+        DB::transaction(function () use ($profile) {
+            $profile->update([
+                'is_approved' => true,
+                'is_verified' => true,
+                'last_rejection_reason' => null,
+            ]);
+
+            // Accepted forms are copied into history. Pending edits never
+            // reach this service, so they stay on the live rows only.
+            FormHistoryService::capture($profile, Auth::user());
+        });
 
         $this->refreshProfile();
 

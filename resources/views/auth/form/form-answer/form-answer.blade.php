@@ -49,6 +49,17 @@
                     {{ $totalSteps }}</p>
             </div>
 
+            @if ($fresh && $hasExistingProfile)
+                <div class="mb-6 rounded-2xl border border-[#D4A537]/40 bg-[#D4A537]/10 p-4 text-sm text-[#123524]">
+                    <p class="font-semibold">You are starting a new form.</p>
+                    <p class="mt-1 text-[#123524]/70">
+                        Describe your current situation. Your previous accepted forms stay in
+                        <a href="{{ route('form-history') }}" class="font-semibold underline">Form History</a>;
+                        submitting this will replace your current details and send them for review.
+                    </p>
+                </div>
+            @endif
+
             <div class="flex items-center gap-2 mb-8">
                 @for ($i = 1; $i <= $totalSteps; $i++)
                     <div class="flex-1 h-1.5 rounded-full {{ $i <= $step ? 'bg-[#123524]' : 'bg-[#123524]/15' }}"></div>
@@ -999,7 +1010,7 @@
                     @else
                         <button type="button" wire:click="submit"
                             class="w-full sm:w-auto px-6 py-3 sm:py-2.5 rounded-xl bg-[#123524] hover:[#0d2819] active:bg-[#0a2013] text-white font-bold shadow-md transition">
-                            Submit
+                            {{ $fresh && $hasExistingProfile ? 'Submit New Form' : 'Submit' }}
                         </button>
                     @endif
                 </div>

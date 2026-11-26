@@ -137,6 +137,11 @@ class User extends Authenticatable
         return $this->hasOne(TracerStudy::class, 'user_id', 'id');
     }
 
+    public function formHistories(): HasMany
+    {
+        return $this->hasMany(FormHistory::class, 'user_id', 'id')->latest('version');
+    }
+
     public function department(): HasOne
     {
         return $this->hasOne(Department::class, 'program_head_id');
