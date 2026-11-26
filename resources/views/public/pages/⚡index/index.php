@@ -16,9 +16,14 @@ new class extends Component
     #[Computed]
     public function stats(): array
     {
-        return Cache::remember('landing:stats', now()->addMinutes(5), function () {
+        // 👇 bumped the cache key to 'landing:stats:v2' so it ignores the old wrong count
+        return Cache::remember('landing:stats:v2', now()->addMinutes(5), function () {
             return [
-                'alumni' => User::role('alumni')->count(),
+                // Added the whereHas constraint here
+                'alumni' => User::role('alumni')
+                    ->whereHas('userProfile', fn ($q) => $q->where('is_approved', true))
+                    ->count(),
+                    
                 'departments' => Department::where('is_active', true)->count(),
                 'programs' => Course::where('is_active', true)->count(),
             ];

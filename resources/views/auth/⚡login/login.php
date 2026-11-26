@@ -1,17 +1,13 @@
 <?php
 
-use App\Models\Course;
-use App\Models\Department;
 use App\Models\User;
 use App\Services\EmailTemplateService;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
-use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -288,31 +284,4 @@ new #[Layout('layouts.auth')] class extends Component
         $this->forgotStep = 3;
     }
 
-    // =========================================================
-    //  COMPUTED STATS
-    // =========================================================
-
-    #[Computed]
-    public function alumni(): int
-    {
-        return Cache::remember('login:stats', now()->addMinutes(10), function () {
-            return User::role('alumni')->count();
-        });
-    }
-
-    #[Computed]
-    public function courses(): int
-    {
-        return Cache::remember('login:stats:courses', now()->addMinutes(10), function () {
-            return Course::count();
-        });
-    }
-
-    #[Computed]
-    public function departments(): int
-    {
-        return Cache::remember('login:stats:departments', now()->addMinutes(10), function () {
-            return Department::count();
-        });
-    }
 };

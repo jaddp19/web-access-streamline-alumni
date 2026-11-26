@@ -14,7 +14,7 @@ new class extends Component
     #[Computed]
     public function departments(): array
     {
-        $cacheKey = 'landing:departments:v1';
+        $cacheKey = 'landing:departments:v2'; // Bumped version to clear old cache
         $cached = Cache::get($cacheKey);
 
         if (! is_array($cached)) {
@@ -29,8 +29,11 @@ new class extends Component
                 ->selectSub(function ($q) {
                     $q->from('student_course')
                         ->join('courses', 'courses.id', '=', 'student_course.course_id')
+                        // 👇 Join the user_profiles table to check approval status
+                        ->join('user_profiles', 'user_profiles.id', '=', 'student_course.user_profile_id')
                         ->whereColumn('courses.department_id', 'departments.id')
                         ->where('courses.is_active', true)
+                        ->where('user_profiles.is_approved', true) // 👈 Filter to approved only
                         ->selectRaw('COUNT(DISTINCT student_course.user_profile_id)');
                 }, 'students_count')
                 ->with([

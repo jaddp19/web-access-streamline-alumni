@@ -14,7 +14,8 @@
              alt="Campus"
              class="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-overlay">
 
-        <div class="relative z-10 flex flex-col justify-between w-full px-14 py-16">
+        <!-- 👇 Changed justify-between to justify-start -->
+        <div class="relative z-10 flex flex-col justify-start w-full px-14 py-16">
 
             <a href="/" class="flex items-center gap-x-3">
                 <div class="w-12 h-12 rounded-full bg-white ring-2 ring-[#D4A537]/60 p-1.5 shadow-md shrink-0">
@@ -27,7 +28,8 @@
                 </span>
             </a>
 
-            <div class="space-y-8 max-w-md">
+            <!-- 👇 Added mt-20 to push the text up under the logo -->
+            <div class="space-y-8 max-w-md mt-20">
                 <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-white/10 rounded-full backdrop-blur-sm">
                     <span class="w-1.5 h-1.5 rounded-full bg-[#D4A537]"></span>
                     <span class="text-white/90 text-xs font-bold tracking-[0.2em]">CSAV ALUMNI SYSTEM</span>
@@ -41,23 +43,6 @@
                 <p class="text-white/70 leading-relaxed">
                     Log in to update your career profile, track graduate batch insights, and drive data-driven growth for Colegio de Sta. Ana de Victorias.
                 </p>
-            </div>
-
-            <div class="flex items-center gap-8">
-                <div>
-                    <div class="text-2xl font-bold text-white" style="font-family: 'Fraunces', serif;">{{ $this->alumni }}</div>
-                    <div class="text-xs text-white/50 font-medium tracking-wide mt-1">ALUMNI MEMBERS</div>
-                </div>
-                <div class="w-px h-10 bg-white/15"></div>
-                <div>
-                    <div class="text-2xl font-bold text-white" style="font-family: 'Fraunces', serif;">{{ $this->departments }}</div>
-                    <div class="text-xs text-white/50 font-medium tracking-wide mt-1">DEPARTMENTS</div>
-                </div>
-                <div class="w-px h-10 bg-white/15"></div>
-                <div>
-                    <div class="text-2xl font-bold text-white" style="font-family: 'Fraunces', serif;">{{ $this->courses }}</div>
-                    <div class="text-xs text-white/50 font-medium tracking-wide mt-1">COURSES</div>
-                </div>
             </div>
         </div>
     </div>

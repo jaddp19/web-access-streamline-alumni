@@ -32,7 +32,7 @@
                 </h1>
 
                 <p class="max-w-lg mx-auto text-base sm:text-md text-[#123524]/70 leading-relaxed px-2">
-                    Explore our diverse academic departments committed to shaping future leaders.
+                    Explore our diverse academic departments committed to shaping industry leaders.
                 </p>
             </div>
 
@@ -78,11 +78,11 @@
                             </p>
                         @endif
 
-                        {{-- Student count --}}
+                        {{-- Graduate count --}}
                         <div class="flex items-center gap-1.5 mt-2.5 text-[#123524]/60 text-xs sm:text-sm">
                             <span class="w-1.5 h-1.5 rounded-full bg-[#D4A537]"></span>
                             {{ number_format($department['students_count']) }}
-                            {{ \Illuminate\Support\Str::plural('Student', $department['students_count']) }}
+                            Registered Alumni
                         </div>
 
                         {{-- Courses list --}}

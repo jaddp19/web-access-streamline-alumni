@@ -22,7 +22,7 @@
 <body>
     @include('components.headers.public.header')
         <main class="bg-gradient-to-br from-white to-green-100 min-h-screen bg-white dark:bg-black">
-            <div class="select-none">
+            <div>
             {{ $slot }}
             </div>
         </main>
