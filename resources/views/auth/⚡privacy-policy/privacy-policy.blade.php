@@ -1,4 +1,4 @@
-<div class="max-w-[900px] mx-auto px-4 py-12 select-none">
+<div class="max-w-[900px] mx-auto px-4 py-12">
 
     {{-- Header --}}
     <div class="relative overflow-hidden bg-[#123524] dark:bg-[#0a1a10] rounded-3xl p-8 mb-8">
