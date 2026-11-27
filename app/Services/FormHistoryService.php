@@ -15,7 +15,7 @@ class FormHistoryService
      * Only approved forms call this service. Pending edits never create a
      * history row because update-form simply mutates the live rows.
      */
-    public static function capture(UserProfile $profile, ?User $approvedBy = null): ?FormHistory
+    public static function capture(UserProfile $profile, ?User $approvedBy = null, ?\Carbon\Carbon $approvedAt = null, ): ?FormHistory
     {
         $user = $profile->user;
 
@@ -62,7 +62,7 @@ class FormHistoryService
             'user_id' => $user->id,
             'approved_by' => $approvedBy?->id,
             'version' => ((int) FormHistory::query()->where('user_id', $user->id)->max('version')) + 1,
-            'approved_at' => now(),
+            'approved_at' => $approvedAt ?? now(),
             'snapshot' => $snapshot,
             'snapshot_hash' => $hash,
         ]);

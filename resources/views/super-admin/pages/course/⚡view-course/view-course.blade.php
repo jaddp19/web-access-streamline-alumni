@@ -1,4 +1,6 @@
-<div>
+<div x-data="{ modalOpen: @entangle('viewingProgramId') }" 
+     @keydown.escape.window="$wire.closeView()">
+     
     <div class="max-w-[85rem] px-3 sm:px-6 lg:px-8 py-6 sm:py-10 lg:py-14 mx-auto">
         <div class="relative flex flex-col rounded-2xl border border-black/5 dark:border-white/5 bg-white dark:bg-[#242526] shadow-sm overflow-hidden">
 
@@ -79,12 +81,36 @@
                                     </div>
                                     <p class="font-semibold text-[#123524] dark:text-white truncate">{{ $program->course_title }}</p>
                                 </div>
-                                @can('can_update')
-                                <a href="{{ route('super-admin.course.update', $program->id) }}"
-                                    class="shrink-0 text-xs font-semibold text-[#123524] dark:text-[#D4A537] hover:underline">
-                                    Edit
-                                </a>
-                                @endcan
+                                
+                                {{-- 3-Dots Dropdown (Mobile) --}}
+                                <div class="shrink-0 relative" x-data="{ open: false }">
+                                    <button @click="open = !open" @click.outside="open = false"
+                                        class="p-1 -mr-1 rounded-lg text-black/40 hover:text-black dark:text-white/40 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition focus:outline-none">
+                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+                                        </svg>
+                                    </button>
+
+                                    <div x-show="open" x-transition x-cloak
+                                        class="absolute right-0 top-full z-20 mt-1 w-32 origin-top-right rounded-xl bg-white dark:bg-[#242526] shadow-lg ring-1 ring-black/5 dark:ring-white/10 focus:outline-none divide-y divide-black/5 dark:divide-white/5">
+                                        
+                                        {{-- View Button --}}
+                                        <button type="button" wire:click="openView({{ $program->id }})"
+                                            class="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-[#123524] dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition w-full text-left">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                            View
+                                        </button>
+
+                                        @can('can_update')
+                                            <a href="{{ route('super-admin.course.update', $program->id) }}"
+                                                class="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-[#123524] dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition w-full text-left">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" /></svg>
+                                                Edit
+                                            </a>
+                                        @endcan
+                                    </div>
+                                </div>
+
                             </div>
                             <p class="text-xs text-black/60 dark:text-white/60 mt-1 truncate">
                                 {{ $program->department->dept_name ?? 'N/A' }}
@@ -178,13 +204,34 @@
                                 <td class="hidden lg:table-cell px-3 lg:px-6 py-3">
                                     <span class="text-black/50 dark:text-white/50 whitespace-nowrap">{{ $program->created_at->diffForHumans() }}</span>
                                 </td>
-                                <td class="px-3 lg:px-6 py-3 text-end">
-                                    @can('can_update')
-                                    <a href="{{ route('super-admin.course.update', $program->id) }}"
-                                        class="inline-flex items-center gap-1 text-[#123524] dark:text-[#D4A537] hover:text-[#0d2819] dark:hover:text-[#E5B94A] font-semibold hover:underline whitespace-nowrap">
-                                        Edit
-                                    </a>
-                                    @endcan
+                                <td class="px-3 lg:px-6 py-3 text-end relative">
+                                    {{-- 3-Dots Dropdown (Desktop) --}}
+                                    <div x-data="{ open: false }" class="inline-block text-left">
+                                        <button @click="open = !open" @click.outside="open = false"
+                                            class="p-1.5 rounded-lg text-black/40 hover:text-black dark:text-white/40 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition focus:outline-none">
+                                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+                                            </svg>
+                                        </button>
+                                        <div x-show="open" x-transition x-cloak
+                                            class="absolute right-0 z-20 mt-1 w-32 origin-top-right rounded-xl bg-white dark:bg-[#242526] shadow-lg ring-1 ring-black/5 dark:ring-white/10 focus:outline-none divide-y divide-black/5 dark:divide-white/5">
+                                            
+                                            {{-- View Button --}}
+                                            <button type="button" wire:click="openView({{ $program->id }})"
+                                                class="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-[#123524] dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition w-full text-left">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                                View
+                                            </button>
+
+                                            @can('can_update')
+                                                <a href="{{ route('super-admin.course.update', $program->id) }}"
+                                                    class="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-[#123524] dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition w-full text-left">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" /></svg>
+                                                    Edit
+                                                </a>
+                                            @endcan
+                                        </div>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -199,7 +246,7 @@
                                 </td>
                             </tr>
                         @endforelse
-                        @endcan 
+                        @endcan
                     </tbody>
                 </table>
             </div>
@@ -252,4 +299,130 @@
             </div>
         </div>
     </div>
+
+    {{-- ================= CENTERED SINGLE VIEW MODAL ================= --}}
+    <template x-teleport="body">
+        <div x-show="modalOpen" class="relative z-[100]" aria-labelledby="modal-title" role="dialog" aria-modal="true" x-cloak>
+            
+            {{-- Backdrop --}}
+            <div x-show="modalOpen" 
+                 x-transition:enter="ease-out duration-300" 
+                 x-transition:enter-start="opacity-0" 
+                 x-transition:enter-end="opacity-100" 
+                 x-transition:leave="ease-in duration-200" 
+                 x-transition:leave-start="opacity-100" 
+                 x-transition:leave-end="opacity-0" 
+                 class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" 
+                 @click="$wire.closeView()"></div>
+
+            <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+                <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                    
+                    {{-- Modal Panel --}}
+                    <div x-show="modalOpen" 
+                         x-transition:enter="ease-out duration-300" 
+                         x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+                         x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" 
+                         x-transition:leave="ease-in duration-200" 
+                         x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" 
+                         x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+                         class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-[#242526] text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-xl border border-black/5 dark:border-white/5">
+                        
+                        @if($this->viewingProgram)
+                            @php $course = $this->viewingProgram; @endphp
+
+                            {{-- Header --}}
+                            <div class="px-4 py-5 sm:px-6 bg-[#F7F5EF] dark:bg-[#3A3B3C] border-b border-black/5 dark:border-white/5 flex items-start justify-between">
+                                <div>
+                                    <h2 class="text-lg font-bold text-[#123524] dark:text-white" id="modal-title" style="font-family: 'Fraunces', serif;">
+                                        Course Details
+                                    </h2>
+                                    <div class="mt-2">
+                                        <span class="inline-flex items-center text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wide {{ $course->is_active ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400' : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300' }}">
+                                            {{ $course->is_active ? 'Active' : 'Inactive' }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <button type="button" @click="$wire.closeView()" class="relative rounded-md bg-transparent text-gray-400 hover:text-gray-500 focus:outline-none">
+                                    <span class="sr-only">Close</span>
+                                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            {{-- Body --}}
+                            <div class="px-4 py-6 sm:px-6">
+                                
+                                {{-- Profile Header --}}
+                                <div class="flex items-center gap-4 mb-6">
+                                    <div class="w-16 h-16 rounded-full bg-[#123524]/10 dark:bg-[#D4A537]/15 flex items-center justify-center text-[#123524] dark:text-[#D4A537] text-xl font-bold shrink-0">
+                                        {{ $course->course_code }}
+                                    </div>
+                                    <div class="min-w-0">
+                                        <h3 class="text-xl font-bold text-[#123524] dark:text-white truncate">{{ $course->course_title }}</h3>
+                                        <p class="text-sm text-black/60 dark:text-white/60">{{ $course->department->dept_name ?? 'N/A' }}</p>
+                                    </div>
+                                </div>
+
+                                {{-- Description --}}
+                                @if ($course->course_desc)
+                                    <div class="mb-6 prose prose-sm text-black/70 dark:text-white/70">
+                                        <p>{{ $course->course_desc }}</p>
+                                    </div>
+                                @endif
+
+                                {{-- Details List --}}
+                                <div class="border-t border-black/5 dark:border-white/5 pt-6 grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-4">
+                                    <div class="flex gap-x-3">
+                                        <svg class="h-6 w-5 flex-none text-[#a97f1f] dark:text-[#D4A537]" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.62 48.62 0 0112 20.904a48.62 48.62 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342" />
+                                        </svg>
+                                        <div class="text-sm">
+                                            <p class="font-semibold text-black dark:text-white">Total Alumni</p>
+                                            <p class="text-black/60 dark:text-white/60">{{ $course->user_profiles_count }} alumni</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex gap-x-3">
+                                        <svg class="h-6 w-5 flex-none text-[#a97f1f] dark:text-[#D4A537]" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <div class="text-sm">
+                                            <p class="font-semibold text-black dark:text-white">Course Type</p>
+                                            <p class="text-black/60 dark:text-white/60 capitalize">{{ $course->course_type }}</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex gap-x-3">
+                                        <svg class="h-6 w-5 flex-none text-[#a97f1f] dark:text-[#D4A537]" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <div class="text-sm">
+                                            <p class="font-semibold text-black dark:text-white">Created On</p>
+                                            <p class="text-black/60 dark:text-white/60">{{ $course->created_at->format('M j, Y g:i A') }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Footer Actions --}}
+                            <div class="bg-[#F7F5EF] dark:bg-[#3A3B3C] px-4 py-4 sm:px-6 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 border-t border-black/5 dark:border-white/5 rounded-b-2xl">
+                                <button type="button" @click="$wire.closeView()"
+                                    class="w-full sm:w-auto justify-center inline-flex rounded-lg bg-white dark:bg-[#242526] px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-white/10 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+                                    Close
+                                </button>
+                                @can('can_update')
+                                <a href="{{ route('super-admin.course.update', $course->id) }}" wire:navigate
+                                    class="w-full sm:w-auto justify-center inline-flex rounded-lg bg-[#123524] dark:bg-[#D4A537] px-4 py-2.5 text-sm font-semibold text-white dark:text-[#123524] shadow-sm hover:bg-[#0d2819] dark:hover:bg-[#E5B94A] transition">
+                                    Edit Course
+                                </a>
+                                @endcan
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
 </div>

@@ -8,7 +8,7 @@
                     <h1 class="text-xl font-bold text-black dark:text-white leading-tight"
                         style="font-family: 'Fraunces', serif;">Inbox</h1>
                     <p class="text-xs text-black/50 dark:text-white/50">
-                        Messages from your department head or from the alumni coordinator
+                        Messages from your Program Head or from the Alumni Coordinator
                     </p>
                 </div>
             </div>
@@ -97,7 +97,7 @@
                                     </span>
                                 </div>
                                 <p class="text-sm text-black/70 dark:text-white/70 mt-1 leading-relaxed">
-                                    Your alumni profile has been reviewed and approved by the alumni coordinator/program head.
+                                    Your alumni profile has been reviewed and approved by the Alumni Coordinator/Program Head.
                                     Thank you for keeping your information up to date.
                                 </p>
                             </div>
@@ -126,7 +126,7 @@
                                 </div>
 
                                 <p class="text-sm text-black/70 dark:text-white/70 mt-1 leading-relaxed">
-                                    The alumni coordinator/program head was unable to approve your alumni profile for the following reason:
+                                    The Alumni Coordinator/Program Head was unable to approve your alumni profile for the following reason:
                                 </p>
 
                                 <div class="mt-3 p-3 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20">
@@ -161,7 +161,7 @@
                                     </span>
                                 </div>
                                 <p class="text-sm text-black/70 dark:text-white/70 mt-1 leading-relaxed">
-                                    Your profile is currently being reviewed by the alumni coordinator.
+                                    Your profile is currently being reviewed by the Alumni Coordinator or Program Head.
                                     You'll receive an update here once a decision has been made.
                                 </p>
                             </div>

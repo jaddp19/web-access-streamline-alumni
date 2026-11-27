@@ -15,6 +15,28 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     /** True when "select every role across all pages" mode is active. */
     public bool $selectAllFiltered = false;
 
+    // --- ADDED FOR VIEW MODAL ---
+    public ?int $viewingRoleId = null;
+
+    public function openView(int $id): void
+    {
+        $this->viewingRoleId = $id;
+    }
+
+    public function closeView(): void
+    {
+        $this->viewingRoleId = null;
+    }
+
+    #[Computed]
+    public function viewingRole(): ?Role
+    {
+        if (! $this->viewingRoleId) return null;
+        
+        return Role::with('permissions')->find($this->viewingRoleId);
+    }
+    // ----------------------------
+
     // =========================================================
     //  COMPUTED
     // =========================================================
@@ -47,7 +69,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     //  PAGE CHANGE
     // =========================================================
 
-    /** Keep the selection across pages — just refresh memoized computeds. */
     public function updatedPage(): void
     {
         unset($this->pageRoleIds);
@@ -57,7 +78,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     //  SELECTION
     // =========================================================
 
-    /** Header checkbox — selects everything across all pages. */
     public function toggleSelectAll(): void
     {
         if ($this->selectAllFiltered) {
@@ -75,13 +95,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $this->selectAllFiltered = true;
     }
 
-    /** Individual row toggle. */
     public function toggleRowSelection($roleId): void
     {
         $roleId = (int) $roleId;
 
-        // Leaving "all" mode: materialise full list so unchecking one row
-        // leaves the rest selected.
         if ($this->selectAllFiltered) {
             $this->selectAllFiltered = false;
             $this->selectedRoles = Role::query()

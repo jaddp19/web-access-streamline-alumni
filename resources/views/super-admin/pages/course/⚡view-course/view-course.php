@@ -14,10 +14,35 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     use WithPagination;
 
     public array $selectedPrograms = [];
-
     public bool $selectAllFiltered = false;
-
     public bool $selectAllOnPage = false;
+
+    // --- ADDED FOR VIEW MODAL ---
+    public ?int $viewingProgramId = null;
+
+    public function openView(int $id): void
+    {
+        $this->viewingProgramId = $id;
+    }
+
+    public function closeView(): void
+    {
+        $this->viewingProgramId = null;
+    }
+
+    #[Computed]
+    public function viewingProgram(): ?Course
+    {
+        if (! $this->viewingProgramId) return null;
+
+        return Course::with('department:id,dept_name')
+            ->withCount(['userProfiles' => fn ($q) => $q
+                ->where('is_approved', true)
+                ->whereHas('user', fn ($u) => $u->role('alumni')),
+            ])
+            ->find($this->viewingProgramId);
+    }
+    // ----------------------------
 
     protected int $perPage = 10;
 
@@ -50,7 +75,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     {
         return Course::query()
             ->with('department:id,dept_name')
-            ->select('id', 'course_code', 'course_title', 'department_id', 'created_at')
+            ->select('id', 'course_code', 'course_title', 'course_desc', 'course_type', 'is_active', 'department_id', 'created_at')
             ->latest()
             ->paginate($this->perPage);
     }
@@ -77,10 +102,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             : count($this->selectedPrograms);
     }
 
-    /**
-     * True when EVERY course across every page is selected.
-     * Used for the header checkbox state.
-     */
     #[Computed]
     public function allSelected(): bool
     {
@@ -97,20 +118,13 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     //  SELECTION
     // =========================================================
 
-    /**
-     * Header checkbox — toggles ALL courses across ALL pages.
-     */
     public function toggleSelectAll(): void
     {
         if ($this->allSelected) {
             $this->clearSelection();
-
             return;
         }
 
-        // Flip into "all selected" mode. deleteSelected() and
-        // isRowSelected() both honor this flag, so every row everywhere
-        // is treated as selected without needing to load all IDs.
         $this->selectAllFiltered = true;
         $this->selectedPrograms = [];
         $this->selectAllOnPage = true;
@@ -119,9 +133,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         unset($this->allSelected);
     }
 
-    /**
-     * Footer button on mobile — toggles just the current page.
-     */
     public function toggleSelectAllOnPage(): void
     {
         $pageIds = $this->pageRowIds;
@@ -151,9 +162,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function toggleRowSelection(int $id): void
     {
-        // If we're in "all selected" mode, materialize the full set of
-        // course IDs first, then fall through to the normal toggle. This
-        // makes unchecking a single row leave everything else selected.
         if ($this->selectAllFiltered) {
             $this->selectAllFiltered = false;
             $this->selectedPrograms = Course::query()
@@ -202,7 +210,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         Gate::authorize('can_delete');
         if ($this->selectedCount <= 0) {
             session()->flash('error', 'Nothing is selected.');
-
             return;
         }
 
@@ -230,7 +237,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         } catch (Throwable $e) {
             report($e);
             session()->flash('error', 'Delete failed. Please try again.');
-
             return;
         }
 

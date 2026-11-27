@@ -28,7 +28,7 @@
                             style="font-family: 'Fraunces', serif;">
                             Update Email Template
                         </h2>
-                        <p class="text-xs sm:text-sm text-black/50 dark:text-white/50">The slug will be regenerated from the subject</p>
+                        <p class="text-xs sm:text-sm text-black/50 dark:text-white/50">The slug is fixed and cannot be changed</p>
                     </div>
                 </div>
 
@@ -64,13 +64,15 @@
                         @error('subject')
                             <span class="block mt-1 text-red-500 dark:text-red-400 text-xs">{{ $message }}</span>
                         @enderror
-
-                        <p class="text-[11px] text-black/40 dark:text-white/40 mt-1.5 flex items-center justify-between gap-2">
-                            <span>Slug: <span class="font-mono text-black/60 dark:text-white/60">{{ $this->slugPreview }}</span></span>
-                            <span>{{ $this->subjectLength }} / 255</span>
-                        </p>
                     </div>
 
+                    <div>   
+                        <label class="block text-[11px] sm:text-xs uppercase tracking-wide font-semibold text-black/60 dark:text-white/60 mb-2">
+                            Slug
+                        </label>
+                        <input type="text" value="{{ $slug }}" disabled
+                            class="w-full px-3 sm:px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 font-mono text-sm text-black/50 dark:text-white/50 cursor-not-allowed">
+                    </div>
                     <!-- Message -->
                     <div>
                         <label for="message"

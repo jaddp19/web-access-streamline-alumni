@@ -92,7 +92,7 @@ class EmailSeeder extends Seeder
                 'subject' => 'Your CSAV Alumni Network staff account has been created',
                 'message' => "Hi {{name}},\n\n"
                     ."An account has been created for you on the CSAV Alumni Network using this login email: {{school_email}}.\n\n"
-                    .'Please contact the alumni coordinator\'s office to receive your login password, '
+                    .'Please contact the Alumni Coordinator\'s office to receive your login password, '
                     ."then log in here: https://web-access-streamline-alumni.test/login.\n\n"
                     .'— Colegio de Sta. Ana de Victorias',
             ],
@@ -258,7 +258,19 @@ class EmailSeeder extends Seeder
                 'slug' => 'password-reset-by-alumni-coordinator',
                 'subject' => 'Your CSAV Alumni password has been reset',
                 'message' => "Hi {{name}},\n\n"
-                    ."Your CSAV Alumni Network password has been reset by the alumni coordinator.\n\n"
+                    ."Your CSAV Alumni Network password has been reset by the Alumni Coordinator.\n\n"
+                    .'Your new temporary password: '
+                    ."{{temp_password}}\n\n"
+                    ."Please log in at {{login_url}} and change it immediately.\n\n"
+                    ."If you did not request this change, contact the CSAV Alumni Office right away.\n\n"
+                    .'— Colegio de Sta. Ana de Victorias',
+            ],
+
+            [
+                'slug' => 'password-reset-by-program-head',
+                'subject' => 'Your CSAV Alumni password has been reset',
+                'message' => "Hi {{name}},\n\n"
+                    ."Your CSAV Alumni Network password has been reset by the Program Head.\n\n"
                     .'Your new temporary password: '
                     ."{{temp_password}}\n\n"
                     ."Please log in at {{login_url}} and change it immediately.\n\n"

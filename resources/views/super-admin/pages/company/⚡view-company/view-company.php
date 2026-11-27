@@ -14,8 +14,29 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     use WithPagination;
 
     public array $selectedCompanies = [];
-
     public bool $selectAllFiltered = false;
+
+    // --- ADDED FOR VIEW MODAL ---
+    public ?int $viewingCompanyId = null;
+
+    public function openView(int $id): void
+    {
+        $this->viewingCompanyId = $id;
+    }
+
+    public function closeView(): void
+    {
+        $this->viewingCompanyId = null;
+    }
+
+    #[Computed]
+    public function viewingCompany(): ?Company
+    {
+        if (! $this->viewingCompanyId) return null;
+        
+        return Company::withCount('workHistories')->find($this->viewingCompanyId);
+    }
+    // ----------------------------
 
     protected int $perPage = 10;
 
@@ -76,7 +97,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     {
         if ($this->selectAllFiltered) {
             $this->clearSelection();
-
             return;
         }
 
@@ -113,8 +133,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     {
         $companyId = (int) $companyId;
 
-        // Leaving "all" mode: materialise the full set so unchecking one
-        // row leaves everything else selected.
         if ($this->selectAllFiltered) {
             $this->selectAllFiltered = false;
             $this->selectedCompanies = Company::query()
@@ -157,7 +175,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         Gate::authorize('can_delete');
         if ($this->selectedCount <= 0) {
             session()->flash('error', 'Nothing is selected.');
-
             return;
         }
 
@@ -172,7 +189,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                     $query->whereIn('id', $this->selectedCompanies);
                 }
 
-                // Capture logos + ids BEFORE delete for post-commit file cleanup.
                 $logos = (clone $query)->pluck('company_logo', 'id')->all();
                 $count = Company::deleteWithAudit($query);
 
@@ -181,11 +197,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         } catch (Throwable $e) {
             report($e);
             session()->flash('error', 'Delete failed. Please try again.');
-
             return;
         }
 
-        // Delete logo files AFTER successful commit.
         foreach ($result['logos'] as $companyId => $logo) {
             $this->deleteLogoFile($logo, (int) $companyId);
         }
@@ -206,7 +220,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         if (! $company) {
             session()->flash('error', 'Company not found.');
-
             return;
         }
 
@@ -218,11 +231,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         } catch (Throwable $e) {
             report($e);
             session()->flash('error', 'Delete failed. Please try again.');
-
             return;
         }
 
-        // File cleanup after commit.
         $this->deleteLogoFile($logo, $id);
 
         Cache::forget('companies:count');
@@ -236,10 +247,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         session()->flash('success', "Company \"{$name}\" deleted.");
     }
 
-    /**
-     * Safely delete a company logo from the public disk.
-     * Skips: null, external URLs, /imgs/, /storage/, and shared paths.
-     */
     protected function deleteLogoFile(?string $path, ?int $exceptId = null): void
     {
         if (blank($path)) {

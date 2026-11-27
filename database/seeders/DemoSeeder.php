@@ -8,6 +8,8 @@ use App\Models\CivilStatusEmployment;
 use App\Models\Company;
 use App\Models\Course;
 use App\Models\Department;
+use App\Models\FormHistory;
+use App\Services\FormHistoryService;
 use App\Models\FurtherStudy;
 use App\Models\TracerStudy;
 use App\Models\User;
@@ -60,6 +62,7 @@ class DemoSeeder extends Seeder
         $this->command->info('    → Pending:       '.BoardExam::where('is_verified', false)->count());
         $this->command->info('    → Top notchers:  '.BoardExam::where('is_top_notcher', true)->count());
         $this->command->info('  Tracer:            '.TracerStudy::count());
+        $this->command->info('  Form histories:    '.FormHistory::count());
         $this->command->info('  Program Head:      '.User::role('program head')->count());
     }
 
@@ -114,6 +117,7 @@ class DemoSeeder extends Seeder
         $courses = Course::query()->where('is_active', true)->get();
         $batches = Batch::query()->pluck('id');
         $companies = Company::query()->pluck('id');
+        $approver = User::role('alumni coordinator')->first();
 
         if ($companies->isEmpty()) {
             Company::factory()->count(30)->create();
@@ -128,7 +132,7 @@ class DemoSeeder extends Seeder
 
         foreach ($courses as $course) {
             for ($i = 0; $i < $this->alumniPerCourse; $i++) {
-                DB::transaction(function () use ($course, $batches, $companies) {
+                DB::transaction(function () use ($course, $batches, $companies, $approver) {
                     $user = User::factory()->alumni()->create();
 
                     // ── Approval state (weighted random) ────────────────
@@ -165,6 +169,16 @@ class DemoSeeder extends Seeder
                     // ── EVERY alumni gets a tracer study ────────────────
                     $this->attachEmploymentData($user, $companies);
                     // ────────────────────────────────────────────────────
+
+                    // Approved alumni get their first immutable history snapshot,
+                    // exactly like the real approval workflow.
+                    if ($approvalState === 'approved') {
+                        FormHistoryService::capture(
+                            $profile,
+                            $approver,
+                            now()->subDays(fake()->numberBetween(1, 365))
+                        );
+                    }
                 });
 
                 $bar->advance();

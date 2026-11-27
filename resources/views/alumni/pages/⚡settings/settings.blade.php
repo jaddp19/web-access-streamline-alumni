@@ -94,6 +94,18 @@
                     </svg>
                     Update Form
                 </a>
+
+                {{-- Form History — previously accepted submissions --}}
+                <a href="{{ route('form-history') }}" target="_blank"
+                    class="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-left rounded-lg transition
+        text-black/60 dark:text-white/60 hover:bg-white dark:hover:bg-white/5">
+                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Form History
+                </a>
                 @endcan
             </nav>
         </aside>

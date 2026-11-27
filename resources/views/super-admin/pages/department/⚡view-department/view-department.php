@@ -19,12 +19,32 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public bool $selectAllOnPage = false;
 
+    // --- ADDED FOR VIEW MODAL ---
+    public ?int $viewingDepartmentId = null;
+
+    public function openView(int $id): void
+    {
+        $this->viewingDepartmentId = $id;
+    }
+
+    public function closeView(): void
+    {
+        $this->viewingDepartmentId = null;
+    }
+
+    #[Computed]
+    public function viewingDepartment(): ?Department
+    {
+        if (! $this->viewingDepartmentId) return null;
+        
+        return Department::with('programHead:id,name,email')
+            ->withCount('courses')
+            ->find($this->viewingDepartmentId);
+    }
+    // ----------------------------
+
     protected int $perPage = 10;
 
-    /**
-     * Called AFTER the page changes. Selection persists across pages —
-     * we only refresh memoized computeds and the page indicator.
-     */
     public function updatedPage(): void
     {
         unset($this->pageRowIds);
@@ -40,8 +60,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         $this->selectAllFiltered = false;
         $this->selectAllOnPage = false;
 
-        // Invalidate memoized computed props so the next render sees
-        // the fresh state (Livewire 3 caches them per-request).
         unset($this->selectedCount);
         unset($this->allSelected);
         unset($this->pageRowIds);
@@ -82,10 +100,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             : count($this->selectedDepartments);
     }
 
-    /**
-     * True when every department across every page is selected.
-     * Drives the header checkbox state.
-     */
     #[Computed]
     public function allSelected(): bool
     {
@@ -102,20 +116,13 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     //  SELECTION
     // =========================================================
 
-    /**
-     * Header checkbox — toggles ALL departments across ALL pages.
-     */
     public function toggleSelectAll(): void
     {
         if ($this->allSelected) {
             $this->clearSelection();
-
             return;
         }
 
-        // Flip into "all selected" mode. isRowSelected() and deleteSelected()
-        // both honor this flag, so every department everywhere is treated
-        // as selected without needing to load all IDs.
         $this->selectAllFiltered = true;
         $this->selectedDepartments = [];
         $this->selectAllOnPage = true;
@@ -124,9 +131,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         unset($this->allSelected);
     }
 
-    /**
-     * Footer button (mobile) — toggles just the current page.
-     */
     public function toggleSelectAllOnPage(): void
     {
         $pageIds = $this->pageRowIds;
@@ -150,16 +154,12 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         $this->recomputeSelectAllOnPage();
 
-        // Count changed → drop the memoized value so the UI updates.
         unset($this->selectedCount);
         unset($this->allSelected);
     }
 
     public function toggleRowSelection(int $id): void
     {
-        // If we're in "select all" mode, materialize the full set of
-        // department IDs first, then fall through to the normal toggle.
-        // This makes unchecking a single row leave everything else selected.
         if ($this->selectAllFiltered) {
             $this->selectAllFiltered = false;
             $this->selectedDepartments = Department::query()
@@ -178,7 +178,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         $this->recomputeSelectAllOnPage();
 
-        // Count changed → drop the memoized value so the UI updates.
         unset($this->selectedCount);
         unset($this->allSelected);
     }
@@ -209,7 +208,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         Gate::authorize('can_delete');
         if ($this->selectedCount <= 0) {
             session()->flash('error', 'Nothing is selected.');
-
             return;
         }
 
@@ -221,7 +219,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                     $query->whereIn('id', $this->selectedDepartments);
                 }
 
-                // Collect logos first for cleanup.
                 $logos = (clone $query)->pluck('dept_logo', 'id')->all();
 
                 $count = Department::deleteWithAudit($query);
@@ -231,11 +228,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         } catch (Throwable $e) {
             report($e);
             session()->flash('error', 'Delete failed. Please try again.');
-
             return;
         }
 
-        // Delete logo files after DB commit.
         foreach ($result['logos'] as $deptId => $logo) {
             $this->deleteLogoFile($logo, (int) $deptId);
         }
@@ -244,14 +239,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         Cache::forget('assign:active-departments:v2');
         Cache::forget('dept:ph_count');
 
-        // Reset internal state.
         $this->selectedDepartments = [];
         $this->selectAllFiltered = false;
         $this->selectAllOnPage = false;
 
-        // Invalidate memoized computed props so the re-render:
-        //   • hides the "N department(s) selected" bar (selectedCount → 0)
-        //   • shows the fresh list (departments recomputed from DB)
         unset($this->selectedCount);
         unset($this->totalDepartmentsCount);
         unset($this->pageRowIds);
@@ -280,7 +271,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         } catch (Throwable $e) {
             report($e);
             session()->flash('error', 'Delete failed. Please try again.');
-
             return;
         }
 
@@ -295,7 +285,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         );
         $this->recomputeSelectAllOnPage();
 
-        // The single row is gone — invalidate memoized computeds.
         unset($this->selectedCount);
         unset($this->totalDepartmentsCount);
         unset($this->pageRowIds);
@@ -305,9 +294,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         session()->flash('success', "Department \"{$name}\" deleted.");
     }
 
-    /**
-     * Safely delete a logo file from the public storage disk.
-     */
     protected function deleteLogoFile(?string $path, ?int $exceptId = null): void
     {
         if (blank($path)) {
@@ -323,7 +309,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         $relative = ltrim($path, '/');
 
-        // Still used by another row? Leave it alone.
         $stillUsed = Department::query()
             ->when($exceptId, fn ($q) => $q->where('id', '!=', $exceptId))
             ->where('dept_logo', $path)
@@ -333,7 +318,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             return;
         }
 
-        // Single-filesystem-hit delete (delete() returns bool without exists check).
         Storage::disk('public')->delete($relative);
     }
 };

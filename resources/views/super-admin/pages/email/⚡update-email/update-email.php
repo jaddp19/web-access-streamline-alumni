@@ -1,26 +1,26 @@
 <?php
 
 use App\Models\EmailTemplate;
-use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 new #[Layout('layouts.app-super-admin')] class extends Component
 {
+    #[Locked]
     public int $emailId;
+
+    /** Display only — never written back from the client. */
+    #[Locked]
+    public string $slug = '';
 
     public string $subject = '';
 
     public string $message = '';
 
     public bool $showPreview = false;
-
-    /** Cached from mount so we don't hit the DB again on update. */
-    protected ?EmailTemplate $templateModel = null;
 
     public function mount(int $email): void
     {
@@ -29,8 +29,8 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         $data = is_array($template->template) ? $template->template : [];
 
-        $this->templateModel = $template;
         $this->emailId = (int) $template->id;
+        $this->slug = (string) ($data['slug'] ?? '');
         $this->subject = (string) ($data['subject'] ?? '');
         $this->message = (string) ($data['message'] ?? '');
     }
@@ -38,12 +38,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     // =========================================================
     //  COMPUTED
     // =========================================================
-
-    #[Computed]
-    public function slugPreview(): string
-    {
-        return Str::slug($this->subject) ?: 'your-template-slug';
-    }
 
     #[Computed]
     public function subjectLength(): int
@@ -119,44 +113,19 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         $subject = $this->sanitizeSubject($validated['subject']);
         $message = $this->sanitizeMessage($validated['message']);
-        $slug = Str::slug($subject);
-
-        // Duplicate slug check (JSON column).
-        $duplicate = EmailTemplate::query()
-            ->where('id', '!=', $this->emailId)
-            ->whereJsonContains('template->slug', $slug)
-            ->exists();
-
-        if ($duplicate) {
-            $this->addError('subject', 'A template with this subject already exists.');
-
-            return;
-        }
 
         try {
-            DB::transaction(function () use ($slug, $subject, $message) {
-                $template = $this->templateModel
-                    ?? EmailTemplate::findOrFail($this->emailId);
+            $template = EmailTemplate::findOrFail($this->emailId);
+            $existing = is_array($template->template) ? $template->template : [];
 
-                $template->update([
-                    'template' => [
-                        'slug' => $slug,
-                        'subject' => $subject,
-                        'message' => $message,
-                    ],
-                ]);
-            });
-        } catch (QueryException $e) {
-            if ($e->getCode() === '23000') {
-                $this->addError('subject', 'This template was just taken. Please try again.');
-
-                return;
-            }
-
-            report($e);
-            session()->flash('error', 'Could not update email template. Please try again.');
-
-            return;
+            // The slug always comes from the database, never from the client,
+            // and is preserved exactly as stored.
+            $template->update([
+                'template' => array_merge($existing, [
+                    'subject' => $subject,
+                    'message' => $message,
+                ]),
+            ]);
         } catch (Throwable $e) {
             report($e);
             session()->flash('error', 'Could not update email template. Please try again.');

@@ -24,12 +24,30 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     /** Current page all-selected (UI state for the header checkbox). */
     public bool $selectAllOnPage = false;
 
+    // --- ADDED FOR VIEW MODAL ---
+    public ?int $viewingAssignmentId = null;
+
+    public function openView(int $id): void
+    {
+        $this->viewingAssignmentId = $id;
+    }
+
+    public function closeView(): void
+    {
+        $this->viewingAssignmentId = null;
+    }
+
+    #[Computed]
+    public function viewingAssignment(): ?Department
+    {
+        if (! $this->viewingAssignmentId) return null;
+        
+        return Department::with('programHead:id,name,email')->find($this->viewingAssignmentId);
+    }
+    // ----------------------------
+
     protected int $perPage = 10;
 
-    /**
-     * Called AFTER the page changes. Selection intentionally persists —
-     * we only refresh memoized computeds and the page indicator.
-     */
     public function updatedPage(): void
     {
         unset($this->pageRowKeys);
@@ -56,10 +74,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     //  COMPUTED
     // =========================================================
 
-    /**
-     * simplePaginate = no COUNT query. We already have our own cached
-     * count — no reason to hit the DB twice per render.
-     */
     #[Computed]
     public function programHeads()
     {
@@ -71,10 +85,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             ->simplePaginate($this->perPage);
     }
 
-    /**
-     * Cached for 30 seconds — COUNT on a big table without an index
-     * is expensive and this number doesn't change every second.
-     */
     #[Computed]
     public function totalProgramHeadsCount(): int
     {
@@ -83,7 +93,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         });
     }
 
-    /** Keys for the current page's rows. */
     #[Computed]
     public function pageRowKeys(): array
     {
@@ -93,7 +102,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             ->all();
     }
 
-    /** How many rows are actually selected (handles exclusions). */
     #[Computed]
     public function selectedCount(): int
     {
@@ -104,15 +112,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         return count($this->selectedProgramHeads);
     }
 
-    /**
-     * True when EVERY assignment across every page is selected.
-     * Drives the header checkbox state.
-     */
     #[Computed]
     public function allSelected(): bool
     {
         if ($this->selectAllFiltered) {
-            // All selected unless the user has unchecked at least one row.
             return count($this->excludedProgramHeads) === 0;
         }
 
@@ -121,7 +124,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         return $total > 0 && count($this->selectedProgramHeads) >= $total;
     }
 
-    /** For the footer: total pages, first/last item numbers. */
     #[Computed]
     public function lastPage(): int
     {
@@ -149,14 +151,10 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     //  SELECTION
     // =========================================================
 
-    /**
-     * Header checkbox — toggles ALL assignments across ALL pages.
-     */
     public function toggleSelectAll(): void
     {
         if ($this->allSelected) {
             $this->clearSelection();
-
             return;
         }
 
@@ -169,7 +167,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         unset($this->allSelected);
     }
 
-    /** Bulk-bar button alias — same effect as the header checkbox. */
     public function selectAllMatching(): void
     {
         $this->selectAllFiltered = true;
@@ -181,7 +178,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         unset($this->allSelected);
     }
 
-    /** Mobile footer — toggles just the current page. */
     public function toggleSelectAllOnPage(): void
     {
         $pageKeys = $this->pageRowKeys;
@@ -194,7 +190,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             ->every(fn ($k) => $this->isRowSelected($k));
 
         if ($allOnPageSelected) {
-            // Deselect this page only
             if ($this->selectAllFiltered) {
                 $this->excludedProgramHeads = array_values(array_unique(
                     array_merge($this->excludedProgramHeads, $pageKeys)
@@ -205,7 +200,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                 );
             }
         } else {
-            // Select this page only
             if ($this->selectAllFiltered) {
                 $this->excludedProgramHeads = array_values(
                     array_diff($this->excludedProgramHeads, $pageKeys)
@@ -226,7 +220,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public function toggleRowSelection(string $key): void
     {
         if ($this->selectAllFiltered) {
-            // In "all" mode, toggling = adding/removing an exception.
             if (in_array($key, $this->excludedProgramHeads, true)) {
                 $this->excludedProgramHeads = array_values(
                     array_diff($this->excludedProgramHeads, [$key])
@@ -280,13 +273,11 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         if ($selectedCount <= 0) {
             session()->flash('error', 'Nothing is selected.');
-
             return;
         }
 
         try {
             $count = DB::transaction(function () {
-                // ---- Select-all (minus exclusions) ----
                 if ($this->selectAllFiltered) {
                     $excludedDeptIds = collect($this->excludedProgramHeads)
                         ->map(fn ($k) => (int) explode('-', $k, 2)[0])
@@ -301,7 +292,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
                         ->update(['program_head_id' => null]);
                 }
 
-                // ---- Specific rows (deptId from each "deptId-userId" key) ----
                 $deptIds = collect($this->selectedProgramHeads)
                     ->map(fn ($k) => (int) explode('-', $k, 2)[0])
                     ->filter()
@@ -321,7 +311,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         } catch (Throwable $e) {
             report($e);
             session()->flash('error', 'Delete failed. Please try again.');
-
             return;
         }
 
@@ -334,7 +323,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
         if ($count === 0) {
             session()->flash('warning', 'Nothing matched — the assignments may already have been removed.');
-
             return;
         }
 

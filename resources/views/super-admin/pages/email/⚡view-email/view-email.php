@@ -12,10 +12,52 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     use WithPagination;
 
     public array $selectedEmails = [];
-
     public bool $selectAll = false;
-
     public bool $selectAllFiltered = false;
+
+    // --- ADDED FOR VIEW MODAL ---
+    public ?int $viewingEmailId = null;
+
+    public function openView(int $id): void
+    {
+        $this->viewingEmailId = $id;
+    }
+
+    public function closeView(): void
+    {
+        $this->viewingEmailId = null;
+    }
+
+    #[Computed]
+    public function viewingEmail(): ?EmailTemplate
+    {
+        if (! $this->viewingEmailId) return null;
+        
+        return EmailTemplate::find($this->viewingEmailId);
+    }
+
+    #[Computed]
+    public function viewingPreviewHtml(): string
+    {
+        $tpl = is_array($this->viewingEmail?->template) ? $this->viewingEmail->template : [];
+        $subject = (string) ($tpl['subject'] ?? '');
+        $message = (string) ($tpl['message'] ?? '');
+
+        try {
+            return view('emails.template', [
+                'emailSubject' => $subject !== '' ? $subject : 'Your subject here',
+                'bodyHtml' => $message !== '' ? $message : 'Your message will appear here.',
+            ])->render();
+        } catch (Throwable $e) {
+            report($e);
+
+            return '<div style="padding:24px;font-family:system-ui,sans-serif;color:#b91c1c;">'
+                .'<strong>Preview unavailable.</strong><br>'
+                .e($e->getMessage())
+                .'</div>';
+        }
+    }
+    // ----------------------------
 
     protected int $perPage = 10;
 
@@ -41,7 +83,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     {
         unset($this->pageRowIds);
 
-        // Recompute the header checkbox state for the new page.
         $pageIds = $this->pageRowIds;
 
         $this->selectAll = ! empty($pageIds)
@@ -110,7 +151,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public function toggleSelectAll(): void
     {
-        // Everything is already selected → clear it.
         if ($this->selectAllFiltered) {
             $this->selectedEmails = [];
             $this->selectAll = false;
@@ -119,8 +159,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             return;
         }
 
-        // Otherwise: select EVERY template — across every page,
-        // not just the current page.
         $this->selectedEmails = $this->filteredQuery()
             ->pluck('id')
             ->map(fn ($id) => (int) $id)

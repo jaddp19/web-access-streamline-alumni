@@ -95,7 +95,7 @@
                             <th class="hidden md:table-cell px-3 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">When</th>
                             <th class="hidden sm:table-cell px-3 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Status</th>
                             <th class="hidden lg:table-cell px-3 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Created By</th>
-                            <th class="hidden lg:table-cell px-3 py-3 text-start font-bold uppercase tracking-wide text-[#123524]/60 dark:text-white/60 text-[11px]">Actions</th>
+                            <th class="px-4 sm:px-6 py-3 text-end"></th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-black/5 dark:divide-white/5">
@@ -116,7 +116,7 @@
                             {{-- Main row --}}
                             <tr wire:key="event-{{ $event->id }}-main" class="hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
                                 <td class="ps-4 sm:ps-6 py-3">
-                                    <div class="flex items-center gap-3 min-w-0 cursor-pointer group" wire:click="openEvent({{ $event->id }})">
+                                    <div class="flex items-center gap-3 min-w-0">
                                         @if ($event->image)
                                             <img src="{{ $event->image_url }}" alt="" loading="lazy"
                                                 class="w-10 h-10 rounded-lg object-cover shrink-0 bg-[#F7F5EF] dark:bg-[#3A3B3C]">
@@ -128,8 +128,9 @@
                                             </div>
                                         @endif
                                         <div class="min-w-0">
-                                            <span class="font-semibold text-[#123524] dark:text-white block truncate group-hover:text-[#1877F2] dark:group-hover:text-[#D4A537] transition-colors">
-                                                {{ $event->title }}
+                                            {{-- ADDED max-w-[240px] HERE --}}
+                                            <span class="font-semibold text-[#123524] dark:text-white block truncate max-w-[130px]">
+                                                {{ $event->title }} 
                                             </span>
                                             <span class="md:hidden text-black/50 dark:text-white/50 text-[11px] block truncate">
                                                 {{ $event->starts_at->format('M d, Y · g:i A') }}
@@ -161,8 +162,8 @@
                                     </div>
                                 </td>
                                 
-                                {{-- 3-Dots Dropdown (Desktop) --}}
-                                <td class="hidden sm:table-cell px-4 sm:px-6 py-3 text-end relative">
+                                {{-- 3-Dots Dropdown (Visible on both Mobile and Desktop) --}}
+                                <td class="px-4 sm:px-6 py-3 text-end relative">
                                     <div x-data="{ open: false }" class="inline-block text-left">
                                         <button @click="open = !open" @click.outside="open = false"
                                             class="p-2 rounded-full text-black/40 hover:text-black dark:text-white/40 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition focus:outline-none">
@@ -174,6 +175,13 @@
                                         <div x-show="open" x-transition x-cloak
                                             class="absolute right-0 z-20 mt-1 w-36 origin-top-right rounded-xl bg-white dark:bg-[#242526] shadow-lg ring-1 ring-black/5 dark:ring-white/10 focus:outline-none divide-y divide-black/5 dark:divide-white/5">
                                             
+                                            {{-- View Button --}}
+                                            <button type="button" wire:click="openEvent({{ $event->id }})"
+                                                class="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-[#123524] dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition w-full text-left">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                                View
+                                            </button>
+
                                             @can('can_update')
                                                 <a href="{{ route('super-admin.event.update', $event->id) }}"
                                                     class="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-[#123524] dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition w-full text-left">
@@ -203,54 +211,9 @@
                                     </div>
                                 </td>
                             </tr>
-
-                            {{-- Mobile-only actions row --}}
-                            <tr wire:key="event-{{ $event->id }}-actions" class="sm:hidden bg-[#F7F5EF]/40 dark:bg-[#3A3B3C]/40">
-                                <td colspan="6" class="px-3 sm:px-6 py-3">
-                                    <div x-data="{ open: false }" class="relative">
-                                        <button @click="open = !open" @click.outside="open = false"
-                                            class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-[#242526] text-[#123524] dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition">
-                                            Actions
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-                                            </svg>
-                                        </button>
-
-                                        <div x-show="open" x-transition x-cloak
-                                            class="absolute bottom-full left-0 mb-1 z-20 w-full rounded-xl bg-white dark:bg-[#242526] shadow-lg ring-1 ring-black/5 dark:ring-white/10 focus:outline-none divide-y divide-black/5 dark:divide-white/5">
-                                            
-                                            @can('can_update')
-                                                <a href="{{ route('super-admin.event.update', $event->id) }}"
-                                                    class="flex items-center justify-center gap-2 px-4 py-3 text-xs font-semibold text-[#123524] dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" /></svg>
-                                                    Edit
-                                                </a>
-
-                                                @if ($event->status !== 'cancelled')
-                                                    <button type="button" wire:click="cancelEvent({{ $event->id }})"
-                                                        wire:confirm="Cancel '{{ $event->title }}'? Attendees will be notified."
-                                                        class="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs font-semibold text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
-                                                        Cancel
-                                                    </button>
-                                                @endif
-                                            @endcan
-
-                                            @can('can_delete')
-                                                <button type="button" wire:click="deleteEvent({{ $event->id }})"
-                                                    wire:confirm="Delete this event? This cannot be undone."
-                                                    class="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs font-semibold text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
-                                                    Delete
-                                                </button>
-                                            @endcan
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-6 py-12 text-center">
+                                <td colspan="5" class="px-6 py-12 text-center">
                                     <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-[#123524]/5 dark:bg-white/5 flex items-center justify-center">
                                         <svg class="w-6 h-6 text-[#123524]/30 dark:text-white/30" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
@@ -358,10 +321,10 @@
                                     <div class="mb-6 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800">
                                         <img src="{{ $ev->image_url }}" alt="{{ $ev->title }}" class="w-full h-48 sm:h-64 object-cover">
                                     </div>
-                                @endif
+                                @endif          
 
                                 {{-- Title & Desc --}}
-                                <h3 class="text-2xl font-bold text-[#123524] dark:text-white">{{ $ev->title }}</h3>
+                                <h3 class="text-2xl font-bold text-[#123524] dark:text-white truncate">{{ $ev->title }}</h3>
                                 <div class="mt-4 prose prose-sm text-black/70 dark:text-white/70">
                                     <p>{{ $ev->description ?? 'No description provided.' }}</p>
                                 </div>

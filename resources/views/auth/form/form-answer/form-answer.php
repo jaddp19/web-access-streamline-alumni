@@ -652,17 +652,10 @@ new #[Layout('layouts.app-form')] class extends Component
                 ]
             );
 
-            if ($isBoardCourse) {
-                $profile->recordBoardAttempt(
-                    $this->board_taken ?: null,
-                    $this->board_rate ?: null,
-                    $examName
-                );
-            }
-
             if ($isFreshSubmission) {
                 $previousCourse = $existingProfile->courses()->first();
                 $courseChanged = (int) ($previousCourse?->id ?? 0) !== (int) $this->course_id;
+                $previousWasBoard = $previousCourse?->course_type === 'board';
 
                 if (! $isBoardCourse) {
                     // New program is non-board: old board attempts no longer
@@ -673,7 +666,7 @@ new #[Layout('layouts.app-form')] class extends Component
                         'board_rate' => null,
                         'is_verified' => true,
                     ])->saveQuietly();
-                } elseif ($courseChanged && $previousCourse?->course_type === 'board') {
+                } elseif ($courseChanged && $previousWasBoard) {
                     // Different board program: every old attempt must be
                     // re-verified against the new program.
                     $profile->boardExams()->reorder()->update([
@@ -682,7 +675,14 @@ new #[Layout('layouts.app-form')] class extends Component
                         'is_top_notcher' => false,
                         'top_notcher_rank' => null,
                     ]);
-                    $profile->forceFill(['is_verified' => false])->saveQuietly();
+                    $profile->forceFill([
+                        'board_taken' => null,
+                        'board_rate' => null,
+                        'is_verified' => false,
+                    ])->saveQuietly();
+                } elseif ($courseChanged) {
+                    // Non-board → board: start the board history fresh.
+                    $profile->boardExams()->reorder()->delete();
                 }
 
                 // A new form always starts a new review cycle, even when the
@@ -691,6 +691,14 @@ new #[Layout('layouts.app-form')] class extends Component
                     'is_approved' => false,
                     'last_rejection_reason' => null,
                 ])->saveQuietly();
+            }
+
+            if ($isBoardCourse) {
+                $profile->recordBoardAttempt(
+                    $this->board_taken ?: null,
+                    $this->board_rate ?: null,
+                    $examName
+                );
             }
 
             $profile->courses()->sync([$this->course_id]);
