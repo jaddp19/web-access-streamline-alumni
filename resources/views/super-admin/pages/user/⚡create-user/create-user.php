@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Batch;
 use App\Models\User;
 use App\Services\EmailTemplateService;
 use Illuminate\Database\QueryException;
@@ -25,9 +24,9 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
     public string $email = '';
 
-    public string $school_year = '';         // 4-digit year (validated against batches)
+    public string $school_year = '';         
 
-    public string $school_id_suffix = '';    // 4-digit input
+    public string $school_id_suffix = '';    
 
     public string $selectedRole = '';
 
@@ -97,20 +96,6 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         });
     }
 
-    /**
-     * Batch years used to validate the school-ID year.
-     */
-    #[Computed(persist: true)]
-    public function batchYears()
-    {
-        return Cache::remember('batches:years-list', now()->addMinutes(10), function () {
-            return Batch::query()
-                ->orderByDesc('batch_name')
-                ->pluck('batch_name')
-                ->map(fn ($y) => (string) $y)
-                ->all();
-        });
-    }
 
     // =========================================================
     //  VALIDATION
@@ -132,24 +117,29 @@ new #[Layout('layouts.app-super-admin')] class extends Component
 
             'school_year' => [
                 'required',
+                'string',
                 'digits:4',
-                Rule::in($this->batchYears),
-                function ($attribute, $value, $fail) {
-                    // Only validate uniqueness once the suffix is fully typed.
-                    if (strlen($this->school_id_suffix) !== 4) {
-                        return;
-                    }
-                    $combined = $value.'-'.$this->school_id_suffix;
-                    if (User::where('school_id', $combined)->exists()) {
-                        $fail('This school ID is already registered to an account.');
-                    }
-                },
             ],
 
             'school_id_suffix' => [
                 'required',
                 'string',
                 'digits:4',
+                function ($attribute, $value, $fail) {
+                    $combined = $this->school_year.$value;
+
+                    // The full school ID (year + suffix) must be exactly 8 digits.
+                    if (! preg_match('/^\d{8}\z/', $combined)) {
+                        $fail('The school ID must be 8 digits in total (0000-0000).');
+
+                        return;
+                    }
+
+                    // Duplicate check on the full "0000-0000" format.
+                    if (User::where('school_id', $this->school_year.'-'.$value)->exists()) {
+                        $fail('This school ID is already registered to an account.');
+                    }
+                },
             ],
 
             'selectedRole' => [
@@ -168,9 +158,8 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             'last_name.required' => 'The last name is required.',
             'last_name.min' => 'The last name must be at least 2 characters.',
             'last_name.max' => 'The last name may not be greater than 255 characters.',
-            'school_year.required' => 'Please enter the batch year.',
-            'school_year.digits' => 'The batch year must be exactly 4 digits.',
-            'school_year.in' => 'The batch year is invalid.',
+            'school_year.required' => 'Please enter the first 4 digits of the school ID.',
+            'school_year.digits' => 'The first 4 digits must be numeric.',
             'school_id_suffix.required' => 'Please enter the last 4 digits of the school ID.',
             'school_id_suffix.digits' => 'The last 4 digits must be numeric.',
             'email.unique' => 'The email address is already registered.',

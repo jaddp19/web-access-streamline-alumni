@@ -1,4 +1,16 @@
 <div>
+    @php
+        $fmt = function ($value, int $limit = 20): string {
+            $text = match (true) {
+                is_null($value) => '—',
+                is_bool($value) => $value ? 'true' : 'false',
+                is_array($value), is_object($value) => json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '—',
+                default => (string) $value,
+            };
+
+            return \Illuminate\Support\Str::limit($text, $limit);
+        };
+    @endphp
     <div class="max-w-[85rem] mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10 lg:py-14">
         <div class="relative flex flex-col rounded-2xl border border-black/5 dark:border-white/5 bg-white dark:bg-[#242526] shadow-sm overflow-hidden">
 
@@ -146,12 +158,12 @@
                                     <div class="flex items-start gap-1.5">
                                         <span class="font-semibold shrink-0">{{ $field }}:</span>
                                         <span class="truncate">
-                                            @if (is_array($change))
-                                                {{ \Illuminate\Support\Str::limit((string) ($change['old'] ?? '—'), 20) }}
+                                            @if (is_array($change) && (array_key_exists('old', $change) || array_key_exists('new', $change)))
+                                                {{ $fmt($change['old'] ?? null) }}
                                                 →
-                                                {{ \Illuminate\Support\Str::limit((string) ($change['new'] ?? '—'), 20) }}
+                                                {{ $fmt($change['new'] ?? null) }}
                                             @else
-                                                {{ \Illuminate\Support\Str::limit((string) $change, 40) }}
+                                                {{ $fmt($change, 40) }}
                                             @endif
                                         </span>
                                     </div>
@@ -242,12 +254,12 @@
                                                 <div class="flex items-start gap-1.5 truncate">
                                                     <span class="font-semibold shrink-0">{{ $field }}:</span>
                                                     <span class="truncate">
-                                                        @if (is_array($change))
-                                                            {{ \Illuminate\Support\Str::limit((string) ($change['old'] ?? '—'), 20) }}
+                                                        @if (is_array($change) && (array_key_exists('old', $change) || array_key_exists('new', $change)))
+                                                            {{ $fmt($change['old'] ?? null) }}
                                                             →
-                                                            {{ \Illuminate\Support\Str::limit((string) ($change['new'] ?? '—'), 20) }}
+                                                            {{ $fmt($change['new'] ?? null) }}
                                                         @else
-                                                            {{ \Illuminate\Support\Str::limit((string) $change, 40) }}
+                                                            {{ $fmt($change, 40) }}
                                                         @endif
                                                     </span>
                                                 </div>
@@ -368,6 +380,237 @@
 
                 {{-- Body --}}
                 <div class="px-6 py-4 max-h-[60vh] overflow-y-auto">
+                    @if (class_basename($this->viewingLog->auditable_type) === 'EmailTemplate')
+                        @php
+                            $log = $this->viewingLog;
+                            $change = ($log->changes ?? [])['template'] ?? null;
+
+                            $decode = function ($v) {
+                                if (is_string($v)) {
+                                    $v = json_decode($v, true);
+                                }
+
+                                return is_array($v) ? $v : null;
+                            };
+
+                            if (is_array($change) && (array_key_exists('old', $change) || array_key_exists('new', $change))) {
+                                $old = $decode($change['old'] ?? null);
+                                $new = $decode($change['new'] ?? null);
+                            } else {
+                                $old = null;
+                                $new = $decode($change);
+                            }
+
+                            $slug = $new['slug'] ?? $old['slug'] ?? null;
+                            $oldSubject = $old['subject'] ?? null;
+                            $newSubject = $new['subject'] ?? null;
+                            $oldMessage = $old['message'] ?? null;
+                            $newMessage = $new['message'] ?? null;
+
+                            $bothExist = $old && $new;
+                            $subjectChanged = $bothExist && $oldSubject !== $newSubject;
+                            $messageChanged = $bothExist && $oldMessage !== $newMessage;
+                            $slugChanged = $bothExist && ($old['slug'] ?? null) !== ($new['slug'] ?? null);
+                        @endphp
+
+                        @if (! $old && ! $new)
+                            <p class="text-sm text-black/50 dark:text-white/50 italic">No template content was recorded for this entry.</p>
+                        @else
+                            <div class="space-y-5">
+
+                                {{-- Slug --}}
+                                @if ($slug)
+                                    <div>
+                                        <p class="text-[11px] uppercase tracking-wide font-semibold text-black/60 dark:text-white/60 mb-1.5">Slug</p>
+                                        <p class="font-mono text-sm text-black/70 dark:text-white/70">
+                                            @if ($slugChanged)
+                                                <span class="line-through text-black/40 dark:text-white/40">{{ $old['slug'] ?? '—' }}</span>
+                                                →
+                                                <span class="font-semibold text-emerald-700 dark:text-emerald-400">{{ $new['slug'] ?? '—' }}</span>
+                                            @else
+                                                {{ $slug }}
+                                            @endif
+                                        </p>
+                                    </div>
+                                @endif
+
+                                {{-- Subject --}}
+                                <div>
+                                    <div class="flex items-center gap-2 mb-1.5">
+                                        <p class="text-[11px] uppercase tracking-wide font-semibold text-black/60 dark:text-white/60">Subject</p>
+                                        @if ($subjectChanged)
+                                            <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400">Changed</span>
+                                        @endif
+                                    </div>
+
+                                    @if ($subjectChanged)
+                                        <div class="rounded-xl border border-black/5 dark:border-white/10 divide-y divide-black/5 dark:divide-white/10 overflow-hidden text-sm">
+                                            <div class="px-3 py-2 bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400">
+                                                <span class="text-[10px] uppercase font-bold mr-2 opacity-70">Before</span>
+                                                <span class="line-through">{{ $oldSubject }}</span>
+                                            </div>
+                                            <div class="px-3 py-2 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
+                                                <span class="text-[10px] uppercase font-bold mr-2 opacity-70">After</span>
+                                                <span class="font-semibold">{{ $newSubject }}</span>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <p class="text-sm font-semibold text-[#123524] dark:text-white">{{ $newSubject ?? $oldSubject ?? '—' }}</p>
+                                    @endif
+                                </div>
+
+                                {{-- Message preview --}}
+                                <div x-data="{ tab: '{{ $new ? 'after' : 'before' }}' }">
+                                    <div class="flex items-center justify-between gap-2 mb-1.5">
+                                        <div class="flex items-center gap-2">
+                                            <p class="text-[11px] uppercase tracking-wide font-semibold text-black/60 dark:text-white/60">Message</p>
+                                            @if ($messageChanged)
+                                                <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400">Changed</span>
+                                            @elseif ($bothExist)
+                                                <span class="text-[10px] text-black/40 dark:text-white/40">Unchanged</span>
+                                            @endif
+                                        </div>
+
+                                        @if ($bothExist)
+                                            <div class="inline-flex rounded-lg border border-black/10 dark:border-white/10 overflow-hidden text-xs font-semibold">
+                                                <button type="button" @click="tab = 'before'"
+                                                    :class="tab === 'before' ? 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400' : 'text-black/50 dark:text-white/50'"
+                                                    class="px-3 py-1 transition">Before</button>
+                                                <button type="button" @click="tab = 'after'"
+                                                    :class="tab === 'after' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' : 'text-black/50 dark:text-white/50'"
+                                                    class="px-3 py-1 transition">After</button>
+                                            </div>
+                                        @else
+                                            <span class="text-[10px] uppercase font-bold {{ $new ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400' }}">
+                                                {{ $new ? 'Created' : 'Deleted' }}
+                                            </span>
+                                        @endif
+                                    </div>
+
+                                    @if ($old)
+                                        <div x-show="tab === 'before'" x-cloak class="rounded-xl overflow-hidden border border-black/10 dark:border-white/10 bg-white">
+                                            <iframe wire:key="audit-email-before-{{ $log->id }}-{{ md5((string) $oldMessage) }}"
+                                                srcdoc="{{ $this->emailPreviewHtml($oldSubject, $oldMessage) }}"
+                                                class="w-full h-[320px]" sandbox="allow-same-origin" title="Message before"></iframe>
+                                        </div>
+                                    @endif
+
+                                    @if ($new)
+                                        <div x-show="tab === 'after'" x-cloak class="rounded-xl overflow-hidden border border-black/10 dark:border-white/10 bg-white">
+                                            <iframe wire:key="audit-email-after-{{ $log->id }}-{{ md5((string) $newMessage) }}"
+                                                srcdoc="{{ $this->emailPreviewHtml($newSubject, $newMessage) }}"
+                                                class="w-full h-[320px]" sandbox="allow-same-origin" title="Message after"></iframe>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+                    @elseif (in_array(class_basename($this->viewingLog->auditable_type), ['Event', 'Post'], true))
+                        @php
+                            $rows = $this->readableChanges($this->viewingLog->changes ?? []);
+
+                            $badge = fn ($v) => match (strtolower((string) $v)) {
+                                'published', 'public' => 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
+                                'cancelled' => 'bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400',
+                                'completed', 'private' => 'bg-blue-100 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400',
+                                default => 'bg-black/5 dark:bg-white/10 text-black/50 dark:text-white/50',
+                            };
+                        @endphp
+
+                        @if (empty($rows))
+                            <p class="text-sm text-black/50 dark:text-white/50 italic">No readable changes were recorded for this entry.</p>
+                        @else
+                            <div class="space-y-3">
+                                @foreach ($rows as $row)
+                                    @php $showDiff = $row['hasOld'] && $row['changed']; @endphp
+
+                                    <div class="rounded-xl border border-black/5 dark:border-white/10 p-3 {{ $showDiff ? 'bg-amber-50/50 dark:bg-amber-500/5' : '' }}">
+                                        <div class="flex items-center justify-between gap-2 mb-2">
+                                            <p class="text-[11px] uppercase tracking-wide font-semibold text-black/60 dark:text-white/60">{{ $row['label'] }}</p>
+                                            @if ($showDiff)
+                                                <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400">Changed</span>
+                                            @endif
+                                        </div>
+
+                                        {{-- STATUS --}}
+                                        @if ($row['kind'] === 'badge')
+                                            <div class="flex items-center gap-2 flex-wrap">
+                                                @if ($showDiff)
+                                                    <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase line-through opacity-70 {{ $badge($row['old']) }}">{{ $row['old'] ?? '—' }}</span>
+                                                    <svg class="w-3 h-3 text-black/40 dark:text-white/40" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                                                @endif
+                                                <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase {{ $badge($row['new']) }}">{{ $row['new'] ?? '—' }}</span>
+                                            </div>
+
+                                        {{-- IMAGE --}}
+                                        @elseif ($row['kind'] === 'image')
+                                            <div class="grid {{ $showDiff ? 'grid-cols-2' : 'grid-cols-1' }} gap-3">
+                                                @if ($showDiff)
+                                                    <div>
+                                                        <p class="text-[10px] uppercase font-bold text-red-600 dark:text-red-400 mb-1">Before</p>
+                                                        @if ($row['old'])
+                                                            <img src="{{ $row['old'] }}" alt="" loading="lazy" class="w-full h-32 object-cover rounded-lg bg-gray-100 dark:bg-gray-800">
+                                                        @else
+                                                            <p class="text-xs italic text-black/40 dark:text-white/40">No image</p>
+                                                        @endif
+                                                    </div>
+                                                @endif
+                                                <div>
+                                                    @if ($showDiff)
+                                                        <p class="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 mb-1">After</p>
+                                                    @endif
+                                                    @if ($row['new'])
+                                                        <img src="{{ $row['new'] }}" alt="" loading="lazy" class="w-full h-32 object-cover rounded-lg bg-gray-100 dark:bg-gray-800">
+                                                    @else
+                                                        <p class="text-xs italic text-black/40 dark:text-white/40">No image</p>
+                                                    @endif
+                                                </div>
+                                            </div>
+
+                                        {{-- ATTACHMENTS --}}
+                                        @elseif ($row['kind'] === 'files')
+                                            @php
+                                                $oldFiles = $row['old'] ?? [];
+                                                $newFiles = $row['new'] ?? [];
+                                                $removed = $showDiff ? array_diff($oldFiles, $newFiles) : [];
+                                                $added = $showDiff ? array_diff($newFiles, $oldFiles) : [];
+                                                $kept = $showDiff ? array_intersect($newFiles, $oldFiles) : $newFiles;
+                                            @endphp
+                                            <div class="flex flex-wrap gap-1.5">
+                                                @foreach ($kept as $f)
+                                                    <span class="px-2 py-1 rounded-lg text-xs bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">{{ $f }}</span>
+                                                @endforeach
+                                                @foreach ($added as $f)
+                                                    <span class="px-2 py-1 rounded-lg text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">+ {{ $f }}</span>
+                                                @endforeach
+                                                @foreach ($removed as $f)
+                                                    <span class="px-2 py-1 rounded-lg text-xs line-through bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400">{{ $f }}</span>
+                                                @endforeach
+                                                @if (empty($kept) && empty($added) && empty($removed))
+                                                    <span class="text-xs italic text-black/40 dark:text-white/40">No attachments</span>
+                                                @endif
+                                            </div>
+
+                                        {{-- TEXT (title, description, location, dates, capacity, category) --}}
+                                        @elseif ($showDiff)
+                                            <div class="rounded-lg border border-black/5 dark:border-white/10 divide-y divide-black/5 dark:divide-white/10 overflow-hidden text-sm">
+                                                <div class="px-3 py-2 bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400">
+                                                    <span class="text-[10px] uppercase font-bold mr-2 opacity-70">Before</span>
+                                                    <span class="line-through whitespace-pre-wrap break-words">{{ $row['old'] ?? '—' }}</span>
+                                                </div>
+                                                <div class="px-3 py-2 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
+                                                    <span class="text-[10px] uppercase font-bold mr-2 opacity-70">After</span>
+                                                    <span class="font-semibold whitespace-pre-wrap break-words">{{ $row['new'] ?? '—' }}</span>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <p class="text-sm text-[#123524] dark:text-white whitespace-pre-wrap break-words">{{ $row['new'] ?? '—' }}</p>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    @else
                     
                     @php
                         $log = $this->viewingLog;
@@ -470,6 +713,7 @@
                             </tbody>
                         </table>
                     </div>
+                    @endif
                 </div>
 
                 {{-- Footer --}}

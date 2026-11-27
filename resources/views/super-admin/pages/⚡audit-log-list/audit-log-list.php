@@ -2,6 +2,10 @@
 
 use App\Models\AuditLog;
 use App\Models\User;
+use App\Models\Post;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
@@ -93,6 +97,101 @@ new #[Layout('layouts.app-super-admin')] class extends Component
             ->paginate($this->perPage);
     }
 
+    public function readableChanges(array $changes): array
+    {
+        $labels = [
+            'title' => 'Title',
+            'description' => 'Description',
+            'location' => 'Location',
+            'capacity' => 'Capacity',
+            'starts_at' => 'Starts',
+            'ends_at' => 'Ends',
+            'status' => 'Status',
+            'image' => 'Image',
+            'category_id' => 'Category',
+            'attachments' => 'Attachments',
+        ];
+
+        // Noise the coordinator doesn't need to see.
+        $skip = ['created_at', 'updated_at', 'deleted_at', 'slug', 'user_id', 'created_by'];
+
+        $rows = [];
+
+        foreach ($changes as $field => $change) {
+            if (in_array($field, $skip, true)) {
+                continue;
+            }
+
+            $isPair = is_array($change)
+                && (array_key_exists('old', $change) || array_key_exists('new', $change));
+
+            $old = $isPair ? ($change['old'] ?? null) : null;
+            $new = $isPair ? ($change['new'] ?? null) : $change;
+
+            $kind = match ($field) {
+                'status' => 'badge',
+                'image' => 'image',
+                'attachments' => 'files',
+                default => 'text',
+            };
+
+            $rows[] = [
+                'label' => $labels[$field] ?? Str::headline((string) $field),
+                'kind' => $kind,
+                'hasOld' => $isPair,
+                'old' => $this->formatAuditValue($field, $old, $kind),
+                'new' => $this->formatAuditValue($field, $new, $kind),
+                'changed' => $isPair ? $old !== $new : true,
+            ];
+        }
+
+        return $rows;
+    }
+
+    protected function formatAuditValue(string $field, mixed $value, string $kind): mixed
+    {
+        if ($field === 'capacity' && ($value === null || $value === '')) {
+            return 'Unlimited';
+        }
+
+        if ($value === null || $value === '' || $value === []) {
+            return null;
+        }
+
+        if ($kind === 'image') {
+            return filter_var($value, FILTER_VALIDATE_URL) ? $value : Storage::url($value);
+        }
+
+        if ($kind === 'files') {
+            $list = is_string($value) ? (json_decode($value, true) ?: [$value]) : (array) $value;
+
+            return array_values(array_map(fn ($f) => basename((string) $f), $list));
+        }
+
+        if (in_array($field, ['starts_at', 'ends_at'], true)) {
+            try {
+                return Carbon::parse($value)->format('M j, Y g:i A');
+            } catch (Throwable) {
+                return (string) $value;
+            }
+        }
+
+        if ($field === 'category_id') {
+            return (new Post)->category()->getRelated()->find($value)?->cat_name
+                ?? "Category #{$value}";
+        }
+
+        if (is_bool($value)) {
+            return $value ? 'Yes' : 'No';
+        }
+
+        if (is_array($value)) {
+            return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        }
+
+        return (string) $value;
+    }
+
     #[Computed]
     public function users(): array
     {
@@ -143,6 +242,20 @@ new #[Layout('layouts.app-super-admin')] class extends Component
     public function closeLog(): void
     {
         $this->viewingLogId = null;
+    }
+
+    public function emailPreviewHtml(?string $subject, ?string $message): string
+    {
+        try {
+            return view('emails.template', [
+                'emailSubject' => filled($subject) ? $subject : '(no subject)',
+                'bodyHtml' => filled($message) ? $message : '(empty message)',
+            ])->render();
+        } catch (Throwable $e) {
+            report($e);
+
+            return '<div style="padding:24px;font-family:system-ui,sans-serif;color:#b91c1c;">Preview unavailable.</div>';
+        }
     }
 
     #[Computed]
