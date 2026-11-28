@@ -293,22 +293,6 @@ class EmailSeeder extends Seeder
                     ."Congratulations, and thank you for keeping your information up to date.\n\n"
                     .'— CSAV Alumni Office',
             ],
-            [
-                'slug' => 'profile-verified-not-passer',
-                'subject' => 'Update on your CSAV alumni profile, {{name}}',
-                'message' => "Hi {{name}},\n\n"
-                    ."Thank you for submitting your board exam details. We've reviewed them against the "
-                    ."official PRC records and confirmed that the information matches our system.\n\n"
-                    .'However, the board rating we have on file does not meet the passing threshold, so your '
-                    ."alumni profile will not carry the \"Verified Board Passer\" badge at this time.\n\n"
-                    ."Reviewed on: {{verified_at}}\n"
-                    ."Reviewed by: {{verified_by}}\n\n"
-                    .'If you retake the board exam, you can submit your new rating from your profile — '
-                    ."we'll re-verify it and update your status accordingly:\n"
-                    ."https://web-access-streamline-alumni.test/login\n\n"
-                    ."If you believe this was a mistake or need help, please contact the CSAV Alumni Office.\n\n"
-                    .'— CSAV Alumni Office',
-            ],
 
             [
                 'slug' => 'profile-rejected',
