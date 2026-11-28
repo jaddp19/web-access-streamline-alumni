@@ -96,15 +96,22 @@
 
             <div class="mb-8">
                 <h2 class="text-3xl font-bold text-[#123524]" style="font-family: 'Fraunces', serif;">
-                    Create your account
+                    {{ $showOtpStep ? 'Verify your email' : 'Create your account' }}
                 </h2>
                 <p class="text-[#123524]/60 mt-2">
-                    Register as an alumnus/alumna. Your account will automatically receive the
-                    <strong class="text-[#123524]">Alumni</strong> role.
+                    @if ($showOtpStep)
+                        Enter the 6-digit code we emailed to
+                        <strong class="text-[#123524]">{{ $pendingEmail }}</strong>
+                        to finish creating your account.
+                    @else
+                        Register as an alumnus/alumna. Your account will automatically receive the
+                        <strong class="text-[#123524]">Alumni</strong> role.
+                    @endif
                 </p>
             </div>
 
-            <form wire:submit="register" class="space-y-5">
+            @if (! $showOtpStep)
+            <form wire:submit="sendRegistrationCode" class="space-y-5">
 
                 {{-- Global error --}}
                 @error('form')
@@ -304,16 +311,90 @@
                     </p>
                 </div>
 
-                <button type="submit" wire:loading.attr="disabled" wire:target="register"
-                    wire:confirm="You can only register once a month. Please review your details before continuing. Continue?"
+                <p class="text-xs text-[#123524]/50 text-center">
+                    We'll email you a 6-digit code to verify your address before creating your account.
+                </p>
+
+                <button type="submit" wire:loading.attr="disabled" wire:target="sendRegistrationCode"
                     class="group w-full py-3.5 px-6 bg-[#123524] hover:bg-[#0d2819] text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
-                    <span wire:loading.remove wire:target="register">Create Account</span>
-                    <span wire:loading wire:target="register">Creating account…</span>
-                    <svg wire:loading.remove wire:target="register" class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <span wire:loading.remove wire:target="sendRegistrationCode">Send Verification Code</span>
+                    <span wire:loading wire:target="sendRegistrationCode">Sending code…</span>
+                    <svg wire:loading.remove wire:target="sendRegistrationCode" class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                     </svg>
                 </button>
             </form>
+            @else
+                <form wire:submit="verifyRegistrationCode" class="space-y-5">
+
+                    {{-- Global error --}}
+                    @error('form')
+                        <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                            {{ $message }}
+                        </div>
+                    @enderror
+
+                    @if ($otpStatusMessage)
+                        <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                            {{ $otpStatusMessage }}
+                        </div>
+                    @endif
+
+                    <div class="rounded-xl border border-[#D4A537]/30 bg-[#D4A537]/10 px-4 py-3">
+                        <p class="text-xs text-[#123524]/70 leading-relaxed">
+                            We sent the code to
+                            <strong class="text-[#123524]">{{ $pendingEmail }}</strong>.
+                            Check your inbox and spam folder. The code expires in 10 minutes.
+                        </p>
+                    </div>
+
+                    <div>
+                        <label for="otpCode" class="block text-sm font-semibold text-[#123524] mb-2">
+                            Verification Code <span class="text-red-500">*</span>
+                        </label>
+                        <input wire:model="otpCode" type="text" id="otpCode" name="otpCode"
+                            inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code"
+                            placeholder="000000" required autofocus
+                            class="w-full px-4 py-3 rounded-xl border text-center text-2xl tracking-[0.5em] font-bold text-[#123524] placeholder-[#123524]/20 focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition
+                            @error('otpCode') border-red-400 @else border-[#123524]/15 @enderror">
+                        @error('otpCode')
+                            <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <button type="submit" wire:loading.attr="disabled" wire:target="verifyRegistrationCode"
+                        wire:confirm="You can only register once a month. Please review your details before continuing. Continue?"
+                        class="group w-full py-3.5 px-6 bg-[#123524] hover:bg-[#0d2819] text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
+                        <span wire:loading.remove wire:target="verifyRegistrationCode">Verify &amp; Create Account</span>
+                        <span wire:loading wire:target="verifyRegistrationCode">Creating account…</span>
+                        <svg wire:loading.remove wire:target="verifyRegistrationCode" class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                        </svg>
+                    </button>
+
+                    <div class="flex items-center justify-between gap-3 pt-1">
+                        <button type="button" wire:click="changeEmail"
+                            class="text-sm font-semibold text-[#123524]/70 hover:text-[#123524] transition">
+                            Change email
+                        </button>
+
+                        <div x-data="{ remaining: {{ $this->registrationResendRemaining() }} }"
+                            x-init="if (remaining > 0) { const timer = setInterval(() => { if (remaining > 0) remaining--; else clearInterval(timer); }, 1000); }"
+                            wire:key="registration-resend-{{ $otpSentAt }}">
+                            <button type="button" wire:click="resendRegistrationCode"
+                                wire:loading.attr="disabled" wire:target="resendRegistrationCode"
+                                :disabled="remaining > 0"
+                                class="text-sm font-semibold text-[#123524] hover:text-[#D4A537] transition disabled:text-[#123524]/40 disabled:cursor-not-allowed">
+                                <span wire:loading.remove wire:target="resendRegistrationCode">
+                                    <span x-show="remaining <= 0">Resend code</span>
+                                    <span x-show="remaining > 0">Resend in <span x-text="remaining"></span>s</span>
+                                </span>
+                                <span wire:loading wire:target="resendRegistrationCode">Sending…</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            @endif
 
             <p class="mt-6 text-center text-sm text-[#123524]/60">
                 Already have an account?

@@ -1,10 +1,13 @@
 <?php
 
+use App\Exceptions\OtpCooldownException;
 use App\Models\Batch;
 use App\Models\User;
+use App\Services\OtpService;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -29,6 +32,17 @@ new #[Title('Create Alumni Account')] #[Layout('layouts.auth')] class extends Co
     public string $password = '';
     public string $password_confirmation = '';
     public bool $terms = false;
+
+    /** OTP step state. */
+    public bool $showOtpStep = false;
+
+    public string $otpCode = '';
+
+    public string $pendingEmail = '';
+
+    public int $otpSentAt = 0;
+
+    public string $otpStatusMessage = '';
 
     /** Bot trap — must stay empty. */
     public string $website = '';
@@ -56,6 +70,23 @@ new #[Title('Create Alumni Account')] #[Layout('layouts.auth')] class extends Co
             'register.form.'.$this->formToken,
             now()->timestamp
         );
+
+        // Restore the OTP step after a refresh. The pending payload is
+        // encrypted and contains only the password hash, never the plain
+        // password.
+        $pending = $this->pendingRegistration();
+
+        if ($pending) {
+            $this->first_name = $pending['first_name'] ?? '';
+            $this->middle_name = $pending['middle_name'] ?? '';
+            $this->last_name = $pending['last_name'] ?? '';
+            $this->email = $pending['email'] ?? '';
+            $this->school_id = $pending['school_id'] ?? '';
+
+            $this->showOtpStep = true;
+            $this->pendingEmail = $pending['email'] ?? '';
+            $this->otpSentAt = (int) ($pending['otp_sent_at'] ?? 0);
+        }
     }
 
     // =========================================================
@@ -190,7 +221,7 @@ new #[Title('Create Alumni Account')] #[Layout('layouts.auth')] class extends Co
     //  REGISTER
     // =========================================================
 
-    public function register()
+    public function sendRegistrationCode()
     {
         if (Auth::check()) {
             return $this->redirectBasedOnRole();
@@ -277,20 +308,118 @@ new #[Title('Create Alumni Account')] #[Layout('layouts.auth')] class extends Co
             throw $e;
         }
 
+        $pending = [
+            'first_name' => $validated['first_name'],
+            'middle_name' => filled($validated['middle_name'] ?? null)
+                ? $validated['middle_name']
+                : null,
+            'last_name' => $validated['last_name'],
+            'email' => $validated['email'],
+            'school_id' => $validated['school_id'],
+            // Store only the hash. The plain password is never persisted.
+            'password_hash' => Hash::make($validated['password']),
+            'created_at' => now()->timestamp,
+            'otp_sent_at' => now()->timestamp,
+        ];
+
         try {
-            $user = DB::transaction(function () use ($validated) {
+            app(OtpService::class)->send(
+                $pending['email'],
+                OtpService::PURPOSE_REGISTER,
+                ['name' => $pending['first_name']],
+            );
+        } catch (OtpCooldownException $e) {
+            $this->addError('form', "Please wait {$e->retryAfter} second(s) before requesting another code.");
+
+            return;
+        } catch (\Throwable $e) {
+            report($e);
+            $this->addError('form', 'We could not send the verification code right now. Please try again.');
+
+            return;
+        }
+
+        $this->storePendingRegistration($pending);
+
+        $this->showOtpStep = true;
+        $this->pendingEmail = $pending['email'];
+        $this->otpSentAt = $pending['otp_sent_at'];
+        $this->otpCode = '';
+        $this->otpStatusMessage = 'We sent a 6-digit code to '.$pending['email'].'. It expires in 10 minutes.';
+
+        // The plain password is no longer needed in the Livewire snapshot.
+        $this->password = '';
+        $this->password_confirmation = '';
+    }
+
+    // =========================================================
+    //  EMAIL VERIFICATION CODE
+    // =========================================================
+
+    public function verifyRegistrationCode()
+    {
+        if (Auth::check()) {
+            return $this->redirectBasedOnRole();
+        }
+
+        $pending = $this->pendingRegistration();
+
+        if (! $pending) {
+            $this->resetOtpStep();
+            $this->addError('form', 'Your registration session expired. Please fill in the form again.');
+
+            return;
+        }
+
+        $this->validate([
+            'otpCode' => ['required', 'digits:6'],
+        ], [
+            'otpCode.required' => 'Please enter the 6-digit code we emailed you.',
+            'otpCode.digits' => 'The verification code must be exactly 6 digits.',
+        ]);
+
+        $status = app(OtpService::class)->verify(
+            $pending['email'],
+            OtpService::PURPOSE_REGISTER,
+            $this->otpCode,
+        );
+
+        if ($status !== OtpService::VERIFY_OK) {
+            $this->addError('otpCode', OtpService::errorMessage($status));
+
+            return;
+        }
+
+        // The monthly limit could have been reached from another tab while
+        // the user was entering the code.
+        if (Cache::has($this->monthlyRegistrationKey())) {
+            $this->clearPendingRegistration();
+            $this->resetOtpStep();
+
+            $this->addError(
+                'form',
+                'You have already registered from this connection. Only one registration is allowed per month — please sign in instead.'
+            );
+
+            return;
+        }
+
+        try {
+            $user = DB::transaction(function () use ($pending) {
                 $user = User::create([
-                    'first_name' => $validated['first_name'],
-                    'middle_name' => filled($validated['middle_name'] ?? null)
-                        ? $validated['middle_name']
-                        : null,
-                    'last_name' => $validated['last_name'],
+                    'first_name' => $pending['first_name'],
+                    'middle_name' => $pending['middle_name'] ?? null,
+                    'last_name' => $pending['last_name'],
                     // `name` is composed automatically by the User model.
-                    'email' => $validated['email'],
-                    'school_id' => $validated['school_id'],
-                    'password' => Hash::make($validated['password']),
+                    'email' => $pending['email'],
+                    'school_id' => $pending['school_id'],
+                    // Already hashed when the code was requested; the
+                    // `hashed` cast leaves existing hashes untouched.
+                    'password' => $pending['password_hash'],
                     'is_active' => true,
                 ]);
+
+                $user->forceFill(['email_verified_at' => now()])->saveQuietly();
 
                 // Role is assigned server-side only. There is no role field
                 // in the form, so it cannot be tampered with.
@@ -306,7 +435,8 @@ new #[Title('Create Alumni Account')] #[Layout('layouts.auth')] class extends Co
             });
         } catch (QueryException $e) {
             if ($e->getCode() === '23000' || str_contains($e->getMessage(), 'Duplicate entry')) {
-                RateLimiter::hit($failureKey, self::FAILED_LOCKOUT_SECONDS);
+                $this->clearPendingRegistration();
+                $this->resetOtpStep();
 
                 $this->addError(
                     'form',
@@ -316,26 +446,30 @@ new #[Title('Create Alumni Account')] #[Layout('layouts.auth')] class extends Co
                 return;
             }
 
-            RateLimiter::hit($failureKey, self::FAILED_LOCKOUT_SECONDS);
             report($e);
-            $this->addError('form', 'We could not create your account right now. Please try again.');
+            $this->allowImmediateOtpResend($pending);
+
+            $this->addError('form', 'We could not create your account right now. Please request a new code and try again.');
 
             return;
         } catch (\Throwable $e) {
             report($e);
-            $this->addError('form', 'We could not create your account right now. Please try again.');
+            $this->allowImmediateOtpResend($pending);
+
+            $this->addError('form', 'We could not create your account right now. Please request a new code and try again.');
 
             return;
         }
 
+        $this->clearPendingRegistration();
         session()->forget('register.form.'.$this->formToken);
-        RateLimiter::clear($failureKey);
+        RateLimiter::clear($this->failedRegistrationKey());
 
         // Block this connection from creating another account for a month.
-        Cache::put($monthlyKey, true, now()->addMonth());
+        Cache::put($this->monthlyRegistrationKey(), true, now()->addMonth());
 
         Auth::login($user);
-        request()->session()->regenerate();
+        session()->regenerate();
 
         Log::info('Alumni self-registration', [
             'user_id' => $user->id,
@@ -343,6 +477,133 @@ new #[Title('Create Alumni Account')] #[Layout('layouts.auth')] class extends Co
         ]);
 
         return redirect()->route('form');
+    }
+
+    public function resendRegistrationCode(): void
+    {
+        $pending = $this->pendingRegistration();
+
+        if (! $pending) {
+            $this->resetOtpStep();
+            $this->addError('form', 'Your registration session expired. Please fill in the form again.');
+
+            return;
+        }
+
+        try {
+            app(OtpService::class)->send(
+                $pending['email'],
+                OtpService::PURPOSE_REGISTER,
+                ['name' => $pending['first_name']],
+            );
+        } catch (OtpCooldownException $e) {
+            $this->addError('otpCode', "Please wait {$e->retryAfter} second(s) before requesting another code.");
+
+            return;
+        } catch (\Throwable $e) {
+            report($e);
+            $this->addError('otpCode', 'We could not resend the code right now. Please try again.');
+
+            return;
+        }
+
+        $pending['otp_sent_at'] = now()->timestamp;
+        $this->storePendingRegistration($pending);
+
+        $this->otpSentAt = $pending['otp_sent_at'];
+        $this->otpCode = '';
+        $this->otpStatusMessage = 'A new 6-digit code has been sent to '.$pending['email'].'.';
+        $this->resetErrorBag('otpCode');
+    }
+
+    public function changeEmail(): void
+    {
+        $pending = $this->pendingRegistration();
+
+        if ($pending) {
+            app(OtpService::class)->clear($pending['email'], OtpService::PURPOSE_REGISTER);
+        }
+
+        $this->clearPendingRegistration();
+        $this->resetOtpStep();
+        $this->password = '';
+        $this->password_confirmation = '';
+        $this->resetErrorBag();
+    }
+
+    public function registrationResendRemaining(): int
+    {
+        if ($this->otpSentAt <= 0) {
+            return 0;
+        }
+
+        return max(
+            0,
+            OtpService::RESEND_COOLDOWN_SECONDS - (now()->timestamp - $this->otpSentAt)
+        );
+    }
+
+    protected function pendingRegistration(): ?array
+    {
+        $payload = session()->get('register.pending');
+
+        if (! is_string($payload) || $payload === '') {
+            return null;
+        }
+
+        try {
+            $data = json_decode(Crypt::decryptString($payload), true);
+        } catch (\Throwable) {
+            session()->forget('register.pending');
+
+            return null;
+        }
+
+        if (! is_array($data) || empty($data['email']) || empty($data['password_hash'])) {
+            session()->forget('register.pending');
+
+            return null;
+        }
+
+        // A pending registration is good for two hours. The code itself
+        // expires much sooner; the user can request a new one.
+        if (isset($data['created_at'])
+            && (now()->timestamp - (int) $data['created_at']) > 7200) {
+            session()->forget('register.pending');
+
+            return null;
+        }
+
+        return $data;
+    }
+
+    protected function storePendingRegistration(array $data): void
+    {
+        session()->put(
+            'register.pending',
+            Crypt::encryptString(json_encode($data))
+        );
+    }
+
+    protected function clearPendingRegistration(): void
+    {
+        session()->forget('register.pending');
+    }
+
+    protected function resetOtpStep(): void
+    {
+        $this->showOtpStep = false;
+        $this->otpCode = '';
+        $this->pendingEmail = '';
+        $this->otpSentAt = 0;
+        $this->otpStatusMessage = '';
+    }
+
+    protected function allowImmediateOtpResend(array $pending): void
+    {
+        $pending['otp_sent_at'] = 0;
+        $this->storePendingRegistration($pending);
+        $this->otpSentAt = 0;
     }
 
     protected function cleanName(string $value): string
@@ -396,8 +657,8 @@ new #[Title('Create Alumni Account')] #[Layout('layouts.auth')] class extends Co
         }
 
         Auth::logout();
-        request()->session()->invalidate();
-        request()->session()->regenerateToken();
+        session()->invalidate();
+        session()->regenerateToken();
 
         return redirect()->route('login');
     }

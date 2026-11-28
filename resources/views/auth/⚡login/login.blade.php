@@ -173,11 +173,11 @@
                             </h3>
                             <p class="text-white/50 text-[11px]">
                                 @if ($forgotStep === 1)
-                                    Step 1 of 2 · Verify your email
+                                    Step 1 of 3 · Verify your email
                                 @elseif ($forgotStep === 2)
-                                    Step 2 of 2 · Verify your identity
+                                    Step 2 of 3 · Verify your identity
                                 @else
-                                    All done
+                                    Step 3 of 3 · Enter verification code
                                 @endif
                             </p>
                         </div>
@@ -245,7 +245,7 @@
                                 School ID Number
                             </label>
                             <input type="text" id="forgotSchoolId" wire:model="forgotSchoolId"
-                                wire:keydown.enter="verifyForgotSchoolIdAndSend"
+                                wire:keydown.enter="verifyForgotSchoolIdAndSendCode"
                                 placeholder="e.g. 2020-1234"
                                 autofocus
                                 class="w-full px-4 py-3 rounded-xl border text-sm text-[#123524] placeholder-[#123524]/30 focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition
@@ -256,37 +256,84 @@
                         </div>
 
                         <div class="flex gap-2 pt-2">
-                            <button type="button" wire:click="$set('forgotStep', 1)"
+                            <button type="button" wire:click="backToForgotEmail"
                                 class="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-[#123524]/15 text-[#123524] hover:bg-[#123524]/5 transition">
                                 Back
                             </button>
-                            <button type="button" wire:click="verifyForgotSchoolIdAndSend"
-                                wire:loading.attr="disabled" wire:target="verifyForgotSchoolIdAndSend"
+                            <button type="button" wire:click="verifyForgotSchoolIdAndSendCode"
+                                wire:loading.attr="disabled" wire:target="verifyForgotSchoolIdAndSendCode"
                                 class="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-[#123524] text-white hover:bg-[#0d2819] transition disabled:opacity-50">
-                                <span wire:loading.remove wire:target="verifyForgotSchoolIdAndSend">Send reset link</span>
-                                <span wire:loading wire:target="verifyForgotSchoolIdAndSend">Sending…</span>
+                                <span wire:loading.remove wire:target="verifyForgotSchoolIdAndSendCode">Send code</span>
+                                <span wire:loading wire:target="verifyForgotSchoolIdAndSendCode">Sending…</span>
                             </button>
                         </div>
                     @endif
 
-                    {{-- STEP 3 — Success --}}
+                    {{-- STEP 3 — Verification code --}}
                     @if ($forgotStep === 3)
-                        <div class="text-center py-2">
-                            <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-emerald-100 flex items-center justify-center">
-                                <svg class="w-7 h-7 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                            <p class="text-sm text-[#123524]/80 leading-relaxed">
-                                {{ $forgotSuccessMessage }}
-                            </p>
+                        <p class="text-sm text-[#123524]/70">
+                            Enter the 6-digit code we emailed you to continue resetting your password.
+                        </p>
+
+                        <div class="bg-[#F7F5EF] border border-[#123524]/10 rounded-lg px-3 py-2 text-xs text-[#123524]/70">
+                            <strong class="text-[#123524]">Email:</strong> {{ $forgotEmail }}
                         </div>
 
-                        <button type="button" wire:click="closeForgotModal"
-                            class="w-full py-2.5 rounded-xl text-sm font-semibold bg-[#123524] text-white hover:bg-[#0d2819] transition">
-                            Got it
-                        </button>
+                        @if ($forgotStatusMessage)
+                            <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                                {{ $forgotStatusMessage }}
+                            </div>
+                        @endif
+
+                        <div>
+                            <label for="forgotCode" class="block text-xs font-semibold text-[#123524] mb-2 uppercase tracking-wide">
+                                Verification Code
+                            </label>
+                            <input type="text" id="forgotCode" wire:model="forgotCode"
+                                wire:keydown.enter="verifyForgotCode"
+                                inputmode="numeric" pattern="[0-9]*" maxlength="6"
+                                autocomplete="one-time-code" placeholder="000000" autofocus
+                                class="w-full px-4 py-3 rounded-xl border text-center text-xl tracking-[0.4em] font-bold text-[#123524] placeholder-[#123524]/20 focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition
+                                @error('forgotCode') border-red-400 @else border-[#123524]/15 @enderror">
+                            @error('forgotCode')
+                                <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="flex gap-2 pt-2">
+                            <button type="button" wire:click="backToForgotSchoolId"
+                                class="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-[#123524]/15 text-[#123524] hover:bg-[#123524]/5 transition">
+                                Back
+                            </button>
+                            <button type="button" wire:click="verifyForgotCode"
+                                wire:loading.attr="disabled" wire:target="verifyForgotCode"
+                                class="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-[#123524] text-white hover:bg-[#0d2819] transition disabled:opacity-50">
+                                <span wire:loading.remove wire:target="verifyForgotCode">Verify code</span>
+                                <span wire:loading wire:target="verifyForgotCode">Verifying…</span>
+                            </button>
+                        </div>
+
+                        <div class="flex items-center justify-between gap-3 pt-1">
+                            <button type="button" wire:click="backToForgotEmail"
+                                class="text-xs font-semibold text-[#123524]/60 hover:text-[#123524] transition">
+                                Use a different email
+                            </button>
+
+                            <div x-data="{ remaining: {{ $this->forgotResendRemaining() }} }"
+                                x-init="if (remaining > 0) { const timer = setInterval(() => { if (remaining > 0) remaining--; else clearInterval(timer); }, 1000); }"
+                                wire:key="forgot-resend-{{ $forgotOtpSentAt }}">
+                                <button type="button" wire:click="resendForgotCode"
+                                    wire:loading.attr="disabled" wire:target="resendForgotCode"
+                                    :disabled="remaining > 0"
+                                    class="text-xs font-semibold text-[#123524] hover:text-[#D4A537] transition disabled:text-[#123524]/40 disabled:cursor-not-allowed">
+                                    <span wire:loading.remove wire:target="resendForgotCode">
+                                        <span x-show="remaining <= 0">Resend code</span>
+                                        <span x-show="remaining > 0">Resend in <span x-text="remaining"></span>s</span>
+                                    </span>
+                                    <span wire:loading wire:target="resendForgotCode">Sending…</span>
+                                </button>
+                            </div>
+                        </div>
                     @endif
                 </div>
             </div>

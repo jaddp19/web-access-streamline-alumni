@@ -325,6 +325,32 @@ class EmailSeeder extends Seeder
                     ."Reviewed by: {{rejected_by}}\n\n"
                     .'— CSAV Alumni Office',
             ],
+
+            // ---------- Email verification codes ----------
+            [
+                'slug' => 'registration-verification-code',
+                'subject' => 'Your CSAV Alumni verification code',
+                'message' => "Hi {{name}},\n\n"
+                    ."Your 6-digit verification code is:\n\n"
+                    ."{{code}}\n\n"
+                    .'Enter it on the registration page to finish creating your CSAV Alumni account. '
+                    ."The code expires in {{expires_in}}.\n\n"
+                    ."If you did not request this code, you can safely ignore this email.\n\n"
+                    .'— CSAV Alumni Office',
+            ],
+            [
+                'slug' => 'password-reset-verification-code',
+                'subject' => 'Your CSAV Alumni password reset code',
+                'message' => "Hi {{name}},\n\n"
+                    ."We received a request to reset your CSAV Alumni Network password.\n\n"
+                    ."Your 6-digit verification code is:\n\n"
+                    ."{{code}}\n\n"
+                    .'Enter it on the password reset page to continue. '
+                    ."The code expires in {{expires_in}}.\n\n"
+                    .'If you did not request a password reset, you can ignore this email — '
+                    ."your password will not change.\n\n"
+                    .'— CSAV Alumni Office',
+            ],
         ];
 
         foreach ($templates as $template) {

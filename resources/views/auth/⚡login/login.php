@@ -1,7 +1,8 @@
 <?php
 
+use App\Exceptions\OtpCooldownException;
 use App\Models\User;
-use App\Services\EmailTemplateService;
+use App\Services\OtpService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -22,13 +23,17 @@ new #[Layout('layouts.auth')] class extends Component
     // ============ FORGOT PASSWORD STATE ============
     public bool $showForgotModal = false;
 
-    public int $forgotStep = 1;   // 1 = email, 2 = school ID, 3 = success
+    public int $forgotStep = 1;   // 1 = email, 2 = school ID, 3 = verification code
 
     public string $forgotEmail = '';
 
     public string $forgotSchoolId = '';
 
-    public string $forgotSuccessMessage = '';
+    public string $forgotCode = '';
+
+    public int $forgotOtpSentAt = 0;
+
+    public string $forgotStatusMessage = '';
 
     /** Max failed login attempts before lockout. */
     protected const MAX_ATTEMPTS = 5;
@@ -123,7 +128,7 @@ new #[Layout('layouts.auth')] class extends Component
         // ────────────────────────────────────────────────────────────────
 
         Auth::login($user, $this->remember);
-        request()->session()->regenerate();
+        session()->regenerate();
         RateLimiter::clear($key);
 
         return $this->redirectBasedOnRole($user);
@@ -150,8 +155,8 @@ new #[Layout('layouts.auth')] class extends Component
         }
 
         Auth::logout();
-        request()->session()->invalidate();
-        request()->session()->regenerateToken();
+        session()->invalidate();
+        session()->regenerateToken();
 
         $this->addError('email', 'This account has no assigned role. Please contact the alumni coordinator.');
     }
@@ -169,8 +174,16 @@ new #[Layout('layouts.auth')] class extends Component
 
     public function openForgotModal(): void
     {
-        $this->reset('forgotStep', 'forgotEmail', 'forgotSchoolId', 'forgotSuccessMessage');
+        $this->reset(
+            'forgotStep',
+            'forgotEmail',
+            'forgotSchoolId',
+            'forgotCode',
+            'forgotOtpSentAt',
+            'forgotStatusMessage',
+        );
         $this->forgotStep = 1;
+        session()->forget('forgot.verified_email');
         $this->resetErrorBag();
         $this->showForgotModal = true;
     }
@@ -181,7 +194,10 @@ new #[Layout('layouts.auth')] class extends Component
         $this->forgotStep = 1;
         $this->forgotEmail = '';
         $this->forgotSchoolId = '';
-        $this->forgotSuccessMessage = '';
+        $this->forgotCode = '';
+        $this->forgotOtpSentAt = 0;
+        $this->forgotStatusMessage = '';
+        session()->forget('forgot.verified_email');
         $this->resetErrorBag();
     }
 
@@ -200,16 +216,20 @@ new #[Layout('layouts.auth')] class extends Component
         ]);
 
         $this->forgotEmail = Str::lower(trim($this->forgotEmail));
+        session()->forget('forgot.verified_email');
+        $this->forgotCode = '';
+        $this->forgotOtpSentAt = 0;
+        $this->forgotStatusMessage = '';
         $this->resetErrorBag();
         $this->forgotStep = 2;
     }
 
     /**
-     * Step 2 — verifies the school ID, then sends the reset link.
+     * Step 2 — verifies the school ID, then emails a 6-digit code.
      * Uses the same generic error for "email not found" and
      * "school ID mismatch" so the failure path leaks nothing.
      */
-    public function verifyForgotSchoolIdAndSend(): void
+    public function verifyForgotSchoolIdAndSendCode(): void
     {
         // Rate-limit per email + IP so an attacker can't brute-force
         // school IDs. School IDs are somewhat predictable (0001-0001,
@@ -254,34 +274,176 @@ new #[Layout('layouts.auth')] class extends Component
         RateLimiter::clear($key);
 
         try {
-            $token = Password::broker()->createToken($user);
+            app(OtpService::class)->send(
+                $user->email,
+                OtpService::PURPOSE_RESET,
+                ['name' => $user->name],
+            );
+        } catch (OtpCooldownException $e) {
+            $this->addError('forgotSchoolId', "Please wait {$e->retryAfter} second(s) before requesting another code.");
 
-            $resetUrl = route('password.reset', [
-                'token' => $token,
-                'email' => $user->email,
-            ]);
-
-            EmailTemplateService::send('password-reset', $user->email, [
-                'name' => $user->name,
-                'reset_url' => $resetUrl,
-                'expires_in' => (string) config('auth.passwords.users.expire', 60),
-            ]);
-
-            Log::info('Password reset requested', [
-                'user_id' => $user->id,
-                'ip' => request()->ip(),
-            ]);
-        } catch (Throwable $e) {
+            return;
+        } catch (\Throwable $e) {
             report($e);
-            $this->addError('forgotSchoolId', 'Could not send the reset email right now. Please try again later.');
+            $this->addError('forgotSchoolId', 'Could not send the verification code right now. Please try again later.');
 
             return;
         }
 
-        // Generic success message — doesn't echo back the email,
-        // so it can't be used to confirm an address either.
-        $this->forgotSuccessMessage = 'If that information matches our records, a password reset link has been sent. Check your inbox and spam folder.';
+        // The code is tied to this verified address, not the public
+        // forgotEmail property, so step 3 cannot be pointed at another inbox.
+        session()->put('forgot.verified_email', $user->email);
+
+        $this->forgotEmail = $user->email;
+        $this->forgotCode = '';
+        $this->forgotOtpSentAt = now()->timestamp;
+        $this->forgotStatusMessage = 'We sent a 6-digit code to '.$user->email.'. It expires in 10 minutes.';
         $this->forgotStep = 3;
+        $this->resetErrorBag();
+
+        Log::info('Password reset code requested', [
+            'user_id' => $user->id,
+            'ip' => request()->ip(),
+        ]);
+    }
+
+    /**
+     * Step 3 — checks the emailed code, then starts the password reset.
+     */
+    public function verifyForgotCode()
+    {
+        $email = session()->get('forgot.verified_email');
+
+        if (! is_string($email) || $email === '') {
+            $this->forgotStep = 1;
+            $this->addError('forgotEmail', 'Your verification session expired. Please start again.');
+
+            return;
+        }
+
+        $this->validate([
+            'forgotCode' => ['required', 'digits:6'],
+        ], [
+            'forgotCode.required' => 'Please enter the 6-digit code we emailed you.',
+            'forgotCode.digits' => 'The verification code must be exactly 6 digits.',
+        ]);
+
+        $user = User::where('email', $email)->first();
+
+        if (! $user) {
+            session()->forget('forgot.verified_email');
+            $this->forgotStep = 1;
+            $this->addError('forgotEmail', 'We could not complete the reset. Please start again.');
+
+            return;
+        }
+
+        $status = app(OtpService::class)->verify($email, OtpService::PURPOSE_RESET, $this->forgotCode);
+
+        if ($status !== OtpService::VERIFY_OK) {
+            $this->addError('forgotCode', OtpService::errorMessage($status));
+
+            return;
+        }
+
+        try {
+            $token = Password::broker()->createToken($user);
+        } catch (\Throwable $e) {
+            report($e);
+            $this->forgotOtpSentAt = 0;
+            $this->addError('forgotCode', 'We could not start the password reset right now. Please request a new code and try again.');
+
+            return;
+        }
+
+        session()->forget('forgot.verified_email');
+
+        Log::info('Password reset verified by email code', [
+            'user_id' => $user->id,
+            'ip' => request()->ip(),
+        ]);
+
+        session()->flash('success', 'Email verified. Please choose a new password.');
+
+        return redirect()->route('password.reset', [
+            'token' => $token,
+            'email' => $user->email,
+        ]);
+    }
+
+    public function resendForgotCode(): void
+    {
+        $email = session()->get('forgot.verified_email');
+
+        if (! is_string($email) || $email === '') {
+            $this->forgotStep = 1;
+            $this->addError('forgotEmail', 'Your verification session expired. Please start again.');
+
+            return;
+        }
+
+        $user = User::where('email', $email)->first();
+
+        if (! $user) {
+            session()->forget('forgot.verified_email');
+            $this->forgotStep = 1;
+            $this->addError('forgotEmail', 'We could not complete the reset. Please start again.');
+
+            return;
+        }
+
+        try {
+            app(OtpService::class)->send(
+                $email,
+                OtpService::PURPOSE_RESET,
+                ['name' => $user->name],
+            );
+        } catch (OtpCooldownException $e) {
+            $this->addError('forgotCode', "Please wait {$e->retryAfter} second(s) before requesting another code.");
+
+            return;
+        } catch (\Throwable $e) {
+            report($e);
+            $this->addError('forgotCode', 'Could not resend the verification code right now. Please try again later.');
+
+            return;
+        }
+
+        $this->forgotOtpSentAt = now()->timestamp;
+        $this->forgotCode = '';
+        $this->forgotStatusMessage = 'A new 6-digit code has been sent to '.$email.'.';
+        $this->resetErrorBag('forgotCode');
+    }
+
+    public function backToForgotEmail(): void
+    {
+        $this->forgotStep = 1;
+        $this->forgotCode = '';
+        $this->forgotOtpSentAt = 0;
+        $this->forgotStatusMessage = '';
+        session()->forget('forgot.verified_email');
+        $this->resetErrorBag();
+    }
+
+    public function backToForgotSchoolId(): void
+    {
+        $this->forgotStep = 2;
+        $this->forgotCode = '';
+        $this->forgotOtpSentAt = 0;
+        $this->forgotStatusMessage = '';
+        $this->resetErrorBag();
+    }
+
+    public function forgotResendRemaining(): int
+    {
+        if ($this->forgotOtpSentAt <= 0) {
+            return 0;
+        }
+
+        return max(
+            0,
+            OtpService::RESEND_COOLDOWN_SECONDS - (now()->timestamp - $this->forgotOtpSentAt)
+        );
     }
 
 };
