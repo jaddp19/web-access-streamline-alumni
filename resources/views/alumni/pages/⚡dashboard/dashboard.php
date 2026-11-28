@@ -18,6 +18,24 @@ use Livewire\Component;
 
 new #[Layout('layouts.app-alumni')] class extends Component
 {
+
+    #[Computed]
+    public function isApproved(): bool
+    {
+        return (bool) $this->userProfile?->is_approved;
+    }
+
+    /** Registered alumni that have been approved (shown in the sidebar). */
+    #[Computed]
+    public function totalApprovedAlumni(): int
+    {
+        return Cache::remember('alumni:approved-count', now()->addMinutes(5), function () {
+            return User::role('alumni')
+                ->whereHas('userProfile', fn ($q) => $q->where('is_approved', true))
+                ->count();
+        });
+    }
+
     #[Computed]
     public function alumni()
     {
@@ -96,6 +114,9 @@ new #[Layout('layouts.app-alumni')] class extends Component
     #[Computed]
     public function upcomingEvents()
     {
+        if (! $this->isApproved) {
+            return collect();
+        }   
         $allowedCreatorIds = array_values(array_unique(array_merge(
             $this->alumniCoordinatorIds,
             $this->programHeadIdsForMyDepartments,
@@ -121,6 +142,9 @@ new #[Layout('layouts.app-alumni')] class extends Component
     #[Computed]
     public function myEventRsvps(): array
     {
+        if (! $this->isApproved) {
+            return [];
+        }
         return EventRsvp::query()
             ->where('user_id', $this->alumni->id)
             ->pluck('response', 'event_id')
@@ -172,6 +196,9 @@ new #[Layout('layouts.app-alumni')] class extends Component
     #[Computed]
     public function recentPosts()
     {
+        if (! $this->isApproved) {
+            return collect();
+        }
         $allowedAuthorIds = array_values(array_unique(array_merge(
             $this->alumniCoordinatorIds,
             $this->programHeadIdsForMyDepartments,

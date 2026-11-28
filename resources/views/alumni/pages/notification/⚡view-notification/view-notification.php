@@ -22,7 +22,8 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
     public function setFilter(string $filter): void
     {
-        $this->filter = $filter;
+        // Only accept the two known filters.
+        $this->filter = in_array($filter, ['all', 'unread'], true) ? $filter : 'all';
         $this->resetPage();
     }
 
@@ -30,6 +31,17 @@ new #[Layout('layouts.app-alumni')] class extends Component
     public function alumni()
     {
         return Auth::user();
+    }
+
+    /**
+     * True only when the logged-in user's profile has been approved.
+     * Everything below is gated on this, so an unapproved user gets
+     * no data even if they call a Livewire action directly.
+     */
+    #[Computed]
+    public function isApproved(): bool
+    {
+        return (bool) $this->alumni?->userProfile?->is_approved;
     }
 
     #[Computed]
@@ -96,9 +108,14 @@ new #[Layout('layouts.app-alumni')] class extends Component
         });
     }
 
+    /** Unapproved users get no allowed authors, so no posts match at all. */
     #[Computed]
     public function allowedAuthorIds(): array
     {
+        if (! $this->isApproved) {
+            return [];
+        }
+
         return array_values(array_unique(array_merge(
             $this->alumniCoordinatorIds,
             $this->programHeadIdsForMyDepartments,
@@ -119,7 +136,7 @@ new #[Layout('layouts.app-alumni')] class extends Component
     #[Computed]
     public function notifications(): LengthAwarePaginator
     {
-        if (empty($this->allowedAuthorIds)) {
+        if (! $this->isApproved || empty($this->allowedAuthorIds)) {
             return new LengthAwarePaginator([], 0, 15);
         }
 
@@ -129,6 +146,10 @@ new #[Layout('layouts.app-alumni')] class extends Component
     #[Computed]
     public function unreadCount(): int
     {
+        if (! $this->isApproved) {
+            return 0;
+        }
+
         return BadgeCounts::unreadNotifications($this->alumni->id);
     }
 
@@ -158,6 +179,12 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
     public function markAllAsRead(): void
     {
+        // Livewire actions can be called from the browser console even when
+        // the button is hidden, so re-check approval here.
+        if (! $this->isApproved) {
+            return;
+        }
+
         $postIds = Post::query()
             ->where('status', 'public')
             ->whereIn('user_id', $this->allowedAuthorIds)

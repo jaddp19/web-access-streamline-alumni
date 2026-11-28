@@ -102,11 +102,15 @@ class EmailSeeder extends Seeder
                 'slug' => 'your-alumni-profile-has-been-verified',
                 'subject' => 'You\'re a board passer, {{name}} — your alumni profile is verified!',
                 'message' => "Hi {{name}},\n\n"
-                    ."After reviewing your board exam details, we've confirmed that you're a board passer — "
-                    ."your alumni profile has been verified!\n\n"
-                    ."Log in here: https://web-access-streamline-alumni.test/login\n\n"
-                    ."Congratulations, and welcome to the alumni community!\n\n"
-                    .'— Colegio de Sta. Ana de Victorias',
+                    .'Great news! After reviewing your board exam details against the official PRC records, '
+                    ."we've confirmed that you're a board passer — your alumni profile is now verified.\n\n"
+                    ."Approved on: {{approved_at}}\n"
+                    ."Reviewed by: {{approved_by}}\n\n"
+                    ."Your tracer study submission is now final and will be included in the university's "
+                    .'alumni reports. You can view your profile anytime by logging in:'
+                    ." https://web-access-streamline-alumni.test/login\n\n"
+                    ."Congratulations, and thank you for keeping your information up to date.\n\n"
+                    .'— CSAV Alumni Office',
             ],
 
             // ---------- Verified, but NOT a board passer ----------
@@ -281,10 +285,10 @@ class EmailSeeder extends Seeder
             // ---------- Profile approval workflow ----------
             [
                 'slug' => 'profile-approved',
-                'subject' => 'You\'re a board passer, {{name}} — your CSAV alumni profile is verified!',
+                'subject' => 'Your CSAV alumni profile has been approved!',
                 'message' => "Hi {{name}},\n\n"
-                    .'Great news! After reviewing your board exam details against the official PRC records, '
-                    ."we've confirmed that you're a board passer — your alumni profile is now verified.\n\n"
+                    .'Great news! After reviewing your alumni profile, '
+                    ."we've confirmed that you're a truly qualified alumni — your alumni profile has been approved.\n\n"
                     ."Approved on: {{approved_at}}\n"
                     ."Reviewed by: {{approved_by}}\n\n"
                     ."Your tracer study submission is now final and will be included in the university's "
@@ -309,6 +313,7 @@ class EmailSeeder extends Seeder
                     ."Reviewed by: {{rejected_by}}\n\n"
                     .'— CSAV Alumni Office',
             ],
+            
 
             // ---------- Email verification codes ----------
             [

@@ -227,7 +227,7 @@ new #[Layout('layouts.app-super-admin')] class extends Component
         // ─── Conditional email ─────────────────────────────────────
         try {
             if ($profile->is_verified) {
-                EmailTemplateService::send('profile-approved', $user->email, [
+                EmailTemplateService::send('your-alumni-profile-has-been-verified', $user->email, [
                     'name' => $user->name,
                     'approved_at' => now()->format('F j, Y · g:i A'),
                     'approved_by' => Auth::user()?->name ?? 'the alumni coordinator',

@@ -42,6 +42,14 @@ new #[Layout('layouts.app-alumni')] class extends Component
         return Auth::user();
     }
 
+    // --- ADDED: The approval check logic ---
+    #[Computed]
+    public function isApproved(): bool
+    {
+        return (bool) $this->alumni->userProfile?->is_approved;
+    }
+    // ---------------------------------------
+
     /** Alumni Coordinator user IDs — cached, small, stable set. */
     #[Computed]
     public function alumniCoordinatorIds(): array
@@ -54,12 +62,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
         });
     }
 
-    /**
-     * Program-head user IDs whose department contains this alumni.
-     *
-     * Uses the User->department() relation directly (hasOne via program_head_id),
-     * so we don't rely on pivot column ambiguity or the user_profiles.courses pluck.
-     */
     #[Computed]
     public function programHeadIdsForMyDepartments(): array
     {
@@ -68,7 +70,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
             return [];
         }
 
-        // Explicitly qualified — avoids ambiguity with the pivot table.
         $deptIds = $profile->courses()
             ->pluck('courses.department_id')
             ->filter()
@@ -82,8 +83,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
 
         sort($deptIds);
 
-        // v2 prefix so we never read stale data written by the old logic.
-        // Shorter TTL — department assignments change more often than 1 hour.
         $key = 'program_head_ids_by_dept_v2_'.implode('_', $deptIds);
 
         return Cache::remember($key, now()->addMinutes(15), function () use ($deptIds) {
@@ -106,13 +105,11 @@ new #[Layout('layouts.app-alumni')] class extends Component
         )));
     }
 
-    /**
-     * Messages = published events from allowed authors.
-     */
     #[Computed]
     public function messages()
     {
-        if (empty($this->allowedAuthorIds)) {
+        // Added approval check here
+        if (! $this->isApproved || empty($this->allowedAuthorIds)) {
             return Event::query()->whereRaw('1 = 0')->paginate(15);
         }
 
@@ -144,11 +141,11 @@ new #[Layout('layouts.app-alumni')] class extends Component
             ->paginate(15);
     }
 
-    /** Count of un-responded messages — for the tab badge. */
     #[Computed]
     public function pendingCount(): int
     {
-        if (empty($this->allowedAuthorIds)) {
+        // Added approval check here
+        if (! $this->isApproved || empty($this->allowedAuthorIds)) {
             return 0;
         }
 
@@ -161,9 +158,6 @@ new #[Layout('layouts.app-alumni')] class extends Component
             ->count();
     }
 
-    /**
-     * The alumni's RSVP response per event — scoped to the current page only.
-     */
     #[Computed]
     public function myRsvps(): array
     {

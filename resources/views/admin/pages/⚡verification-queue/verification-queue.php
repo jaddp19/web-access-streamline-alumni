@@ -230,7 +230,7 @@ new #[Layout('layouts.app-admin')] class extends Component
         // is_verified === false → data verified but failed → neutral email
         try {
             if ($profile->is_verified) {
-                EmailTemplateService::send('profile-approved', $user->email, [
+                EmailTemplateService::send('your-alumni-profile-has-been-verified', $user->email, [
                     'name' => $user->name,
                     'approved_at' => now()->format('F j, Y · g:i A'),
                     'approved_by' => Auth::user()?->name ?? 'the alumni coordinator',

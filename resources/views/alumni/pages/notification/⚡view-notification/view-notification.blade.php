@@ -11,25 +11,27 @@
                 </div>
             </div>
 
-            {{-- Dynamic unread badge --}}
-            <div class="hidden sm:flex items-center gap-2">
-                @if ($this->unreadCount > 0)
-                    <div
-                        class="px-4 py-1.5 rounded-full bg-[#123524]/5 dark:bg-[#D4A537]/10 text-[#123524] dark:text-[#D4A537] text-xs font-semibold flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-                        {{ $this->unreadCount }} unread
-                    </div>
-                @else
-                    <div
-                        class="px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-semibold flex items-center gap-2">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                        </svg>
-                        All caught up
-                    </div>
-                @endif
-            </div>
+            {{-- Dynamic unread badge (approved users only) --}}
+            @if ($this->isApproved)
+                <div class="hidden sm:flex items-center gap-2">
+                    @if ($this->unreadCount > 0)
+                        <div
+                            class="px-4 py-1.5 rounded-full bg-[#123524]/5 dark:bg-[#D4A537]/10 text-[#123524] dark:text-[#D4A537] text-xs font-semibold flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                            {{ $this->unreadCount }} unread
+                        </div>
+                    @else
+                        <div
+                            class="px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-semibold flex items-center gap-2">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                            </svg>
+                            All caught up
+                        </div>
+                    @endif
+                </div>
+            @endif
         </div>
     </div>
 
@@ -81,6 +83,28 @@
         @can('can_view')
         {{-- ===== MAIN COLUMN — NOTIFICATIONS ===== --}}
         <main class="lg:col-span-9 space-y-4">
+
+            @if (! $this->isApproved)
+                {{-- Not approved yet: nothing to see --}}
+                <div
+                    class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm p-10 text-center border border-transparent dark:border-white/5">
+                    <div
+                        class="w-16 h-16 rounded-full bg-[#D4A537]/15 flex items-center justify-center mx-auto mb-3">
+                        <svg class="w-8 h-8 text-[#a97f1f] dark:text-[#D4A537]" fill="none" stroke="currentColor"
+                            stroke-width="1.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <p class="font-bold text-black dark:text-white text-lg" style="font-family: 'Fraunces', serif;">
+                        Awaiting approval
+                    </p>
+                    <p class="text-black/50 dark:text-white/50 text-sm mt-1 max-w-sm mx-auto">
+                        Your alumni profile has not been approved yet. Notifications will appear here once the alumni
+                        office approves it.
+                    </p>
+                </div>
+            @else
 
             {{-- Filter tabs --}}
             <div class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm p-2 flex items-center gap-1 overflow-x-auto">
@@ -278,6 +302,8 @@
                     </div>
                 </div>
             @endif
+
+            @endif {{-- end isApproved --}}
 
         </main>
         @endcan

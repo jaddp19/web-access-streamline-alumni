@@ -41,6 +41,22 @@
             </div>
         </aside>
 
+        <main class="lg:col-span-6 space-y-4">
+        @if (! $this->isApproved)
+            <div class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm p-10 text-center border border-transparent dark:border-white/5">
+                <div class="w-16 h-16 rounded-full bg-[#D4A537]/15 flex items-center justify-center mx-auto mb-3">
+                    <svg class="w-8 h-8 text-[#a97f1f] dark:text-[#D4A537]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <p class="font-bold text-black dark:text-white text-lg" style="font-family: 'Fraunces', serif;">
+                    Awaiting approval
+                </p>
+                <p class="text-black/50 dark:text-white/50 text-sm mt-1 max-w-sm mx-auto">
+                    Your alumni profile has not been approved yet. Announcements and events will appear here once the alumni office approves it.
+                </p>
+            </div>
+        @else
         {{-- ===== MAIN FEED COLUMN ===== --}}
         <main class="lg:col-span-6 space-y-4">
 
@@ -273,15 +289,17 @@
             @endforelse
             @endcan
         </main>
+        @endif
+        </main>
 
         {{-- ===== RIGHT SIDEBAR ===== --}}
         <aside class="lg:col-span-3 space-y-4">
 
-            @php
-                $totalAlumni = \App\Models\User::role('alumni')->count();
-                $myBatchName = $this->userProfile?->batch?->batch_name;
-            @endphp
+        @php
+            $myBatchName = $this->userProfile?->batch?->batch_name;
+        @endphp
 
+            @if ($this->isApproved)
             {{-- Alumni at a glance --}}
             <div
                 class="bg-white dark:bg-[#242526] rounded-2xl shadow-sm overflow-hidden border border-transparent dark:border-white/5">
@@ -301,7 +319,7 @@
                         </div>
                         <div>
                             <p class="text-lg font-bold text-black dark:text-white leading-none">
-                                {{ number_format($totalAlumni) }}</p>
+                                {{ number_format($this->totalApprovedAlumni) }}
                             <p class="text-xs text-black/50 dark:text-white/50 mt-0.5">Registered alumni</p>
                         </div>
                     </div>
@@ -325,6 +343,7 @@
                     @endif
                 </div>
             </div>
+            @endif
 
             {{-- School branding --}}
             <div

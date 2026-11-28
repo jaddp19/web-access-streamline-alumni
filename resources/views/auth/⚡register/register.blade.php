@@ -353,8 +353,9 @@
                             Verification Code <span class="text-red-500">*</span>
                         </label>
                         <input wire:model="otpCode" type="text" id="otpCode" name="otpCode"
-                            inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code"
+                            inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code"
                             placeholder="000000" required autofocus
+                            oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6)"
                             class="w-full px-4 py-3 rounded-xl border text-center text-2xl tracking-[0.5em] font-bold text-[#123524] placeholder-[#123524]/20 focus:outline-none focus:ring-2 focus:ring-[#D4A537] focus:border-transparent transition
                             @error('otpCode') border-red-400 @else border-[#123524]/15 @enderror">
                         @error('otpCode')

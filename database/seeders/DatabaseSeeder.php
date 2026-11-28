@@ -24,7 +24,7 @@ class DatabaseSeeder extends Seeder
             DepartmentSeeder::class,
             CourseSeeder::class,
             PhAddressSeeder::class,
-            // DemoSeeder::class,
+            DemoSeeder::class,
             EventSeeder::class,
             EventRsvpSeeder::class,
             PostSeeder::class,
